@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Test — TypeMaster</title>
+<meta name="description" content="Take a timed typing test on TypeMaster: choose a category and duration from 1 to 10 minutes.">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+
+  <!-- ============ SETUP PHASE ============ -->
+  <div id="setup">
+    <div class="page-head">
+      <h1 class="section-title" data-i18n="test_title">Typing Test</h1>
+    </div>
+
+    <h2 class="section-title" style="font-size:1.15rem" data-i18n="choose_category">Choose a category</h2>
+    <div class="picker-row" id="catRow">
+      <button class="pick" data-cat="standard" data-i18n="cat_standard">Standard</button>
+      <button class="pick" data-cat="advanced" data-i18n="cat_advanced">Advanced</button>
+      <button class="pick" data-cat="professional" data-i18n="cat_professional">Professional</button>
+      <button class="pick" data-cat="custom" data-i18n="cat_custom">Custom</button>
+    </div>
+
+    <h2 class="section-title" style="font-size:1.15rem" data-i18n="choose_duration">Choose a duration</h2>
+    <div class="picker-row" id="durRow">
+      <button class="pick" data-min="1">1 <span data-i18n="minutes">min</span></button>
+      <button class="pick" data-min="2">2 <span data-i18n="minutes">min</span></button>
+      <button class="pick" data-min="3">3 <span data-i18n="minutes">min</span></button>
+      <button class="pick" data-min="5">5 <span data-i18n="minutes">min</span></button>
+      <button class="pick" data-min="10">10 <span data-i18n="minutes">min</span></button>
+    </div>
+
+    <div id="testListWrap">
+      <div id="testList" class="grid grid-2"></div>
+    </div>
+
+    <div id="customWrap" class="hidden">
+      <div class="form-group">
+        <textarea id="customText" class="form-control" rows="6" data-i18n-ph="custom_ph" placeholder="Paste your own text here (at least 20 characters)…"></textarea>
+        <p class="form-note" id="customCount">0</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <button class="btn btn-primary" id="startBtn" data-i18n="start_test" disabled>Start Test</button>
+    </div>
+  </div>
+
+  <!-- ============ PLAYER PHASE ============ -->
+  <div id="player" class="player-wrap hidden">
+    <div class="page-head">
+      <h1 class="section-title" id="playerTitle">Test</h1>
+      <p class="section-sub" id="playerSub"></p>
+    </div>
+    <div class="player-stats">
+      <div class="pstat"><span class="v" id="statWpm">0</span><span class="l" data-i18n="live_wpm">WPM</span></div>
+      <div class="pstat"><span class="v" id="statAcc">100%</span><span class="l" data-i18n="live_acc">Accuracy</span></div>
+      <div class="pstat"><span class="v" id="statTime">0:00</span><span class="l" data-i18n="live_time">Time</span></div>
+    </div>
+    <div class="type-text" id="typeText"></div>
+    <input class="ghost-input" id="ghostInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="type-hint" data-i18n="player_hint">Click the text and start typing. Use Backspace to fix mistakes.</div>
+    <div class="finger-hint" id="fingerHint"></div>
+    <div id="kb"></div>
+  </div>
+
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/test-data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/keyboard.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  UI.init({ active: "test" });
+
+  let cat = null, testId = null, minutes = 0;
+
+  const catRow = document.getElementById("catRow");
+  const durRow = document.getElementById("durRow");
+  const testList = document.getElementById("testList");
+  const testListWrap = document.getElementById("testListWrap");
+  const customWrap = document.getElementById("customWrap");
+  const customText = document.getElementById("customText");
+  const customCount = document.getElementById("customCount");
+  const startBtn = document.getElementById("startBtn");
+
+  function selectIn(row, btn) {
+    row.querySelectorAll(".pick").forEach(p => p.classList.remove("selected"));
+    btn.classList.add("selected");
+  }
+
+  function renderTests() {
+    testList.innerHTML = "";
+    testId = null;
+    (TEST_CATALOG[cat] || []).forEach(t => {
+      const b = document.createElement("button");
+      b.className = "btn btn-outline";
+      b.style.textAlign = "start";
+      b.innerHTML = "<strong>" + UI.esc(t.name) + "</strong><br><span class=\"text-muted\" style=\"font-weight:400;font-size:.85rem\">" + UI.esc(t.desc || "") + "</span>";
+      b.onclick = () => {
+        testList.querySelectorAll(".btn").forEach(x => x.classList.remove("btn-primary"));
+        b.classList.add("btn-primary");
+        testId = t.id;
+        validate();
+      };
+      testList.appendChild(b);
+    });
+    validate();
+  }
+
+  function validate() {
+    let ok = !!cat && minutes > 0;
+    if (ok) {
+      if (cat === "custom") ok = customText.value.trim().length >= 20;
+      else ok = !!testId;
+    }
+    startBtn.disabled = !ok;
+  }
+
+  catRow.querySelectorAll(".pick").forEach(btn => {
+    btn.onclick = () => {
+      selectIn(catRow, btn);
+      cat = btn.getAttribute("data-cat");
+      if (cat === "custom") {
+        testListWrap.classList.add("hidden");
+        customWrap.classList.remove("hidden");
+      } else {
+        customWrap.classList.add("hidden");
+        testListWrap.classList.remove("hidden");
+        renderTests();
+      }
+      validate();
+    };
+  });
+
+  durRow.querySelectorAll(".pick").forEach(btn => {
+    btn.onclick = () => {
+      selectIn(durRow, btn);
+      minutes = parseInt(btn.getAttribute("data-min"), 10) || 0;
+      validate();
+    };
+  });
+
+  customText.addEventListener("input", () => {
+    customCount.textContent = customText.value.trim().length + " / 20";
+    validate();
+  });
+
+  const fmtTime = s => {
+    s = Math.max(0, Math.floor(s));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  };
+
+  startBtn.onclick = () => {
+    let text, name, blind = false;
+    if (cat === "custom") {
+      text = customText.value.trim();
+      name = UI.t("cat_custom");
+    } else {
+      const t = getTest(cat, testId);
+      if (!t) return;
+      text = t.text; name = t.name; blind = !!t.blind;
+    }
+    if (!text) return;
+    const dur = minutes * 60;
+
+    document.getElementById("setup").classList.add("hidden");
+    const player = document.getElementById("player");
+    player.classList.remove("hidden");
+    document.getElementById("playerTitle").textContent = name;
+    document.getElementById("playerSub").textContent = minutes + " " + UI.t("minutes");
+
+    const typeText = document.getElementById("typeText");
+    const ghostInput = document.getElementById("ghostInput");
+    const wpmEl = document.getElementById("statWpm");
+    const accEl = document.getElementById("statAcc");
+    const timeEl = document.getElementById("statTime");
+
+    Keyboard.render(document.getElementById("kb"), document.getElementById("fingerHint"));
+    Keyboard.highlight(text[0] || null);
+
+    Typer.mount({
+      textEl: typeText,
+      inputEl: ghostInput,
+      text: text,
+      mode: "test",
+      durationSec: dur,
+      blind: blind,
+      onTick(stats) {
+        wpmEl.textContent = stats.nwpm;
+        accEl.textContent = (Math.round(stats.acc * 10) / 10) + "%";
+        timeEl.textContent = fmtTime(stats.remainingSec);
+      },
+      onKey(typed, next) {
+        Keyboard.pressFlash(typed);
+        Keyboard.highlight(next);
+      },
+      onDone(result) {
+        const payload = {
+          cat: name,
+          dur: dur,
+          gwpm: result.gwpm,
+          nwpm: result.nwpm,
+          acc: Math.round(result.acc * 10) / 10,
+          typos: result.typos,
+          keyDelta: result.keyDelta,
+          completedAll: result.completedAll
+        };
+        try { sessionStorage.setItem("tm_last_result", JSON.stringify(payload)); } catch (e) {}
+        location.href = "results.html";
+      }
+    });
+  };
+});
+</script>
+</body>
+</html>
