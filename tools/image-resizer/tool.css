@@ -252,3 +252,163 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
   padding: 1rem 1.1rem; }
 .ttips strong { color: var(--dk-text); }
 .ttips span { color: var(--dk-muted); font-size: .92rem; }
+
+/* ---------- v2: bulk queue ---------- */
+.tqueue-head { display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; flex-wrap: wrap; margin: 1.25rem 0 .25rem; }
+.tqueue-head h3 { margin: 0; font-size: 1.05rem; color: var(--dk-text); }
+.tcount { display: inline-block; min-width: 1.6rem; text-align: center; font-size: .8rem;
+  font-weight: 700; color: #fff; background: var(--dk-violet); border-radius: 999px;
+  padding: .1rem .5rem; vertical-align: middle; }
+.tgroup-h { font-size: 1.05rem; color: var(--dk-text); margin: 1.5rem 0 .5rem;
+  padding-block-start: 1.25rem; border-block-start: 1px solid var(--dk-border); }
+.tqthumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--dk-border); background: var(--dk-bg); flex: none; }
+.tqrow { grid-template-columns: auto 1fr auto; }
+.tqmain { min-width: 0; }
+.tqedit { display: flex; gap: .5rem; align-items: center; }
+.tqbadge { display: inline-block; font-size: .72rem; font-weight: 700; color: var(--dk-violet);
+  background: color-mix(in srgb, var(--dk-violet) 12%, transparent);
+  border-radius: 999px; padding: .1rem .55rem; margin-inline-start: .4rem; vertical-align: middle; }
+
+/* ---------- v2: progress ---------- */
+.tprogress { height: 10px; border-radius: 999px; background: var(--dk-border);
+  overflow: hidden; margin-block-start: 1rem; }
+.tprogress > span { display: block; height: 100%; width: 0; background: var(--dk-violet);
+  border-radius: 999px; transition: width .2s ease; }
+
+/* ---------- v2: results grid ---------- */
+.tresults { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: .9rem; margin-block-start: 1rem; }
+.trcard { background: var(--dk-card); border: 1px solid var(--dk-border);
+  border-radius: var(--dk-radius); padding: .8rem; display: flex; flex-direction: column; gap: .5rem; }
+.trcard img { width: 100%; height: 130px; object-fit: contain; border-radius: 8px;
+  background: var(--dk-surface); border: 1px solid var(--dk-border); }
+.trcard img.has-alpha { background: repeating-conic-gradient(#cfcfe0 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.trname { font-weight: 600; font-size: .85rem; color: var(--dk-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trmeta { font-size: .78rem; color: var(--dk-muted); }
+.trmeta .ok { color: var(--dk-success); font-weight: 700; }
+.trmeta .miss { color: var(--dk-amber-deep, #B57E00); font-weight: 700; }
+
+/* ---------- v2: editor modal ---------- */
+.tmodal { position: fixed; inset: 0; z-index: 9000; background: rgba(10, 8, 25, .62);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+  overflow-y: auto; }
+.tmodal[hidden] { display: none; }
+.tmodal-box { background: var(--dk-card); border: 1px solid var(--dk-border);
+  border-radius: 14px; padding: 1.1rem; width: min(680px, 100%); max-height: 94vh;
+  overflow-y: auto; }
+.tmodal-head { display: flex; align-items: center; justify-content: space-between;
+  margin-block-end: .75rem; }
+.tmodal-head h3 { margin: 0; color: var(--dk-text); font-size: 1.1rem; }
+.tcanvas-wrap { position: relative; margin-block: .9rem; background: var(--dk-surface);
+  border: 1px solid var(--dk-border); border-radius: 10px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; min-height: 200px; }
+.tcanvas-wrap canvas { display: block; max-width: 100%; max-height: 52vh; touch-action: none;
+  cursor: crosshair; }
+.tcanvas-wrap canvas.pick { cursor: copy; }
+.tswatch { display: inline-block; width: 2rem; height: 2rem; border-radius: 8px;
+  border: 2px solid var(--dk-border); background: transparent; vertical-align: middle; }
+.tcolor { width: 3rem; height: 2.2rem; border: 1px solid var(--dk-border); border-radius: 8px;
+  background: var(--dk-bg); padding: .15rem; cursor: pointer; margin-block-start: .5rem; }
+#paneBg .tfield, #paneCrop .tfield { margin-block-end: .8rem; }
+#paneBg .tbtnrow, #paneCrop .tbtnrow { margin-block-start: .6rem; }
+
+@media (max-width: 480px) {
+  .tqrow { grid-template-columns: auto 1fr; }
+  .tqedit { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  .tresults { grid-template-columns: repeat(2, 1fr); }
+  .tmodal { padding: .5rem; align-items: flex-start; }
+  .tmodal-box { padding: .8rem; }
+}
+
+/* ---------- v2: batch panel (prominent, top of tool) ---------- */
+.tbpanel { background: var(--dk-surface); border: 2px solid var(--dk-violet);
+  border-radius: var(--dk-radius); padding: 1.1rem 1.2rem; margin-block-end: 1.25rem; }
+.tbpanel > h3 { margin: 0 0 .25rem; font-size: 1.15rem; color: var(--dk-text); }
+.tbpanel .tbtnrow { margin-block-start: .9rem; }
+.tbpanel .tfield { margin-block-end: .85rem; }
+.tbpanel #applyAllBtn { font-size: 1.02rem; padding: .8rem 1.8rem; }
+
+@media (max-width: 480px) {
+  .tbpanel { padding: .9rem .8rem; }
+  .tbpanel #applyAllBtn { width: 100%; }
+}
+
+/* ---------- v2: review workflow (serial numbers, checkboxes) ---------- */
+.tqrow { grid-template-columns: auto auto 1fr auto; }
+.tqcheck { width: 1.3rem; height: 1.3rem; accent-color: var(--dk-violet);
+  cursor: pointer; flex: none; }
+.tnum { width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--dk-violet);
+  color: #fff; font-weight: 700; font-size: .8rem; display: flex; align-items: center;
+  justify-content: center; flex: none; font-variant-numeric: tabular-nums; }
+.tqmain2 { display: flex; gap: .7rem; align-items: center; min-width: 0; }
+.tqmain2 .tqmain { min-width: 0; flex: 1; }
+.treview { margin-block-start: 1rem; border-block-start: 1px dashed var(--dk-border);
+  padding-block-start: 1rem; }
+.treview .tbtnrow { margin-block-start: .6rem; }
+#downloadNowBtn { font-size: 1.05rem; padding: .85rem 2.2rem; }
+#editSeqLabel { margin: 0 0 .5rem; font-weight: 600; color: var(--dk-violet); }
+
+@media (max-width: 480px) {
+  .tqrow { grid-template-columns: auto auto 1fr; }
+  #downloadNowBtn { width: 100%; }
+}
+
+/* ---------- v2: details, position grid, sliders ---------- */
+.tdetails { border: 1px solid var(--dk-border); border-radius: 10px; margin-block-end: .8rem;
+  background: var(--dk-card); }
+.tdetails summary { cursor: pointer; padding: .8rem 1rem; font-weight: 600; color: var(--dk-text);
+  list-style: none; }
+.tdetails summary::-webkit-details-marker { display: none; }
+.tdetails summary::after { content: "+"; float: inline-end; color: var(--dk-violet); font-weight: 700; }
+.tdetails[open] summary::after { content: "–"; }
+.tdetails > *:not(summary) { margin-inline: 1rem; }
+.tdetails > *:last-child { margin-block-end: 1rem; }
+.tposgrid { display: grid; grid-template-columns: repeat(3, 2.4rem); gap: .35rem; margin-block-start: .5rem; }
+.tposgrid button { width: 2.4rem; height: 2.4rem; border-radius: 8px; border: 1px solid var(--dk-border);
+  background: var(--dk-bg); cursor: pointer; }
+.tposgrid button[aria-pressed="true"] { background: var(--dk-violet); border-color: var(--dk-violet); }
+.tsliders { display: grid; gap: .55rem; margin-block: .6rem; }
+.tsliders label { display: grid; grid-template-columns: 7rem 1fr; gap: .6rem; align-items: center;
+  font-size: .85rem; color: var(--dk-text); }
+.tshortcuts { margin-block-end: 1rem; }
+
+/* ---------- v2: queue extras ---------- */
+.tqfocus { outline: 3px solid color-mix(in srgb, var(--dk-focus) 55%, transparent); outline-offset: 1px; }
+.tqdrop { outline: 2px dashed var(--dk-violet); outline-offset: 2px; }
+.tnum { cursor: grab; }
+.tnum:active { cursor: grabbing; }
+.tqinfo { grid-column: 1 / -1; font-size: .8rem; color: var(--dk-muted); background: var(--dk-bg);
+  border: 1px solid var(--dk-border); border-radius: 8px; padding: .6rem .8rem;
+  display: grid; grid-template-columns: auto 1fr; gap: .2rem .8rem; }
+.tqinfo dt { font-weight: 600; color: var(--dk-text); }
+.tqinfo dd { margin: 0; overflow-wrap: anywhere; }
+.ticonbtn { background: transparent; border: 1px solid var(--dk-border); border-radius: 8px;
+  color: var(--dk-text); font-size: .95rem; width: 2rem; height: 2rem; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; }
+.ticonbtn:hover { border-color: var(--dk-violet); }
+
+/* ---------- v2: modal tools ---------- */
+.tmodal-tools { display: flex; gap: .4rem; }
+.tmodal-tools .tbtn:disabled { opacity: .4; }
+
+/* ---- board / university presets ---- */
+.tboardlist{list-style:none;margin:.4rem 0;padding:0;max-height:220px;overflow:auto;display:flex;flex-direction:column;gap:.3rem}
+.tboarditem{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;text-align:start;padding:.5rem .6rem;border:1px solid var(--border);border-radius:.5rem;background:var(--surface);color:var(--text);font-size:.85rem;cursor:pointer;min-height:44px}
+.tboarditem:hover{border-color:var(--accent)}
+.tboardname{font-weight:600}
+.tboardtag{font-size:.68rem;opacity:.7;white-space:nowrap;border:1px solid var(--border);border-radius:99px;padding:.1rem .45rem}
+.tboardtag.ok{opacity:1;border-color:var(--accent);color:var(--accent)}
+.tautowrap{display:inline-flex;flex-direction:column;gap:.15rem;align-items:flex-start}
+.tautonote{font-size:.72rem;opacity:.75;line-height:1.3}
+/* ---- queue: reorder / focus / info ---- */
+.ticonbtn{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:34px;border:1px solid var(--border);border-radius:.4rem;background:var(--surface);color:var(--text);font-size:1rem;cursor:pointer}
+.ticonbtn:hover{border-color:var(--accent)}
+.tnum{cursor:grab}
+.tqrow.tqdrop{outline:2px dashed var(--accent);outline-offset:-2px}
+.tqrow.tqfocus{outline:2px solid var(--accent);outline-offset:-2px}
+.tqinfo{display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem;margin:.4rem 0 0;padding:.5rem .6rem;font-size:.8rem;background:var(--surface2,var(--surface));border-radius:.4rem;width:100%}
+.tqinfo dt{font-weight:600;opacity:.75}
+.tqinfo dd{margin:0;overflow-wrap:anywhere}
