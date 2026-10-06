@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing Games — TypeMaster</title>
+<meta name="description" content="Make typing practice fun with TypeMaster games: falling words and word sprint challenges with live scores.">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+
+  <div class="page-header">
+    <p class="eyebrow" data-i18n="d_eyebrow_games">Play &amp; learn</p>
+    <h1 data-i18n="games_title">Typing Games</h1>
+    <p class="page-sub" data-i18n="games_sub">Turn practice into play — games build real speed without the boredom.</p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card lift game-card">
+      <h2 class="section-title" data-i18n="wf_title">Word Fall</h2>
+      <p class="text-muted" data-i18n="wf_desc">Type falling words before they reach the bottom.</p>
+      <p class="best-line"><span data-i18n="wf_best">Best</span>: <strong id="wfBest">0</strong></p>
+      <button class="btn btn-primary" id="wfStart" data-i18n="wf_start">Play</button>
+    </div>
+    <div class="card lift game-card">
+      <h2 class="section-title" data-i18n="ws_title">Word Sprint</h2>
+      <p class="text-muted" data-i18n="ws_desc">Type as many words as you can in 60 seconds.</p>
+      <p class="best-line"><span data-i18n="ws_best">Best</span>: <strong id="wsBest">0</strong></p>
+      <button class="btn btn-primary" id="wsStart" data-i18n="ws_start">Play</button>
+    </div>
+  </div>
+
+  <section id="gameArena" class="hidden mt-3" aria-live="polite">
+    <div class="card">
+      <div class="hud-row">
+        <div class="hud"><span class="hud-label" data-i18n="d_go_score">Score</span><span class="hud-value" id="gameScore">0</span></div>
+        <div class="hud"><span class="hud-label" data-i18n="d_lives">Lives</span><span class="hud-value" id="gameLives">3</span></div>
+        <div class="hud"><span class="hud-label" data-i18n="d_time">Time</span><span class="hud-value" id="gameTime">60</span></div>
+      </div>
+      <div id="gameField" class="game-field"></div>
+      <input id="gameInput" class="form-control" data-i18n-ph="game_type_here" placeholder="Type the word here..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div id="gameOver" class="hidden text-center mt-3">
+        <h2 class="section-title" id="goTitle">Game Over</h2>
+        <p class="mt-2"><span data-i18n="d_go_score">Score</span>: <strong id="goScore">0</strong></p>
+        <p class="text-muted"><span data-i18n="d_go_best">Best</span>: <strong id="goBest">0</strong></p>
+        <button class="btn btn-primary mt-2" id="playAgain" data-i18n="play_again">Play again</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="card mt-3">
+    <h2 class="section-title" data-i18n="games_howto_title">How to play</h2>
+    <ol class="steps mt-2">
+      <li data-i18n="games_howto_1">Pick a game above and press Play.</li>
+      <li data-i18n="games_howto_2">Type the words exactly as shown.</li>
+      <li data-i18n="games_howto_3">Beat your best score to earn XP.</li>
+    </ol>
+  </div>
+
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/games.js"></script>
+<script src="js/pages/games.js"></script>
+</body>
+</html>

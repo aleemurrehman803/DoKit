@@ -3,62 +3,68 @@
 **TypeMaster** — "Type Faster. Type Better." / "تیز لکھیں، بہتر لکھیں"
 
 A free, bilingual (English + اردو) touch-typing tutor: structured lessons,
-timed typing tests, and smart progress tracking. Plain HTML/CSS/JS only —
-no build tools, no external CDNs. Open `index.html` in any modern browser,
-or deploy as-is to any static host (e.g. GitHub Pages).
+timed typing tests, typing games, smart practice drills, printable
+certificates, and progress tracking. Plain HTML/CSS/JS only — no build
+tools, no CDNs, no external requests. Deploy as-is to GitHub Pages (or open
+`index.html` in any modern browser).
 
-## Features
+## Pages
 
-- Step-by-step lessons (beginner → intermediate → advanced) with 90%+
-  accuracy gating between lessons
-- Timed typing tests (1–10 minutes) across Standard, Advanced and
-  Professional categories, plus custom text
-- Live WPM and accuracy feedback, per-key analysis, problem-key detection
-- Accounts with progress, streaks, XP/levels, badges and goals
-  (stored locally in the browser)
-- English/Urdu interface with RTL support, light/dark themes, responsive
-  mobile layout
+- `index.html` — Home: hero with live typing demo, features, plans
+- `signup.html` / `login.html` — Account creation and login
+- `dashboard.html` — Continue learning, best WPM, streak, problem keys
+- `lessons.html` — Lesson tracks: Beginner / Intermediate / Advanced / Story
+- `lesson.html?id=` — Lesson player (typing engine + keyboard guide)
+- `test.html` — Timed tests (1–10 min), categories, custom text
+- `results.html` — Gross/Net WPM, accuracy, per-key table
+- `progress.html` — Trend chart, streak calendar, goals, badges
+- `profile.html` — Name/password, theme, language, data export, reset
+- `games.html` — Word Fall and Word Sprint typing games
+- `practice.html` — Smart drills from your problem keys + common words
+- `certificate.html` — Printable typing certificate
+- `faq.html` — Typing guides (WPM, accuracy, speed tips)
 
 ## Folder structure
 
 ```
-├── index.html        Home
-├── signup.html       Account creation
-├── login.html        Login
-├── dashboard.html    Stats overview
-├── lessons.html      Lesson catalog
-├── lesson.html?id=   Lesson player
-├── test.html         Typing test
-├── results.html      Test results
-├── progress.html     Charts, streaks, goals, badges
-├── profile.html      Settings and data export
 ├── css/
-│   ├── main.css      Design system (light/dark, RTL-ready)
+│   ├── main.css      Design system (variables, light/dark, RTL-ready, print)
 │   └── player.css    Typing player + on-screen keyboard
 ├── js/
-│   ├── urdu.js       English + Urdu string tables
-│   ├── storage.js    Data layer (browser localStorage)
-│   ├── ui.js         Navigation, footer, theme/language toggles
-│   ├── curriculum.js Lesson content
-│   ├── test-data.js  Test passages
-│   ├── engine.js     Keystroke-capture typing engine
-│   ├── keyboard.js   On-screen keyboard with finger guidance
+│   ├── urdu.js       EN + UR string tables (data-i18n)
+│   ├── urdu2.js      Additional EN + UR strings (merged into I18N)
+│   ├── storage.js    Data layer (localStorage, tm_* keys), async API
+│   ├── ui.js         Nav/footer injection, theme + language toggles
+│   ├── curriculum.js 44 original lessons with progressive key groups
+│   ├── test-data.js  Original test passages (Standard/Advanced/Pro)
+│   ├── engine.js     Hidden-input keystroke engine, live stats
+│   ├── keyboard.js   QWERTY guide, finger-zone colors, next-key highlight
 │   ├── gamification.js XP, levels, badges, streaks
-│   ├── charts.js     Canvas trend chart + streak calendar
-│   └── pages/        One init script per page
+│   ├── charts.js     Dependency-free canvas trend chart + streak calendar
+│   ├── games.js      Word Fall + Word Sprint game logic
+│   ├── practice.js   Smart practice drills + top-200 word list
+│   ├── certificate.js Certificate data fill
+│   └── pages/        One script per HTML page (no inline scripts)
 ├── sitemap.xml / robots.txt   SEO basics
 └── README.md
 ```
 
-## How scores work
+## Key mechanics
 
-- **Gross WPM** = (characters typed ÷ 5) ÷ minutes
-- **Net WPM** = (correct characters ÷ 5) ÷ minutes
-- **Accuracy** = correct keystrokes ÷ total keystrokes × 100
-- Stars per lesson: 3 stars ≥ 97%, 2 stars ≥ 93%, 1 star ≥ 90%
+- **WPM formulas** — Gross = (chars/5)/min, Net = (correct chars/5)/min,
+  Accuracy = correct/total keystrokes × 100.
+- **Unlock gating** — 90%+ accuracy required to unlock the next lesson.
+  Stars: 3 ≥97%, 2 ≥93%, 1 ≥90%.
+- **Problem keys** — per-key accuracy tracked across sessions; weakest keys
+  surface on the dashboard and feed Smart Practice drills.
+- **i18n** — toggle in nav; `document.dir=rtl` + Urdu strings when Urdu
+  selected. Lesson/test *content* stays English (typing is English-keyboard).
+- **Auth** — browser-local accounts; passwords stored as salted SHA-256
+  hashes (SubtleCrypto, with fallback), never plaintext.
+- **Security** — strict Content Security Policy on every page, zero inline
+  scripts, all user data rendered via `textContent`.
 
 ## Privacy
 
-All data stays in your own browser (localStorage). Passwords are stored
-as salted SHA-256 hashes, never as plain text. No data is sent to any
-server.
+All data (account, progress, scores) stays in the visitor's own browser
+(localStorage). Nothing is uploaded anywhere.

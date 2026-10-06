@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Dashboard</title>
 <meta name="description" content="Your TypeMaster dashboard: stats, problem keys, and recent typing tests.">
@@ -13,23 +12,31 @@
 <div id="site-nav"></div>
 <main class="container">
 
-  <div class="page-head">
+  <div class="page-header">
+    <p class="eyebrow" data-i18n="d_eyebrow_dashboard">Your journey</p>
     <h1 data-i18n="dash_title">Dashboard</h1>
-    <p class="text-muted">
+    <p class="page-sub">
       <span data-i18n="welcome">Welcome</span>, <strong id="userName"></strong>
-      <span class="plan-badge"><span data-i18n="plan_label">Plan</span>: <span data-i18n="plan_free">Free</span></span>
+      &nbsp;<span class="plan-badge"><span data-i18n="plan_label">Plan</span>: <span data-i18n="plan_free">Free</span></span>
     </p>
   </div>
 
+  <section class="card continue-card" id="continueCard" aria-label="Continue learning">
+    <div>
+      <p class="eyebrow" data-i18n="d_continue_title">Continue learning</p>
+      <h2 id="continueLessonName">—</h2>
+      <p class="text-muted" data-i18n="d_continue_sub">Pick up right where you left off — your next lesson is ready when you are.</p>
+      <div class="continue-best">
+        <span class="stat-value" id="bestWpm">0</span>
+        <span class="stat-label" data-i18n="best_wpm">Best WPM</span>
+      </div>
+    </div>
+    <div class="continue-cta">
+      <a class="btn btn-primary btn-lg" id="continueLink" href="lessons.html"><span data-i18n="d_start">Start</span></a>
+    </div>
+  </section>
+
   <div class="stat-grid" id="statGrid">
-    <div class="card stat-card">
-      <div class="stat-num"><a id="continueLink" href="lessons.html">—</a></div>
-      <div class="stat-label" data-i18n="continue_lesson">Continue Learning</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-num" id="bestWpm">0</div>
-      <div class="stat-label" data-i18n="best_wpm">Best WPM</div>
-    </div>
     <div class="card stat-card">
       <div class="stat-num" id="streakCount">0</div>
       <div class="stat-label" data-i18n="day_streak">Day Streak</div>
@@ -37,6 +44,10 @@
     <div class="card stat-card">
       <div class="stat-num" id="levelLabel">—</div>
       <div class="stat-label" data-i18n="xp_level">Level</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" id="lessonsDone">0</div>
+      <div class="stat-label" data-i18n="d_lessons_done">Lessons done</div>
     </div>
   </div>
 
@@ -54,6 +65,7 @@
 </main>
 <div id="site-foot"></div>
 <script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/curriculum.js"></script>

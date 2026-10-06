@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Typing Lessons</title>
 <meta name="description" content="Structured typing lessons from beginner to advanced. Complete each lesson with 90%+ accuracy to unlock the next.">
@@ -13,9 +12,10 @@
 <div id="site-nav"></div>
 <main class="container">
 
-  <div class="page-head">
+  <div class="page-header">
+    <p class="eyebrow" data-i18n="d_eyebrow_lessons">Curriculum</p>
     <h1 data-i18n="lessons_title">Typing Lessons</h1>
-    <p class="text-muted" data-i18n="lessons_sub">Complete each lesson with 90%+ accuracy to unlock the next.</p>
+    <p class="page-sub" data-i18n="lessons_sub">Complete each lesson with 90%+ accuracy to unlock the next.</p>
   </div>
 
   <div id="lessonLevels"></div>
@@ -23,6 +23,7 @@
 </main>
 <div id="site-foot"></div>
 <script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/curriculum.js"></script>
