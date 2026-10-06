@@ -1,95 +1,232 @@
 /* ============================================================
-   TypeMaster — Typing player + on-screen keyboard styles
+   TypeMaster — Typing player + on-screen keyboard (v2 redesign)
+   Class names below are a contract with js/engine.js and
+   js/keyboard.js — do not rename them:
+     .ch .current .ok .bad .typed .blind (engine)
+     .kb .kb-row .key .wide .space .f-* .next .pressed (keyboard)
+   Typing content is always English, so .type-text stays LTR.
    ============================================================ */
 
-.player-wrap { max-width: 860px; margin: 0 auto; }
+.player-wrap { max-width: 880px; margin: 0 auto; }
 
+/* ---------- Live stat pills ---------- */
 .player-stats {
-  display: flex; gap: 18px; flex-wrap: wrap;
-  justify-content: center; margin-bottom: 18px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 .pstat {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 8px 20px; text-align: center; min-width: 110px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 22px;
+  text-align: center;
+  min-width: 118px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
-.pstat .v { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
-.pstat .l { font-size: 0.78rem; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+.pstat::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0; top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent));
+  opacity: 0.85;
+}
+.pstat .v {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pstat .l {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
 
-/* The text being typed */
+/* ---------- The text being typed ---------- */
 .type-text {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 26px 30px;
+  padding: 28px 32px;
   font-size: 1.45rem;
-  line-height: 2.1;
-  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-  letter-spacing: 0.5px;
+  line-height: 2.15;
+  font-family: var(--font-mono);
+  letter-spacing: 0.4px;
   box-shadow: var(--shadow);
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   user-select: none;
-  min-height: 180px;
+  min-height: 190px;
+  direction: ltr;              /* typing content is always English */
+  text-align: left;
+  cursor: text;
 }
-[dir="rtl"] .type-text { font-family: var(--font); } /* keep readable in Urdu UI */
-.type-text .ch { border-radius: 4px; padding: 1px 0; }
-.type-text .ch.current { background: var(--primary-light); box-shadow: inset 0 -3px 0 var(--primary); }
+.type-text:focus-within { border-color: var(--primary-300); }
+.type-text .ch {
+  border-radius: 4px;
+  padding: 2px 1px;
+  margin: 0 -1px;
+  color: var(--muted);
+  transition: color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
+}
 .type-text .ch.ok { color: var(--success); }
-.type-text .ch.bad { color: var(--error); background: var(--error-bg); }
-.type-text.blind .ch.typed { color: transparent; text-shadow: 0 0 9px var(--muted); }
+.type-text .ch.bad {
+  color: var(--danger);
+  background: var(--danger-bg);
+  box-shadow: inset 0 -2px 0 var(--danger);
+}
+/* current char: soft highlight + blinking block caret */
+.type-text .ch.current {
+  background: var(--primary-50);
+  box-shadow: inset 0 -3px 0 var(--primary-400);
+  color: var(--ink);
+}
+[data-theme="dark"] .type-text .ch.current { background: rgba(126, 166, 245, 0.16); }
+.type-text .ch.current::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 8%;
+  bottom: 8%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--primary-600);
+  animation: caret-blink 1.05s steps(1) infinite;
+  pointer-events: none;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+/* blind mode: typed chars dissolve into a blur */
+.type-text.blind .ch.typed { color: transparent; text-shadow: 0 0 10px var(--muted); }
+
 /* hidden input that captures keystrokes */
 .ghost-input {
-  position: fixed; top: -9999px; inset-inline-start: -9999px;
-  opacity: 0; pointer-events: none;
+  position: fixed;
+  top: -9999px;
+  inset-inline-start: -9999px;
+  opacity: 0;
+  pointer-events: none;
 }
 .type-hint { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 18px; }
 
 /* ---------- On-screen keyboard ---------- */
 .kb {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 18px 16px;
   box-shadow: var(--shadow);
   margin-bottom: 22px;
   user-select: none;
+  overflow-x: auto;
 }
-.kb-row { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
+.kb-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 6px;
+  min-width: max-content;
+  margin-inline: auto;
+  width: max-content;
+  max-width: 100%;
+}
 .kb-row:last-child { margin-bottom: 0; }
 .key {
-  min-width: 44px; height: 48px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border); border-radius: 8px;
-  background: var(--surface-2);
-  font-weight: 700; font-size: 0.95rem; color: var(--text);
-  transition: transform 0.06s, background 0.12s, box-shadow 0.12s;
+  min-width: 46px;
+  height: 50px;
+  padding-inline: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-bottom-width: 3px;
+  border-radius: 9px;
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  box-shadow: 0 2px 0 rgba(22, 51, 110, 0.08), 0 5px 10px rgba(22, 51, 110, 0.06);
+  transition: transform 0.07s ease, background-color 0.14s ease,
+              box-shadow 0.14s ease, border-color 0.14s ease;
   flex: 0 1 auto;
+  font-family: var(--font-mono);
 }
-.key.wide { min-width: 72px; font-size: 0.78rem; }
-.key.space { min-width: 280px; }
-.key.next {
-  background: var(--primary); color: #fff; border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light), 0 4px 12px rgba(26,86,219,.4);
-  transform: scale(1.08);
+.key.wide { min-width: 76px; font-size: 0.78rem; font-family: var(--font); }
+.key.space { min-width: 290px; }
+/* next key to press: glow + lift */
+.key.next, .key.active {
+  background: linear-gradient(180deg, var(--primary-500), var(--primary-600));
+  color: #fff;
+  border-color: var(--primary-700);
+  border-bottom-color: var(--primary-800);
+  box-shadow: 0 0 0 3px var(--primary-100), 0 6px 16px rgba(36, 88, 214, 0.45);
+  transform: translateY(-2px) scale(1.06);
 }
-.key.pressed { background: var(--success); border-color: var(--success); color: #fff; }
-/* finger zone tints */
-.key.f-lpinky  { border-bottom: 3px solid #ef4444; }
-.key.f-lring   { border-bottom: 3px solid #f97316; }
-.key.f-lmiddle { border-bottom: 3px solid #eab308; }
-.key.f-lindex  { border-bottom: 3px solid #22c55e; }
-.key.f-rindex  { border-bottom: 3px solid #06b6d4; }
-.key.f-rmiddle { border-bottom: 3px solid #3b82f6; }
-.key.f-rring   { border-bottom: 3px solid #8b5cf6; }
-.key.f-rpinky  { border-bottom: 3px solid #ec4899; }
-.key.f-thumb   { border-bottom: 3px solid #64748b; }
-.finger-hint { text-align: center; font-weight: 700; color: var(--primary); min-height: 28px; margin-bottom: 8px; }
+[data-theme="dark"] .key.next, [data-theme="dark"] .key.active {
+  box-shadow: 0 0 0 3px rgba(126, 166, 245, 0.28), 0 6px 16px rgba(36, 88, 214, 0.5);
+}
+/* physical press flash */
+.key.pressed {
+  background: var(--success);
+  border-color: var(--success);
+  border-bottom-color: #0e7a38;
+  color: #fff;
+  transform: translateY(2px);
+  box-shadow: 0 0 0 1px var(--success);
+}
+/* pulsing hint (reserved for guided drills) */
+.key.hint { animation: key-hint-pulse 1.4s ease-in-out infinite; }
+@keyframes key-hint-pulse {
+  0%, 100% { box-shadow: 0 2px 0 rgba(22,51,110,0.08), 0 0 0 0 var(--primary-200); }
+  50% { box-shadow: 0 2px 0 rgba(22,51,110,0.08), 0 0 0 6px transparent; transform: translateY(-1px); }
+}
+/* finger-zone identity colors (kept from v1, refined) */
+.key.f-lpinky  { border-bottom-color: #ef4444; }
+.key.f-lring   { border-bottom-color: #f97316; }
+.key.f-lmiddle { border-bottom-color: #eab308; }
+.key.f-lindex  { border-bottom-color: #22c55e; }
+.key.f-rindex  { border-bottom-color: #06b6d4; }
+.key.f-rmiddle { border-bottom-color: #3b82f6; }
+.key.f-rring   { border-bottom-color: #8b5cf6; }
+.key.f-rpinky  { border-bottom-color: #ec4899; }
+.key.f-thumb   { border-bottom-color: #64748b; }
+
+.finger-hint {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-700);
+  min-height: 30px;
+  margin-bottom: 10px;
+}
+[data-theme="dark"] .finger-hint { color: var(--primary-300); }
+
+/* ---------- Lesson complete ---------- */
+.result-stars { font-size: 3rem; text-align: center; margin: 12px 0; letter-spacing: 8px; }
+.result-stars .off { color: var(--border); }
+
+/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
-  .key { min-width: 30px; height: 40px; font-size: 0.8rem; }
+  .key { min-width: 31px; height: 42px; font-size: 0.8rem; padding-inline: 4px; }
   .key.space { min-width: 150px; }
-  .key.wide { min-width: 48px; }
-  .type-text { font-size: 1.1rem; padding: 18px; }
+  .key.wide { min-width: 50px; font-size: 0.7rem; }
+  .type-text { font-size: 1.12rem; padding: 18px; line-height: 2; }
+  .pstat { min-width: 96px; padding: 8px 14px; }
+  .pstat .v { font-size: 1.3rem; }
 }
 
-/* lesson complete overlay */
-.result-stars { font-size: 3rem; text-align: center; margin: 10px 0; letter-spacing: 6px; }
-.result-stars .off { color: var(--border); }
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .type-text .ch.current::after { animation: none; opacity: 1; }
+  .key.hint { animation: none; }
+}
