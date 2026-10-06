@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Free Word Counter Online — Count Words &amp; Characters | DoKit</title>
+<meta name="description" content="Count words, characters, sentences, and paragraphs live, with reading time and keyword density. Free, and your text never leaves your device."/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/word-counter/"/>
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml"/>
+<meta name="theme-color" content="#6C4CF1"/>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="/assets/icon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta property="og:title" content="Free Word Counter Online | DoKit"/>
+<meta property="og:description" content="Live word, character, sentence counts plus reading time and keyword density."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="/assets/og-cover.png"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="tool.css"/>
+<script src="../../js/i18n.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="tool.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Is my text uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"Never. All counting happens in your browser with JavaScript — your text never leaves your device."}},
+{"@type":"Question","name":"How is reading time calculated?","acceptedAnswer":{"@type":"Answer","text":"At an average adult pace of 200 words per minute; speaking time assumes 130 words per minute, a typical presentation pace."}},
+{"@type":"Question","name":"Does it work with Urdu text?","acceptedAnswer":{"@type":"Answer","text":"Yes. Word, character, sentence, and paragraph counts work for Urdu, and common Urdu words are filtered out of the keyword list."}},
+{"@type":"Question","name":"What counts as a word?","acceptedAnswer":{"@type":"Answer","text":"Any run of characters separated by spaces or line breaks. Hyphenated words like \"well-known\" count as one word."}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HowTo","name":"How to count words","step":[
+{"@type":"HowToStep","name":"Paste your text","text":"Type or paste anything into the box — an essay, article, caption, or script."},
+{"@type":"HowToStep","name":"Read the live stats","text":"Words, characters, sentences, paragraphs, reading and speaking time update as you type."},
+{"@type":"HowToStep","name":"Check keywords or copy","text":"See your top 10 keywords with density, or copy the full statistics with one click."}]}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<header id="dk-nav"></header>
+<main id="main" class="twrap">
+  <nav class="tcrumb" aria-label="Breadcrumb">
+    <a href="../../" data-i18n="common.crumb_home">Home</a> /
+    <a href="../" data-i18n="common.crumb_tools">Tools</a> /
+    <span data-i18n="toolnames.word_counter">Word Counter</span>
+  </nav>
+
+  <div class="thero">
+    <h1 data-i18n="wc.hero_title">Word Counter</h1>
+    <p data-i18n="wc.hero_desc">Live word, character, sentence, and paragraph counts — plus reading time and top keywords.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="wc.privacy">Text never leaves your device</span></span></p>
+  </div>
+
+  <section class="tcard" aria-labelledby="tool-h">
+    <h2 id="tool-h" class="sr-only" data-i18n="wc.hero_title">Word Counter</h2>
+    <div class="tfield">
+      <label for="text" data-i18n="wc.label">Your text</label>
+      <textarea class="ttext" id="text" data-i18n-ph="wc.placeholder" placeholder="Type or paste your text here…"></textarea>
+    </div>
+    <div class="tstats" id="stats" aria-live="polite">
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.words">Words</p><p class="tstat-v" id="stWords">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.chars">Characters</p><p class="tstat-v" id="stChars">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.chars_nospace">Characters (no spaces)</p><p class="tstat-v" id="stCharsNs">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.sentences">Sentences</p><p class="tstat-v" id="stSent">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.paragraphs">Paragraphs</p><p class="tstat-v" id="stPara">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.reading">Reading time</p><p class="tstat-v" id="stRead">0</p></div>
+      <div class="tstat"><p class="tstat-k" data-i18n="wc.speaking">Speaking time</p><p class="tstat-v" id="stSpeak">0</p></div>
+    </div>
+    <h3 style="font-size:1rem" data-i18n="wc.keywords">Top keywords</h3>
+    <p class="thint" data-i18n="wc.keywords_hint">Most frequent words — minimum 3 letters, common words ignored.</p>
+    <div id="kwWrap" aria-live="polite">
+      <p class="thint" id="kwEmpty" data-i18n="wc.keywords_empty">Keywords will appear here once you type.</p>
+      <table class="tkw" id="kwTable" hidden>
+        <thead><tr><th scope="col">#</th><th scope="col" data-i18n="wc.keywords">Top keywords</th><th scope="col" style="text-align:end">%</th></tr></thead>
+        <tbody id="kwBody"></tbody>
+      </table>
+    </div>
+    <div class="tbtnrow">
+      <button type="button" class="tbtn tbtn-primary" id="copyBtn" data-i18n="wc.copy">Copy stats</button>
+      <button type="button" class="tbtn tbtn-ghost" id="clearBtn" data-i18n="wc.clear">Clear</button>
+    </div>
+  </section>
+
+  <section class="tsection" aria-labelledby="howto-h">
+    <h2 id="howto-h" data-i18n="wc.howto_title">How to count words</h2>
+    <ol class="thowto">
+      <li><div><h3 data-i18n="wc.howto_1t">Paste your text</h3><p data-i18n="wc.howto_1d">Type or paste anything into the box — an essay, article, caption, or script.</p></div></li>
+      <li><div><h3 data-i18n="wc.howto_2t">Read the live stats</h3><p data-i18n="wc.howto_2d">Words, characters, sentences, paragraphs, reading and speaking time update as you type.</p></div></li>
+      <li><div><h3 data-i18n="wc.howto_3t">Check keywords or copy</h3><p data-i18n="wc.howto_3d">See your top 10 keywords with density, or copy the full statistics with one click.</p></div></li>
+    </ol>
+    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection" aria-labelledby="tips-h">
+    <h2 id="tips-h" data-i18n="counter.tips_title">Pro tips</h2>
+    <ul class="ttips">
+      <li><strong data-i18n="counter.tip_1t">Use keyword density for SEO</strong> <span data-i18n="counter.tip_1d">The top-10 keywords table shows how often each word appears. Keep your main keyword around 1–2% of the total — higher than that looks like stuffing to search engines.</span></li>
+      <li><strong data-i18n="counter.tip_2t">Plan by speaking time</strong> <span data-i18n="counter.tip_2d">At about 150 words per minute, 300 words is roughly 2 minutes of speech. Use the live speaking-time stat to size scripts, presentations, and videos.</span></li>
+    </ul>
+    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection tfaq" aria-labelledby="faq-h">
+    <h2 id="faq-h" data-i18n="wc.faq_title">Frequently asked questions</h2>
+    <details><summary data-i18n="wc.faq_q1">Is my text uploaded anywhere?</summary><p class="tfaq-a" data-i18n="wc.faq_a1">…</p></details>
+    <details><summary data-i18n="wc.faq_q2">How is reading time calculated?</summary><p class="tfaq-a" data-i18n="wc.faq_a2">…</p></details>
+    <details><summary data-i18n="wc.faq_q3">Does it work with Urdu text?</summary><p class="tfaq-a" data-i18n="wc.faq_a3">…</p></details>
+    <details><summary data-i18n="wc.faq_q4">What counts as a word?</summary><p class="tfaq-a" data-i18n="wc.faq_a4">…</p></details>
+      <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+</section>
+
+  <section class="tsection" aria-labelledby="rel-h">
+    <h2 id="rel-h" data-i18n="wc.related">Related tools</h2>
+    <div class="trelated">
+      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
+      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
+      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
+    </div>
+  </section>
+</main>
+<footer id="dk-footer"></footer>
+</body>
+</html>

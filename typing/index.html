@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>TypeMaster — Learn Touch Typing Step by Step</title>
+<meta name="description" content="Free structured typing lessons, timed typing tests, and smart progress tracking — from your first keystroke to 80+ WPM.">
+<link rel="stylesheet" href="css/main.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How do the lessons work?","acceptedAnswer":{"@type":"Answer","text":"Each lesson teaches 2–3 new keys through guided drills. Finish a lesson with 90%+ accuracy to unlock the next one, moving from beginner home-row basics to full advanced passages."}},
+{"@type":"Question","name":"Is TypeMaster free?","acceptedAnswer":{"@type":"Answer","text":"Yes — all beginner lessons and 3 timed tests per day are free forever, no credit card required. Pro and School plans unlock unlimited tests, analytics, and certificates."}},
+{"@type":"Question","name":"Do I need an account?","acceptedAnswer":{"@type":"Answer","text":"No. You can learn and take tests without signing up. A free account only adds saved history, XP, badges, and streaks across your devices."}},
+{"@type":"Question","name":"How is WPM calculated?","acceptedAnswer":{"@type":"Answer","text":"We use gross WPM: all typed characters (including errors) divided by 5 — one 'word' — then divided by minutes. Net WPM subtracts uncorrected errors. Both are shown on every result screen."}},
+{"@type":"Question","name":"Can I practice on my phone?","acceptedAnswer":{"@type":"Answer","text":"Yes — the whole site works in your phone's browser, so lessons and tests run anywhere. For the fastest progress though, a real keyboard is recommended."}}]}
+</script>
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow" data-i18n="d_hero_eyebrow">Free forever · No sign-up needed</p>
+        <h1 data-i18n="hero_title">Master Touch Typing, Step by Step</h1>
+        <p class="lead" data-i18n="hero_sub">Free structured lessons, timed typing tests, and smart progress tracking — from your first keystroke to 80+ WPM.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="lessons.html" data-i18n="start_learning">Start Learning</a>
+          <a class="btn btn-outline btn-lg" href="test.html" data-i18n="take_test">Take a Typing Test</a>
+        </div>
+      </div>
+      <div class="demo-window" aria-hidden="true">
+        <div class="demo-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="demo-title">typemaster — live demo</span></div>
+        <div class="demo-body"><span class="demo-prompt">❯</span> <span id="demoType"></span><span class="demo-caret"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stat-band" aria-label="TypeMaster highlights">
+    <div class="stat"><div class="stat-value">25</div><div class="stat-label" data-i18n="d_stat1_l">Guided lessons</div></div>
+    <div class="stat"><div class="stat-value">12+</div><div class="stat-label" data-i18n="d_stat2_l">Practice texts</div></div>
+    <div class="stat"><div class="stat-value">80+</div><div class="stat-label" data-i18n="d_stat3_l">Target speed</div></div>
+    <div class="stat"><div class="stat-value">100%</div><div class="stat-label" data-i18n="d_stat4_l">Free core</div></div>
+  </section>
+
+  <section class="mt-3">
+    <div class="page-header center">
+      <p class="eyebrow" data-i18n="d_why_eyebrow">Why it works</p>
+      <h2 class="section-title" data-i18n="features_title">Why TypeMaster?</h2>
+    </div>
+    <div class="grid grid-3">
+      <div class="card lift feature-card">
+        <div class="feature-ico">📚</div>
+        <h3 data-i18n="f1t">Structured Lessons</h3>
+        <p data-i18n="f1d">Beginner to advanced curriculum — learn 2–3 keys at a time, the proven way.</p>
+      </div>
+      <div class="card lift feature-card">
+        <div class="feature-ico">⏱️</div>
+        <h3 data-i18n="f2t">Timed Tests</h3>
+        <p data-i18n="f2d">1 to 10 minute tests across Standard, Advanced and Professional categories.</p>
+      </div>
+      <div class="card lift feature-card">
+        <div class="feature-ico">📊</div>
+        <h3 data-i18n="f3t">Smart Tracking</h3>
+        <p data-i18n="f3d">WPM, accuracy, per-key analysis and automatic problem-key detection.</p>
+      </div>
+      <div class="card lift feature-card">
+        <div class="feature-ico">🏆</div>
+        <h3 data-i18n="f4t">Gamified</h3>
+        <p data-i18n="f4d">XP, levels, badges and daily streaks keep you coming back.</p>
+      </div>
+      <div class="card lift feature-card">
+        <div class="feature-ico">🌐</div>
+        <h3 data-i18n="f5t">Bilingual</h3>
+        <p data-i18n="f5d">Full interface in English and اردو — learn in your own language.</p>
+      </div>
+      <div class="card lift feature-card">
+        <div class="feature-ico">💛</div>
+        <h3 data-i18n="f6t">Free Forever Core</h3>
+        <p data-i18n="f6d">All beginner lessons and daily tests free. No credit card needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-3">
+    <div class="page-header center">
+      <p class="eyebrow" data-i18n="d_plans_eyebrow">Simple pricing</p>
+      <h2 class="section-title" data-i18n="pricing_title">Simple Plans</h2>
+      <p class="section-sub" data-i18n="pricing_sub">Start free. Upgrade when you're serious about speed.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card lift price-card">
+        <h3 data-i18n="plan_free">Free</h3>
+        <ul class="plan-list">
+          <li data-i18n="free_d1">All beginner lessons</li>
+          <li data-i18n="free_d2">3 timed tests per day</li>
+          <li data-i18n="free_d3">Basic progress report</li>
+        </ul>
+        <a class="btn btn-primary btn-sm" href="signup.html" data-i18n="choose_plan">Choose Plan</a>
+      </div>
+      <div class="card lift price-card featured">
+        <h3 data-i18n="plan_pro">Pro</h3>
+        <ul class="plan-list">
+          <li data-i18n="pro_d1">Everything unlimited</li>
+          <li data-i18n="pro_d2">Advanced analytics</li>
+          <li data-i18n="pro_d3">Typing certificates</li>
+          <li data-i18n="pro_d4">Ad-free experience</li>
+        </ul>
+        <a class="btn btn-outline btn-sm" href="signup.html" data-i18n="choose_plan">Choose Plan</a>
+      </div>
+      <div class="card lift price-card">
+        <h3 data-i18n="plan_school">School</h3>
+        <ul class="plan-list">
+          <li data-i18n="school_d1">Class management</li>
+          <li data-i18n="school_d2">Student reports</li>
+          <li data-i18n="school_d3">Teacher dashboard</li>
+        </ul>
+        <a class="btn btn-outline btn-sm" href="signup.html" data-i18n="choose_plan">Choose Plan</a>
+      </div>
+    </div>
+  <section class="mt-3">
+    <div class="page-header center">
+      <h2 class="section-title" data-i18n="tmfaq_title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item"><summary data-i18n="tmfaq_q1">How do the lessons work?</summary><p data-i18n="tmfaq_a1">Each lesson teaches 2–3 new keys through guided drills. Finish a lesson with 90%+ accuracy to unlock the next one, moving from beginner home-row basics to full advanced passages.</p></details>
+      <details class="faq-item"><summary data-i18n="tmfaq_q2">Is TypeMaster free?</summary><p data-i18n="tmfaq_a2">Yes — all beginner lessons and 3 timed tests per day are free forever, no credit card required. Pro and School plans unlock unlimited tests, analytics, and certificates.</p></details>
+      <details class="faq-item"><summary data-i18n="tmfaq_q3">Do I need an account?</summary><p data-i18n="tmfaq_a3">No. You can learn and take tests without signing up. A free account only adds saved history, XP, badges, and streaks across your devices.</p></details>
+      <details class="faq-item"><summary data-i18n="tmfaq_q4">How is WPM calculated?</summary><p data-i18n="tmfaq_a4">We use gross WPM: all typed characters (including errors) divided by 5 — one 'word' — then divided by minutes. Net WPM subtracts uncorrected errors. Both are shown on every result screen.</p></details>
+      <details class="faq-item"><summary data-i18n="tmfaq_q5">Can I practice on my phone?</summary><p data-i18n="tmfaq_a5">Yes — the whole site works in your phone's browser, so lessons and tests run anywhere. For the fastest progress though, a real keyboard is recommended.</p></details>
+    </div>
+  </section>
+
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/index.js"></script>
+</body>
+</html>

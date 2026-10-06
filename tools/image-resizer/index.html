@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Free Image Resizer Online — Resize PNG, JPG, WebP | DoKit</title>
+<meta name="description" content="Resize images online for free. Set width and height in pixels or percent, lock the aspect ratio, and download as PNG, JPEG, or WebP. Files never leave your device."/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/image-resizer/"/>
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml"/>
+<meta name="theme-color" content="#6C4CF1"/>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="/assets/icon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta property="og:title" content="Free Image Resizer Online | DoKit"/>
+<meta property="og:description" content="Resize any image in seconds — pixels or percent, aspect lock, PNG/JPEG/WebP export."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="/assets/og-cover.png"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="tool.css"/>
+<script src="../../js/i18n.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="tool.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Will resizing reduce image quality?","acceptedAnswer":{"@type":"Answer","text":"Downsizing keeps quality high. For JPEG and WebP you control the quality slider — 85–90 looks identical to the original for most photos. PNG is always lossless."}},
+{"@type":"Question","name":"Is there a file size limit?","acceptedAnswer":{"@type":"Answer","text":"Yes — 25 MB per image. Images larger than 16 megapixels are automatically pre-scaled so your browser never runs out of memory. Everything runs on your device; nothing is uploaded."}},
+{"@type":"Question","name":"Do resized images keep EXIF data?","acceptedAnswer":{"@type":"Answer","text":"No. The image is redrawn on a fresh canvas, which strips EXIF metadata including GPS location — your resized image is more privacy-safe than the original."}},
+{"@type":"Question","name":"Can I resize an animated GIF?","acceptedAnswer":{"@type":"Answer","text":"Not with this tool — resizing would drop the animation. Convert your GIF to WebP instead, which keeps animation at much smaller file sizes."}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HowTo","name":"How to resize an image","step":[
+{"@type":"HowToStep","name":"Upload your image","text":"Drag & drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse your files."},
+{"@type":"HowToStep","name":"Set the new size","text":"Type exact pixel dimensions or a percentage. Keep the aspect-ratio lock on to avoid stretching the image."},
+{"@type":"HowToStep","name":"Download","text":"Pick PNG, JPEG, or WebP, adjust quality if needed, and download — watermark-free."}]}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<header id="dk-nav"></header>
+<main id="main" class="twrap">
+  <nav class="tcrumb" aria-label="Breadcrumb">
+    <a href="../../" data-i18n="common.crumb_home">Home</a> /
+    <a href="../" data-i18n="common.crumb_tools">Tools</a> /
+    <span data-i18n="toolnames.resizer">Image Resizer</span>
+  </nav>
+
+  <div class="thero">
+    <h1 data-i18n="resizer.hero_title">Image Resizer</h1>
+    <p data-i18n="resizer.hero_desc">Resize any image in seconds — set exact pixels or a percentage, lock the aspect ratio, and export as PNG, JPEG, or WebP.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="img.privacy">Your files never leave your device — everything happens in your browser.</span></span></p>
+  </div>
+
+  <section class="tcard" aria-labelledby="tool-h">
+    <h2 id="tool-h" class="sr-only" data-i18n="resizer.hero_title">Image Resizer</h2>
+
+    <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
+      <div class="tdrop-icon" aria-hidden="true">🖼️</div>
+      <p class="tdrop-title" id="dz-t" data-i18n="resizer.drop_title">Drag &amp; drop your image here</p>
+      <p class="tdrop-sub"><span data-i18n="resizer.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="resizer.drop_browse">browse your files</button></p>
+      <p class="tdrop-hint" data-i18n="resizer.drop_hint">PNG, JPEG, WebP · up to 25 MB</p>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp"/>
+    </div>
+
+    <div id="controls" hidden>
+      <div class="tfield" style="margin-block-start:1rem">
+        <span id="modeLabel" data-i18n="resizer.mode" style="font-weight:600;font-size:.9rem">Resize mode</span>
+        <div class="tseg" role="group" aria-labelledby="modeLabel" style="margin-inline-start:.75rem">
+          <button type="button" id="modePx" aria-pressed="true" data-i18n="resizer.mode_pixels">Pixels</button>
+          <button type="button" id="modePct" aria-pressed="false" data-i18n="resizer.mode_percent">Percent</button>
+        </div>
+      </div>
+      <div class="trow" id="pxRow">
+        <div class="tfield">
+          <label for="inW" data-i18n="resizer.width">Width (px)</label>
+          <input class="tinput" id="inW" type="number" min="1" max="16000" value="800"/>
+        </div>
+        <div class="tfield">
+          <label for="inH" data-i18n="resizer.height">Height (px)</label>
+          <input class="tinput" id="inH" type="number" min="1" max="16000" value="600"/>
+        </div>
+      </div>
+      <div class="trow" id="pctRow" hidden>
+        <div class="tfield">
+          <label for="inP" data-i18n="resizer.percent">Scale (%)</label>
+          <input class="tinput" id="inP" type="number" min="1" max="400" value="50"/>
+        </div>
+      </div>
+      <div class="tfield">
+        <label class="tcheck"><input type="checkbox" id="lockAspect" checked/> <span data-i18n="resizer.lock">Lock aspect ratio</span></label>
+      </div>
+      <div class="trow">
+        <div class="tfield">
+          <label for="fmt" data-i18n="resizer.format">Output format</label>
+          <select class="tselect" id="fmt">
+            <option value="png">PNG</option>
+            <option value="jpg">JPEG</option>
+            <option value="webp">WebP</option>
+          </select>
+        </div>
+        <div class="tfield" id="qRow">
+          <label for="q"><span data-i18n="resizer.quality">Quality</span> — <output class="tslider-val" id="qVal" for="q">90</output></label>
+          <input type="range" class="tslider" id="q" min="1" max="100" value="90"/>
+        </div>
+      </div>
+      <p class="thint"><span data-i18n="resizer.out_dims">Output size</span>: <strong id="dimsLive">800 × 600 px</strong></p>
+      <div class="tbtnrow">
+        <button type="button" class="tbtn tbtn-primary" id="resizeBtn" data-i18n="resizer.resize_btn">Resize image</button>
+      </div>
+      <div id="notice" class="tnotice" style="margin-block-start:1rem" hidden></div>
+    </div>
+
+    <div id="result" aria-live="polite" style="margin-block-start:1rem">
+      <div class="tempty" id="emptyState">
+        <div class="empty-icon" aria-hidden="true">✨</div>
+        <p data-i18n="resizer.empty">Your resized image will appear here.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="tsection" aria-labelledby="howto-h">
+    <h2 id="howto-h" data-i18n="resizer.howto_title">How to resize an image</h2>
+    <ol class="thowto">
+      <li><div><h3 data-i18n="resizer.howto_1t">Upload your image</h3><p data-i18n="resizer.howto_1d">Drag &amp; drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse your files.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_2t">Set the new size</h3><p data-i18n="resizer.howto_2d">Type exact pixel dimensions or a percentage. Keep the aspect-ratio lock on to avoid stretching the image.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_3t">Download</h3><p data-i18n="resizer.howto_3d">Pick PNG, JPEG, or WebP, adjust quality if needed, and download — watermark-free.</p></div></li>
+    </ol>
+    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection" aria-labelledby="tips-h">
+    <h2 id="tips-h" data-i18n="resizer.tips_title">Pro tips</h2>
+    <ul class="ttips">
+      <li><strong data-i18n="resizer.tip_1t">Resize before you upload</strong> <span data-i18n="resizer.tip_1d">Websites rarely display images wider than 1600 px, so downsizing first makes pages load faster and uploads finish sooner — with no visible difference.</span></li>
+      <li><strong data-i18n="resizer.tip_2t">JPEG for photos, PNG for graphics</strong> <span data-i18n="resizer.tip_2d">JPEG at quality 85–90 keeps photos small and crisp; PNG stays sharp for logos and screenshots with text. WebP usually beats both on file size.</span></li>
+    </ul>
+    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection tfaq" aria-labelledby="faq-h">
+    <h2 id="faq-h" data-i18n="resizer.faq_title">Frequently asked questions</h2>
+    <details><summary data-i18n="resizer.faq_q1">Will resizing reduce image quality?</summary><p class="tfaq-a" data-i18n="resizer.faq_a1">Downsizing keeps quality high…</p></details>
+    <details><summary data-i18n="resizer.faq_q2">Is there a file size limit?</summary><p class="tfaq-a" data-i18n="resizer.faq_a2">Yes — 25 MB per image…</p></details>
+    <details><summary data-i18n="resizer.faq_q3">Do resized images keep EXIF data?</summary><p class="tfaq-a" data-i18n="resizer.faq_a3">No…</p></details>
+    <details><summary data-i18n="resizer.faq_q4">Can I resize an animated GIF?</summary><p class="tfaq-a" data-i18n="resizer.faq_a4">Not with this tool…</p></details>
+      <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+</section>
+
+  <section class="tsection" aria-labelledby="rel-h">
+    <h2 id="rel-h" data-i18n="resizer.related">Related tools</h2>
+    <div class="trelated">
+      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
+      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
+      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
+    </div>
+  </section>
+</main>
+<footer id="dk-footer"></footer>
+</body>
+</html>
