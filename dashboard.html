@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Dashboard</title>
 <meta name="description" content="Your TypeMaster dashboard: stats, problem keys, and recent typing tests.">
@@ -55,69 +57,6 @@
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/curriculum.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  UI.init({ active: '' });
-  const user = DB.requireUser();
-  if (!user) return;
-
-  document.getElementById('userName').textContent = user.name;
-
-  const progress = DB.getProgress();
-
-  // Continue Learning: first lesson in order that is not done and unlocked.
-  let nextId = null;
-  for (const id of CURR_ORDER) {
-    const rec = progress.lessons[id];
-    if (!rec || !rec.done) {
-      if (isUnlocked(id, progress)) { nextId = id; }
-      break;
-    }
-  }
-  const continueLink = document.getElementById('continueLink');
-  if (nextId) {
-    continueLink.href = 'lesson.html?id=' + encodeURIComponent(nextId);
-    continueLink.textContent = getLesson(nextId).title;
-  } else {
-    continueLink.href = 'lessons.html';
-    continueLink.textContent = UI.t('start_first_lesson');
-  }
-
-  document.getElementById('bestWpm').textContent = DB.bestWPM();
-  document.getElementById('streakCount').textContent = progress.streak.count || 0;
-  const lvl = DB.level();
-  document.getElementById('levelLabel').textContent = 'Level ' + lvl + ' · ' + UI.levelName(lvl);
-
-  // Problem keys
-  const pkWrap = document.getElementById('problemKeys');
-  const pks = DB.problemKeys(8);
-  if (pks.length === 0) {
-    pkWrap.innerHTML = '<p class="text-muted" data-i18n="no_problem_keys">No problem keys yet — keep practicing!</p>';
-    UI.applyI18n(pkWrap);
-  } else {
-    pkWrap.innerHTML = pks.map(k =>
-      '<span class="key-pill" title="' + Math.round(k.acc * 100) + '% ' + UI.t('correct') + '">' +
-      UI.esc(k.ch === ' ' ? 'Space' : k.ch) + '</span>'
-    ).join('');
-  }
-
-  // Recent tests (last 5)
-  const rtWrap = document.getElementById('recentTests');
-  const tests = (progress.tests || []).slice(0, 5);
-  if (tests.length === 0) {
-    rtWrap.innerHTML = '<p class="text-muted" data-i18n="no_tests">No tests yet. Take your first test!</p>';
-    UI.applyI18n(rtWrap);
-  } else {
-    let rows = tests.map(t =>
-      '<tr><td>' + UI.esc(new Date(t.date).toLocaleDateString()) + '</td>' +
-      '<td>' + UI.esc(t.cat || '') + '</td>' +
-      '<td>' + UI.esc(String(t.dur)) + ' min</td>' +
-      '<td>' + UI.esc(String(t.nwpm)) + '</td>' +
-      '<td>' + UI.esc(String(t.acc)) + '%</td></tr>'
-    ).join('');
-    rtWrap.innerHTML = '<table class="data-table"><thead><tr><th>Date</th><th>Category</th><th>Duration</th><th>WPM</th><th>Acc</th></tr></thead><tbody>' + rows + '</tbody></table>';
-  }
-});
-</script>
+<script src="js/pages/dashboard.js"></script>
 </body>
 </html>

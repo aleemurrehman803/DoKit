@@ -1,58 +1,64 @@
-# TypeMaster — Stage 1 (MVP)
+# TypeMaster
 
 **TypeMaster** — "Type Faster. Type Better." / "تیز لکھیں، بہتر لکھیں"
 
 A free, bilingual (English + اردو) touch-typing tutor: structured lessons,
 timed typing tests, and smart progress tracking. Plain HTML/CSS/JS only —
-no build tools, no CDNs. Deploy as-is to GitHub Pages (or open `index.html`
-in any modern browser).
+no build tools, no external CDNs. Open `index.html` in any modern browser,
+or deploy as-is to any static host (e.g. GitHub Pages).
+
+## Features
+
+- Step-by-step lessons (beginner → intermediate → advanced) with 90%+
+  accuracy gating between lessons
+- Timed typing tests (1–10 minutes) across Standard, Advanced and
+  Professional categories, plus custom text
+- Live WPM and accuracy feedback, per-key analysis, problem-key detection
+- Accounts with progress, streaks, XP/levels, badges and goals
+  (stored locally in the browser)
+- English/Urdu interface with RTL support, light/dark themes, responsive
+  mobile layout
 
 ## Folder structure
 
 ```
-typemaster-site/
-├── index.html        Home — hero, features, pricing glimpse
-├── signup.html       Account creation (SHA-256 hashed passwords)
-├── login.html        Login + demo forgot-password
-├── dashboard.html    Continue lesson, best WPM, streak, problem keys
-├── lessons.html      Beginner / Intermediate / Advanced lesson cards
-├── lesson.html?id=   Lesson player (typing engine + keyboard guide)
-├── test.html         Category + duration picker, test player, custom text
-├── results.html      Gross/Net WPM, accuracy, per-key table, share card
-├── progress.html     Trend chart, streak calendar, goals, badges
-├── profile.html      Name/password, theme, language, data export, reset
+├── index.html        Home
+├── signup.html       Account creation
+├── login.html        Login
+├── dashboard.html    Stats overview
+├── lessons.html      Lesson catalog
+├── lesson.html?id=   Lesson player
+├── test.html         Typing test
+├── results.html      Test results
+├── progress.html     Charts, streaks, goals, badges
+├── profile.html      Settings and data export
 ├── css/
-│   ├── main.css      Design system (variables, light/dark, RTL-ready)
+│   ├── main.css      Design system (light/dark, RTL-ready)
 │   └── player.css    Typing player + on-screen keyboard
 ├── js/
-│   ├── urdu.js       EN + UR string tables (data-i18n)
-│   ├── storage.js    Data layer (localStorage, tm_* keys) — clean async
-│   │                 API so Firebase Auth/Firestore can replace it later
-│   ├── ui.js         Nav/footer injection, theme + language toggles
-│   ├── curriculum.js 25 original lessons with progressive key groups
-│   ├── test-data.js  Original test passages (Standard/Advanced/Pro)
-│   ├── engine.js     Hidden-input keystroke engine, live stats
-│   ├── keyboard.js   QWERTY guide, finger-zone colors, next-key highlight
+│   ├── urdu.js       English + Urdu string tables
+│   ├── storage.js    Data layer (browser localStorage)
+│   ├── ui.js         Navigation, footer, theme/language toggles
+│   ├── curriculum.js Lesson content
+│   ├── test-data.js  Test passages
+│   ├── engine.js     Keystroke-capture typing engine
+│   ├── keyboard.js   On-screen keyboard with finger guidance
 │   ├── gamification.js XP, levels, badges, streaks
-│   └── charts.js     Dependency-free canvas trend chart + streak calendar
+│   ├── charts.js     Canvas trend chart + streak calendar
+│   └── pages/        One init script per page
 ├── sitemap.xml / robots.txt   SEO basics
 └── README.md
 ```
 
-## Key mechanics
+## How scores work
 
-- **WPM formulas** — Gross = (chars/5)/min, Net = (correct chars/5)/min,
-  Accuracy = correct/total keystrokes × 100.
-- **Unlock gating** — 90%+ accuracy required to unlock the next lesson.
-  Stars: 3 ≥97%, 2 ≥93%, 1 ≥90%.
-- **Problem keys** — per-key accuracy tracked across sessions; weakest keys
-  surface on the dashboard.
-- **i18n** — toggle in nav; `document.dir=rtl` + Urdu strings when Urdu
-  selected. Lesson/test *content* stays English (typing is English-keyboard).
-- **Auth** — demo-grade localStorage auth; passwords stored as SHA-256
-  hashes (SubtleCrypto, with fallback), never plaintext.
+- **Gross WPM** = (characters typed ÷ 5) ÷ minutes
+- **Net WPM** = (correct characters ÷ 5) ÷ minutes
+- **Accuracy** = correct keystrokes ÷ total keystrokes × 100
+- Stars per lesson: 3 stars ≥ 97%, 2 stars ≥ 93%, 1 star ≥ 90%
 
-## Roadmap
+## Privacy
 
-- **Stage 2:** Paddle billing (Free/Pro/School), certificates, blog + FAQ (SEO/AEO)
-- **Stage 3:** Teacher dashboard, Urdu-keyboard typing lessons
+All data stays in your own browser (localStorage). Passwords are stored
+as salted SHA-256 hashes, never as plain text. No data is sent to any
+server.

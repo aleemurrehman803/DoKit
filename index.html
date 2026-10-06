@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Learn Touch Typing Step by Step</title>
 <meta name="description" content="Free structured typing lessons, timed typing tests, and smart progress tracking — from your first keystroke to 80+ WPM.">
@@ -96,10 +98,6 @@
 <script src="js/urdu.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  UI.init({ active: 'home' });
-});
-</script>
+<script src="js/pages/index.js"></script>
 </body>
 </html>

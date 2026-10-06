@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Log In</title>
 <meta name="description" content="Log in to your TypeMaster account to continue learning touch typing.">
@@ -40,33 +42,6 @@
 <script src="js/urdu.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  UI.init({ active: '' });
-  const setErr = (id, key) => { document.getElementById(id).textContent = key ? UI.t(key) : ''; };
-  document.getElementById('forgotLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    UI.toast(UI.t('reset_msg'));
-  });
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    setErr('err-email', null);
-    setErr('err-password', null);
-    const email = document.getElementById('email').value.trim();
-    const pw = document.getElementById('password').value;
-    let bad = false;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('err-email', 'err_email'); bad = true; }
-    if (!pw) { setErr('err-password', 'err_wrong_pw'); bad = true; }
-    if (bad) return;
-    const res = await DB.login(email, pw);
-    if (!res.ok) {
-      if (res.error === 'nouser') setErr('err-email', 'err_no_user');
-      else setErr('err-password', 'err_wrong_pw');
-      return;
-    }
-    location.href = 'dashboard.html';
-  });
-});
-</script>
+<script src="js/pages/login.js"></script>
 </body>
 </html>
