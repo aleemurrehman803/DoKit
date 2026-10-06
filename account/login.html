@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<title>Log In — DoKit</title>
+<meta name="description" content="Log in to your DoKit account.">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:480px">
+      <div class="card form-card">
+        <div class="section-head" style="text-align:center">
+          <span class="eyebrow">Member access</span>
+          <h1>Welcome back</h1>
+        </div>
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input class="form-control text-input" id="email" name="email" type="email" autocomplete="email">
+            <div class="form-error" id="err-email" role="alert"></div>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input class="form-control text-input" id="password" name="password" type="password" autocomplete="current-password">
+            <div class="form-error" id="err-password" role="alert"></div>
+          </div>
+          <button class="btn btn-primary" type="submit" style="width:100%">Log In</button>
+        </form>
+        <p class="form-note" style="text-align:center;margin-top:var(--sp-3)">
+          New to DoKit? <a href="signup.html">Create an account</a>
+        </p>
+        <p class="form-note" style="text-align:center;color:var(--text-muted);font-size:var(--fs-sm)">
+          🔌 Scaffold only — connects to Firebase Auth in production.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  try{window.DKUI&&(DKUI.renderNav("login"),DKUI.renderFooter(),DKUI.init())}catch(e){}
+  var form=document.getElementById("loginForm");
+  form.addEventListener("submit",function(ev){
+    ev.preventDefault();
+    var ok=true;
+    var email=document.getElementById("email"),pw=document.getElementById("password");
+    var eErr=document.getElementById("err-email"),pErr=document.getElementById("err-password");
+    eErr.textContent="";pErr.textContent="";
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){eErr.textContent="Please enter a valid email address.";ok=false;}
+    if(pw.value.length<6){pErr.textContent="Password must be at least 6 characters.";ok=false;}
+    if(!ok)return;
+    // Scaffold: store a local session flag; real auth via Firebase later.
+    try{localStorage.setItem("dk_account",JSON.stringify({email:email.value.trim(),ts:Date.now()}));}catch(e){}
+    window.location.href="dashboard.html";
+  });
+});
+</script>
+</body>
+</html>

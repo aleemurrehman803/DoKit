@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<title>Dashboard — DoKit</title>
+<meta name="description" content="Your DoKit dashboard: profile, usage stats and coins.">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container">
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <span class="eyebrow">Account</span>
+        <h1>Dashboard</h1>
+        <p>Your profile, usage and rewards at a glance.</p>
+      </div>
+
+      <div class="grid" style="margin-bottom:var(--sp-5)">
+        <div class="card">
+          <h3>👤 Profile</h3>
+          <p><strong id="dashName">Guest</strong><br><span id="dashEmail" style="color:var(--text-muted)">Not signed in</span></p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Member since: <span id="dashSince">—</span></p>
+          <p><a class="btn btn-sm" href="login.html" id="dashAuthBtn">Log in</a></p>
+        </div>
+        <div class="card">
+          <h3>🪙 Coins</h3>
+          <p style="font-size:2rem;font-weight:700" id="dashCoins">0</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Earn coins by using tools and inviting friends.</p>
+        </div>
+        <div class="card">
+          <h3>📊 Usage</h3>
+          <ul style="list-style:none;padding:0;margin:0">
+            <li>Tools used: <strong id="dashToolsUsed">0</strong></li>
+            <li>Images processed: <strong id="dashImages">0</strong></li>
+            <li>Current streak: <strong id="dashStreak">0 days</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔗 Your referral link</h3>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)">Share it — you earn coins when friends join.</p>
+        <p><code id="dashRefLink" style="word-break:break-all">—</code></p>
+        <button class="btn btn-sm" id="copyRefBtn" type="button">Copy link</button>
+      </div>
+
+      <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
+        🔌 Scaffold only — real profiles, stats and coin ledger sync via Firebase + Firestore in production.
+      </p>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  try{window.DKUI&&(DKUI.renderNav("dashboard"),DKUI.renderFooter(),DKUI.init())}catch(e){}
+  function lsGet(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
+  var acct=lsGet("dk_account",null);
+  if(acct){
+    document.getElementById("dashName").textContent=acct.name||acct.email||"Member";
+    document.getElementById("dashEmail").textContent=acct.email||"";
+    document.getElementById("dashSince").textContent=acct.ts?new Date(acct.ts).toLocaleDateString():"—";
+    var btn=document.getElementById("dashAuthBtn");
+    btn.textContent="Log out";btn.href="#";
+    btn.addEventListener("click",function(ev){ev.preventDefault();try{localStorage.removeItem("dk_account");}catch(e){}location.reload();});
+  }
+  var coins=lsGet("dk_coins",0);
+  document.getElementById("dashCoins").textContent=Number(coins)||0;
+  var streak=lsGet("dk_streak",null);
+  document.getElementById("dashStreak").textContent=(streak&&streak.count?streak.count:0)+" days";
+  var toolsUsed=lsGet("dk_tools_used",null);
+  var toolCount=0;
+  if(toolsUsed&&typeof toolsUsed==="object"){for(var k in toolsUsed){if(Object.prototype.hasOwnProperty.call(toolsUsed,k))toolCount++;}}
+  else if(typeof toolsUsed==="number"){toolCount=toolsUsed;}
+  document.getElementById("dashToolsUsed").textContent=toolCount;
+  var uid="";try{uid=localStorage.getItem("dk_uid")||"";}catch(e){}
+  var link=uid?("https://aleemurrehman803.github.io/DoKit/?ref="+uid):"Log in to get your link";
+  document.getElementById("dashRefLink").textContent=link;
+  document.getElementById("copyRefBtn").addEventListener("click",function(){
+    if(navigator.clipboard&&uid){navigator.clipboard.writeText(link).catch(function(){});}
+  });
+});
+</script>
+</body>
+</html>

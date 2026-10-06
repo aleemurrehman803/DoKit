@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<title>Admin — DoKit</title>
+<meta name="description" content="DoKit admin panel.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container">
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <span class="eyebrow">Internal</span>
+        <h1>Admin panel</h1>
+        <p>Site overview and content management. Scaffold — real data via Firebase Admin SDK in production.</p>
+      </div>
+
+      <div class="grid" style="margin-bottom:var(--sp-5)">
+        <div class="card"><h3>👥 Users</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Total registered</p></div>
+        <div class="card"><h3>🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 30 days</p></div>
+        <div class="card"><h3>🪙 Coins issued</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All time</p></div>
+        <div class="card"><h3>🔗 Referrals</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All time</p></div>
+      </div>
+
+      <div class="card" style="margin-bottom:var(--sp-5)">
+        <h3>Tools</h3>
+        <ul>
+          <li>Image Resizer <span class="badge">live</span></li>
+          <li>Image Compressor <span class="badge">live</span></li>
+          <li>Image Converter <span class="badge">live</span></li>
+          <li>Word Counter <span class="badge">live</span></li>
+          <li>Case Converter <span class="badge">live</span></li>
+          <li>TypeMaster <span class="badge">live</span></li>
+          <li>TypeFight <span class="badge badge-amber">coming soon</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Content</h3>
+        <ul>
+          <li><a href="../guides/">Guides</a> — 3 published</li>
+          <li><a href="../blog/">Blog</a> — 3 drafts</li>
+        </ul>
+      </div>
+
+      <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
+        🔌 Scaffold only — requires Firebase Admin SDK + authenticated admin role. Never expose admin routes publicly without auth.
+      </p>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("admin"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
+</body>
+</html>
