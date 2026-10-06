@@ -33,64 +33,92 @@
 <main id="main">
 
   <!-- HERO -->
-  <section class="hero">
-    <div class="container">
-      <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
-      <h1 data-i18n="hero_h1">Every tool you'll ever need.</h1>
-      <p class="tagline" data-i18n="hero_tag">Resize images, count words, convert files, master typing — fast, free, and private. No sign-up, no uploads, no nonsense.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="tools/" data-i18n="hero_cta_tools">Browse all tools</a>
-        <a class="btn btn-ghost" href="typing/" data-i18n="hero_cta_typing">Start typing practice</a>
+  <section class="hero hero-mesh bg-noise">
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
+        <h1 data-i18n="home2.hero_h1">Get everyday tasks done in seconds — free.</h1>
+        <p class="tagline" data-i18n="hero_tag">Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.</p>
+        <ul class="stat-strip stat-strip--subtle" data-i18n-aria="home2.strip_label" aria-label="DoKit at a glance">
+          <li><span class="stat-strip__ic" aria-hidden="true">🧰</span><strong data-countup="6">6</strong> <span data-i18n="home2.strip_tools">tools</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🎁</span><strong><span data-countup="100">100</span>%</strong> <span data-i18n="home2.bar_free">free</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🚫</span><span data-i18n="home2.strip_nosignup">No sign-up</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🔒</span><span data-i18n="home2.bar_private">Private by design</span></li>
+        </ul>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="tools/" data-i18n="hero_cta_tools">Browse all tools</a>
+          <a class="btn btn-ghost" href="typing/" data-i18n="hero_cta_typing">Start typing practice</a>
+        </div>
       </div>
+      <!-- HERO_ILLUSTRATION_SLOT (480x360): parent supplies the custom illustration later.
+           Swap the inner .term-card for <img class="illus-slot__img" …> when ready;
+           .illus-slot keeps the soft-gradient frame either way. -->
+      <div class="illus-slot">
+        <div class="term-card" aria-hidden="true">
+          <div class="term-card__bar"><span></span><span></span><span></span><span class="term-card__title" data-i18n="home2.demo_title">Live in your browser</span></div>
+          <div class="term-card__body"><span class="term-card__prompt" data-i18n="home2.demo_prompt">dokit ›</span><span class="term-card__line" id="typeLine"></span><span class="type-caret" aria-hidden="true"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
       <div class="search-wrap">
         <span class="search-icon" aria-hidden="true">🔍</span>
         <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
         <input class="text-input" type="search" id="toolSearch" data-i18n-ph="search_ph" placeholder="Search tools… e.g. resize, words" autocomplete="off">
       </div>
+      <p class="dk-hint" id="searchHint" hidden><span data-i18n="home2.hint_a">Tip: press</span> <kbd>/</kbd> <span data-i18n="home2.hint_b">to search</span><button type="button" class="dk-hint__close" data-hint-close data-i18n-aria="home2.hint_dismiss" aria-label="Dismiss tip">✕</button></p>
     </div>
+    <div class="wave-div" aria-hidden="true"><svg viewBox="0 0 1440 72" preserveAspectRatio="none" focusable="false"><path d="M0,38 C240,70 480,6 720,36 C960,66 1200,10 1440,38 L1440,72 L0,72 Z"/></svg></div>
   </section>
 
   <!-- BROWSE BY CATEGORY -->
-  <section class="section" aria-labelledby="cats-h">
+  <section class="section cats-section" aria-labelledby="cats-h">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head reveal">
+        <p class="section-kicker heading-accent" data-i18n="home2.kicker_cats">Find your tool</p>
         <h2 id="cats-h" data-i18n="cats_title">Browse by category</h2>
         <div class="section-rule" aria-hidden="true"></div>
         <p data-i18n="cats_sub">Tap a category to see its tools — or search above.</p>
       </div>
-      <div class="cat-list" id="catList" aria-live="polite"></div>
-      <div class="empty-state" id="toolsEmpty" style="display:none">
-        <span class="empty-state__icon" aria-hidden="true">🔍</span>
-        <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
+      <div class="cats-overlap">
+        <div id="recentBox" hidden></div>
+        <div class="cat-list" id="catList" aria-live="polite"></div>
+        <div class="empty-state" id="toolsEmpty" style="display:none">
+          <span class="empty-state__icon" aria-hidden="true">🔍</span>
+          <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
+        </div>
       </div>
     </div>
   </section>
+
+  <div class="wave-div wave-div--soft" aria-hidden="true"><svg viewBox="0 0 1440 72" preserveAspectRatio="none" focusable="false"><path d="M0,38 C240,70 480,6 720,36 C960,66 1200,10 1440,38 L1440,72 L0,72 Z"/></svg></div>
 
   <!-- WHY DOKIT -->
   <div class="band">
     <section class="section">
       <div class="container">
-        <div class="section-head">
+        <div class="section-head reveal">
+          <p class="section-kicker heading-accent" data-i18n="home2.kicker_why">The DoKit promise</p>
           <h2 data-i18n="why_title">Why DoKit?</h2>
           <p data-i18n="why_sub">Built differently — on purpose.</p>
         </div>
-        <div class="grid">
-          <div class="card">
+        <div class="grid why-stagger">
+          <div class="card reveal" style="--reveal-delay:.05s">
             <div class="tool-card__icon" aria-hidden="true">🔒</div>
             <h3 data-i18n="why1_t">Private by design</h3>
             <p data-i18n="why1_d">Your files never leave your device. Everything runs in your browser — nothing to hack, nothing to leak.</p>
           </div>
-          <div class="card">
+          <div class="card reveal" style="--reveal-delay:.12s">
             <div class="tool-card__icon" aria-hidden="true">⚡</div>
             <h3 data-i18n="why2_t">Blazing fast</h3>
             <p data-i18n="why2_d">Zero bloat, zero tracking scripts. Pages open in a blink and tools respond instantly.</p>
           </div>
-          <div class="card">
+          <div class="card reveal" style="--reveal-delay:.19s">
             <div class="tool-card__icon" aria-hidden="true">🎁</div>
             <h3 data-i18n="why3_t">Free core, forever</h3>
             <p data-i18n="why3_d">Every tool on this page is free to use — no account, no watermarks, no catches.</p>
           </div>
-          <div class="card">
+          <div class="card reveal" style="--reveal-delay:.26s">
             <div class="tool-card__icon" aria-hidden="true">🌐</div>
             <h3 data-i18n="why4_t">English + اردو</h3>
             <p data-i18n="why4_d">A full Urdu interface with right-to-left layout, alongside English.</p>
@@ -100,14 +128,34 @@
     </section>
   </div>
 
-  <!-- STATS -->
-  <section class="section">
+  <!-- SOCIAL PROOF -->
+  <section class="section" aria-labelledby="proof-h">
     <div class="container">
-      <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-        <div class="stat"><div class="stat__num">6</div><div class="stat__label" data-i18n="stat_tools_l">Free tools</div></div>
-        <div class="stat"><div class="stat__num">100%</div><div class="stat__label" data-i18n="stat_private_l">Private — files stay on your device</div></div>
-        <div class="stat"><div class="stat__num">0</div><div class="stat__label" data-i18n="stat_signup_l">Sign-up required</div></div>
-        <div class="stat"><div class="stat__num">2</div><div class="stat__label" data-i18n="stat_lang_l">Languages</div></div>
+      <div class="section-head reveal">
+        <p class="section-kicker heading-accent" data-i18n="home2.kicker_proof">Loved in real life</p>
+        <h2 id="proof-h" data-i18n="home2.proof_t">Made for everyday people</h2>
+        <div class="section-rule" aria-hidden="true"></div>
+        <p data-i18n="home2.proof_sub">Students, freelancers and shop owners reach for DoKit daily — no sign-up, no learning curve.</p>
+      </div>
+      <div class="grid stats-grid reveal" style="grid-template-columns:repeat(2,1fr)">
+        <div class="stat"><div class="stat__num" data-countup="6">6</div><div class="stat__label" data-i18n="stat_tools_l">Free tools</div></div>
+        <div class="stat"><div class="stat__num"><span data-countup="100">100</span>%</div><div class="stat__label" data-i18n="stat_private_l">Private — files stay on your device</div></div>
+        <div class="stat"><div class="stat__num" data-countup="0">0</div><div class="stat__label" data-i18n="stat_signup_l">Sign-up required</div></div>
+        <div class="stat"><div class="stat__num" data-countup="2">2</div><div class="stat__label" data-i18n="stat_lang_l">Languages</div></div>
+      </div>
+      <div class="grid love-grid reveal">
+        <div class="card love-card">
+          <span class="badge" data-i18n="home2.seg1_t">Students</span>
+          <p data-i18n="home2.seg1_d">Word counts checked and essays polished — right before the deadline, no account needed.</p>
+        </div>
+        <div class="card love-card">
+          <span class="badge" data-i18n="home2.seg2_t">Freelancers</span>
+          <p data-i18n="home2.seg2_d">Client images resized and compressed in the browser — nothing uploaded, nothing to explain.</p>
+        </div>
+        <div class="card love-card">
+          <span class="badge" data-i18n="home2.seg3_t">Small shops</span>
+          <p data-i18n="home2.seg3_d">Product photos converted and shrunk before listing — files never leave the device.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -115,11 +163,11 @@
   <!-- FAQ TEASER -->
   <section class="section">
     <div class="container" style="max-width:44rem">
-      <div class="section-head">
+      <div class="section-head reveal">
         <h2 data-i18n="faq_teaser_t">Quick answers</h2>
         <p data-i18n="faq_teaser_sub">The three questions everyone asks first.</p>
       </div>
-      <div class="faq-accordion" id="faqTeaser">
+      <div class="faq-accordion reveal" id="faqTeaser">
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq1_a">Yes — every tool listed here is free with no account, no watermarks, and no usage caps on normal use.</div>
@@ -140,10 +188,12 @@
   <!-- CTA -->
   <section class="section">
     <div class="container">
-      <div class="band-dark">
-        <h2 data-i18n="cta_t">Get more done, right in your browser.</h2>
-        <p data-i18n="cta_d">Six free tools today, more on the way. Bookmark DoKit and skip the sketchy download sites.</p>
-        <p style="margin:0"><a class="btn btn-accent" href="tools/" data-i18n="cta_btn">Explore tools</a></p>
+      <div class="band-dark cta-band reveal">
+        <div class="cta-band__copy">
+          <h2 data-i18n="cta_t">Get more done, right in your browser.</h2>
+          <p data-i18n="cta_d">Six free tools today, more on the way. Bookmark DoKit and skip the sketchy download sites.</p>
+        </div>
+        <p class="cta-band__action" style="margin:0"><a class="btn btn-accent btn-lg" href="tools/" data-i18n="cta_btn">Explore tools</a></p>
       </div>
     </div>
   </section>
