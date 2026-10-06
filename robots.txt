@@ -2,5 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /results.html
 
-Sitemap: https://example.com/sitemap.xml
-# NOTE: replace example.com with the real GitHub Pages URL after deploy
+Sitemap: https://aleemurrehman803.github.io/typemaster/sitemap.xml

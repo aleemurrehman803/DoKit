@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — TypeMaster</title>
 <meta name="description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
@@ -76,98 +78,6 @@
 <script src="js/urdu.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const user = DB.requireUser();
-  if (!user) return;
-  UI.init({ active: "profile" });
-
-  document.getElementById("userSub").textContent = (user.name || "") + " • " + (user.email || "");
-  document.getElementById("nameInput").value = user.name || "";
-
-  // change name
-  document.getElementById("nameBtn").onclick = async () => {
-    const v = document.getElementById("nameInput").value.trim();
-    if (!v) return;
-    if (await DB.updateName(v)) {
-      UI.toast(UI.t("name_updated"));
-      document.getElementById("userSub").textContent = v + " • " + (user.email || "");
-    }
-  };
-
-  // change password
-  document.getElementById("pwBtn").onclick = async () => {
-    const oldPw = document.getElementById("pwOld").value;
-    const newPw = document.getElementById("pwNew").value;
-    const conf = document.getElementById("pwConfirm").value;
-    if (newPw.length < 6) { UI.toast(UI.t("err_pw_short")); return; }
-    if (newPw !== conf) { UI.toast(UI.t("err_pw_match")); return; }
-    const res = await DB.updatePassword(oldPw, newPw);
-    if (res.ok) {
-      UI.toast(UI.t("pw_updated"));
-      document.getElementById("pwOld").value = "";
-      document.getElementById("pwNew").value = "";
-      document.getElementById("pwConfirm").value = "";
-    } else {
-      UI.toast(UI.t("err_old_pw"));
-    }
-  };
-
-  // appearance
-  const settings = DB.getSettings();
-  const themeChk = document.getElementById("themeChk");
-  themeChk.checked = settings.theme === "dark";
-  themeChk.onchange = () => {
-    const theme = themeChk.checked ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
-    DB.saveSettings({ theme: theme });
-  };
-
-  const langRow = document.getElementById("langRow");
-  const markLang = () => {
-    langRow.querySelectorAll(".pick").forEach(p =>
-      p.classList.toggle("selected", p.getAttribute("data-lang") === UI.lang));
-  };
-  markLang();
-  langRow.querySelectorAll(".pick").forEach(p => {
-    p.onclick = () => {
-      const lang = p.getAttribute("data-lang");
-      if (lang !== UI.lang) {
-        DB.saveSettings({ lang: lang });
-        location.reload();
-      }
-    };
-  });
-
-  // data download
-  document.getElementById("dlBtn").onclick = () => {
-    const data = DB.exportData();
-    if (!data) return;
-    const blob = new Blob([data], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "typemaster-data.json";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    UI.toast(UI.t("data_downloaded"));
-  };
-
-  // reset progress
-  document.getElementById("resetBtn").onclick = () => {
-    if (confirm(UI.t("reset_confirm"))) {
-      DB.resetProgress();
-      UI.toast(UI.t("reset_done"));
-      setTimeout(() => location.reload(), 800);
-    }
-  };
-
-  // logout
-  document.getElementById("logoutBtn2").onclick = () => {
-    DB.logout();
-    location.href = "index.html";
-  };
-});
-</script>
+<script src="js/pages/profile.js"></script>
 </body>
 </html>

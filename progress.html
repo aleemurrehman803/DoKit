@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Progress — TypeMaster</title>
 <meta name="description" content="Track your typing progress: WPM trend charts, practice streaks, goals, and badges.">
@@ -55,65 +57,6 @@
 <script src="js/ui.js"></script>
 <script src="js/gamification.js"></script>
 <script src="js/charts.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  if (!DB.requireUser()) return;
-  UI.init({ active: "progress" });
-
-  const p = DB.getProgress();
-
-  // trend chart — last 20 tests, chronological
-  const tests = (p.tests || []).slice(0, 20).reverse();
-  const canvas = document.getElementById("trendChart");
-  if (tests.length >= 2) {
-    Charts.trend(
-      canvas,
-      tests.map(t => new Date(t.date).toLocaleDateString()),
-      tests.map(t => t.nwpm || 0),
-      tests.map(t => t.acc || 0)
-    );
-  } else {
-    canvas.classList.add("hidden");
-    document.getElementById("noTrend").classList.remove("hidden");
-  }
-
-  // streak calendar
-  Charts.streakCal(document.getElementById("streakCal"), p);
-
-  // goal
-  const goalCur = document.getElementById("goalCur");
-  const goalInput = document.getElementById("goalInput");
-  const cur = (p.goals && p.goals.targetWpm) || 40;
-  goalCur.textContent = cur;
-  goalInput.value = cur;
-  document.getElementById("goalBtn").onclick = () => {
-    const v = parseInt(goalInput.value, 10);
-    DB.setGoal(isNaN(v) ? 40 : v);
-    const np = DB.getProgress();
-    goalCur.textContent = np.goals.targetWpm;
-    goalInput.value = np.goals.targetWpm;
-    UI.toast(UI.t("goal_saved"));
-  };
-
-  // badges
-  const earned = p.badges || [];
-  const grid = document.getElementById("badgeGrid");
-  if (!earned.length) document.getElementById("noBadges").classList.remove("hidden");
-  grid.innerHTML = BADGES.map(b => {
-    const info = Game.badgeInfo(b.id, UI.lang);
-    const has = earned.includes(b.id);
-    return "<div class=\"badge-chip\" style=\"" + (has ? "" : "opacity:.35;filter:grayscale(1);") + "\">" +
-      "<div style=\"font-size:1.6rem\">" + b.icon + "</div>" +
-      "<div><strong>" + UI.esc(info ? info.name : b.id) + "</strong>" +
-      "<div class=\"text-muted\" style=\"font-size:.8rem\">" + UI.esc(info ? info.desc : "") + "</div></div></div>";
-  }).join("");
-
-  // totals
-  document.getElementById("tTests").textContent = (p.tests || []).length;
-  document.getElementById("tLessons").textContent =
-    Object.keys(p.lessons || {}).filter(k => p.lessons[k] && p.lessons[k].done).length;
-  document.getElementById("tXp").textContent = p.xp || 0;
-});
-</script>
+<script src="js/pages/progress.js"></script>
 </body>
 </html>

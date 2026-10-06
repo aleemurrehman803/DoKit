@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<!-- style-src allows unsafe-inline: all inline style="" attributes are developer-authored; no user data ever reaches a style attribute. script-src stays strict (no unsafe-inline). -->
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TypeMaster — Sign Up</title>
 <meta name="description" content="Create your free TypeMaster account and start learning touch typing.">
@@ -47,32 +49,6 @@
 <script src="js/urdu.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/ui.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  UI.init({ active: '' });
-  const form = document.getElementById('signupForm');
-  const setErr = (id, key) => { document.getElementById(id).textContent = key ? UI.t(key) : ''; };
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    ['err-name', 'err-email', 'err-password', 'err-confirm'].forEach(id => setErr(id, null));
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const pw = document.getElementById('password').value;
-    const confirm = document.getElementById('confirm').value;
-    let bad = false;
-    if (!name) { setErr('err-name', 'err_name'); bad = true; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('err-email', 'err_email'); bad = true; }
-    if (pw.length < 6) { setErr('err-password', 'err_pw_short'); bad = true; }
-    if (confirm !== pw) { setErr('err-confirm', 'err_pw_match'); bad = true; }
-    if (bad) return;
-    const res = await DB.signup(name, email, pw);
-    if (!res.ok && res.error === 'taken') {
-      setErr('err-email', 'err_email_taken');
-      return;
-    }
-    location.href = 'dashboard.html';
-  });
-});
-</script>
+<script src="js/pages/signup.js"></script>
 </body>
 </html>
