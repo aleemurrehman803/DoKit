@@ -982,3 +982,74 @@ input[type="range"].slider {
   .cat-tools { padding: var(--sp-3) var(--sp-4) var(--sp-4); }
   .cat-divider { margin-inline: var(--sp-4); }
 }
+
+/* ---------- Home page upgrade (Worker 3 · Oct 6, 2026) ---------- */
+/* Equal-height cards across grids */
+.grid, .grid-2 { grid-auto-rows: 1fr; }
+/* Prominent primary CTA */
+.btn-lg { padding: var(--sp-4) var(--sp-6); font-size: var(--fs-lg); }
+/* Gradient mesh hero: purple → pink → orange (subtle), dark variant */
+.hero-mesh {
+  background:
+    radial-gradient(42rem 30rem at 12% 8%, rgba(108, 76, 241, 0.12), transparent 60%),
+    radial-gradient(36rem 28rem at 88% 18%, rgba(236, 72, 153, 0.10), transparent 60%),
+    radial-gradient(40rem 34rem at 55% 100%, rgba(249, 115, 22, 0.10), transparent 62%),
+    var(--bg);
+}
+[data-theme="dark"] .hero-mesh {
+  background:
+    radial-gradient(42rem 30rem at 12% 8%, rgba(139, 116, 255, 0.16), transparent 60%),
+    radial-gradient(36rem 28rem at 88% 18%, rgba(236, 72, 153, 0.12), transparent 60%),
+    radial-gradient(40rem 34rem at 55% 100%, rgba(249, 115, 22, 0.10), transparent 62%),
+    var(--bg);
+}
+/* Hero: copy + live typing demo */
+.hero__grid { display: grid; gap: var(--sp-6); align-items: center; }
+/* Wave divider flush with the hero's bottom edge */
+.hero .wave-div { margin-block-start: var(--sp-6); margin-block-end: calc(-1 * var(--sp-8)); }
+/* Serif-italic kicker above section headings */
+.section-kicker { margin: 0 0 var(--sp-2); font-size: var(--fs-lg); color: var(--primary); }
+/* Overlapping cards: category tiles rise over the hero's bottom edge */
+.cats-section .section-head { margin-block-end: calc(var(--sp-6) + var(--sp-10)); }
+.cats-overlap { position: relative; z-index: 2; margin-block-start: calc(-1 * var(--sp-10)); }
+/* Bento grid for the category tiles (desktop only; search results stay a list) */
+@media (min-width: 900px) {
+  .cat-list.is-bento {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    align-items: start;
+    max-inline-size: none;
+  }
+  .cat-list.is-bento .cat-card[data-cat="image"] { grid-column: span 4; }
+  .cat-list.is-bento .cat-card[data-cat="text"] { grid-column: span 2; }
+  .cat-list.is-bento .cat-card[data-cat="typing"] { grid-column: span 2; }
+  .cat-list.is-bento .cat-card[data-cat="coming"] { grid-column: span 4; }
+}
+/* Staggered "Why DoKit?" cards — margin (not transform) so .reveal transitions stay intact */
+@media (min-width: 768px) {
+  .why-stagger { padding-block-end: var(--sp-8); }
+  .why-stagger > *:nth-child(even) { margin-block-start: var(--sp-8); }
+}
+@media (min-width: 900px) {
+  .hero { text-align: start; }
+  .hero__grid { grid-template-columns: 1.05fr 0.95fr; gap: var(--sp-8); }
+  .hero .tagline { margin-inline: 0; }
+  .hero-cta { justify-content: flex-start; }
+  .hero .stat-strip--subtle { justify-content: flex-start; }
+}
+/* Social proof */
+.stats-grid { max-inline-size: 52rem; margin-inline: auto; }
+.love-grid { margin-block-start: var(--sp-6); }
+.love-card p { margin-block: var(--sp-3) 0; color: var(--text-muted); font-size: var(--fs-sm); }
+/* Asymmetric CTA band */
+@media (min-width: 768px) {
+  .cta-band {
+    display: grid;
+    grid-template-columns: 1.5fr auto;
+    gap: var(--sp-6);
+    align-items: center;
+    text-align: start;
+    padding: var(--sp-10) var(--sp-8);
+  }
+  .cta-band__action { justify-self: end; }
+}
