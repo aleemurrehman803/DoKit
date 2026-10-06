@@ -1,5 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /results.html
-
-Sitemap: https://aleemurrehman803.github.io/typemaster/sitemap.xml
+Sitemap: https://aleemurrehman803.github.io/dokit/sitemap.xml
