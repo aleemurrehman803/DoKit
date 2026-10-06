@@ -1255,6 +1255,8 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
     injectNav();       /* Refer + Profile (+coin pill) buttons before the theme toggle */
     injectShareBar();  /* floating social share sidebar + mobile FAB */
     watchNav();
+    /* Retry injectNav after renderNav (home.js) populates .nav-actions */
+    try { setTimeout(injectNav, 500); setTimeout(injectNav, 1500); } catch (e) {}
   }
 
   /* Cross-tab: keep the coin pill fresh when another tab changes the balance. */
