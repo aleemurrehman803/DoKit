@@ -1005,6 +1005,18 @@ input[type="range"].slider {
 }
 /* Hero: copy + live typing demo */
 .hero__grid { display: grid; gap: var(--sp-6); align-items: center; }
+/* Hero illustration (custom artwork, right of copy on desktop, stacked on mobile) */
+.hero__visual { display: flex; justify-content: center; align-items: center; }
+.hero-illustration {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 60px -18px rgba(76, 41, 213, 0.35), 0 8px 24px -8px rgba(15, 10, 40, 0.25);
+}
+@media (min-width: 900px) {
+  .hero__visual { justify-content: flex-end; }
+  .hero-illustration { max-width: 30rem; }
+}
 /* Wave divider flush with the hero's bottom edge */
 .hero .wave-div { margin-block-start: var(--sp-6); margin-block-end: calc(-1 * var(--sp-8)); }
 /* Serif-italic kicker above section headings */
