@@ -18,86 +18,98 @@
 <link rel="stylesheet" href="./tool.css">
 </head>
 <body data-nav="">
-<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="tf-hero">
     <div class="container">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="../" data-i18n="crumb_home">Home</a></li>
-          <li><a href="../tools/" data-i18n="nav_all_tools">All Tools</a></li>
+          <li><a href="../">Home</a></li>
+          <li><a href="../tools/">All Tools</a></li>
           <li aria-current="page">TypeFight</li>
         </ol>
       </nav>
-      <span class="badge badge-amber" data-i18n="badge_soon">Coming soon</span>
-      <h1>⚔️ <span data-i18n="tf_title">TypeFight</span></h1>
-      <p class="tf-tag" data-i18n="tf_sub">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
+      <span class="badge badge-amber">Coming soon</span>
+      <h1>⚔️ <span>TypeFight</span></h1>
+      <p class="tf-tag">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
+      <p style="margin-top:var(--sp-4)"><a class="btn btn-primary" href="../typing/">⌨️ Practice now</a> <a class="btn btn-ghost" href="#tfNotifyCard">Get notified</a></p>
     </div>
   </section>
 
   <section class="section">
     <div class="container" style="max-width:46rem">
-      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
+      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0"></p></div>
 
-      <h2 data-i18n="tf_concept_t">The concept</h2>
-      <p data-i18n="tf_concept_d">TypeFight turns typing into a sport. Players enter a battle room, race the same text, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p>
+      <h2>The concept</h2>
+      <p>TypeFight turns typing into a sport. Players enter a battle room, race the same text, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p>
 
-      <h2 data-i18n="tf_how_t">How it will work</h2>
+      <h2>How it will work</h2>
       <div class="tf-steps">
-        <div class="card tf-step"><span class="tf-step__n">1</span><h3 data-i18n="tf_h1t">Enter</h3><p data-i18n="tf_h1d">Join a battle room with a small entry.</p></div>
-        <div class="card tf-step"><span class="tf-step__n">2</span><h3 data-i18n="tf_h2t">Race</h3><p data-i18n="tf_h2d">Everyone types the same text, live.</p></div>
-        <div class="card tf-step"><span class="tf-step__n">3</span><h3 data-i18n="tf_h3t">Winner takes the pot</h3><p data-i18n="tf_h3d">Fastest + most accurate typist wins the pooled entries.</p></div>
+        <div class="card tf-step"><span class="tf-step__n">1</span><h3>Enter</h3><p>Join a battle room with a small entry.</p></div>
+        <div class="card tf-step"><span class="tf-step__n">2</span><h3>Race</h3><p>Everyone types the same text, live.</p></div>
+        <div class="card tf-step"><span class="tf-step__n">3</span><h3>Winner takes the pot</h3><p>Fastest + most accurate typist wins the pooled entries.</p></div>
       </div>
 
-      <h2 data-i18n="tf_fair_t">Anti-fraud pillars</h2>
+      <h2>Virtual coins — start earning today</h2>
+      <div class="card">
+        <p><strong>🪙 DoKit Coins</strong> are already live across the site. Every typing session, lesson, and daily streak earns you coins — stored safely in your own browser (<code>dk_coins</code> in localStorage, no account needed).</p>
+        <ul>
+          <li>Practice typing daily to build your coin balance</li>
+          <li>Coins unlock battle entries when TypeFight launches</li>
+          <li>Top coin holders get early access to beta battles</li>
+        </ul>
+        <p style="margin-bottom:0"><a class="btn btn-primary" href="../typing/">⌨️ Practice now — earn coins</a></p>
+      </div>
+
+      <h2>Anti-fraud pillars</h2>
       <div class="grid">
-        <div class="card"><h3 data-i18n="tf_f1t">Live keystroke analysis</h3><p data-i18n="tf_f1d">Paste and automation patterns are detected and rejected.</p></div>
-        <div class="card"><h3 data-i18n="tf_f2t">Verified identities</h3><p data-i18n="tf_f2d">One account per person — no smurfing.</p></div>
-        <div class="card"><h3 data-i18n="tf_f3t">Proctored finals</h3><p data-i18n="tf_f3d">High-stake finals use screen + camera verification.</p></div>
-        <div class="card"><h3 data-i18n="tf_f4t">Transparent pots</h3><p data-i18n="tf_f4d">Every pot and payout is publicly auditable.</p></div>
+        <div class="card"><h3>Live keystroke analysis</h3><p>Paste and automation patterns are detected and rejected.</p></div>
+        <div class="card"><h3>Verified identities</h3><p>One account per person — no smurfing.</p></div>
+        <div class="card"><h3>Proctored finals</h3><p>High-stake finals use screen + camera verification.</p></div>
+        <div class="card"><h3>Transparent pots</h3><p>Every pot and payout is publicly auditable.</p></div>
       </div>
 
       <div class="card tf-phase">
-        <h2 data-i18n="tf_phase_t">Honest timeline</h2>
-        <p data-i18n="tf_phase_d">TypeFight needs a real backend — matchmaking, payments, and fraud review can't run in a browser alone. It's planned for Phase 5. This page is just the teaser; leave your email and we'll tell you when battles open.</p>
+        <h2>Honest timeline</h2>
+        <p>TypeFight needs a real backend — matchmaking, payments, and fraud review can't run in a browser alone. It's planned for Phase 5. This page is just the teaser; leave your email and we'll tell you when battles open.</p>
       </div>
 
       <div class="card" id="tfNotifyCard">
-        <h2 data-i18n="tf_notify_t">Get notified</h2>
+        <h2>Get notified</h2>
         <form id="tfNotifyForm">
           <div class="field">
-            <label for="tfName" data-i18n="notify_name">Name</label>
+            <label for="tfName">Name</label>
             <input class="text-input" type="text" id="tfName" required autocomplete="name">
           </div>
           <div class="field">
-            <label for="tfEmail" data-i18n="notify_email">Email</label>
+            <label for="tfEmail">Email</label>
             <input class="text-input" type="email" id="tfEmail" required autocomplete="email" dir="ltr">
           </div>
-          <button class="btn btn-primary btn-block" type="submit" data-i18n="notify_btn">Notify me</button>
+          <button class="btn btn-primary btn-block" type="submit">Notify me</button>
         </form>
       </div>
 
-      <p style="margin-top:var(--sp-6)"><a href="../tools/" data-i18n="tf_back">Back to tools</a> →</p>
+      <p style="margin-top:var(--sp-6)"><a href="../tools/">Back to tools</a> →</p>
     </div>
   </section>
 
   <section class="section">
     <div class="container" style="max-width:46rem">
-      <h2 data-i18n="tf.faq_title">Frequently asked questions</h2>
+      <h2>Frequently asked questions</h2>
       <div class="tf-faq">
-        <details><summary data-i18n="tf.faq_q1">What is TypeFight?</summary><p data-i18n="tf.faq_a1">TypeFight turns typing into a sport: players enter a battle room, everyone types the same text live, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p></details>
-        <details><summary data-i18n="tf.faq_q2">When does TypeFight launch?</summary><p data-i18n="tf.faq_a2">It is planned for Phase 5, after the typing school and core tools are complete. Building it needs a real backend — matchmaking, payments, and fraud review cannot run in a browser alone. Leave your email above and we will tell you when battles open.</p></details>
-        <details><summary data-i18n="tf.faq_q3">Will it cost money?</summary><p data-i18n="tf.faq_a3">Entering a battle will cost a small entry fee — that fee is exactly what forms the prize pot. Watching and practicing will always be free.</p></details>
-        <details><summary data-i18n="tf.faq_q4">How will winners be paid?</summary><p data-i18n="tf.faq_a4">Winnings will be paid out through standard digital payment methods to the winner's verified account, and every pot and payout will be publicly auditable.</p></details>
-        <details><summary data-i18n="tf.faq_q5">How is cheating prevented?</summary><p data-i18n="tf.faq_a5">Battles use live keystroke analysis that rejects paste and automation patterns, one verified account per person, screen-plus-camera verification for high-stake finals, and transparent, auditable pots.</p></details>
+        <details><summary>What is TypeFight?</summary><p>TypeFight turns typing into a sport: players enter a battle room, everyone types the same text live, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p></details>
+        <details><summary>When does TypeFight launch?</summary><p>It is planned for Phase 5, after the typing school and core tools are complete. Building it needs a real backend — matchmaking, payments, and fraud review cannot run in a browser alone. Leave your email above and we will tell you when battles open.</p></details>
+        <details><summary>Will it cost money?</summary><p>Entering a battle will cost a small entry fee — that fee is exactly what forms the prize pot. Watching and practicing will always be free.</p></details>
+        <details><summary>How will winners be paid?</summary><p>Winnings will be paid out through standard digital payment methods to the winner's verified account, and every pot and payout will be publicly auditable.</p></details>
+        <details><summary>How is cheating prevented?</summary><p>Battles use live keystroke analysis that rejects paste and automation patterns, one verified account per person, screen-plus-camera verification for high-stake finals, and transparent, auditable pots.</p></details>
       </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <div id="dk-assistant-root"></div>
-<script src="../js/i18n.js" defer></script>
+<script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="./tool.js" defer></script>
 <script src="../js/assistant-kb.js" defer></script>

@@ -8,6 +8,17 @@
 <title>Pricing — DoKit</title>
 <meta name="description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
 <link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/pricing.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pricing — DoKit">
+<meta property="og:description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/pricing.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pricing — DoKit">
+<meta name="twitter:description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
@@ -17,51 +28,68 @@
 <link rel="stylesheet" href="css/hub.css">
 </head>
 <body data-nav="pricing">
-<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="./" data-i18n="crumb_home">Home</a></li>
-          <li aria-current="page" data-i18n="pricing_title">Simple pricing</li>
+          <li><a href="./">Home</a></li>
+          <li aria-current="page">Simple pricing</li>
         </ol>
       </nav>
       <div class="section-head">
-        <h1 data-i18n="pricing_title">Simple pricing</h1>
-        <p data-i18n="pricing_sub">Start free. Everything listed here stays free.</p>
+        <h1>Simple pricing</h1>
+        <p>Start free. Everything listed here stays free.</p>
       </div>
-      <div class="price-grid">
-        <div class="card price-card featured">
-          <h2 data-i18n="free_t">Free</h2>
-          <div class="price">$0 <small data-i18n="free_forever">forever</small></div>
+      <div class="price-grid price-grid--3">
+        <div class="card price-card">
+          <h2>Free</h2>
+          <div class="price">$0 <small>forever</small></div>
           <ul class="price-features">
-            <li data-i18n="free_f1">All 6 tools, unlimited normal use</li>
-            <li data-i18n="free_f2">No account needed</li>
-            <li data-i18n="free_f3">Files never leave your device</li>
-            <li data-i18n="free_f4">English + اردو</li>
+            <li>All 6 tools, unlimited normal use</li>
+            <li>No account needed</li>
+            <li>Files never leave your device</li>
+            <li>English + اردو</li>
           </ul>
-          <a class="btn btn-primary btn-block" href="tools/" data-i18n="free_cta">Start using tools</a>
+          <a class="btn btn-ghost btn-block" href="tools/">Start using tools</a>
+        </div>
+        <div class="card price-card featured">
+          <p><span class="badge badge-amber">Most Popular</span> <span class="badge">Coming soon</span></p>
+          <h2>Pro</h2>
+          <div class="price">PKR — <small>Coming soon</small></div>
+          <ul class="price-features">
+            <li>Everything in Free</li>
+            <li>Batch processing &amp; presets</li>
+            <li>Priority access to new tools</li>
+            <li>Cloud sync across devices <span class="badge">Coming soon</span></li>
+          </ul>
+          <a class="btn btn-primary btn-block" href="tools/">Get notified at launch</a>
+          <p class="hint">Pro isn't on sale yet — and everything above is already free.</p>
         </div>
         <div class="card price-card">
-          <p><span class="badge badge-amber" data-i18n="pro_badge">Coming soon</span></p>
-          <h2 data-i18n="pro_t">Pro</h2>
-          <div class="price">—</div>
+          <p><span class="badge">Coming soon</span></p>
+          <h2>School</h2>
+          <div class="price">PKR — <small>Coming soon</small></div>
           <ul class="price-features">
-            <li data-i18n="pro_f1">Everything in Free</li>
-            <li data-i18n="pro_f2">Batch processing &amp; presets</li>
-            <li data-i18n="pro_f3">Priority access to new tools</li>
+            <li>Everything in Pro</li>
+            <li>Typing classrooms &amp; assignments</li>
+            <li>Teacher dashboard <span class="badge">Coming soon</span></li>
           </ul>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="pro_note">Pro isn't on sale yet — and everything above is already free.</p>
+          <a class="btn btn-ghost btn-block" href="contact.html">Contact us</a>
         </div>
+      </div>
+      <div class="card" style="max-width:46rem;margin:var(--sp-6) auto 0;text-align:center">
+        <h2 style="margin-block-start:0">💳 How you'll pay</h2>
+        <p style="margin-bottom:0">When Pro and School launch, payments will be accepted via <strong>USDT</strong> and <strong>PKR</strong> (bank transfer / mobile wallet). No checkout exists yet — this page is honest about what's coming. <strong>Launching when ready.</strong></p>
       </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <div id="dk-assistant-root"></div>
-<script src="js/i18n.js" defer></script>
+<script src="js/i18n-v2.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="js/assistant-kb.js" defer></script>
