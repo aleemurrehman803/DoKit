@@ -2,36 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FAQ — TypeMaster</title>
-<meta name="description" content="Answers to common TypeMaster questions: how lessons work, WPM scoring, accounts, certificates, and more.">
-<link rel="stylesheet" href="css/main.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>FAQ — DoKit</title>
+<meta name="description" content="DoKit FAQ: is it free, where do files go, accounts, browsers, TypeMaster, mobile app.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/faq.html">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/hub.css">
 </head>
-<body>
-<div id="site-nav"></div>
-<main class="container">
-
-  <div class="page-header">
-    <p class="eyebrow" data-i18n="d_eyebrow_faq">Help center</p>
-    <h1 data-i18n="faq_title">Frequently Asked Questions</h1>
-    <p class="page-sub" data-i18n="faq_sub">Everything you need to know about learning to type with TypeMaster.</p>
-  </div>
-
-  <div class="faq-list">
-    <details class="faq-item"><summary data-i18n="faq_q1"></summary><p data-i18n="faq_a1"></p></details>
-    <details class="faq-item"><summary data-i18n="faq_q2"></summary><p data-i18n="faq_a2"></p></details>
-    <details class="faq-item"><summary data-i18n="faq_q3"></summary><p data-i18n="faq_a3"></p></details>
-    <details class="faq-item"><summary data-i18n="faq_q4"></summary><p data-i18n="faq_a4"></p></details>
-    <details class="faq-item"><summary data-i18n="faq_q5"></summary><p data-i18n="faq_a5"></p></details>
-  </div>
-
+<body data-nav="faq">
+<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:44rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="/" data-i18n="crumb_home">Home</a></li>
+          <li aria-current="page" data-i18n="faq_title">Frequently asked questions</li>
+        </ol>
+      </nav>
+      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
+      <h1 data-i18n="faq_title">Frequently asked questions</h1>
+      <p style="color:var(--text-muted)" data-i18n="faq_sub">Everything people usually want to know about DoKit.</p>
+      <div class="faq-accordion" id="faqList">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq1_a">Yes. Every tool here is free — no accounts, no watermarks.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq2_q">Where do my files go?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq2_a">Nowhere. Everything is processed inside your browser.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq3_q">Do I need an account?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq3_a">No. Open any tool and start working.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq4_q">Which browsers are supported?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq4_a">Recent Chrome, Edge, Firefox, and Safari.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq5_q">Is there a mobile app?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq5_a">Not yet — but the whole site works well in your phone's browser.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false"><span data-i18n="fq6_q">What is TypeMaster?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a" data-i18n="fq6_a">Our flagship typing school inside DoKit.</div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
-<div id="site-foot"></div>
-<script src="js/urdu.js"></script>
-<script src="js/urdu2.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/faq.js"></script>
+<footer id="site-foot"></footer>
+<div id="dk-assistant-root"></div>
+<script src="/js/i18n.js" defer></script>
+<script src="/js/ui.js" defer></script>
+<script src="/js/pages/info.js" defer></script>
+<script src="/js/assistant-kb.js" defer></script>
+<script src="/js/assistant.js" defer></script>
 </body>
 </html>
