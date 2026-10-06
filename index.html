@@ -16,6 +16,9 @@
 <meta property="og:title" content="DoKit — Every tool you'll ever need">
 <meta property="og:description" content="Free online tools: image resizer, compressor, converter, word counter, case converter, typing school. Private by design.">
 <meta property="og:url" content="https://aleemurrehman803.github.io/dokit/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/tokens.css">
@@ -47,20 +50,15 @@
     </div>
   </section>
 
-  <!-- POPULAR TOOLS -->
-  <section class="section">
+  <!-- BROWSE BY CATEGORY -->
+  <section class="section" aria-labelledby="cats-h">
     <div class="container">
       <div class="section-head">
-        <h2 data-i18n="popular_title">Popular tools</h2>
-        <p data-i18n="popular_sub">The tools people reach for every day.</p>
+        <h2 id="cats-h" data-i18n="cats_title">Browse by category</h2>
+        <div class="section-rule" aria-hidden="true"></div>
+        <p data-i18n="cats_sub">Tap a category to see its tools — or search above.</p>
       </div>
-      <div class="chips" role="group" aria-label="Filter by category" data-i18n-aria="cat_label">
-        <button class="chip" data-cat="all" aria-pressed="true" data-i18n="cat_all">All</button>
-        <button class="chip" data-cat="image" aria-pressed="false" data-i18n="cat_image">Image</button>
-        <button class="chip" data-cat="text" aria-pressed="false" data-i18n="cat_text">Text</button>
-        <button class="chip" data-cat="typing" aria-pressed="false" data-i18n="cat_typing">Typing</button>
-      </div>
-      <div class="grid" id="toolsGrid" aria-live="polite"></div>
+      <div class="cat-list" id="catList" aria-live="polite"></div>
       <div class="empty-state" id="toolsEmpty" style="display:none">
         <span class="empty-state__icon" aria-hidden="true">🔍</span>
         <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
