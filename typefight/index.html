@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>TypeFight — Typing Battles (Coming Soon) — DoKit</title>
+<meta name="description" content="TypeFight: skill-based typing battles. Enter, race the same text, winner takes the pot. Teaser — coming in Phase 5.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="./tool.css">
+</head>
+<body data-nav="">
+<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="tf-hero">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="/" data-i18n="crumb_home">Home</a></li>
+          <li><a href="/tools/" data-i18n="nav_all_tools">All Tools</a></li>
+          <li aria-current="page">TypeFight</li>
+        </ol>
+      </nav>
+      <span class="badge badge-amber" data-i18n="badge_soon">Coming soon</span>
+      <h1>⚔️ <span data-i18n="tf_title">TypeFight</span></h1>
+      <p class="tf-tag" data-i18n="tf_sub">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
+
+      <h2 data-i18n="tf_concept_t">The concept</h2>
+      <p data-i18n="tf_concept_d">TypeFight turns typing into a sport. Players enter a battle room, race the same text, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p>
+
+      <h2 data-i18n="tf_how_t">How it will work</h2>
+      <div class="tf-steps">
+        <div class="card tf-step"><span class="tf-step__n">1</span><h3 data-i18n="tf_h1t">Enter</h3><p data-i18n="tf_h1d">Join a battle room with a small entry.</p></div>
+        <div class="card tf-step"><span class="tf-step__n">2</span><h3 data-i18n="tf_h2t">Race</h3><p data-i18n="tf_h2d">Everyone types the same text, live.</p></div>
+        <div class="card tf-step"><span class="tf-step__n">3</span><h3 data-i18n="tf_h3t">Winner takes the pot</h3><p data-i18n="tf_h3d">Fastest + most accurate typist wins the pooled entries.</p></div>
+      </div>
+
+      <h2 data-i18n="tf_fair_t">Anti-fraud pillars</h2>
+      <div class="grid">
+        <div class="card"><h3 data-i18n="tf_f1t">Live keystroke analysis</h3><p data-i18n="tf_f1d">Paste and automation patterns are detected and rejected.</p></div>
+        <div class="card"><h3 data-i18n="tf_f2t">Verified identities</h3><p data-i18n="tf_f2d">One account per person — no smurfing.</p></div>
+        <div class="card"><h3 data-i18n="tf_f3t">Proctored finals</h3><p data-i18n="tf_f3d">High-stake finals use screen + camera verification.</p></div>
+        <div class="card"><h3 data-i18n="tf_f4t">Transparent pots</h3><p data-i18n="tf_f4d">Every pot and payout is publicly auditable.</p></div>
+      </div>
+
+      <div class="card tf-phase">
+        <h2 data-i18n="tf_phase_t">Honest timeline</h2>
+        <p data-i18n="tf_phase_d">TypeFight needs a real backend — matchmaking, payments, and fraud review can't run in a browser alone. It's planned for Phase 5. This page is just the teaser; leave your email and we'll tell you when battles open.</p>
+      </div>
+
+      <div class="card" id="tfNotifyCard">
+        <h2 data-i18n="tf_notify_t">Get notified</h2>
+        <form id="tfNotifyForm">
+          <div class="field">
+            <label for="tfName" data-i18n="notify_name">Name</label>
+            <input class="text-input" type="text" id="tfName" required autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="tfEmail" data-i18n="notify_email">Email</label>
+            <input class="text-input" type="email" id="tfEmail" required autocomplete="email" dir="ltr">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" data-i18n="notify_btn">Notify me</button>
+        </form>
+      </div>
+
+      <p style="margin-top:var(--sp-6)"><a href="/tools/" data-i18n="tf_back">Back to tools</a> →</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <h2 data-i18n="tf.faq_title">Frequently asked questions</h2>
+      <div class="tf-faq">
+        <details><summary data-i18n="tf.faq_q1">What is TypeFight?</summary><p data-i18n="tf.faq_a1">TypeFight turns typing into a sport: players enter a battle room, everyone types the same text live, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p></details>
+        <details><summary data-i18n="tf.faq_q2">When does TypeFight launch?</summary><p data-i18n="tf.faq_a2">It is planned for Phase 5, after the typing school and core tools are complete. Building it needs a real backend — matchmaking, payments, and fraud review cannot run in a browser alone. Leave your email above and we will tell you when battles open.</p></details>
+        <details><summary data-i18n="tf.faq_q3">Will it cost money?</summary><p data-i18n="tf.faq_a3">Entering a battle will cost a small entry fee — that fee is exactly what forms the prize pot. Watching and practicing will always be free.</p></details>
+        <details><summary data-i18n="tf.faq_q4">How will winners be paid?</summary><p data-i18n="tf.faq_a4">Winnings will be paid out through standard digital payment methods to the winner's verified account, and every pot and payout will be publicly auditable.</p></details>
+        <details><summary data-i18n="tf.faq_q5">How is cheating prevented?</summary><p data-i18n="tf.faq_a5">Battles use live keystroke analysis that rejects paste and automation patterns, one verified account per person, screen-plus-camera verification for high-stake finals, and transparent, auditable pots.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<div id="dk-assistant-root"></div>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="./tool.js" defer></script>
+<script src="../js/assistant-kb.js" defer></script>
+<script src="../js/assistant.js" defer></script>
+</body>
+</html>
