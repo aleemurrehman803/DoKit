@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson — TypeMaster</title>
+<meta name="description" content="Practice this TypeMaster lesson with live feedback, finger guidance, and accuracy scoring.">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+  <div id="playerArea" class="player-wrap">
+    <div class="page-head">
+      <h1 class="section-title" id="lessonTitle">Lesson</h1>
+      <p class="section-sub"><span class="badge-chip" id="lessonKeys"></span></p>
+    </div>
+    <div class="player-stats">
+      <div class="pstat"><span class="v" id="statWpm">0</span><span class="l" data-i18n="live_wpm">WPM</span></div>
+      <div class="pstat"><span class="v" id="statAcc">100%</span><span class="l" data-i18n="live_acc">Accuracy</span></div>
+      <div class="pstat"><span class="v" id="statTime">0:00</span><span class="l" data-i18n="live_time">Time</span></div>
+    </div>
+    <div class="type-text" id="typeText"></div>
+    <input class="ghost-input" id="ghostInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="type-hint" data-i18n="player_hint">Click the text and start typing. Use Backspace to fix mistakes.</div>
+    <div class="finger-hint" id="fingerHint"></div>
+    <div id="kb"></div>
+  </div>
+  <div id="donePanel" class="player-wrap hidden"></div>
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/curriculum.js"></script>
+<script src="js/gamification.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/keyboard.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  const lesson = getLesson(id);
+  if (!lesson || !isUnlocked(id, DB.getProgress())) { location.href = "lessons.html"; return; }
+
+  UI.init({ active: "lessons" });
+  document.getElementById("lessonTitle").textContent = lesson.title;
+  document.getElementById("lessonKeys").textContent = lesson.keys || "";
+
+  const text = lesson.lines.join("\n");
+  const typeText = document.getElementById("typeText");
+  const ghostInput = document.getElementById("ghostInput");
+  const wpmEl = document.getElementById("statWpm");
+  const accEl = document.getElementById("statAcc");
+  const timeEl = document.getElementById("statTime");
+
+  Keyboard.render(document.getElementById("kb"), document.getElementById("fingerHint"));
+  Keyboard.highlight(text[0] || null);
+
+  const fmtTime = s => {
+    s = Math.floor(s);
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  };
+
+  Typer.mount({
+    textEl: typeText,
+    inputEl: ghostInput,
+    text: text,
+    mode: "lesson",
+    onTick(stats) {
+      wpmEl.textContent = stats.nwpm;
+      accEl.textContent = (Math.round(stats.acc * 10) / 10) + "%";
+      timeEl.textContent = fmtTime(stats.elapsedSec);
+    },
+    onKey(typed, next) {
+      Keyboard.pressFlash(typed);
+      Keyboard.highlight(next);
+    },
+    onDone(result) {
+      DB.recordKeyStats(result.keyDelta);
+      const passed = result.acc >= 90;
+      let stars = 0, earned = [];
+      if (passed) {
+        stars = DB.saveLessonResult(id, result.acc);
+        earned = Game.afterActivity("lesson", { acc: result.acc });
+      }
+      showDone(passed, stars, result.acc, earned);
+    }
+  });
+
+  function showDone(passed, stars, acc, earned) {
+    document.getElementById("playerArea").classList.add("hidden");
+    const dp = document.getElementById("donePanel");
+    dp.classList.remove("hidden");
+    const accStr = (Math.round(acc * 10) / 10) + "%";
+    const nid = nextLessonId(id);
+    const nextHref = nid ? "lesson.html?id=" + encodeURIComponent(nid) : "lessons.html";
+    let html = "";
+    if (passed) {
+      html += "<h2 class=\"section-title text-center\" style=\"margin-bottom:12px\">" + UI.t("lesson_done") + "</h2>";
+      html += "<div class=\"result-stars\">" + UI.stars(stars) + "</div>";
+      html += "<p class=\"text-center\">" + UI.t("your_accuracy") + ": <strong>" + accStr + "</strong></p>";
+      html += "<p class=\"text-center text-muted\">" + UI.t("stars_earned") + "</p>";
+      if (earned.length) {
+        html += "<div class=\"text-center mt-2\">" + earned.map(bid => {
+          const bi = Game.badgeInfo(bid, UI.lang);
+          return "<span class=\"badge-chip\">" + UI.esc(bi ? bi.icon + " " + bi.name : bid) + "</span>";
+        }).join(" ") + "</div>";
+        earned.forEach(bid => {
+          const bi = Game.badgeInfo(bid, UI.lang);
+          UI.toast(bi ? bi.icon + " " + bi.name : bid);
+        });
+      }
+      html += "<div class=\"text-center mt-3\">" +
+        "<a class=\"btn btn-primary\" href=\"" + nextHref + "\">" + UI.t("next_lesson") + "</a> " +
+        "<button class=\"btn btn-outline\" id=\"retryBtn\">" + UI.t("retry") + "</button> " +
+        "<a class=\"btn btn-ghost\" href=\"lessons.html\">" + UI.t("back_lessons") + "</a></div>";
+    } else {
+      html += "<h2 class=\"section-title text-center\" style=\"margin-bottom:12px\">" + UI.t("lesson_done") + "</h2>";
+      html += "<p class=\"text-center\">" + UI.t("your_accuracy") + ": <strong>" + accStr + "</strong></p>";
+      html += "<p class=\"text-center text-muted\">" + UI.t("need_90") + "</p>";
+      html += "<div class=\"text-center mt-3\">" +
+        "<button class=\"btn btn-primary\" id=\"retryBtn\">" + UI.t("retry") + "</button> " +
+        "<a class=\"btn btn-ghost\" href=\"lessons.html\">" + UI.t("back_lessons") + "</a></div>";
+    }
+    dp.innerHTML = html;
+    const retry = document.getElementById("retryBtn");
+    if (retry) retry.onclick = () => location.reload();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TypeMaster — Log In</title>
+<meta name="description" content="Log in to your TypeMaster account to continue learning touch typing.">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+
+  <div class="card form-card">
+    <h1 class="section-title" data-i18n="login_title">Welcome back</h1>
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="email" data-i18n="email">Email</label>
+        <input class="form-control" id="email" name="email" type="email" autocomplete="email">
+        <div class="form-error" id="err-email"></div>
+      </div>
+      <div class="form-group">
+        <label for="password" data-i18n="password">Password</label>
+        <input class="form-control" id="password" name="password" type="password" autocomplete="current-password">
+        <div class="form-error" id="err-password"></div>
+      </div>
+      <button class="btn btn-primary" type="submit" data-i18n="login_btn">Log In</button>
+      <p class="mt-2 text-center">
+        <a href="#" id="forgotLink" data-i18n="forgot_password">Forgot password?</a>
+      </p>
+    </form>
+    <p class="form-note mt-2 text-center">
+      <span data-i18n="no_account">New to TypeMaster?</span>
+      <a href="signup.html" data-i18n="nav_signup">Sign Up</a>
+    </p>
+  </div>
+
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  UI.init({ active: '' });
+  const setErr = (id, key) => { document.getElementById(id).textContent = key ? UI.t(key) : ''; };
+  document.getElementById('forgotLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    UI.toast(UI.t('reset_msg'));
+  });
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setErr('err-email', null);
+    setErr('err-password', null);
+    const email = document.getElementById('email').value.trim();
+    const pw = document.getElementById('password').value;
+    let bad = false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('err-email', 'err_email'); bad = true; }
+    if (!pw) { setErr('err-password', 'err_wrong_pw'); bad = true; }
+    if (bad) return;
+    const res = await DB.login(email, pw);
+    if (!res.ok) {
+      if (res.error === 'nouser') setErr('err-email', 'err_no_user');
+      else setErr('err-password', 'err_wrong_pw');
+      return;
+    }
+    location.href = 'dashboard.html';
+  });
+});
+</script>
+</body>
+</html>
