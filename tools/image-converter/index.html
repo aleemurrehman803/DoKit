@@ -37,36 +37,36 @@
 </script>
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 <header id="dk-nav"></header>
 <main id="main" class="twrap">
   <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.converter">Image Converter</span>
+    <a href="../../">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page">Image Converter</span>
   </nav>
 
   <div class="thero">
-    <h1 data-i18n="converter.hero_title">Image Converter</h1>
-    <p data-i18n="converter.hero_desc">Convert up to 10 images at once between PNG, JPEG, and WebP — right in your browser, no uploads.</p>
-    <p><span class="tprivacy">🔒 <span data-i18n="img.privacy">Your files never leave your device — everything happens in your browser.</span></span></p>
+    <h1>Image Converter</h1>
+    <p>Convert up to 10 images at once between PNG, JPEG, and WebP — right in your browser, no uploads.</p>
+    <p><span class="tprivacy">🔒 <span>Your files never leave your device — everything happens in your browser.</span></span></p>
   </div>
 
   <section class="tcard" aria-labelledby="tool-h">
-    <h2 id="tool-h" class="sr-only" data-i18n="converter.hero_title">Image Converter</h2>
+    <h2 id="tool-h" class="sr-only">Image Converter</h2>
 
     <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
       <div class="tdrop-icon" aria-hidden="true">🔄</div>
-      <p class="tdrop-title" id="dz-t" data-i18n="converter.drop_title">Drag &amp; drop images here</p>
-      <p class="tdrop-sub"><span data-i18n="converter.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="converter.drop_browse">browse your files</button></p>
-      <p class="tdrop-hint" data-i18n="converter.drop_hint">PNG, JPEG, WebP · up to 25 MB each · max 10 files</p>
+      <p class="tdrop-title" id="dz-t">Drag &amp; drop images here</p>
+      <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
+      <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB each · max 10 files</p>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple/>
     </div>
-      <p class="tdrop-privacy" data-i18n="saas.privacy_line">🔒 Files never leave your device — 100% private.</p>
-      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span data-i18n="saas.try_sample">Try with sample</span></button></p>
+      <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
+      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
 
     <div id="controls" style="margin-block-start:1rem">
       <div class="trow">
         <div class="tfield field">
-          <label class="label" for="fmt" data-i18n="converter.format">Convert all to</label>
+          <label class="label" for="fmt">Convert all to</label>
           <select class="tselect input" id="fmt">
             <option value="webp">WebP</option>
             <option value="jpg">JPEG</option>
@@ -74,45 +74,45 @@
           </select>
         </div>
         <div class="tfield field" id="qRow">
-          <label class="label" for="q"><span data-i18n="converter.quality">Quality (JPEG/WebP)</span> — <output class="tslider-val" id="qVal" for="q">90</output></label>
+          <label class="label" for="q"><span>Quality (JPEG/WebP)</span> — <output class="tslider-val" id="qVal" for="q">90</output></label>
           <input type="range" class="tslider" id="q" min="1" max="100" value="90"/>
         </div>
       </div>
       <div class="tbtnrow">
-        <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="clearBtn" data-i18n="converter.clear_all">Remove all</button>
+        <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="clearBtn">Remove all</button>
       </div>
-      <p class="thint" data-i18n="converter.note_nozip">Files download individually — DoKit ships with zero dependencies, so there is no zip bundling.</p>
+      <p class="thint">Files download individually — DoKit ships with zero dependencies, so there is no zip bundling.</p>
     </div>
 
-    <h3 style="font-size:1rem;margin-block-start:1.25rem" data-i18n="converter.queue">Files</h3>
+    <h3 style="font-size:1rem;margin-block-start:1.25rem">Files</h3>
     <div id="queueWrap" aria-live="polite">
       <div class="tempty empty-state" id="emptyState" data-w4-empty>
         <div class="empty-icon empty-state__icon" aria-hidden="true">✨</div>
-        <p class="empty-state__title" data-i18n="tools2.empty_title">Nothing here yet</p>
-        <p class="empty-state__text" data-i18n="converter.empty">Add images to start converting.</p>
-        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span data-i18n="tools2.empty_add_images">Add images</span></button></p>
+        <p class="empty-state__title">Nothing here yet</p>
+        <p class="empty-state__text">Add images to start converting.</p>
+        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span>Add images</span></button></p>
       </div>
       <ul class="tqueue" id="queue" hidden></ul>
     </div>
   </section>
   <div class="saas-steps" data-saas-steps>
-    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="saas.step1">Add your files</span></div>
-    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="saas.step2">Choose settings</span></div>
-    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="saas.step3">Download</span></div>
-    <button type="button" class="saas-steps-x" data-i18n-aria="saas.dismiss" aria-label="Dismiss">×</button>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span>Add your files</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span>Choose settings</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span>Download</span></div>
+    <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
   </div>
   <section class="section saas-compare" aria-labelledby="cmp-h-converter">
     <div class="container">
-      <h2 id="cmp-h-converter" class="sr-only" data-i18n="saas.compare_title">Why DoKit?</h2>
+      <h2 id="cmp-h-converter" class="sr-only">Why DoKit?</h2>
       <div class="compare-table">
         <div class="compare-col compare-old">
-          <h3 data-i18n="saas.old_way">The old way</h3>
-          <p data-i18n="saas.cmp_old_converter"></p>
+          <h3>The old way</h3>
+          <p>Random converter sites: upload, wait, dodge ads — your files leave your device.</p>
         </div>
         <div class="compare-vs" aria-hidden="true">VS</div>
         <div class="compare-col compare-new">
           <h3>DoKit</h3>
-          <p data-i18n="saas.cmp_new_converter"></p>
+          <p>DoKit: instant conversion, files never leave your device.</p>
         </div>
       </div>
     </div>
@@ -120,44 +120,44 @@
 
   
   <aside class="saas-next" data-saas-next>
-    <span data-i18n="saas.next_label">Next best action:</span>
-    <a href="../image-compressor/" data-i18n="saas.next_compressor">Try it →</a>
+    <span>Next best action:</span>
+    <a href="../image-compressor/">Try it →</a>
   </aside>
 <section class="tsection collapsible" aria-labelledby="howto-h">
-    <h2 id="howto-h" data-i18n="converter.howto_title">How to convert images</h2>
+    <h2 id="howto-h">How to convert images</h2>
     <ol class="thowto">
-      <li><div><h3 data-i18n="converter.howto_1t">Add up to 10 images</h3><p data-i18n="converter.howto_1d">Drag &amp; drop your PNG, JPEG, or WebP files into the box, or click to browse. Each file can be up to 25 MB.</p></div></li>
-      <li><div><h3 data-i18n="converter.howto_2t">Pick the output format</h3><p data-i18n="converter.howto_2d">Choose PNG, JPEG, or WebP from the dropdown. JPEG and WebP get a quality slider; PNG is always lossless.</p></div></li>
-      <li><div><h3 data-i18n="converter.howto_3t">Download each file</h3><p data-i18n="converter.howto_3d">Every converted file gets its own download button. A failed file never stops the rest of the queue.</p></div></li>
+      <li><div><h3>Add up to 10 images</h3><p>Drag &amp; drop your PNG, JPEG, or WebP files into the box, or click to browse. Each file can be up to 25 MB.</p></div></li>
+      <li><div><h3>Pick the output format</h3><p>Choose PNG, JPEG, or WebP from the dropdown. JPEG and WebP get a quality slider; PNG is always lossless.</p></div></li>
+      <li><div><h3>Download each file</h3><p>Every converted file gets its own download button. A failed file never stops the rest of the queue.</p></div></li>
     </ol>
-    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
   </section>
 
   <section class="tsection collapsible" aria-labelledby="tips-h">
-    <h2 id="tips-h" data-i18n="converter.tips_title">Pro tips</h2>
+    <h2 id="tips-h">Pro tips</h2>
     <ul class="ttips">
-      <li><strong data-i18n="converter.tip_1t">Convert PNG screenshots to WebP</strong> <span data-i18n="converter.tip_1d">Screenshots and graphics with text stay crisp as WebP but shrink dramatically — often 50–70% smaller than PNG, with zero visible loss.</span></li>
-      <li><strong data-i18n="converter.tip_2t">Keep PNG for editing, JPEG for sharing</strong> <span data-i18n="converter.tip_2d">PNG is lossless, so it is the best archive format when you plan to edit later. Convert to JPEG or WebP only for the final copy you share or upload.</span></li>
+      <li><strong>Convert PNG screenshots to WebP</strong> <span>Screenshots and graphics with text stay crisp as WebP but shrink dramatically — often 50–70% smaller than PNG, with zero visible loss.</span></li>
+      <li><strong>Keep PNG for editing, JPEG for sharing</strong> <span>PNG is lossless, so it is the best archive format when you plan to edit later. Convert to JPEG or WebP only for the final copy you share or upload.</span></li>
     </ul>
-    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h" data-i18n="converter.faq_title">Frequently asked questions</h2>
-    <details><summary data-i18n="converter.faq_q1">Which format should I choose?</summary><p class="tfaq-a" data-i18n="converter.faq_a1">…</p></details>
-    <details><summary data-i18n="converter.faq_q2">Why do files download one by one instead of as a zip?</summary><p class="tfaq-a" data-i18n="converter.faq_a2">…</p></details>
-    <details><summary data-i18n="converter.faq_q3">Does converting strip metadata?</summary><p class="tfaq-a" data-i18n="converter.faq_a3">…</p></details>
-    <details><summary data-i18n="converter.faq_q4">Can I convert animated GIFs?</summary><p class="tfaq-a" data-i18n="converter.faq_a4">…</p></details>
-      <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <h2 id="faq-h">Frequently asked questions</h2>
+    <details><summary>Which format should I choose?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>Why do files download one by one instead of as a zip?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>Does converting strip metadata?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>Can I convert animated GIFs?</summary><p class="tfaq-a">…</p></details>
+      <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
-    <h2 id="rel-h" data-i18n="converter.related">Related tools</h2>
+    <h2 id="rel-h">Related tools</h2>
     <div class="trelated">
-      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
-      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
-      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
-      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
+      <a class="trel-card" href="../image-resizer/"><h3>Image Resizer</h3><p>Change image dimensions in pixels or percent.</p></a>
+      <a class="trel-card" href="../image-compressor/"><h3>Image Compressor</h3><p>Shrink file size without visible quality loss.</p></a>
+      <a class="trel-card" href="../word-counter/"><h3>Word Counter</h3><p>Live word, character, and reading-time stats.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3>Case Converter</h3><p>Convert text between six letter cases.</p></a>
     </div>
   </section>
 </main>

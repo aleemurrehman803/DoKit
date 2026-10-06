@@ -37,43 +37,43 @@
 </script>
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 <header id="dk-nav"></header>
 <main id="main" class="twrap">
   <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.compressor">Image Compressor</span>
+    <a href="../../">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page">Image Compressor</span>
   </nav>
 
   <div class="thero">
-    <h1 data-i18n="compressor.hero_title">Image Compressor</h1>
-    <p data-i18n="compressor.hero_desc">Make images smaller without visible quality loss — drag the quality slider, or set a target size and let DoKit find the sweet spot.</p>
-    <p><span class="tprivacy">🔒 <span data-i18n="img.privacy">Your files never leave your device — everything happens in your browser.</span></span></p>
+    <h1>Image Compressor</h1>
+    <p>Make images smaller without visible quality loss — drag the quality slider, or set a target size and let DoKit find the sweet spot.</p>
+    <p><span class="tprivacy">🔒 <span>Your files never leave your device — everything happens in your browser.</span></span></p>
   </div>
 
   <section class="tcard" aria-labelledby="tool-h">
-    <h2 id="tool-h" class="sr-only" data-i18n="compressor.hero_title">Image Compressor</h2>
+    <h2 id="tool-h" class="sr-only">Image Compressor</h2>
 
     <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
       <div class="tdrop-icon" aria-hidden="true">🗜️</div>
-      <p class="tdrop-title" id="dz-t" data-i18n="compressor.drop_title">Drag &amp; drop your image here</p>
-      <p class="tdrop-sub"><span data-i18n="compressor.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="compressor.drop_browse">browse your files</button></p>
-      <p class="tdrop-hint" data-i18n="compressor.drop_hint">PNG, JPEG, WebP · up to 25 MB</p>
+      <p class="tdrop-title" id="dz-t">Drag &amp; drop your image here</p>
+      <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
+      <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB</p>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp"/>
     </div>
-      <p class="tdrop-privacy" data-i18n="saas.privacy_line">🔒 Files never leave your device — 100% private.</p>
-      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span data-i18n="saas.try_sample">Try with sample</span></button></p>
+      <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
+      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
 
     <div id="controls" hidden>
       <div class="tfield" style="margin-block-start:1rem">
-        <span id="modeLabel" data-i18n="compressor.mode" style="font-weight:600;font-size:.9rem">Compression mode</span>
+        <span id="modeLabel" style="font-weight:600;font-size:.9rem">Compression mode</span>
         <div class="tseg" role="group" aria-labelledby="modeLabel" style="margin-inline-start:.75rem">
-          <button type="button" id="modeQ" aria-pressed="true" data-i18n="compressor.mode_quality">Manual quality</button>
-          <button type="button" id="modeT" aria-pressed="false" data-i18n="compressor.mode_target">Target size</button>
+          <button type="button" id="modeQ" aria-pressed="true">Manual quality</button>
+          <button type="button" id="modeT" aria-pressed="false">Target size</button>
         </div>
       </div>
       <div class="trow">
         <div class="tfield field">
-          <label class="label" for="fmt" data-i18n="compressor.output_format">Output format</label>
+          <label class="label" for="fmt">Output format</label>
           <select class="tselect input" id="fmt">
             <option value="jpg">JPEG</option>
             <option value="webp">WebP</option>
@@ -81,51 +81,51 @@
           </select>
         </div>
         <div class="tfield field" id="qRow">
-          <label class="label" for="q"><span data-i18n="compressor.quality">Quality</span> — <output class="tslider-val" id="qVal" for="q">80</output></label>
+          <label class="label" for="q"><span>Quality</span> — <output class="tslider-val" id="qVal" for="q">80</output></label>
           <input type="range" class="tslider" id="q" min="1" max="100" value="80"/>
         </div>
         <div class="tfield field" id="tRow" hidden>
-          <label class="label" for="targetKb" data-i18n="compressor.target_kb">Target size (KB)</label>
+          <label class="label" for="targetKb">Target size (KB)</label>
           <input class="tinput input" id="targetKb" type="number" min="5" max="25000" value="200"/>
-          <p class="thint hint" data-i18n="compressor.target_hint">Example: 200 — DoKit picks the best quality under this size.</p>
-          <p class="thint hint" data-i18n="hint.target_kb"></p>
+          <p class="thint hint">Example: 200 — DoKit picks the best quality under this size.</p>
+          <p class="thint hint"></p>
         </div>
       </div>
       <div class="tstats" id="estStats" aria-live="polite">
-        <div class="tstat"><p class="tstat-k" data-i18n="compressor.estimate">Estimated output</p><p class="tstat-v" id="estSize">—</p></div>
-        <div class="tstat"><p class="tstat-k" data-i18n="common.original">Original</p><p class="tstat-v" id="origSize">—</p></div>
+        <div class="tstat"><p class="tstat-k">Estimated output</p><p class="tstat-v" id="estSize">—</p></div>
+        <div class="tstat"><p class="tstat-k">Original</p><p class="tstat-v" id="origSize">—</p></div>
       </div>
-      <p class="tnotice" data-i18n="compressor.tip">Tip: photos saved as PNG are huge — converting to WebP typically saves around 70%.</p>
+      <p class="tnotice">Tip: photos saved as PNG are huge — converting to WebP typically saves around 70%.</p>
       <div id="notice" class="tnotice" style="margin-block-start:.75rem" hidden></div>
     </div>
 
     <div id="result" aria-live="polite" style="margin-block-start:1rem">
       <div class="tempty empty-state" id="emptyState" data-w4-empty>
         <div class="empty-icon empty-state__icon" aria-hidden="true">✨</div>
-        <p class="empty-state__title" data-i18n="tools2.empty_title">Nothing here yet</p>
-        <p class="empty-state__text" data-i18n="compressor.empty">Your compressed image will appear here.</p>
-        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span data-i18n="tools2.empty_add_images">Add images</span></button></p>
+        <p class="empty-state__title">Nothing here yet</p>
+        <p class="empty-state__text">Your compressed image will appear here.</p>
+        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span>Add images</span></button></p>
       </div>
     </div>
   </section>
   <div class="saas-steps" data-saas-steps>
-    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="saas.step1">Add your files</span></div>
-    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="saas.step2">Choose settings</span></div>
-    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="saas.step3">Download</span></div>
-    <button type="button" class="saas-steps-x" data-i18n-aria="saas.dismiss" aria-label="Dismiss">×</button>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span>Add your files</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span>Choose settings</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span>Download</span></div>
+    <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
   </div>
   <section class="section saas-compare" aria-labelledby="cmp-h-compressor">
     <div class="container">
-      <h2 id="cmp-h-compressor" class="sr-only" data-i18n="saas.compare_title">Why DoKit?</h2>
+      <h2 id="cmp-h-compressor" class="sr-only">Why DoKit?</h2>
       <div class="compare-table">
         <div class="compare-col compare-old">
-          <h3 data-i18n="saas.old_way">The old way</h3>
-          <p data-i18n="saas.cmp_old_compressor"></p>
+          <h3>The old way</h3>
+          <p>Desktop software: install, learn, pay — or lose quality.</p>
         </div>
         <div class="compare-vs" aria-hidden="true">VS</div>
         <div class="compare-col compare-new">
           <h3>DoKit</h3>
-          <p data-i18n="saas.cmp_new_compressor"></p>
+          <p>DoKit: drag, slide, done — quality kept.</p>
         </div>
       </div>
     </div>
@@ -133,44 +133,44 @@
 
   
   <aside class="saas-next" data-saas-next>
-    <span data-i18n="saas.next_label">Next best action:</span>
-    <a href="../image-resizer/" data-i18n="saas.next_resizer">Try it →</a>
+    <span>Next best action:</span>
+    <a href="../image-resizer/">Try it →</a>
   </aside>
 <section class="tsection collapsible" aria-labelledby="howto-h">
-    <h2 id="howto-h" data-i18n="compressor.howto_title">How to compress an image</h2>
+    <h2 id="howto-h">How to compress an image</h2>
     <ol class="thowto">
-      <li><div><h3 data-i18n="compressor.howto_1t">Upload your image</h3><p data-i18n="compressor.howto_1d">Drag &amp; drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse.</p></div></li>
-      <li><div><h3 data-i18n="compressor.howto_2t">Choose quality or a target size</h3><p data-i18n="compressor.howto_2d">Drag the quality slider and watch the live size estimate, or switch to target-size mode and type the maximum KB you want.</p></div></li>
-      <li><div><h3 data-i18n="compressor.howto_3t">Compare and download</h3><p data-i18n="compressor.howto_3d">Drag the comparison slider to check quality, then download your smaller image — watermark-free.</p></div></li>
+      <li><div><h3>Upload your image</h3><p>Drag &amp; drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse.</p></div></li>
+      <li><div><h3>Choose quality or a target size</h3><p>Drag the quality slider and watch the live size estimate, or switch to target-size mode and type the maximum KB you want.</p></div></li>
+      <li><div><h3>Compare and download</h3><p>Drag the comparison slider to check quality, then download your smaller image — watermark-free.</p></div></li>
     </ol>
-    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
   </section>
 
   <section class="tsection collapsible" aria-labelledby="tips-h">
-    <h2 id="tips-h" data-i18n="compressor.tips_title">Pro tips</h2>
+    <h2 id="tips-h">Pro tips</h2>
     <ul class="ttips">
-      <li><strong data-i18n="compressor.tip_1t">The 80–85 sweet spot</strong> <span data-i18n="compressor.tip_1d">For JPEG photos, quality 80–85 usually halves the file size compared to 95+, with differences only visible when zoomed in. Drag the comparison slider to check yourself.</span></li>
-      <li><strong data-i18n="compressor.tip_2t">Try WebP for bigger savings</strong> <span data-i18n="compressor.tip_2d">WebP keeps the same visual quality as JPEG at roughly 25–35% smaller size — ideal for web images. Choose JPEG only when compatibility with old software matters.</span></li>
+      <li><strong>The 80–85 sweet spot</strong> <span>For JPEG photos, quality 80–85 usually halves the file size compared to 95+, with differences only visible when zoomed in. Drag the comparison slider to check yourself.</span></li>
+      <li><strong>Try WebP for bigger savings</strong> <span>WebP keeps the same visual quality as JPEG at roughly 25–35% smaller size — ideal for web images. Choose JPEG only when compatibility with old software matters.</span></li>
     </ul>
-    <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h" data-i18n="compressor.faq_title">Frequently asked questions</h2>
-    <details><summary data-i18n="compressor.faq_q1">How much smaller will my image get?</summary><p class="tfaq-a" data-i18n="compressor.faq_a1">…</p></details>
-    <details><summary data-i18n="compressor.faq_q2">What does target-size mode do?</summary><p class="tfaq-a" data-i18n="compressor.faq_a2">…</p></details>
-    <details><summary data-i18n="compressor.faq_q3">Will compression remove metadata?</summary><p class="tfaq-a" data-i18n="compressor.faq_a3">…</p></details>
-    <details><summary data-i18n="compressor.faq_q4">Is there a limit on how many images I can compress?</summary><p class="tfaq-a" data-i18n="compressor.faq_a4">…</p></details>
-      <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
+    <h2 id="faq-h">Frequently asked questions</h2>
+    <details><summary>How much smaller will my image get?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>What does target-size mode do?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>Will compression remove metadata?</summary><p class="tfaq-a">…</p></details>
+    <details><summary>Is there a limit on how many images I can compress?</summary><p class="tfaq-a">…</p></details>
+      <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
-    <h2 id="rel-h" data-i18n="compressor.related">Related tools</h2>
+    <h2 id="rel-h">Related tools</h2>
     <div class="trelated">
-      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
-      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
-      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
-      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
+      <a class="trel-card" href="../image-resizer/"><h3>Image Resizer</h3><p>Change image dimensions in pixels or percent.</p></a>
+      <a class="trel-card" href="../image-converter/"><h3>Image Converter</h3><p>Convert between PNG, JPEG, and WebP.</p></a>
+      <a class="trel-card" href="../word-counter/"><h3>Word Counter</h3><p>Live word, character, and reading-time stats.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3>Case Converter</h3><p>Convert text between six letter cases.</p></a>
     </div>
   </section>
 </main>
