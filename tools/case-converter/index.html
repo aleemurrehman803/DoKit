@@ -41,9 +41,7 @@
 <header id="dk-nav"></header>
 <main id="main" class="twrap">
   <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../" data-i18n="common.crumb_home">Home</a> /
-    <a href="../" data-i18n="common.crumb_tools">Tools</a> /
-    <span data-i18n="toolnames.case_converter">Case Converter</span>
+    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.case_converter">Case Converter</span>
   </nav>
 
   <div class="thero">
@@ -54,13 +52,15 @@
 
   <section class="tcard" aria-labelledby="tool-h">
     <h2 id="tool-h" class="sr-only" data-i18n="cc.hero_title">Case Converter</h2>
-    <div class="tfield">
-      <label for="text" data-i18n="cc.label">Your text</label>
+    <div class="tfield field">
+      <label class="label" for="text" data-i18n="cc.label">Your text</label>
       <textarea class="ttext" id="text" placeholder="Type or paste your text here…"></textarea>
+      <p class="tdrop-privacy" data-i18n="saas.privacy_line">🔒 Files never leave your device — 100% private.</p>
+      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="text"><span data-i18n="saas.try_sample">Try with sample</span></button></p>
     </div>
-    <div class="tfield">
-      <label for="mode" data-i18n="cc.mode">Conversion mode</label>
-      <select class="tselect" id="mode">
+    <div class="tfield field">
+      <label class="label" for="mode" data-i18n="cc.mode">Conversion mode</label>
+      <select class="tselect input" id="mode">
         <option value="upper" data-i18n="cc.upper">UPPER CASE</option>
         <option value="lower" data-i18n="cc.lower">lower case</option>
         <option value="title" data-i18n="cc.title">Title Case</option>
@@ -69,8 +69,8 @@
         <option value="inverse" data-i18n="cc.inverse">iNVERSE cAsE</option>
       </select>
     </div>
-    <div class="tfield">
-      <label for="output" data-i18n="cc.result_label">Converted text</label>
+    <div class="tfield field">
+      <label class="label" for="output" data-i18n="cc.result_label">Converted text</label>
       <textarea class="ttext" id="output" readonly aria-live="polite" data-i18n-ph="cc.empty" placeholder="Your converted text will appear here."></textarea>
     </div>
     <div class="tstats" aria-live="polite">
@@ -82,8 +82,35 @@
       <button type="button" class="tbtn tbtn-ghost" id="clearBtn" data-i18n="cc.clear">Clear</button>
     </div>
   </section>
+  <div class="saas-steps" data-saas-steps>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="saas.step1">Add your files</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="saas.step2">Choose settings</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="saas.step3">Download</span></div>
+    <button type="button" class="saas-steps-x" data-i18n-aria="saas.dismiss" aria-label="Dismiss">×</button>
+  </div>
+  <section class="section saas-compare" aria-labelledby="cmp-h-cc">
+    <div class="container">
+      <h2 id="cmp-h-cc" class="sr-only" data-i18n="saas.compare_title">Why DoKit?</h2>
+      <div class="compare-table">
+        <div class="compare-col compare-old">
+          <h3 data-i18n="saas.old_way">The old way</h3>
+          <p data-i18n="saas.cmp_old_cc"></p>
+        </div>
+        <div class="compare-vs" aria-hidden="true">VS</div>
+        <div class="compare-col compare-new">
+          <h3>DoKit</h3>
+          <p data-i18n="saas.cmp_new_cc"></p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <section class="tsection" aria-labelledby="howto-h">
+  
+  <aside class="saas-next" data-saas-next>
+    <span data-i18n="saas.next_label">Next best action:</span>
+    <a href="../word-counter/" data-i18n="saas.next_counter">Try it →</a>
+  </aside>
+<section class="tsection collapsible" aria-labelledby="howto-h">
     <h2 id="howto-h" data-i18n="cc.howto_title">How to convert text case</h2>
     <ol class="thowto">
       <li><div><h3 data-i18n="cc.howto_1t">Paste your text</h3><p data-i18n="cc.howto_1d">Type or paste your text into the box.</p></div></li>
@@ -93,7 +120,7 @@
     <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
   </section>
 
-  <section class="tsection" aria-labelledby="tips-h">
+  <section class="tsection collapsible" aria-labelledby="tips-h">
     <h2 id="tips-h" data-i18n="case.tips_title">Pro tips</h2>
     <ul class="ttips">
       <li><strong data-i18n="case.tip_1t">Title Case for headings, Sentence case for body</strong> <span data-i18n="case.tip_1d">Use Title Case for titles and headings, and Sentence case for descriptions and paragraphs — it matches professional publishing style.</span></li>
@@ -102,7 +129,7 @@
     <p class="thint tnote-soon" data-i18n="common.coming_soon" hidden>Full translation coming soon.</p>
   </section>
 
-  <section class="tsection tfaq" aria-labelledby="faq-h">
+  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
     <h2 id="faq-h" data-i18n="cc.faq_title">Frequently asked questions</h2>
     <details><summary data-i18n="cc.faq_q1">How does Title Case handle hyphenated words?</summary><p class="tfaq-a" data-i18n="cc.faq_a1">…</p></details>
     <details><summary data-i18n="cc.faq_q2">What is iNVERSE cAsE?</summary><p class="tfaq-a" data-i18n="cc.faq_a2">…</p></details>
