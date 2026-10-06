@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Results — TypeMaster</title>
+<meta name="description" content="Your typing test results: gross and net WPM, accuracy, typos, and per-key analysis.">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+  <div class="page-head">
+    <h1 class="section-title" data-i18n="test_done">Test Complete</h1>
+    <p class="section-sub" id="resultSub"></p>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" id="rGwpm">0</div><div class="stat-label" data-i18n="gross_wpm">Gross WPM</div></div>
+    <div class="stat-card"><div class="stat-num" id="rNwpm">0</div><div class="stat-label" data-i18n="net_wpm">Net WPM</div></div>
+    <div class="stat-card"><div class="stat-num" id="rAcc">0%</div><div class="stat-label" data-i18n="accuracy">Accuracy</div></div>
+    <div class="stat-card"><div class="stat-num" id="rTypos">0</div><div class="stat-label" data-i18n="typos">Typos</div></div>
+  </div>
+
+  <div id="keyTableWrap" class="mt-3 hidden">
+    <h2 class="section-title" style="font-size:1.15rem" data-i18n="per_key">Per-key accuracy</h2>
+    <table class="data-table">
+      <thead><tr>
+        <th data-i18n="per_key">Key</th>
+        <th data-i18n="accuracy">Accuracy</th>
+        <th data-i18n="times">n</th>
+      </tr></thead>
+      <tbody id="keyRows"></tbody>
+    </table>
+  </div>
+
+  <div class="share-card mt-3" id="shareCard"></div>
+
+  <div class="text-center mt-3">
+    <button class="btn btn-primary" id="shareBtn" data-i18n="share_result">Share Result</button>
+    <button class="btn btn-outline" id="saveBtn" data-i18n="save_history">Save to History</button>
+    <a class="btn btn-ghost" href="test.html" data-i18n="retake">Retake</a>
+  </div>
+  <p class="text-center mt-2 hidden" id="loginNote">
+    <a href="login.html" data-i18n="nav_login">Login</a>
+  </p>
+  <div class="text-center mt-2" id="earnedWrap"></div>
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/gamification.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let r = null;
+  try { r = JSON.parse(sessionStorage.getItem("tm_last_result") || "null"); } catch (e) {}
+  if (!r) { location.href = "test.html"; return; }
+
+  UI.init({ active: "test" });
+
+  document.getElementById("resultSub").textContent =
+    r.cat + " • " + (r.dur / 60) + " " + UI.t("minutes");
+  document.getElementById("rGwpm").textContent = r.gwpm;
+  document.getElementById("rNwpm").textContent = r.nwpm;
+  document.getElementById("rAcc").textContent = r.acc + "%";
+  document.getElementById("rTypos").textContent = r.typos;
+
+  // per-key table
+  const delta = r.keyDelta || {};
+  const rows = Object.keys(delta)
+    .map(k => {
+      const d = delta[k] || { ok: 0, bad: 0 };
+      const n = (d.ok || 0) + (d.bad || 0);
+      return { key: k, n: n, acc: n ? (d.ok || 0) / n * 100 : 100 };
+    })
+    .filter(x => x.n > 0)
+    .sort((a, b) => a.acc - b.acc);
+  if (rows.length) {
+    document.getElementById("keyTableWrap").classList.remove("hidden");
+    document.getElementById("keyRows").innerHTML = rows.map(x =>
+      "<tr><td>" + (x.key === " " ? "Space" : UI.esc(x.key)) + "</td><td>" +
+      (Math.round(x.acc * 10) / 10) + "%</td><td>" + x.n + "</td></tr>"
+    ).join("");
+  }
+
+  // share card
+  const shareText = "I scored " + r.nwpm + " net WPM with " + r.acc + "% accuracy on TypeMaster! 🚀";
+  document.getElementById("shareCard").textContent = shareText;
+
+  document.getElementById("shareBtn").onclick = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      ok = true;
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = shareText;
+      document.body.appendChild(ta);
+      ta.select();
+      try { ok = document.execCommand("copy"); } catch (_) {}
+      ta.remove();
+    }
+    if (ok) UI.toast(UI.t("copied"));
+  };
+
+  // save to history
+  const saveBtn = document.getElementById("saveBtn");
+  saveBtn.onclick = () => {
+    if (!DB.currentUser()) {
+      UI.toast(UI.t("nav_login"));
+      document.getElementById("loginNote").classList.remove("hidden");
+      UI.applyI18n(document.getElementById("loginNote"));
+      return;
+    }
+    DB.saveTestResult({ cat: r.cat, dur: r.dur, gwpm: r.gwpm, nwpm: r.nwpm, acc: r.acc, typos: r.typos });
+    DB.recordKeyStats(r.keyDelta || {});
+    const earned = Game.afterActivity("test", { nwpm: r.nwpm, dur: r.dur });
+    UI.toast(UI.t("saved"));
+    saveBtn.disabled = true;
+    if (earned.length) {
+      document.getElementById("earnedWrap").innerHTML = earned.map(bid => {
+        const bi = Game.badgeInfo(bid, UI.lang);
+        return "<span class=\"badge-chip\">" + UI.esc(bi ? bi.icon + " " + bi.name : bid) + "</span>";
+      }).join(" ");
+    }
+  };
+});
+</script>
+</body>
+</html>
