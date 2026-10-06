@@ -1,0 +1,66 @@
+/* TypeFight teaser — isolated module styles.
+   One tool = one folder: only page-specific styles live here.
+   Shared tokens/components come from ../../css/tokens.css + ../../css/hub.css. */
+
+.tf-hero {
+  padding-block: var(--sp-6) var(--sp-8);
+  background:
+    radial-gradient(36rem 18rem at 50% -6rem, var(--dk-violet-soft), transparent);
+}
+.tf-hero h1 {
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  letter-spacing: -0.02em;
+  margin-block: var(--sp-3);
+}
+.tf-tag {
+  font-size: var(--fs-lg);
+  color: var(--text-muted);
+  max-inline-size: 38rem;
+}
+
+.tf-steps {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: 1fr;
+  margin-block: var(--sp-4) var(--sp-6);
+}
+.tf-step { position: relative; overflow: hidden; }
+.tf-step__n {
+  position: absolute;
+  inset-block-start: var(--sp-2);
+  inset-inline-end: var(--sp-4);
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--dk-violet-soft);
+  line-height: 1;
+}
+[data-theme="dark"] .tf-step__n { color: var(--surface-2); }
+.tf-step h3 { margin-block-end: var(--sp-2); }
+.tf-step p { margin: 0; color: var(--text-muted); }
+
+.tf-phase {
+  border: 2px dashed var(--dk-amber);
+  margin-block: var(--sp-6);
+}
+.tf-phase h2 { margin-block-start: 0; }
+.tf-phase p:last-child { margin-block-end: 0; }
+
+#tfNotifyCard { margin-block: var(--sp-6); }
+#tfNotifyCard h2 { margin-block-start: 0; }
+
+@media (min-width: 768px) {
+  .tf-steps { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-step, .tf-phase { transition: none; }
+}
+
+/* ---------- faq (native details/summary) ---------- */
+.tf-faq { display: grid; gap: .6rem; margin-block: var(--sp-4) var(--sp-6); }
+.tf-faq details { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.tf-faq summary { cursor: pointer; padding: .9rem 1rem; font-weight: 600; color: var(--text); list-style: none; }
+.tf-faq summary::-webkit-details-marker { display: none; }
+.tf-faq summary::after { content: "+"; float: inline-end; color: var(--primary); font-weight: 700; }
+.tf-faq details[open] summary::after { content: "–"; }
+.tf-faq details > p { padding: 0 1rem .9rem; color: var(--text-muted); font-size: .92rem; margin: 0; }

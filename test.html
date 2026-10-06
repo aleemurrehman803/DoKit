@@ -1,89 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Typing Test — TypeMaster</title>
-<meta name="description" content="Take a timed typing test on TypeMaster: choose a category and duration from 1 to 10 minutes.">
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/player.css">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<meta http-equiv="refresh" content="0;url=/typing/test.html">
+<title>Redirecting&hellip;</title>
 </head>
 <body>
-<div id="site-nav"></div>
-<main class="container">
-
-  <!-- ============ SETUP PHASE ============ -->
-  <div id="setup">
-    <div class="page-header">
-      <p class="eyebrow" data-i18n="d_eyebrow_test">Timed challenge</p>
-      <h1 data-i18n="test_title">Typing Test</h1>
-    </div>
-
-    <div class="card mb-3">
-      <h2 class="section-title" data-i18n="choose_category">1. Choose a category</h2>
-      <div class="picker-row" id="catRow">
-        <button class="pick" data-cat="standard" data-i18n="cat_standard">Standard</button>
-        <button class="pick" data-cat="advanced" data-i18n="cat_advanced">Advanced</button>
-        <button class="pick" data-cat="professional" data-i18n="cat_professional">Professional</button>
-        <button class="pick" data-cat="custom" data-i18n="cat_custom">Custom</button>
-      </div>
-    </div>
-
-    <div class="card mb-3">
-      <h2 class="section-title" data-i18n="choose_duration">2. Choose duration</h2>
-      <div class="picker-row" id="durRow">
-        <button class="pick" data-min="1">1 <span data-i18n="minutes">min</span></button>
-        <button class="pick" data-min="2">2 <span data-i18n="minutes">min</span></button>
-        <button class="pick" data-min="3">3 <span data-i18n="minutes">min</span></button>
-        <button class="pick" data-min="5">5 <span data-i18n="minutes">min</span></button>
-        <button class="pick" data-min="10">10 <span data-i18n="minutes">min</span></button>
-      </div>
-    </div>
-
-    <div id="testListWrap" class="card mb-3">
-      <div id="testList" class="grid grid-2"></div>
-    </div>
-
-    <div id="customWrap" class="card mb-3 hidden">
-      <div class="field">
-        <textarea id="customText" class="form-control" rows="6" data-i18n-ph="custom_ph" placeholder="Paste your own text here (at least 20 characters)..."></textarea>
-        <p class="form-note" id="customCount">0</p>
-      </div>
-    </div>
-
-    <div class="text-center mt-3">
-      <button class="btn btn-primary btn-lg" id="startBtn" data-i18n="start_test" disabled>Start Test</button>
-    </div>
-  </div>
-
-  <!-- ============ PLAYER PHASE ============ -->
-  <div id="player" class="player-wrap hidden">
-    <div class="page-header">
-      <h1 id="playerTitle">Test</h1>
-      <p class="page-sub" id="playerSub"></p>
-    </div>
-    <div class="player-stats">
-      <div class="pstat"><span class="v" id="statWpm">0</span><span class="l" data-i18n="live_wpm">WPM</span></div>
-      <div class="pstat"><span class="v" id="statAcc">100%</span><span class="l" data-i18n="live_acc">Accuracy</span></div>
-      <div class="pstat"><span class="v" id="statTime">0:00</span><span class="l" data-i18n="live_time">Time</span></div>
-    </div>
-    <div class="type-text" id="typeText"></div>
-    <input class="ghost-input" id="ghostInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <div class="type-hint" data-i18n="player_hint">Click the text, then start typing. The timer starts on your first keystroke.</div>
-    <div class="finger-hint" id="fingerHint"></div>
-    <div id="kb"></div>
-  </div>
-
-</main>
-<div id="site-foot"></div>
-<script src="js/urdu.js"></script>
-<script src="js/urdu2.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/test-data.js"></script>
-<script src="js/engine.js"></script>
-<script src="js/keyboard.js"></script>
-<script src="js/pages/test.js"></script>
+<p>This page has moved. <a href="/typing/test.html">Continue to /typing/test.html</a></p>
 </body>
 </html>

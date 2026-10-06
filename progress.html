@@ -1,63 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Progress — TypeMaster</title>
-<meta name="description" content="Track your typing progress: WPM trend charts, practice streaks, goals, and badges.">
-<link rel="stylesheet" href="css/main.css">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<meta http-equiv="refresh" content="0;url=/typing/progress.html">
+<title>Redirecting&hellip;</title>
 </head>
 <body>
-<div id="site-nav"></div>
-<main class="container">
-  <div class="page-header">
-    <p class="eyebrow" data-i18n="d_eyebrow_progress">Insights</p>
-    <h1 data-i18n="progress_title">My Progress</h1>
-  </div>
-
-  <div class="card mb-3">
-    <h2 class="section-title" data-i18n="trend_title">Progress trend</h2>
-    <canvas id="trendChart" style="width:100%"></canvas>
-    <p class="text-muted hidden" id="noTrend" data-i18n="no_data">No data yet.</p>
-  </div>
-
-  <div class="card mb-3">
-    <h2 class="section-title" data-i18n="streak_title">Practice streak</h2>
-    <div id="streakCal" class="mt-2"></div>
-  </div>
-
-  <div class="card mb-3">
-    <h2 class="section-title" data-i18n="goal_title">My goal</h2>
-    <div class="field">
-      <label for="goalInput" data-i18n="target_wpm">Target WPM</label>
-      <div class="picker-row" style="margin-bottom:12px">
-        <input type="number" id="goalInput" class="form-control" style="max-width:170px" min="10" max="200">
-        <button class="btn btn-primary" id="goalBtn" data-i18n="set_goal">Set Goal</button>
-      </div>
-      <p class="text-muted"><span data-i18n="target_wpm">Target WPM</span>: <strong id="goalCur">—</strong></p>
-    </div>
-  </div>
-
-  <div class="card mb-3">
-    <h2 class="section-title" data-i18n="badges_title">Badges</h2>
-    <p class="text-muted hidden" id="noBadges" data-i18n="no_badges">No badges earned yet.</p>
-    <div class="grid grid-4 mt-2" id="badgeGrid" style="gap:10px"></div>
-  </div>
-
-  <div class="stat-grid">
-    <div class="card stat-card"><div class="stat-num" id="tTests">0</div><div class="stat-label" data-i18n="total_tests">Total tests</div></div>
-    <div class="card stat-card"><div class="stat-num" id="tLessons">0</div><div class="stat-label" data-i18n="lessons_done">Lessons done</div></div>
-    <div class="card stat-card"><div class="stat-num" id="tXp">0</div><div class="stat-label" data-i18n="total_xp">Total XP</div></div>
-  </div>
-</main>
-<div id="site-foot"></div>
-<script src="js/urdu.js"></script>
-<script src="js/urdu2.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/gamification.js"></script>
-<script src="js/charts.js"></script>
-<script src="js/pages/progress.js"></script>
+<p>This page has moved. <a href="/typing/progress.html">Continue to /typing/progress.html</a></p>
 </body>
 </html>
