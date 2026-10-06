@@ -1,0 +1,1 @@
+document.addEventListener("DOMContentLoaded",()=>{UI.init({active:"cert"}),DB.requireUser()&&Certificate.fill()});
