@@ -1,0 +1,121 @@
+/* DoKit design tokens — spec §1, §8
+   Light theme is default; [data-theme="dark"] overrides.
+   All spacing/type use these variables. RTL-safe (no physical L/R). */
+
+/* Self-hosted Noto Nastaliq Urdu (SIL OFL) — no external requests at runtime */
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../assets/fonts/noto-nastaliq-urdu.woff2") format("woff2");
+}
+
+:root {
+  /* Brand */
+  --dk-violet: #6C4CF1;
+  --dk-violet-deep: #4A2FD6;
+  --dk-violet-soft: #EFEAFF;
+  --dk-amber: #FFC531;
+  --dk-amber-deep: #D99E00;
+  --dk-ink: #17142E;
+
+  /* Light theme surfaces */
+  --bg: #FFFFFF;
+  --bg-soft: #F6F4FF;
+  --surface: #FFFFFF;
+  --surface-2: #F1EDFF;
+  --text: #17142E;
+  --text-muted: #5C5778;
+  --border: #E4DFF5;
+  --primary: #6C4CF1;
+  --primary-contrast: #FFFFFF;
+  --accent: #FFC531;
+  --danger: #D64545;
+  --success: #2FA36B;
+
+  /* Type scale */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-3xl: 2.75rem;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ur: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Urdu Typesetting", var(--font-sans);
+
+  /* Spacing */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-8: 3rem;
+  --sp-10: 4rem;
+
+  /* Radii */
+  --r-sm: 0.375rem;
+  --r-md: 0.625rem;
+  --r-lg: 1rem;
+  --r-xl: 1.5rem;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(23, 20, 46, 0.08);
+  --shadow-md: 0 4px 16px rgba(23, 20, 46, 0.10);
+  --shadow-lg: 0 12px 40px rgba(108, 76, 241, 0.18);
+
+  /* Layout */
+  --maxw: 72rem;
+}
+
+[data-theme="dark"] {
+  --dk-violet-soft: #2A2350;
+  --bg: #12101F;
+  --bg-soft: #17142E;
+  --surface: #1D1933;
+  --surface-2: #262147;
+  --text: #F2EFFD;
+  --text-muted: #A9A3C9;
+  --border: #2E2952;
+  --primary: #8B74FF;
+  --primary-contrast: #17142E;
+  --accent: #FFC531;
+  --danger: #E86A6A;
+  --success: #4CC98A;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.50);
+}
+
+/* Urdu typography: Nastaliq-friendly font stack + roomier line-height (self-hosted woff2) */
+html[lang="ur"] body {
+  font-family: var(--font-ur); /* starts with "Noto Nastaliq Urdu" (self-hosted) */
+  line-height: 1.9;
+}
+html[lang="ur"] p, html[lang="ur"] li, html[lang="ur"] .card p {
+  line-height: 2.1;
+}
+html[lang="ur"] h1, html[lang="ur"] h2, html[lang="ur"] h3 {
+  line-height: 2.2;
+}
+
+/* ---------- Language dropdown (custom button + menu, replaces native select) ---------- */
+.lang-drop{position:relative}
+.lang-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .7rem;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-sm);cursor:pointer;white-space:nowrap}
+.lang-btn:hover{border-color:var(--primary)}
+.lang-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.lang-menu{position:absolute;inset-inline-end:0;top:calc(100% + .4rem);z-index:70;min-inline-size:11rem;max-block-size:60vh;overflow:auto;margin:0;padding:.35rem;list-style:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md)}
+.lang-menu[hidden]{display:none}
+.lang-menu li{padding:.5rem .7rem;border-radius:var(--r-sm);cursor:pointer;color:var(--text)}
+.lang-menu li:hover,.lang-menu li:focus-visible{background:var(--surface-2);outline:none}
+.lang-menu li[aria-selected="true"]{font-weight:700;color:var(--primary)}
+@media (max-width:559px){.lang-btn #langCur{display:none}}
+
+/* ---------- Smooth theme switching (no flash) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  body{transition:background-color .25s ease,color .25s ease}
+  .site-header,.site-footer,.card,.tcard,.btn,.lang-menu,.toast{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
+}

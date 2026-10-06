@@ -1,70 +1,72 @@
-# TypeMaster
+# DoKit — Every tool you'll ever need.
 
-**TypeMaster** — "Type Faster. Type Better." / "تیز لکھیں، بہتر لکھیں"
+DoKit is a free toolbox of online utilities that run **entirely in your
+browser**. No sign-up, no uploads, no tracking. Your files never leave your
+device — there is no server to hack, because there is no server.
 
-A free, bilingual (English + اردو) touch-typing tutor: structured lessons,
-timed typing tests, typing games, smart practice drills, printable
-certificates, and progress tracking. Plain HTML/CSS/JS only — no build
-tools, no CDNs, no external requests. Deploy as-is to GitHub Pages (or open
-`index.html` in any modern browser).
+**Live site:** https://aleemurrehman803.github.io/dokit/ (custom domain
+`getdokit.com` planned)
 
-## Pages
+## What's inside
 
-- `index.html` — Home: hero with live typing demo, features, plans
-- `signup.html` / `login.html` — Account creation and login
-- `dashboard.html` — Continue learning, best WPM, streak, problem keys
-- `lessons.html` — Lesson tracks: Beginner / Intermediate / Advanced / Story
-- `lesson.html?id=` — Lesson player (typing engine + keyboard guide)
-- `test.html` — Timed tests (1–10 min), categories, custom text
-- `results.html` — Gross/Net WPM, accuracy, per-key table
-- `progress.html` — Trend chart, streak calendar, goals, badges
-- `profile.html` — Name/password, theme, language, data export, reset
-- `games.html` — Word Fall and Word Sprint typing games
-- `practice.html` — Smart drills from your problem keys + common words
-- `certificate.html` — Printable typing certificate
-- `faq.html` — Typing guides (WPM, accuracy, speed tips)
+- **5 free tools** (`/tools/`): Image Resizer, Image Compressor, Image
+  Converter, Word Counter, Case Converter
+- **Typing school** (`/typing/`): the full TypeMaster suite — lessons, speed
+  tests, games, certificates (flagship section)
+- **TypeFight** (`/typefight/`): teaser for upcoming skill-based typing battles
+- **DoKit Assistant**: an in-site guide that answers questions about every
+  tool, in your language
+- **Company pages**: About, Contact, Pricing, FAQ, Privacy, Terms, Coming Soon
 
-## Folder structure
+## Key properties
+
+- **Private by design** — all processing happens on-device (`<canvas>`,
+  local text). Nothing is uploaded anywhere.
+- **10 languages** — English, اردو, العربية, हिन्दी, Español, Français,
+  Português, Deutsch, Türkçe, Русский — with right-to-left layout for Urdu
+  and Arabic. UI chrome ships in all 10; long-form articles (privacy, terms,
+  FAQ) are fully translated in English + Urdu, and show English with an
+  honest "full translation coming soon" note in the other languages.
+- **PWA-ready** — installable (`manifest.webmanifest`), works offline after
+  the first visit (service worker `sw.js` + `offline.html`).
+- **Zero dependencies** — no npm, no CDN libraries. Vanilla HTML/CSS/JS.
+- **Accessible** — skip links, focus rings, aria labels, keyboard-operable.
+
+## Repository layout (plugin architecture)
 
 ```
-├── css/
-│   ├── main.css      Design system (variables, light/dark, RTL-ready, print)
-│   └── player.css    Typing player + on-screen keyboard
-├── js/
-│   ├── urdu.js       EN + UR string tables (data-i18n)
-│   ├── urdu2.js      Additional EN + UR strings (merged into I18N)
-│   ├── storage.js    Data layer (localStorage, tm_* keys), async API
-│   ├── ui.js         Nav/footer injection, theme + language toggles
-│   ├── curriculum.js 44 original lessons with progressive key groups
-│   ├── test-data.js  Original test passages (Standard/Advanced/Pro)
-│   ├── engine.js     Hidden-input keystroke engine, live stats
-│   ├── keyboard.js   QWERTY guide, finger-zone colors, next-key highlight
-│   ├── gamification.js XP, levels, badges, streaks
-│   ├── charts.js     Dependency-free canvas trend chart + streak calendar
-│   ├── games.js      Word Fall + Word Sprint game logic
-│   ├── practice.js   Smart practice drills + top-200 word list
-│   ├── certificate.js Certificate data fill
-│   └── pages/        One script per HTML page (no inline scripts)
-├── sitemap.xml / robots.txt   SEO basics
-└── README.md
+index.html / about.html / contact.html / ...   hub + company pages
+tools/index.html                                searchable tool directory
+typefight/          index.html, tool.js (TypeFight.*), tool.css, README.md
+typing/             TypeMaster suite (self-contained legacy module)
+css/                tokens.css (design tokens), hub.css (component library)
+js/                 i18n.js (DKI18N), ui.js (DKUI Shared UI API v1.0.0),
+                    tools-data.js, assistant.js, assistant-kb.js, pages/
+assets/             logo.svg, icon.svg, og-cover.svg
 ```
 
-## Key mechanics
+**Module rules** (bind every contributor):
 
-- **WPM formulas** — Gross = (chars/5)/min, Net = (correct chars/5)/min,
-  Accuracy = correct/total keystrokes × 100.
-- **Unlock gating** — 90%+ accuracy required to unlock the next lesson.
-  Stars: 3 ≥97%, 2 ≥93%, 1 ≥90%.
-- **Problem keys** — per-key accuracy tracked across sessions; weakest keys
-  surface on the dashboard and feed Smart Practice drills.
-- **i18n** — toggle in nav; `document.dir=rtl` + Urdu strings when Urdu
-  selected. Lesson/test *content* stays English (typing is English-keyboard).
-- **Auth** — browser-local accounts; passwords stored as salted SHA-256
-  hashes (SubtleCrypto, with fallback), never plaintext.
-- **Security** — strict Content Security Policy on every page, zero inline
-  scripts, all user data rendered via `textContent`.
+1. One tool = one folder. Zero cross-imports between tool folders.
+2. Tool JS depends ONLY on the 3 shared files: `css/tokens.css`,
+   `js/ui.js`, `js/i18n.js`.
+3. No shared mutable globals — the only shared surfaces are the read-only
+   `DKUI` API and the append-only `DKI18N` dictionary.
+4. New modules use localStorage prefix `dokit:<name>:*` (the `/typing/`
+   suite keeps its legacy `typemaster_*` keys — do not rename).
+5. Each tool ships its own JS namespace (`TypeFight.*`, …) and its own
+   `README.md` so the folder is understandable alone.
 
-## Privacy
+## Assets note
 
-All data (account, progress, scores) stays in the visitor's own browser
-(localStorage). Nothing is uploaded anywhere.
+- `assets/og-cover.svg` (1200×630) is the designed social cover; it is
+  converted to PNG at publish time (SVG is the source of truth).
+- `assets/icon.svg` is the PWA master icon; `icon-192.png` / `icon-512.png`
+  referenced by the manifest are generated from it at publish time.
+
+## Security & privacy model
+
+Static site, no backend. User content is never placed into `innerHTML`;
+file processing is client-side with type allowlist (PNG/JPEG/WebP) and a
+25 MB cap; canvas redraw strips EXIF data. See `privacy.html` for the
+user-facing policy.

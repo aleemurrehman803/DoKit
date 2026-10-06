@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Coming Soon — DoKit</title>
+<meta name="description" content="What's next on DoKit: QR Generator, Password Generator, JSON Formatter, Unit Converter — and the TypeFight typing-battle teaser.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/coming-soon.html">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/hub.css">
+</head>
+<body data-nav="coming">
+<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="/" data-i18n="crumb_home">Home</a></li>
+          <li aria-current="page" data-i18n="cs_title">Coming soon</li>
+        </ol>
+      </nav>
+      <h1 data-i18n="cs_title">Coming soon</h1>
+      <p style="color:var(--text-muted)" data-i18n="cs_sub">Four new tools are on the workbench. Here's a first look.</p>
+
+      <a class="tool-card" href="/typefight/" style="margin-block:var(--sp-5);border:2px solid var(--primary)">
+        <span class="tool-card__icon" aria-hidden="true">⚔️</span>
+        <h3 class="tool-card__name"><span data-i18n="tool_typefight_name">TypeFight</span> <span class="badge badge-amber" data-i18n="badge_soon">Coming soon</span></h3>
+        <p class="tool-card__desc" data-i18n="tf_sub">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
+      </a>
+
+      <div class="grid">
+        <div class="card">
+          <div class="tool-card__icon" aria-hidden="true">📱</div>
+          <h3 data-i18n="cs1_t">QR Generator</h3>
+          <p data-i18n="cs1_d">Create QR codes for links, text, and contact cards — instantly, offline.</p>
+        </div>
+        <div class="card">
+          <div class="tool-card__icon" aria-hidden="true">🔑</div>
+          <h3 data-i18n="cs2_t">Password Generator</h3>
+          <p data-i18n="cs2_d">Strong, random passwords generated on your device. Nothing ever leaves it.</p>
+        </div>
+        <div class="card">
+          <div class="tool-card__icon" aria-hidden="true">🧾</div>
+          <h3 data-i18n="cs3_t">JSON Formatter</h3>
+          <p data-i18n="cs3_d">Pretty-print, minify, and validate JSON without pasting it into a stranger's website.</p>
+        </div>
+        <div class="card">
+          <div class="tool-card__icon" aria-hidden="true">📏</div>
+          <h3 data-i18n="cs4_t">Unit Converter</h3>
+          <p data-i18n="cs4_d">Length, weight, temperature, and more — with a clean, fast interface.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-block:var(--sp-6)">
+        <h2 data-i18n="notify_t">Get notified</h2>
+        <p data-i18n="notify_d">Leave your name and email. We'll send one email when new tools launch.</p>
+        <form id="notifyForm">
+          <div class="field">
+            <label for="nName" data-i18n="notify_name">Name</label>
+            <input class="text-input" type="text" id="nName" required autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="nEmail" data-i18n="notify_email">Email</label>
+            <input class="text-input" type="email" id="nEmail" required autocomplete="email" dir="ltr">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" data-i18n="notify_btn">Notify me</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<div id="dk-assistant-root"></div>
+<script src="/js/i18n.js" defer></script>
+<script src="/js/ui.js" defer></script>
+<script src="/js/pages/info.js" defer></script>
+<script src="/js/assistant-kb.js" defer></script>
+<script src="/js/assistant.js" defer></script>
+</body>
+</html>

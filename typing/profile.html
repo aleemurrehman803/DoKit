@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Profile — TypeMaster</title>
+<meta name="description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+  <div class="page-header">
+    <p class="eyebrow" data-i18n="d_eyebrow_profile">Account</p>
+    <h1 data-i18n="profile_title">Profile</h1>
+    <p class="page-sub" id="userSub"></p>
+  </div>
+
+  <div class="card mb-3">
+    <h2 class="section-title" data-i18n="change_name">Change name</h2>
+    <div class="field">
+      <div class="picker-row" style="margin-bottom:0">
+        <input type="text" id="nameInput" class="form-control" style="max-width:280px" data-i18n-ph="new_name" placeholder="New name">
+        <button class="btn btn-primary btn-sm" id="nameBtn" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <h2 class="section-title" data-i18n="change_password">Change password</h2>
+    <div class="form-card" style="margin:0;max-width:380px">
+      <div class="field">
+        <input type="password" id="pwOld" class="form-control" data-i18n-ph="old_password" placeholder="Current password" aria-label="Current password">
+      </div>
+      <div class="field">
+        <input type="password" id="pwNew" class="form-control" data-i18n-ph="new_password" placeholder="New password" aria-label="New password">
+      </div>
+      <div class="field">
+        <input type="password" id="pwConfirm" class="form-control" data-i18n-ph="new_password" placeholder="Confirm new password" aria-label="Confirm new password">
+      </div>
+      <button class="btn btn-primary btn-sm" id="pwBtn" data-i18n="save">Save</button>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <h2 class="section-title" data-i18n="appearance">Appearance</h2>
+    <div class="field">
+      <label class="check-row">
+        <input type="checkbox" id="themeChk">
+        <span data-i18n="dark_mode">Dark mode</span>
+      </label>
+    </div>
+    <div class="field">
+      <label data-i18n="language">Language</label>
+      <div class="picker-row" id="langRow" style="margin-bottom:0">
+        <button class="pick" data-lang="en">English</button>
+        <button class="pick" data-lang="ur">اردو</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <h2 class="section-title" data-i18n="your_data">Your data</h2>
+    <button class="btn btn-outline btn-sm" id="dlBtn" data-i18n="download_data">Download my data</button>
+  </div>
+
+  <div class="card mb-3" style="border-color:var(--danger)">
+    <h2 class="section-title" data-i18n="danger_zone">Danger zone</h2>
+    <button class="btn btn-danger btn-sm" id="resetBtn" data-i18n="reset_progress">Reset progress</button>
+  </div>
+
+  <div class="text-center mt-3">
+    <button class="btn btn-ghost" id="logoutBtn2" data-i18n="nav_logout">Logout</button>
+  </div>
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/profile.js"></script>
+</body>
+</html>

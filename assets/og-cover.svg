@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="DoKit — Every tool you'll ever need">
+  <defs>
+    <linearGradient id="ogbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6C4CF1"/>
+      <stop offset="0.55" stop-color="#3B2A8F"/>
+      <stop offset="1" stop-color="#17142E"/>
+    </linearGradient>
+    <linearGradient id="oglogo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8B74FF"/>
+      <stop offset="1" stop-color="#4A2FD6"/>
+    </linearGradient>
+    <radialGradient id="ogglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFC531" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFC531" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#ogbg)"/>
+  <circle cx="1020" cy="120" r="260" fill="url(#ogglow)"/>
+  <circle cx="120" cy="560" r="180" fill="#6C4CF1" opacity="0.18"/>
+  <circle cx="640" cy="80" r="90" fill="#ffffff" opacity="0.05"/>
+
+  <!-- Logo lockup (left) -->
+  <g transform="translate(120,200) scale(2.2)">
+    <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#oglogo)"/>
+    <path d="M16 15 A8.5 8.5 0 1 1 32.5 10.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round"/>
+    <rect x="20.75" y="17" width="6.5" height="31" rx="3.25" fill="#ffffff"/>
+    <path d="M24 19 C39 19 45.5 25 45.5 32.5 C45.5 40 39 46 24 46" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <text x="290" y="300" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="96" font-weight="800" fill="#ffffff" letter-spacing="-2">DoKit</text>
+  <text x="292" y="360" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="38" font-weight="400" fill="#FFC531">Every tool you&#8217;ll ever need.</text>
+  <text x="292" y="412" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="24" fill="#ffffff" opacity="0.75">Free &#183; Fast &#183; Private &#183; In your browser</text>
+
+  <!-- Floating tool glyphs (right) -->
+  <g opacity="0.95">
+    <!-- image glyph -->
+    <g transform="translate(880,180) rotate(-8)">
+      <rect x="-70" y="-70" width="140" height="140" rx="28" fill="#ffffff" opacity="0.12"/>
+      <rect x="-44" y="-44" width="88" height="88" rx="14" fill="none" stroke="#ffffff" stroke-width="7"/>
+      <circle cx="-20" cy="-20" r="10" fill="#FFC531"/>
+      <path d="M-44 24 L-14 -6 L8 16 L22 2 L44 24 Z" fill="#ffffff" opacity="0.85"/>
+    </g>
+    <!-- text glyph -->
+    <g transform="translate(1050,330) rotate(6)">
+      <rect x="-70" y="-70" width="140" height="140" rx="28" fill="#ffffff" opacity="0.12"/>
+      <text x="0" y="34" text-anchor="middle" font-family="Georgia,serif" font-size="88" font-weight="700" fill="#ffffff">Aa</text>
+    </g>
+    <!-- keyboard glyph -->
+    <g transform="translate(880,470) rotate(-4)">
+      <rect x="-70" y="-70" width="140" height="140" rx="28" fill="#ffffff" opacity="0.12"/>
+      <rect x="-48" y="-30" width="96" height="60" rx="12" fill="none" stroke="#ffffff" stroke-width="7"/>
+      <g fill="#FFC531">
+        <circle cx="-28" cy="-12" r="6"/><circle cx="-10" cy="-12" r="6"/><circle cx="8" cy="-12" r="6"/><circle cx="26" cy="-12" r="6"/>
+        <circle cx="-28" cy="8" r="6"/><circle cx="-10" cy="8" r="6"/><circle cx="8" cy="8" r="6"/><circle cx="26" cy="8" r="6"/>
+      </g>
+    </g>
+  </g>
+</svg>

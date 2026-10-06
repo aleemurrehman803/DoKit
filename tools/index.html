@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>All Tools — DoKit | Free Online Tools</title>
+<meta name="description" content="Browse all 6 free DoKit tools: image resizer, compressor, converter, word counter, case converter, and the TypeMaster typing school.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="/" data-i18n="crumb_home">Home</a></li>
+          <li aria-current="page" data-i18n="nav_all_tools">All Tools</li>
+        </ol>
+      </nav>
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <h1 data-i18n="tools_title">All tools</h1>
+        <p data-i18n="tools_sub">Six free tools. Search or filter by category — everything runs in your browser.</p>
+      </div>
+      <div class="search-wrap" style="margin-inline:0;margin-bottom:var(--sp-4)">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
+        <input class="text-input" type="search" id="toolSearch" data-i18n-ph="search_ph" placeholder="Search tools… e.g. resize, words" autocomplete="off">
+      </div>
+      <div class="chips" style="justify-content:flex-start" role="group" data-i18n-aria="cat_label" aria-label="Filter by category">
+        <button class="chip" data-cat="all" aria-pressed="true" data-i18n="cat_all">All</button>
+        <button class="chip" data-cat="image" aria-pressed="false" data-i18n="cat_image">Image</button>
+        <button class="chip" data-cat="text" aria-pressed="false" data-i18n="cat_text">Text</button>
+        <button class="chip" data-cat="typing" aria-pressed="false" data-i18n="cat_typing">Typing</button>
+      </div>
+      <p style="color:var(--text-muted);font-size:var(--fs-sm)" id="toolsCount" aria-live="polite"></p>
+      <div class="grid" id="toolsGrid" aria-live="polite"></div>
+      <div class="empty-state" id="toolsEmpty" style="display:none">
+        <span class="empty-state__icon" aria-hidden="true">🔍</span>
+        <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="../js/tools-data.js" defer></script>
+<script src="../js/pages/tools.js" defer></script>
+<div id="dk-assistant-root"></div>
+<script src="../js/assistant-kb.js" defer></script>
+<script src="../js/assistant.js" defer></script>
+</body>
+</html>
