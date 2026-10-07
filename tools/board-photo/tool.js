@@ -63,6 +63,15 @@
       "bp.step3": "Download your board photo",
       "bp.download": "Download JPG",
       "bp.again": "Use another photo",
+      "bp.bg_label": "Background colour",
+      "bp.bg_white": "White",
+      "bp.bg_blue": "Blue",
+      "bp.bg_red": "Red",
+      "bp.bg_board": "Board default",
+      "bp.bg_original": "Keep original",
+      "bp.print_sheet": "Print Sheet (4×6)",
+      "bp.share_wa": "Share on WhatsApp",
+      "bp.share_msg": "I made my board photo with DoKit Board Photo",
       "bp.verified": "Verified specs",
       "bp.typical": "Typical — confirm with your board",
       "bp.spec_size": "Size",
@@ -111,7 +120,16 @@
       "bp.search_ph": "تلاش کے لیے لکھیں… مثلاً BISE Lahore",
       "bp.no_match": "کوئی نتیجہ نہیں — “Pakistani admission (typical)” منتخب کریں یا نیچے کسٹم سائز لکھیں۔",
       "bp.verified": "تصدیق شدہ تفصیلات",
-      "bp.typical": "معمول — اپنے بورڈ سے تصدیق کریں"
+      "bp.typical": "معمول — اپنے بورڈ سے تصدیق کریں",
+      "bp.bg_label": "پس منظر کا رنگ",
+      "bp.bg_white": "سفید",
+      "bp.bg_blue": "نیلا",
+      "bp.bg_red": "سرخ",
+      "bp.bg_board": "بورڈ کا طے شدہ",
+      "bp.bg_original": "اصل رکھیں",
+      "bp.print_sheet": "پرنٹ شیٹ (4×6)",
+      "bp.share_wa": "واٹس ایپ پر شیئر کریں",
+      "bp.share_msg": "میں نے DoKit Board Photo سے اپنی بورڈ فوٹو بنائی"
     });
   }
 
@@ -141,6 +159,7 @@
   var currentBlob = null;
   var currentName = "board-photo.jpg";
   var processing = false;
+  var bgOverride = null; // null = board's spec bg; "original" = no fill; else a css colour
 
   function genericBoard() {
     for (var i = 0; i < BOARDS.length; i++) {
@@ -261,10 +280,12 @@
       if (BOARDS[i].id === id) { selected = BOARDS[i]; break; }
     }
     if (!selected) selected = genericBoard();
+    bgOverride = null; /* new board -> back to its spec background */
     syncToggleLabel();
     setDropOpen(false);
     renderList("");
     renderSpec();
+    syncBgBtns();
     if (currentBlob) processImage(lastImage, true);
   }
 
@@ -357,8 +378,9 @@
     var canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     var ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
+    /* background fill: user override > board spec bg > white. "original" = no fill */
+    var fill = bgOverride === "original" ? null : (bgOverride || b.bg || "#ffffff");
+    if (fill) { ctx.fillStyle = fill; ctx.fillRect(0, 0, W, H); }
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, sx, sy, cw, ch, 0, 0, W, H);
@@ -434,6 +456,76 @@
     fileInput.click();
   });
 
+  /* ---------------- FEATURE 1: background changer ---------------- */
+  var bgBtns = document.querySelectorAll("#bgRow .bbg-btn");
+  function syncBgBtns() {
+    for (var i = 0; i < bgBtns.length; i++) {
+      var v = bgBtns[i].getAttribute("data-bg");
+      var active = (bgOverride === null && v === "board") || (bgOverride === v);
+      bgBtns[i].classList.toggle("active", active);
+      bgBtns[i].setAttribute("aria-pressed", active ? "true" : "false");
+    }
+  }
+  for (var bi = 0; bi < bgBtns.length; bi++) {
+    (function (btn) {
+      btn.addEventListener("click", function () {
+        var v = btn.getAttribute("data-bg");
+        bgOverride = (v === "board") ? null : v;
+        syncBgBtns();
+        if (lastImage) processImage(lastImage, true);
+      });
+    })(bgBtns[bi]);
+  }
+
+  /* ---------------- FEATURE 2: print sheet (4x6in @300dpi) ---------------- */
+  $("sheetBtn").addEventListener("click", function () {
+    if (!currentBlob) return;
+    var url = URL.createObjectURL(currentBlob);
+    var img = new Image();
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      makePrintSheet(img);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); };
+    img.src = url;
+  });
+
+  function makePrintSheet(img) {
+    var SHEET_W = 1200, SHEET_H = 1800, GAP = 12; /* 4x6 inch @ 300 DPI */
+    var pw = img.naturalWidth || 200, ph = img.naturalHeight || 230;
+    var cols = Math.max(1, Math.floor((SHEET_W + GAP) / (pw + GAP)));
+    var rows = Math.max(1, Math.floor((SHEET_H + GAP) / (ph + GAP)));
+    var gridW = cols * pw + (cols - 1) * GAP;
+    var gridH = rows * ph + (rows - 1) * GAP;
+    var ox = Math.round((SHEET_W - gridW) / 2);
+    var oy = Math.round((SHEET_H - gridH) / 2);
+    var canvas = document.createElement("canvas");
+    canvas.width = SHEET_W; canvas.height = SHEET_H;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, SHEET_W, SHEET_H);
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        ctx.drawImage(img, ox + c * (pw + GAP), oy + r * (ph + GAP), pw, ph);
+      }
+    }
+    canvas.toBlob(function (blob) {
+      if (!blob) return;
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "board-photo-sheet-4x6.jpg";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    }, "image/jpeg", 0.92);
+  }
+
+  /* ---------------- FEATURE 3: WhatsApp share ---------------- */
+  $("waBtn").addEventListener("click", function () {
+    var msg = t("bp.share_msg", "I made my board photo with DoKit Board Photo") + " \uD83C\uDF93\n" + location.href;
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank", "noopener");
+  });
+
   /* ---------------- board search + custom ---------------- */
   $("boardSearch").addEventListener("input", function () {
     renderList($("boardSearch").value);
@@ -447,9 +539,11 @@
     var h = Math.max(10, Math.min(4000, parseInt($("ch").value, 10) || 230));
     var kb = Math.max(1, Math.min(10240, parseInt($("ckb").value, 10) || 50));
     selected = { id: "custom", name: "Custom (" + w + "×" + h + ")", w: w, h: h, kb: kb, bg: "#ffffff", bgName: "white", verified: false, note: "Your custom size. Confirm exact specs with your board.", source: "Custom" };
+    bgOverride = null;
     syncToggleLabel();
     renderList("");
     renderSpec();
+    syncBgBtns();
     if (lastImage) processImage(lastImage, true);
   });
 
@@ -459,4 +553,5 @@
   setDropOpen(false);
   renderList("");
   renderSpec();
+  syncBgBtns();
 })();

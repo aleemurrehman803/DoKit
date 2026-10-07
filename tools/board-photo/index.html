@@ -135,8 +135,20 @@
           <span class="bpill" id="pillSize">–</span>
         </div>
         <p class="thint" id="resultNote" hidden></p>
+        <div class="bbg-row" id="bgRow">
+          <p class="bbg-label" data-i18n="bp.bg_label">Background colour</p>
+          <div class="bbg-btns" role="group" aria-label="Background colour">
+            <button type="button" class="bbg-btn" data-bg="#ffffff"><span class="bbg-swatch" style="background:#ffffff" aria-hidden="true"></span><span data-i18n="bp.bg_white">White</span></button>
+            <button type="button" class="bbg-btn" data-bg="#e6f0ff"><span class="bbg-swatch" style="background:#e6f0ff" aria-hidden="true"></span><span data-i18n="bp.bg_blue">Blue</span></button>
+            <button type="button" class="bbg-btn" data-bg="#d93b3b"><span class="bbg-swatch" style="background:#d93b3b" aria-hidden="true"></span><span data-i18n="bp.bg_red">Red</span></button>
+            <button type="button" class="bbg-btn" data-bg="board"><span class="bbg-swatch bbg-swatch-board" aria-hidden="true"></span><span data-i18n="bp.bg_board">Board default</span></button>
+            <button type="button" class="bbg-btn" data-bg="original"><span class="bbg-swatch bbg-swatch-orig" aria-hidden="true"></span><span data-i18n="bp.bg_original">Keep original</span></button>
+          </div>
+        </div>
         <div class="tbtnrow" style="justify-content:center">
           <button type="button" class="tbtn tbtn-primary" id="downloadBtn" data-i18n="bp.download">Download JPG</button>
+          <button type="button" class="tbtn tbtn-ghost" id="sheetBtn" data-i18n="bp.print_sheet">Print Sheet (4×6)</button>
+          <button type="button" class="tbtn tbtn-ghost" id="waBtn" data-i18n="bp.share_wa">Share on WhatsApp</button>
           <button type="button" class="tbtn tbtn-ghost" id="againBtn" data-i18n="bp.again">Use another photo</button>
         </div>
       </div>
