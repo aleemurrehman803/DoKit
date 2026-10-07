@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Board Photo — BISE &amp; University Exam Photo Maker | DoKit</title>
+<meta name="description" content="Make the perfect exam photo for Pakistani boards & universities: pick your board (BISE, BIE, FBISE, universities), upload a photo, and download it at the exact size, background and KB your board requires. Free, private, in your browser."/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/board-photo/"/>
+<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
+<meta name="theme-color" content="#6C4CF1"/>
+<link rel="manifest" href="../../manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="../../assets/icon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta property="og:title" content="Board Photo — BISE & University Exam Photo Maker | DoKit"/>
+<meta property="og:description" content="Exam photos at your board's exact size, background and KB. Pick BISE/BIE/university, upload, download. Free & private."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="../../css/hub.css"/>
+<link rel="stylesheet" href="tool.css"/>
+<script src="../../js/i18n-v2.js" defer></script>
+<script src="../../js/i18n-hotfix.js" defer></script>
+  <script src="../../js/i18n-tools-shared.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../../js/firebase.js" defer></script>
+<script src="../../js/site-wide.js" defer></script>
+<script src="../../js/maintenance.js" defer></script>
+<script src="../../js/journey.js" defer></script>
+<script src="tool.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Which boards and universities are included?","acceptedAnswer":{"@type":"Answer","text":"BISE Peshawar, BISE Swat, BISE Mardan, BISE Kohat and BISE D.I. Khan (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Quetta (white background), BISE Bahawalpur (150×200 px, 8–22 KB, blue background), FBISE, LUMS, NUST, UET Lahore, Punjab University, University of Karachi, IBA Karachi, COMSATS, AIOU, AJK Board and more. Boards marked “typical” use the common Pakistani exam standard — please confirm with your board."}},
+{"@type":"Question","name":"What does the verified badge mean?","acceptedAnswer":{"@type":"Answer","text":"“Verified” means the size, background and file-size limit were read from an official board notification or the board's own website. “Typical” means the board hasn't published specs, so the common Pakistani exam standard is used — confirm with your board before submitting."}},
+{"@type":"Question","name":"What if my board is missing?","acceptedAnswer":{"@type":"Answer","text":"Use the generic “Pakistani admission (typical)” preset, or type your board's width, height and KB target into the custom fields — every field is editable."}},
+{"@type":"Question","name":"Is my photo uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"Never. Everything runs in your browser with JavaScript — your photo never leaves your device."}},
+{"@type":"Question","name":"How is the photo cropped?","acceptedAnswer":{"@type":"Answer","text":"The tool auto-crops to your board's exact dimensions, keeping the head fully in frame with headroom — your face is never altered or cut."}},
+{"@type":"Question","name":"What file format do I get?","acceptedAnswer":{"@type":"Answer","text":"A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal."}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HowTo","name":"How to make a board exam photo","step":[
+{"@type":"HowToStep","name":"Find your board","text":"Type your board or university name in the search box and pick it from the list. Check the spec card for exact size, background and KB."},
+{"@type":"HowToStep","name":"Upload your photo","text":"Drop a clear front-facing photo into the upload box, or click to browse your files."},
+{"@type":"HowToStep","name":"Auto-fit to board specs","text":"The photo is auto-cropped to your board's exact dimensions and compressed to fit the KB target — face kept fully in frame."},
+{"@type":"HowToStep","name":"Download","text":"Download the JPG and upload it straight to your board's admission or registration portal."}]}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main" class="twrap">
+  <nav class="tcrumb" aria-label="Breadcrumb">
+    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page">Board Photo</span>
+  </nav>
+
+  <div class="thero">
+  <div class="thero-icon" aria-hidden="true">
+    <!-- Board Photo: graduation cap -->
+    <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
+      <defs>
+        <linearGradient id="tig-board" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
+        </linearGradient>
+      </defs>
+      <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-board)"/>
+      <path d="M36 20L14 29l22 9 18-7.4V42h4V29L36 20z" fill="#fff"/>
+      <path d="M24 38.5V46c0 3 5.4 5.5 12 5.5s12-2.5 12-5.5v-7.5l-12 4.9-12-4.9z" fill="#fff" opacity=".85"/>
+      <path d="M54 42v10" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="54" cy="54" r="2.5" fill="#fff"/>
+    </svg>
+  </div>
+    <h1>Board Photo</h1>
+    <p data-i18n="bp.hero_desc">Exam &amp; admission photos for Pakistani boards &amp; universities — exact size, background and KB your board asks for. Free, private, in your browser.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="bp.privacy">Your photo never leaves your device — 100% private.</span></span></p>
+  </div>
+
+  <section class="tcard" aria-labelledby="tool-h">
+    <h2 id="tool-h" class="sr-only">Board Photo</h2>
+
+    <!-- Step 1: board -->
+    <div class="bstep">
+      <h3 class="bstep-h"><span class="bstep-n">1</span> <span data-i18n="bp.step1">Find your board or university</span></h3>
+      <div class="tfield field">
+        <label class="label" for="boardSearch" data-i18n="bp.search_label">Search boards &amp; universities</label>
+        <input class="tinput input" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search… e.g. BISE Lahore" data-i18n-ph="bp.search_ph"/>
+      </div>
+      <ul class="tboardlist" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
+      <p class="thint" id="boardNone" hidden data-i18n="bp.no_match">No match — pick “Pakistani admission (typical)” or set a custom size below.</p>
+      <div class="bspec" id="boardInfo" hidden></div>
+      <details class="tdetails" style="margin-block-start:.6rem">
+        <summary data-i18n="bp.custom_title">Custom size (board not listed?)</summary>
+        <div class="trow" style="margin-block-start:.6rem">
+          <div class="tfield"><label for="cw"><span data-i18n="bp.width">Width (px)</span></label><input class="tinput" id="cw" type="number" min="10" max="4000" value="200"/></div>
+          <div class="tfield"><label for="ch"><span data-i18n="bp.height">Height (px)</span></label><input class="tinput" id="ch" type="number" min="10" max="4000" value="230"/></div>
+          <div class="tfield"><label for="ckb"><span data-i18n="bp.kb">Max size (KB)</span></label><input class="tinput" id="ckb" type="number" min="1" max="10240" value="50"/></div>
+        </div>
+        <div class="tbtnrow"><button type="button" class="tbtn tbtn-ghost tbtn-sm" id="customBtn" data-i18n="bp.custom_apply">Use custom size</button></div>
+      </details>
+    </div>
+
+    <!-- Step 2: upload -->
+    <div class="bstep">
+      <h3 class="bstep-h"><span class="bstep-n">2</span> <span data-i18n="bp.step2">Upload your photo</span></h3>
+      <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
+        <div class="tdrop-icon" aria-hidden="true">📷</div>
+        <p class="tdrop-title" id="dz-t" data-i18n="bp.drop_title">Drag &amp; drop your photo here</p>
+        <p class="tdrop-sub"><span data-i18n="bp.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="bp.drop_browse">browse your files</button></p>
+        <p class="tdrop-hint" data-i18n="bp.drop_hint">PNG, JPEG, WebP · up to 25 MB · one photo</p>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" aria-label="Choose your photo"/>
+      </div>
+      <p class="tnotice" style="margin-block-start:.8rem" data-i18n="bp.integrity_note">Your face is never altered — only size, framing and file size change.</p>
+    </div>
+
+    <!-- Step 3: result -->
+    <div class="bstep" id="resultStep" hidden>
+      <h3 class="bstep-h"><span class="bstep-n">3</span> <span data-i18n="bp.step3">Download your board photo</span></h3>
+      <div class="bpreview">
+        <img id="resultImg" alt="Your board-ready photo"/>
+        <div class="bresult-meta">
+          <span class="bpill" id="pillDims">–</span>
+          <span class="bpill" id="pillSize">–</span>
+        </div>
+        <p class="thint" id="resultNote" hidden></p>
+        <div class="tbtnrow" style="justify-content:center">
+          <button type="button" class="tbtn tbtn-primary" id="downloadBtn" data-i18n="bp.download">Download JPG</button>
+          <button type="button" class="tbtn tbtn-ghost" id="againBtn" data-i18n="bp.again">Use another photo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="terror" id="errBox" hidden role="alert"></div>
+  </section>
+
+  <section class="tsection collapsible" aria-labelledby="howto-h">
+    <h2 id="howto-h" data-i18n="bp.howto_title">How to make a board exam photo</h2>
+    <ol class="thowto">
+      <li><div><h3 data-i18n="bp.howto_1t">Find your board</h3><p data-i18n="bp.howto_1d">Type your board or university name and pick it from the list. Check the spec card for the exact size, background and KB.</p></div></li>
+      <li><div><h3 data-i18n="bp.howto_2t">Upload your photo</h3><p data-i18n="bp.howto_2d">Drop a clear, front-facing photo into the box. A plain background matching your board's requirement works best.</p></div></li>
+      <li><div><h3 data-i18n="bp.howto_3t">Auto-fit to board specs</h3><p data-i18n="bp.howto_3d">The photo is auto-cropped to your board's exact dimensions and compressed to fit the KB target — your face stays fully in frame.</p></div></li>
+      <li><div><h3 data-i18n="bp.howto_4t">Download</h3><p data-i18n="bp.howto_4d">Download the JPG and upload it straight to your board's admission or registration portal.</p></div></li>
+    </ol>
+    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection collapsible" aria-labelledby="tips-h">
+    <h2 id="tips-h" data-i18n="bp.tips_title">Pro tips</h2>
+    <ul class="ttips">
+      <li><strong data-i18n="bp.tip_1t">Use a plain background photo</strong> <span data-i18n="bp.tip_1d">Boards reject busy backgrounds. Take the photo against a plain wall in the colour your board asks for (usually white or blue).</span></li>
+      <li><strong data-i18n="bp.tip_2t">Face the camera, neutral expression</strong> <span data-i18n="bp.tip_2d">Look straight at the camera with eyes open and a neutral expression — the same rules as a passport photo.</span></li>
+      <li><strong data-i18n="bp.tip_3t">Check “typical” specs with your board</strong> <span data-i18n="bp.tip_3d">Boards marked “typical” haven't published official specs — the common Pakistani exam standard is used. Confirm the size with your board before submitting.</span></li>
+    </ul>
+    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+    <h2 id="faq-h" data-i18n="bp.faq_title">Frequently asked questions</h2>
+    <details><summary data-i18n="bp.faq_q1">Which boards and universities are included?</summary><p class="tfaq-a" data-i18n="bp.faq_a1">BISE Peshawar, BISE Swat, BISE Mardan, BISE Kohat and BISE D.I. Khan (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Quetta (white background), BISE Bahawalpur (150×200 px, 8–22 KB, blue background), FBISE, LUMS, NUST, UET Lahore, Punjab University, University of Karachi, IBA Karachi, COMSATS, AIOU, AJK Board and more. Boards marked “typical” use the common Pakistani exam standard — please confirm with your board.</p></details>
+    <details><summary data-i18n="bp.faq_q2">What does the verified badge mean?</summary><p class="tfaq-a" data-i18n="bp.faq_a2">“Verified” means the size, background and file-size limit were read from an official board notification or the board's own website. “Typical” means the board hasn't published specs, so the common Pakistani exam standard is used — confirm with your board before submitting.</p></details>
+    <details><summary data-i18n="bp.faq_q3">What if my board is missing?</summary><p class="tfaq-a" data-i18n="bp.faq_a3">Use the generic “Pakistani admission (typical)” preset, or type your board's width, height and KB target into the custom fields — every field is editable.</p></details>
+    <details><summary data-i18n="bp.faq_q4">Is my photo uploaded anywhere?</summary><p class="tfaq-a" data-i18n="bp.faq_a4">Never. Everything runs in your browser with JavaScript — your photo never leaves your device.</p></details>
+    <details><summary data-i18n="bp.faq_q5">How is the photo cropped?</summary><p class="tfaq-a" data-i18n="bp.faq_a5">The tool auto-crops to your board's exact dimensions, keeping the head fully in frame with headroom — your face is never altered or cut.</p></details>
+    <details><summary data-i18n="bp.faq_q6">What file format do I get?</summary><p class="tfaq-a" data-i18n="bp.faq_a6">A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal.</p></details>
+    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
+  </section>
+
+  <section class="tsection" aria-labelledby="rel-h">
+    <h2 id="rel-h" data-i18n="bp.related">Related tools</h2>
+    <div class="trelated">
+      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
+      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
+      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
+    </div>
+  </section>
+</main>
+<footer id="dk-footer"></footer>
+</body>
+</html>
