@@ -1,27 +1,37 @@
 /**
  * DoKit — Doki Personality & Animation Module
  * =============================================
- * WHAT: Gives the assistant its "Doki ✨" identity with animated UI elements.
- *       Includes floating FAB icon, activity indicators, and personality constants.
+ * WHAT: Gives the assistant its "Doki" identity with a cute panda mascot
+ *       (assets/doki-panda.svg) working at a laptop inside the circular FAB,
+ *       plus a status pill and activity indicators.
  *
- * WHY: A named, animated assistant feels more friendly and alive than a generic
- *      "DoKit Assistant". The ✨ sparkle and animations create delight.
- *      Activity indicators ("Doki is thinking...") set expectations during AI delays.
+ * WHY: A named, animated mascot feels more friendly and alive than a generic
+ *      "DoKit Assistant". The panda typing at its laptop while Doki works
+ *      creates delight. Activity indicators ("Doki is thinking...") set
+ *      expectations during AI delays.
  *
  * HOW IT WORKS:
  *   1. MutationObserver watches #dk-assistant-root for FAB and panel title
- *   2. FAB: Replaces 💬 with animated ✨ (CSS float + pulse ring animations)
- *   3. Title: Changes "DoKit Assistant" → "Doki ✨"
- *   4. Activity API: Doki.showActivity(type) displays animated status:
+ *   2. FAB: Replaces 💬 with the panda SVG (fetched + inlined so CSS can
+ *      animate its parts: blinking eyes, typing paws, headphone pulse)
+ *   3. Title: Changes "DoKit Assistant" → "🎧 Doki"
+ *   4. Circle activity API: window.DokiActivity.start(status) puts the panda
+ *      in working mode + shows a status pill (thinking → searching → writing);
+ *      setStatus(status) updates the pill; stop() hides everything.
+ *   5. Chat activity API: Doki.showActivity(type) displays animated status:
  *      - thinking 🤔, searching 🔍, typing ⌨️, working ⚙️, listening 🎤
- *      - Each with bouncing icon + animated dots
- *   5. Injects CSS animations via <style> tag (doki-styles)
+ *      - Each with bouncing icon + animated dots (also drives the circle)
+ *   6. Injects CSS animations via <style> tag (doki-styles); panda keyframes
+ *      (doki-panda-*) live in css/polish.css
  *
  * ANIMATIONS (CSS keyframes):
  *   - doki-float: Gentle up/down + rotate on FAB icon (3s loop)
  *   - doki-pulse: Expanding ring around FAB (2s loop)
  *   - doki-bounce: Activity icon bounce (1s loop)
  *   - doki-dot: Typing dots wave (1.4s staggered)
+ *   - doki-panda-float / doki-panda-blink: idle panda life
+ *   - doki-panda-bob / doki-panda-paw / doki-panda-phones / doki-panda-think:
+ *     working panda (in css/polish.css)
  *
  * @module Doki
  */
@@ -80,10 +90,42 @@
    * @param {HTMLElement} fab - The .dk-fab button element.
    */
   function enhanceFab(fab) {
-    // Replace 💬 with animated Doki icon
-    fab.innerHTML = '<span class="doki-fab-icon">🎧</span>';
+    // Replace 💬 with Doki the panda working at a laptop
+    var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.svg") : "/assets/doki-panda.svg";
+    fab.innerHTML = '<span class="doki-fab-icon doki-panda"><img class="doki-panda-img" src="' + src + '" alt="Doki" draggable="false"></span>';
     fab.setAttribute("aria-label", "Chat with " + DOKI_NAME);
     fab.classList.add("doki-fab");
+    inlinePanda(fab, src);
+  }
+
+  /**
+   * Upgrade the panda <img> to inline SVG so page CSS can animate its parts
+   * (blinking eyes, typing paws, headphone pulse).
+   * WHY fetch+inline: CSS cannot reach inside an <img> SVG. Inlining keeps the
+   * asset file (reusable anywhere) while enabling per-part animation.
+   * Fallback: if fetch fails, the <img> stays and still shows the panda.
+   * @param {HTMLElement} fab - The .dk-fab button element.
+   * @param {string} src - Resolved URL of assets/doki-panda.svg.
+   */
+  function inlinePanda(fab, src) {
+    if (!window.fetch) return;
+    fetch(src).then(function (r) {
+      if (!r.ok) throw new Error("panda svg " + r.status);
+      return r.text();
+    }).then(function (svg) {
+      if (!fab.isConnected || svg.indexOf("<svg") === -1) return;
+      var img = fab.querySelector(".doki-panda-img");
+      if (!img || !img.isConnected) return; // FAB re-rendered meanwhile
+      var wrap = document.createElement("span");
+      wrap.className = "doki-panda-inline";
+      wrap.innerHTML = svg;
+      var node = wrap.firstChild;
+      if (node && node.setAttribute) {
+        node.setAttribute("aria-hidden", "true");
+        node.setAttribute("focusable", "false");
+      }
+      img.parentNode.replaceChild(wrap, img);
+    }).catch(function () { /* keep the <img> fallback */ });
   }
 
   /**
@@ -185,8 +227,11 @@
    * @example
    *   var el = Doki.showActivity("thinking");
    *   doAsyncWork().then(function () { Doki.hideActivity(el); });
+   * NOTE: also starts the "live activity in circle" on the FAB (stopped by
+   * hideActivity), so thinking/searching/typing states animate the circle.
    */
   function showActivity(type) {
+    circleStart(type);
     var root = document.getElementById("dk-assistant-root");
     if (!root) return null;
     var body = root.querySelector(".dk-panel__body");
@@ -210,11 +255,126 @@
    * Remove an activity indicator from the chat.
    * WHY null-safe: The element may already be gone (e.g., chat cleared).
    * Never throws — safe to call unconditionally in .finally() blocks.
+   * Also stops the circle activity (wired below).
    * @param {HTMLElement|null} el - Element returned by showActivity().
    */
   function hideActivity(el) {
     if (el && el.parentNode) el.parentNode.removeChild(el);
+    circleStop();
   }
+
+  /* ============ Doki live activity: panda works inside the circle ============
+     WHAT: While Doki works (AI call in flight), the circular FAB itself shows
+     live activity -- the panda keeps typing at its laptop (paws animate, body
+     bobs, headphone pulse via CSS on .doki-working) and a small status pill
+     next to the circle cycles: "Doki is thinking..." -> "Doki is searching..."
+     -> "Doki is writing...". No separate panel opens; everything happens at
+     the circle. The panda is never swapped out.
+     WHY keep the panda: the mascot is Doki's identity -- swapping it for emoji
+     would break the brand moment. States now live in the status label text.
+     WHY a separate module surface: assistant-ai.js drives it around the
+     Gemini/OpenAI call via window.DokiActivity. showActivity()/hideActivity()
+     also drive it so the thinking/searching/typing states animate the circle.
+     Exposed as window.DokiActivity = { start, stop, setStatus }. */
+
+  var CIRCLE_STATUS = {
+    thinking: { en: "Doki is thinking...", ur: "\u0688\u0648\u06a9\u06cc \u0633\u0648\u0686 \u0631\u06c1\u0627 \u06c1\u06d2..." },
+    searching: { en: "Doki is searching...", ur: "\u0688\u0648\u06a9\u06cc \u062a\u0644\u0627\u0634 \u06a9\u0631 \u0631\u06c1\u0627 \u06c1\u06d2..." },
+    writing: { en: "Doki is writing...", ur: "\u0688\u0648\u06a9\u06cc \u0644\u06a9\u06be \u0631\u06c1\u0627 \u06c1\u06d2..." }
+  };
+  /* showActivity types -> circle status keys (typing shows as "writing") */
+  var ACTIVITY_TO_STATUS = { thinking: "thinking", searching: "searching", typing: "writing", working: "thinking", listening: "thinking" };
+  var statusPill = null;
+  var circleReduceMotion = false;
+  try {
+    circleReduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  } catch (e) {}
+
+  function findFab() {
+    var root = document.getElementById("dk-assistant-root");
+    return root ? root.querySelector(".dk-fab") : null;
+  }
+
+  function circleStatusText(key) {
+    var mapped = ACTIVITY_TO_STATUS[key] || key;
+    var e = CIRCLE_STATUS[mapped] || CIRCLE_STATUS.thinking;
+    try {
+      if (window.DKI18N && typeof window.DKI18N.getLang === "function" && window.DKI18N.getLang() === "ur") return e.ur;
+    } catch (err) {}
+    return e.en;
+  }
+
+  /**
+   * Create (once) the status pill that floats next to the circle.
+   * WHY fixed positioning: the FAB is position:fixed at the viewport corner,
+   * so the pill anchors to the same corner and survives panel toggles.
+   */
+  function ensureStatusPill() {
+    if (statusPill && statusPill.isConnected) return statusPill;
+    statusPill = document.createElement("div");
+    statusPill.className = "doki-status";
+    statusPill.setAttribute("role", "status");
+    statusPill.setAttribute("aria-live", "polite");
+    document.body.appendChild(statusPill);
+    return statusPill;
+  }
+
+  /**
+   * Put the circular FAB into "working" mode: the panda typing animation runs
+   * (CSS on .doki-working) and the status pill appears with the state text.
+   * WHY no innerHTML swap: the panda stays in the circle the whole time.
+   * Safe to call repeatedly -- any previous run is cleaned up first.
+   * @param {string} [status] - thinking, searching, writing (or an
+   *   activity type like typing -- mapped automatically).
+   */
+  function circleStart(status) {
+    circleStop(); // clear any previous run
+    var fab = findFab();
+    if (fab) {
+      fab.classList.add("doki-working");
+      try { fab.setAttribute("aria-busy", "true"); } catch (e2) {}
+    }
+    var pill = ensureStatusPill();
+    pill.textContent = circleStatusText(status);
+    void pill.offsetWidth; // restart the fade transition
+    pill.classList.add("show");
+  }
+
+  /**
+   * Update the status pill text with a smooth fade.
+   * @param {string} status - thinking, searching, writing (or activity type).
+   */
+  function circleSetStatus(status) {
+    var pill = ensureStatusPill();
+    var txt = circleStatusText(status);
+    if (pill.textContent === txt && pill.classList.contains("show")) return;
+    pill.classList.remove("show");
+    setTimeout(function () {
+      if (!pill.isConnected) return;
+      pill.textContent = txt;
+      void pill.offsetWidth;
+      pill.classList.add("show");
+    }, circleReduceMotion ? 0 : 160);
+  }
+
+  /**
+   * Take the FAB out of "working" mode and hide the status pill.
+   * Null-safe and idempotent: safe to call unconditionally.
+   */
+  function circleStop() {
+    var fab = findFab();
+    if (fab) {
+      fab.classList.remove("doki-working");
+      try { fab.removeAttribute("aria-busy"); } catch (e) {}
+    }
+    if (statusPill && statusPill.isConnected) statusPill.classList.remove("show");
+  }
+
+  window.DokiActivity = {
+    start: circleStart,
+    stop: circleStop,
+    setStatus: circleSetStatus
+  };
 
   window.Doki = {
     name: DOKI_NAME,

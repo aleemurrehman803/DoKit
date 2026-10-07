@@ -148,6 +148,7 @@
       try { if (window.DKMemory) ctx = DKMemory.getContext(3); } catch (e) {}
       var fullPrompt = ctx ? ("Recent conversation:\n" + ctx + "\n\nCurrent question: " + prompt) : prompt;
       
+      try { if (window.DokiActivity && DokiActivity.setStatus) DokiActivity.setStatus("searching"); } catch (e) {}
       return geminiModel.generateContent(fullPrompt).then(function (result) {
         var text = result && result.response ? result.response.text() : "";
         text = (text || "").trim();
@@ -174,6 +175,7 @@
       var ctx = "";
       try { if (window.DKMemory) ctx = DKMemory.getContext(3); } catch (e) {}
       
+      try { if (window.DokiActivity && DokiActivity.setStatus) DokiActivity.setStatus("searching"); } catch (e) {}
       return fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -211,10 +213,18 @@
    * — the assistant NEVER goes silent.
    * WHY log to memory: Both success paths log the exchange so future prompts
    * include this conversation as context.
+   * WHY DokiActivity: while the AI call is in flight, the panda keeps typing
+   * in the circular FAB and a status pill cycles thinking → searching →
+   * writing — no separate panel. start("thinking") fires before the first
+   * provider; setStatus("searching") fires before each API call;
+   * setStatus("writing") shows briefly on an answer; stop() runs in the final
+   * .then(), which always executes because neither provider ever rejects
+   * (all errors → null).
    * @param {string} prompt - User's question (scope already checked by assistant.js).
    * @returns {Promise<string|null>} AI answer, or null if all providers failed.
    */
   function ask(prompt) {
+    try { if (window.DokiActivity && DokiActivity.start) DokiActivity.start("thinking"); } catch (e) {}
     return askGemini(prompt).then(function (result) {
       if (result) {
         // Log to memory
@@ -227,6 +237,18 @@
       if (result) {
         try { if (window.DKMemory) DKMemory.log(prompt, result, null); } catch (e) {}
       }
+      // AI work finished — show "writing" briefly on an answer so the
+      // status pill reads naturally, then stop the circle activity.
+      try {
+        if (window.DokiActivity) {
+          if (result && DokiActivity.setStatus && DokiActivity.stop) {
+            DokiActivity.setStatus("writing");
+            setTimeout(function () { try { DokiActivity.stop(); } catch (e3) {} }, 900);
+          } else if (DokiActivity.stop) {
+            DokiActivity.stop();
+          }
+        }
+      } catch (e2) {}
       return result; // null = use KB fallback
     });
   }

@@ -475,3 +475,169 @@ input[type="submit"]:active, input[type="button"]:active {
   filter: brightness(.96);
   transition: transform .08s ease-out, filter .08s ease-out;
 }
+
+/* ============ 54. Doki live activity in circle ============ */
+/* While Doki works (AI call in flight), the circular FAB itself shows live
+   activity — pulsing ring + wobbling icon (JS cycles 🎧 → 🔍 → 📖 → ✨).
+   No separate panel opens. Toggled by window.DokiActivity.start()/stop(). */
+.dk-fab.doki-working {
+  overflow: visible !important;
+}
+/* Working ring (uses ::before so it never clashes with the idle ::after pulse) */
+.dk-fab.doki-working::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 3px solid var(--brand, #4F46E5);
+  opacity: 0;
+  animation: doki-work-ring 1.2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes doki-work-ring {
+  0% { transform: scale(.75); opacity: .8; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+/* Quiet the idle pulse ring while the working ring runs */
+.dk-fab.doki-working::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
+/* Icon wobble + smooth swap while working (overrides the idle doki-float) */
+.dk-fab.doki-working .doki-fab-icon {
+  animation: doki-work-wobble 1.2s ease-in-out infinite;
+}
+@keyframes doki-work-wobble {
+  0%, 100% { transform: rotate(-14deg) scale(1); }
+  50% { transform: rotate(14deg) scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-fab.doki-working::before,
+  .dk-fab.doki-working .doki-fab-icon {
+    animation: none !important;
+  }
+}
+
+/* ============ 55. Doki panda mascot ============ */
+/* The panda lives in the circular FAB. Idle: gentle float + blinking eyes.
+   Working (.doki-working on the FAB): panda bobs, paws type, headphones
+   pulse, laptop screen shows typing dots. SVG is inlined by JS so page CSS
+   can reach its parts; the <img> fallback stays static (still cute). */
+.doki-fab-icon.doki-panda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: doki-panda-float 4s ease-in-out infinite;
+}
+.doki-panda-img,
+.doki-panda-inline svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: block;
+}
+.doki-panda-inline {
+  display: inline-flex;
+}
+@keyframes doki-panda-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+/* Idle blink: eyes close briefly every ~4.6s */
+.doki-panda-inline .panda-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: doki-panda-blink 4.6s ease-in-out infinite;
+}
+@keyframes doki-panda-blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.08); }
+}
+/* ---- Working state: panda types at its laptop ---- */
+/* Neutralize the old emoji-era whole-FAB wobble (injected doki-styles):
+   the circle stays steady while the panda works inside it. */
+.dk-fab.doki-working {
+  animation: none;
+}
+/* Override the old emoji-era wobbles: the panda bobs instead */
+.dk-fab.doki-working .doki-fab-icon.doki-panda {
+  animation: doki-panda-bob 0.9s ease-in-out infinite;
+}
+@keyframes doki-panda-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+.dk-fab.doki-working .panda-paw-l,
+.dk-fab.doki-working .panda-paw-r {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: doki-panda-paw 0.45s ease-in-out infinite;
+}
+.dk-fab.doki-working .panda-paw-r {
+  animation-delay: 0.22s;
+}
+@keyframes doki-panda-paw {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+.dk-fab.doki-working .panda-phones {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: doki-panda-phones 1.2s ease-in-out infinite;
+}
+@keyframes doki-panda-phones {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+/* Laptop screen: code lines hide, typing dots pulse while working */
+.dk-fab.doki-working .panda-code {
+  display: none;
+}
+.panda-screen-dots {
+  display: none;
+}
+.dk-fab.doki-working .panda-screen-dots {
+  display: block;
+  animation: doki-panda-think 1s ease-in-out infinite;
+}
+@keyframes doki-panda-think {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+/* ---- Status pill: floats next to the circle while Doki works ---- */
+.doki-status {
+  position: fixed;
+  inset-block-end: var(--sp-5);
+  inset-inline-end: calc(var(--sp-5) + 4.25rem);
+  z-index: 219;
+  max-width: 16rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: #1e1b3a;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(30, 27, 58, 0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+.doki-status.show {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .doki-fab-icon.doki-panda,
+  .doki-panda-inline .panda-eye,
+  .dk-fab.doki-working .doki-fab-icon.doki-panda,
+  .dk-fab.doki-working .panda-paw-l,
+  .dk-fab.doki-working .panda-paw-r,
+  .dk-fab.doki-working .panda-phones,
+  .dk-fab.doki-working .panda-screen-dots {
+    animation: none !important;
+  }
+  .doki-status {
+    transition: none;
+  }
+}
