@@ -27,6 +27,7 @@
     userPage: 0,
     runCounts: {},     // uid -> number (cached)
     detailUid: null,
+    bulk: [],          // selected user uids for bulk actions (#9)
     tools: [
       { id: "image-resizer",    name: "Image Resizer",    href: "../tools/image-resizer/" },
       { id: "image-compressor", name: "Image Compressor", href: "../tools/image-compressor/" },
@@ -170,7 +171,11 @@
     { id: "security",  label: "🔐 Security" },
     { id: "deposits",  label: "💰 Deposits" },
     { id: "withdrawals", label: "💸 Withdrawals" },
-    { id: "paysettings", label: "⚙️ Pay settings" }
+    { id: "paysettings", label: "⚙️ Pay settings" },
+    { id: "settings",  label: "⚙️ Settings" },
+    { id: "flags",     label: "🚩 Feature flags" },
+    { id: "announce",  label: "📢 Announcement" },
+    { id: "inbox",     label: "📥 Inbox" }
   ];
 
   function wireTabs() {
@@ -288,8 +293,8 @@
 
   function loadUsers() {
     var d = db();
-    if (!d) { setHtml("admUsersBody", '<tr><td colspan="6">' + errHtml("Database unavailable.") + "</td></tr>"); return; }
-    setHtml("admUsersBody", '<tr><td colspan="6">' + SPINNER + "</td></tr>");
+    if (!d) { setHtml("admUsersBody", '<tr><td colspan="7">' + errHtml("Database unavailable.") + "</td></tr>"); return; }
+    setHtml("admUsersBody", '<tr><td colspan="7">' + SPINNER + "</td></tr>");
     d.collection("users").orderBy("createdAt", "desc").limit(USERS_FETCH_LIMIT).get()
       .then(function (snap) {
         state.users = [];
@@ -302,15 +307,24 @@
             photoURL: u.photoURL || "",
             coins: Number(u.coins) || 0,
             createdAt: toMillis(u.createdAt),
-            lastLogin: toMillis(u.lastLogin)
+            lastLogin: toMillis(u.lastLogin),
+            suspended: !!u.suspended,
+            suspendReason: u.suspendReason || "",
+            suspendUntil: toMillis(u.suspendUntil)
           });
         });
         state.userPage = 0;
         renderUsers();
       })
       .catch(function (err) {
-        setHtml("admUsersBody", '<tr><td colspan="6">' + errHtml("Could not load users. " + friendlyDbErr(err)) + "</td></tr>");
+        setHtml("admUsersBody", '<tr><td colspan="7">' + errHtml("Could not load users. " + friendlyDbErr(err)) + "</td></tr>");
       });
+  }
+
+  /* True while a suspension is in force (no expiry, or expiry in future). */
+  function suspensionActive(u) {
+    if (!u || !u.suspended) return false;
+    return !u.suspendUntil || u.suspendUntil > Date.now();
   }
 
   function filteredUsers() {
@@ -330,12 +344,18 @@
     var page = list.slice(start, start + PAGE_SIZE);
 
     if (!page.length) {
-      setHtml("admUsersBody", '<tr><td colspan="6" style="color:var(--text-muted)">No users found.</td></tr>');
+      setHtml("admUsersBody", '<tr><td colspan="7" style="color:var(--text-muted)">No users found.</td></tr>');
     } else {
       setHtml("admUsersBody", page.map(function (u) {
         var rc = state.runCounts[u.uid];
+        var checked = state.bulk.indexOf(u.uid) !== -1 ? " checked" : "";
+        var suspBadge = suspensionActive(u)
+          ? ' <span class="badge badge-amber" title="' + esc(u.suspendReason || "Suspended") + '">🚫 Suspended</span>'
+          : "";
         return "<tr>" +
-          "<td><strong>" + esc(u.name || "(no name)") + "</strong></td>" +
+          '<td><input type="checkbox" data-bulk-uid="' + esc(u.uid) + '"' + checked +
+          ' aria-label="Select ' + esc(u.email || u.name || "user") + '" style="width:1.05rem;height:1.05rem"></td>' +
+          "<td><strong>" + esc(u.name || "(no name)") + "</strong>" + suspBadge + "</td>" +
           "<td>" + esc(u.email || "—") + "</td>" +
           "<td>" + esc(u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—") + "</td>" +
           '<td><span class="badge">' + fmtNum(u.coins) + " 🪙</span></td>" +
@@ -344,6 +364,7 @@
           "</tr>";
       }).join(""));
     }
+    updateBulkBar();
 
     setHtml("admUsersInfo",
       "Showing " + (list.length ? start + 1 : 0) + "–" + Math.min(start + PAGE_SIZE, list.length) +
@@ -398,6 +419,28 @@
         }).join("") + "</ul>";
       }
 
+      var suspOn = suspensionActive(u);
+      var suspSection;
+      if (suspOn) {
+        suspSection =
+          '<div class="adm-err" style="margin:var(--sp-3) 0"><strong>🚫 Suspended</strong>' +
+          (u.suspendReason ? " — " + esc(u.suspendReason) : "") +
+          (u.suspendUntil ? "<br><span class='adm-muted'>Until: " + esc(fmtDate(u.suspendUntil)) + "</span>"
+                          : "<br><span class='adm-muted'>Permanent</span>") +
+          '<div style="margin-top:.5rem"><button class="btn btn-sm btn-primary" id="admUnsuspendBtn">Lift suspension</button></div></div>';
+      } else {
+        suspSection =
+          '<div style="margin:var(--sp-3) 0;padding:.7rem .9rem;border:1px solid var(--border,#e5e7eb);border-radius:.5rem">' +
+          "<h4 style='margin-top:0'>🚫 Suspend user</h4>" +
+          '<div class="adm-row">' +
+          '<input id="admSuspendReason" class="text-input" type="text" maxlength="200" placeholder="Reason (shown in logs)…" style="flex:2;min-width:180px" aria-label="Suspension reason">' +
+          '<select id="admSuspendDays" class="text-input" aria-label="Suspension length">' +
+          '<option value="1">24 hours</option><option value="7" selected>7 days</option>' +
+          '<option value="30">30 days</option><option value="0">Permanent</option></select>' +
+          '<button class="btn btn-sm" id="admSuspendBtn" style="border-color:var(--danger,#C93A3A);color:var(--danger,#C93A3A)">Suspend</button>' +
+          "</div></div>";
+      }
+
       setHtml("admUserDetail",
         '<div class="card">' +
         '<div style="display:flex;justify-content:space-between;align-items:start;gap:1rem;flex-wrap:wrap">' +
@@ -414,6 +457,7 @@
         '<button class="btn btn-sm btn-primary" id="admCoinAdd">Add coins</button>' +
         '<button class="btn btn-sm" id="admCoinReset" style="border-color:var(--danger);color:var(--danger)">Reset to 0</button>' +
         "</div>" +
+        suspSection +
         "<h4>Journey history</h4>" + runsHtml +
         "</div>");
 
@@ -429,6 +473,19 @@
       $("admCoinReset").addEventListener("click", function () {
         if (!confirm("Reset " + (u.email || u.name || "this user") + "'s coins to 0?")) return;
         setCoins(u, 0);
+      });
+      var suspBtn = $("admSuspendBtn");
+      if (suspBtn) suspBtn.addEventListener("click", function () {
+        var reason = (($("admSuspendReason") || {}).value || "").trim();
+        var days = parseInt(($("admSuspendDays") || {}).value, 10);
+        if (!reason) { alert("Please enter a suspension reason."); return; }
+        if (!confirm("Suspend " + (u.email || u.name || "this user") + (days > 0 ? " for " + days + " day(s)?" : " permanently?"))) return;
+        suspendUser(u, reason, days);
+      });
+      var unsuspBtn = $("admUnsuspendBtn");
+      if (unsuspBtn) unsuspBtn.addEventListener("click", function () {
+        if (!confirm("Lift the suspension for " + (u.email || u.name || "this user") + "?")) return;
+        unsuspendUser(u);
       });
       var detail = $("admUserDetail");
       if (detail && detail.scrollIntoView) detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -459,6 +516,182 @@
         openUserDetail(u.uid);
       })
       .catch(function (err) { alert("Could not reset coins: " + friendlyDbErr(err)); });
+  }
+
+  /* ================= 2b. BAN / SUSPEND (#8) =================
+   * users/{uid}: { suspended: bool, suspendReason: string, suspendUntil: ms|0 }
+   * suspendUntil = 0 (or absent) means permanent. Expiry is enforced by
+   * checking suspensionActive() wherever access is gated. */
+
+  function suspendUser(u, reason, days) {
+    var d = db();
+    if (!d) return;
+    var until = days > 0 ? Date.now() + days * 864e5 : 0;
+    d.collection("users").doc(u.uid).update({
+      suspended: true,
+      suspendReason: String(reason).slice(0, 200),
+      suspendUntil: until
+    }).then(function () {
+      u.suspended = true;
+      u.suspendReason = reason;
+      u.suspendUntil = until;
+      renderUsers();
+      logAudit("user_suspended", u.uid,
+        "reason:" + reason + " days:" + days + " (" + (u.email || u.name) + ")");
+      openUserDetail(u.uid); // refresh panel
+    }).catch(function (err) { alert("Could not suspend user: " + friendlyDbErr(err)); });
+  }
+
+  function unsuspendUser(u) {
+    var d = db();
+    if (!d) return;
+    d.collection("users").doc(u.uid).update({
+      suspended: false,
+      suspendReason: "",
+      suspendUntil: 0
+    }).then(function () {
+      u.suspended = false;
+      u.suspendReason = "";
+      u.suspendUntil = 0;
+      renderUsers();
+      logAudit("user_unsuspended", u.uid, (u.email || u.name || ""));
+      openUserDetail(u.uid); // refresh panel
+    }).catch(function (err) { alert("Could not lift suspension: " + friendlyDbErr(err)); });
+  }
+
+  /* ================= 2c. BULK USER ACTIONS (#9) ================= */
+
+  function updateBulkBar() {
+    var bar = $("admBulkBar");
+    if (!bar) return;
+    var n = state.bulk.length;
+    bar.style.display = n ? "" : "none";
+    var count = $("admBulkCount");
+    if (count) count.textContent = n + " selected";
+    var all = $("admBulkAll");
+    if (all) {
+      // Reflect page-level selection state (checked only if every row on page is selected).
+      var boxes = document.querySelectorAll('#admUsersBody [data-bulk-uid]');
+      var sel = 0;
+      for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) sel++;
+      all.checked = boxes.length > 0 && sel === boxes.length;
+    }
+  }
+
+  function toggleBulk(uid, on) {
+    var i = state.bulk.indexOf(uid);
+    if (on && i === -1) state.bulk.push(uid);
+    if (!on && i !== -1) state.bulk.splice(i, 1);
+    updateBulkBar();
+  }
+
+  function bulkGiveCoins() {
+    var d = db(), F = fv();
+    if (!d || !F) return;
+    var amt = parseInt(($("admBulkCoinsAmt") || {}).value, 10);
+    if (!amt || amt <= 0) { alert("Enter a positive number of coins."); return; }
+    var uids = state.bulk.slice();
+    if (!uids.length) return;
+    if (!confirm("Give " + amt + " coins to " + uids.length + " user(s)?")) return;
+    var batch = d.batch();
+    uids.forEach(function (uid) {
+      batch.update(d.collection("users").doc(uid), { coins: F.increment(amt) });
+    });
+    batch.commit().then(function () {
+      // Optimistic local update.
+      state.users.forEach(function (u) {
+        if (uids.indexOf(u.uid) !== -1) u.coins += amt;
+      });
+      logAudit("bulk_coins_add", uids.length + " users", "+" + amt + " coins each");
+      state.bulk = [];
+      renderUsers();
+      alert("Done — " + amt + " coins given to " + uids.length + " user(s).");
+    }).catch(function (err) { alert("Bulk coin grant failed: " + friendlyDbErr(err)); });
+  }
+
+  function bulkSuspend() {
+    var d = db();
+    if (!d) return;
+    var uids = state.bulk.slice();
+    if (!uids.length) return;
+    var reason = window.prompt("Suspension reason for " + uids.length + " user(s):", "Bulk suspension");
+    if (reason === null || !reason.trim()) return;
+    reason = reason.trim().slice(0, 200);
+    var daysStr = window.prompt("Suspend for how many days? (0 = permanent)", "7");
+    if (daysStr === null) return;
+    var days = parseInt(daysStr, 10);
+    if (isNaN(days) || days < 0) { alert("Invalid number of days."); return; }
+    if (!confirm("Suspend " + uids.length + " user(s)" + (days > 0 ? " for " + days + " day(s)?" : " permanently?"))) return;
+    var until = days > 0 ? Date.now() + days * 864e5 : 0;
+    var batch = d.batch();
+    uids.forEach(function (uid) {
+      batch.update(d.collection("users").doc(uid), {
+        suspended: true, suspendReason: reason, suspendUntil: until
+      });
+    });
+    batch.commit().then(function () {
+      state.users.forEach(function (u) {
+        if (uids.indexOf(u.uid) !== -1) {
+          u.suspended = true; u.suspendReason = reason; u.suspendUntil = until;
+        }
+      });
+      logAudit("bulk_suspend", uids.length + " users", "reason:" + reason + " days:" + days);
+      state.bulk = [];
+      renderUsers();
+      alert("Done — " + uids.length + " user(s) suspended.");
+    }).catch(function (err) { alert("Bulk suspend failed: " + friendlyDbErr(err)); });
+  }
+
+  function bulkExport() {
+    var uids = state.bulk.slice();
+    if (!uids.length) return;
+    var rows = [["uid", "name", "email", "coins", "joined", "suspended"]];
+    state.users.forEach(function (u) {
+      if (uids.indexOf(u.uid) === -1) return;
+      rows.push([
+        u.uid, u.name || "", u.email || "", String(u.coins),
+        u.createdAt ? new Date(u.createdAt).toISOString() : "",
+        suspensionActive(u) ? "yes" : "no"
+      ]);
+    });
+    var csv = rows.map(function (r) {
+      return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(",");
+    }).join("\r\n");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dokit-users-export.csv";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    logAudit("bulk_export", uids.length + " users", "CSV download");
+  }
+
+  function wireBulk() {
+    var all = $("admBulkAll");
+    if (all && !all.dataset.wired) {
+      all.dataset.wired = "1";
+      all.addEventListener("change", function () {
+        var boxes = document.querySelectorAll('#admUsersBody [data-bulk-uid]');
+        for (var i = 0; i < boxes.length; i++) {
+          boxes[i].checked = all.checked;
+          toggleBulk(boxes[i].getAttribute("data-bulk-uid"), all.checked);
+        }
+      });
+    }
+    // Row checkboxes (delegated — rows re-render on paging/search).
+    document.addEventListener("click", function (ev) {
+      var box = ev.target.closest ? ev.target.closest("[data-bulk-uid]") : null;
+      if (box) toggleBulk(box.getAttribute("data-bulk-uid"), box.checked);
+    });
+    function once(id, fn) {
+      var el = $(id);
+      if (el && !el.dataset.wired) { el.dataset.wired = "1"; el.addEventListener("click", fn); }
+    }
+    once("admBulkGive", bulkGiveCoins);
+    once("admBulkSuspend", bulkSuspend);
+    once("admBulkExport", bulkExport);
+    once("admBulkClear", function () { state.bulk = []; renderUsers(); });
   }
 
   function wireUsers() {
@@ -1089,13 +1322,290 @@
     return (err && err.message) ? String(err.message).slice(0, 120) : "Unknown error.";
   }
 
+  /* ================= 9. SITE SETTINGS (#16) =================
+   * Reads/writes Firestore `site_settings/general`:
+   * { siteName, tagline, contactEmail, footerNote,
+   *   maintenanceMode, maintenanceMessage, updatedAt, updatedBy } */
+
+  function loadSettings() {
+    var d = db();
+    if (!d) { showSettingsMsg("Database unavailable.", false); return; }
+    d.collection("site_settings").doc("general").get().then(function (snap) {
+      var c = snap.exists ? snap.data() : {};
+      setVal("admSetSiteName", c.siteName || "DoKit");
+      setVal("admSetTagline", c.tagline || "");
+      setVal("admSetContactEmail", c.contactEmail || "");
+      setVal("admSetFooterNote", c.footerNote || "");
+      var mm = $("admSetMaintenance");
+      if (mm) mm.checked = !!c.maintenanceMode;
+      setVal("admSetMaintMsg", c.maintenanceMessage || "");
+    }).catch(function (err) {
+      showSettingsMsg("Could not load settings: " + friendlyDbErr(err), false);
+    });
+  }
+
+  function setVal(id, v) { var el = $(id); if (el) el.value = v; }
+
+  function showSettingsMsg(msg, ok) {
+    var el = $("admSettingsMsg");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "";
+    el.style.color = ok ? "#1F7A4D" : "#C93A3A";
+  }
+
+  function wireSettings() {
+    var btn = $("admSettingsSave");
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", function () {
+      var d = db(), F = fv();
+      if (!d) { showSettingsMsg("Database unavailable.", false); return; }
+      var email = (($("admSetContactEmail") || {}).value || "").trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showSettingsMsg("Contact email looks invalid.", false);
+        return;
+      }
+      var data = {
+        siteName: (($("admSetSiteName") || {}).value || "").trim().slice(0, 60),
+        tagline: (($("admSetTagline") || {}).value || "").trim().slice(0, 140),
+        contactEmail: email,
+        footerNote: (($("admSetFooterNote") || {}).value || "").trim().slice(0, 160),
+        maintenanceMode: !!($("admSetMaintenance") || {}).checked,
+        maintenanceMessage: (($("admSetMaintMsg") || {}).value || "").trim().slice(0, 200),
+        updatedBy: currentAdminUid(),
+        updatedAt: F ? F.serverTimestamp() : new Date()
+      };
+      d.collection("site_settings").doc("general").set(data, { merge: true })
+        .then(function () {
+          logAudit("settings_updated", "site_settings/general",
+            "maintenanceMode=" + data.maintenanceMode);
+          showSettingsMsg("✅ Settings saved.", true);
+        })
+        .catch(function (err) { showSettingsMsg("Save failed: " + friendlyDbErr(err), false); });
+    });
+  }
+
+  /* ================= 10. FEATURE FLAGS (#17) =================
+   * Reads/writes Firestore `site_settings/flags` as { flagId: bool }.
+   * (Per-tool on/off toggles already live in the Content tab → config/tools.) */
+
+  var FEATURE_FLAGS = [
+    { id: "contact_form",    name: "Contact form",    desc: "Show the contact form on contact.html" },
+    { id: "announcement_bar", name: "Announcement bar", desc: "Allow the announcement bar on public pages" },
+    { id: "user_signup",     name: "User sign-up",    desc: "Allow new account registrations" },
+    { id: "blog",            name: "Blog section",    desc: "Show the blog in navigation" },
+    { id: "guides",          name: "Guides section",  desc: "Show guides in navigation" },
+    { id: "typefight",       name: "TypeFight",       desc: "Show the TypeFight game section" }
+  ];
+
+  function loadFlags() {
+    var d = db();
+    var wrap = $("admFlags");
+    if (!wrap) return;
+    wrap.innerHTML = SPINNER;
+    function renderFlagsList(flags) {
+      wrap.innerHTML = FEATURE_FLAGS.map(function (f) {
+        var on = flags[f.id] !== false; // default enabled
+        return '<div class="adm-toolrow">' +
+          "<div><strong>" + esc(f.name) + "</strong><br>" +
+          '<span class="adm-muted">' + esc(f.desc) + "</span></div>" +
+          '<label class="adm-switch"><input type="checkbox" data-flag-toggle="' + esc(f.id) + '"' +
+          (on ? " checked" : "") + '><span class="adm-slider"></span>' +
+          '<span class="sr-note">' + esc(f.name) + " enabled</span></label>" +
+          "</div>";
+      }).join("");
+    }
+    if (!d) { renderFlagsList({}); return; }
+    d.collection("site_settings").doc("flags").get().then(function (snap) {
+      renderFlagsList((snap.exists && snap.data()) || {});
+    }).catch(function (err) {
+      wrap.innerHTML = errHtml("Could not load flags: " + friendlyDbErr(err));
+    });
+    if (!wrap.dataset.wired) {
+      wrap.dataset.wired = "1";
+      wrap.addEventListener("change", function (ev) {
+        var input = ev.target.closest ? ev.target.closest("[data-flag-toggle]") : null;
+        if (!input || !d) return;
+        var id = input.getAttribute("data-flag-toggle");
+        var on = input.checked;
+        var F = fv();
+        var patch = { updatedBy: currentAdminUid(), updatedAt: F ? F.serverTimestamp() : new Date() };
+        patch[id] = on;
+        d.collection("site_settings").doc("flags").set(patch, { merge: true })
+          .then(function () { logAudit("flag_toggle", id, "enabled=" + on); })
+          .catch(function (err) {
+            input.checked = !on;
+            alert("Could not save flag: " + friendlyDbErr(err));
+          });
+      });
+    }
+  }
+
+  /* ================= 11. ANNOUNCEMENT BAR (#18) =================
+   * Reads/writes Firestore `site_settings/announcement`:
+   * { enabled, text, linkText, linkUrl, startDate, endDate, updatedAt, updatedBy }
+   * Rendered on public pages by js/site-wide.js. */
+
+  function loadAnnounce() {
+    var d = db();
+    if (!d) { showAnnMsg("Database unavailable.", false); return; }
+    d.collection("site_settings").doc("announcement").get().then(function (snap) {
+      var c = snap.exists ? snap.data() : {};
+      var en = $("admAnnEnabled");
+      if (en) en.checked = !!c.enabled;
+      setVal("admAnnText", c.text || "");
+      setVal("admAnnLinkText", c.linkText || "");
+      setVal("admAnnLinkUrl", c.linkUrl || "");
+      setVal("admAnnStart", c.startDate || "");
+      setVal("admAnnEnd", c.endDate || "");
+    }).catch(function (err) {
+      showAnnMsg("Could not load announcement: " + friendlyDbErr(err), false);
+    });
+  }
+
+  function showAnnMsg(msg, ok) {
+    var el = $("admAnnMsg");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "";
+    el.style.color = ok ? "#1F7A4D" : "#C93A3A";
+  }
+
+  function isSafeLinkUrl(u) {
+    if (!u) return true;
+    u = u.trim();
+    return u.charAt(0) === "/" || /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(u);
+  }
+
+  function wireAnnounce() {
+    var btn = $("admAnnSave");
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", function () {
+      var d = db(), F = fv();
+      if (!d) { showAnnMsg("Database unavailable.", false); return; }
+      var text = (($("admAnnText") || {}).value || "").trim().slice(0, 160);
+      var linkUrl = (($("admAnnLinkUrl") || {}).value || "").trim().slice(0, 200);
+      if (!text) { showAnnMsg("Message text is required.", false); return; }
+      if (!isSafeLinkUrl(linkUrl)) {
+        showAnnMsg("Link URL must start with / or http(s)://", false);
+        return;
+      }
+      var start = (($("admAnnStart") || {}).value || "").trim();
+      var end = (($("admAnnEnd") || {}).value || "").trim();
+      if (start && end && start > end) { showAnnMsg("Start date must be before end date.", false); return; }
+      var data = {
+        enabled: !!($("admAnnEnabled") || {}).checked,
+        text: text,
+        linkText: (($("admAnnLinkText") || {}).value || "").trim().slice(0, 40),
+        linkUrl: linkUrl,
+        startDate: start,
+        endDate: end,
+        updatedBy: currentAdminUid(),
+        updatedAt: F ? F.serverTimestamp() : new Date()
+      };
+      d.collection("site_settings").doc("announcement").set(data, { merge: true })
+        .then(function () {
+          logAudit("announcement_updated", "site_settings/announcement",
+            "enabled=" + data.enabled + " text:" + text.slice(0, 60));
+          showAnnMsg("✅ Announcement saved.", true);
+        })
+        .catch(function (err) { showAnnMsg("Save failed: " + friendlyDbErr(err), false); });
+    });
+  }
+
+  /* ================= 12. CONTACT INBOX (#37) =================
+   * Reads Firestore `contact_messages` (written by js/pages/contact-form.js):
+   * { name, email, subject, message, page, userAgent, createdAt }.
+   * Actions: mark read / delete. All actions audit-logged. */
+
+  function loadInbox() {
+    var d = db();
+    var body = $("admInboxBody");
+    if (!body) return;
+    if (!d) {
+      body.innerHTML = '<tr><td colspan="7">' + errHtml("Database unavailable.") + "</td></tr>";
+      return;
+    }
+    body.innerHTML = '<tr><td colspan="7">' + SPINNER + "</td></tr>";
+    d.collection("contact_messages").orderBy("createdAt", "desc").limit(50).get()
+      .then(function (snap) {
+        var countEl = $("admInboxCount");
+        var unread = 0;
+        snap.forEach(function (doc) { if (!(doc.data() || {}).read) unread++; });
+        if (countEl) countEl.textContent = snap.empty ? "" : "(" + snap.size + " total, " + unread + " unread)";
+        if (snap.empty) {
+          body.innerHTML = '<tr><td colspan="7" style="color:var(--text-muted)">No messages yet. 🎉</td></tr>';
+          return;
+        }
+        var rows = [];
+        snap.forEach(function (doc) {
+          var m = doc.data() || {};
+          var read = !!m.read;
+          rows.push("<tr" + (read ? "" : " style='font-weight:600'") + ">" +
+            "<td style='white-space:nowrap'>" + esc(relTime(toMillis(m.createdAt))) + "</td>" +
+            "<td>" + esc(m.name || "—") + "</td>" +
+            "<td><a href='mailto:" + esc(m.email || "") + "'>" + esc(m.email || "—") + "</a></td>" +
+            "<td>" + esc(m.subject || "—") + "</td>" +
+            "<td style='max-width:280px'>" + esc(String(m.message || "").slice(0, 200)) +
+            (String(m.message || "").length > 200 ? "…" : "") + "</td>" +
+            "<td>" + (read
+              ? "<span class='badge'>read</span>"
+              : "<span class='badge badge-amber'>new</span>") + "</td>" +
+            "<td style='white-space:nowrap'>" +
+            (read ? "" : '<button class="btn btn-sm" type="button" data-inbox-read="' + esc(doc.id) + '">✓ Read</button> ') +
+            '<button class="btn btn-sm" type="button" data-inbox-del="' + esc(doc.id) + '" style="border-color:var(--danger,#C93A3A);color:var(--danger,#C93A3A)">Delete</button>' +
+            "</td></tr>");
+        });
+        body.innerHTML = rows.join("");
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="7">' + errHtml("Could not load inbox. " + friendlyDbErr(err)) + "</td></tr>";
+      });
+  }
+
+  function wireInbox() {
+    var body = $("admInboxBody");
+    if (!body || body.dataset.wired) return;
+    body.dataset.wired = "1";
+    body.addEventListener("click", function (ev) {
+      var t = ev.target.closest ? ev.target.closest("[data-inbox-read],[data-inbox-del]") : null;
+      if (!t) return;
+      var d = db();
+      if (!d) return;
+      if (t.hasAttribute("data-inbox-read")) {
+        var id = t.getAttribute("data-inbox-read");
+        d.collection("contact_messages").doc(id).update({ read: true, readAt: fv() ? fv().serverTimestamp() : new Date() })
+          .then(function () {
+            logAudit("inbox_read", id, "marked read");
+            loadInbox();
+          })
+          .catch(function (err) { alert("Could not mark as read: " + friendlyDbErr(err)); });
+      } else {
+        var delId = t.getAttribute("data-inbox-del");
+        if (!confirm("Delete this message permanently?")) return;
+        d.collection("contact_messages").doc(delId).delete()
+          .then(function () {
+            logAudit("inbox_deleted", delId, "message deleted");
+            loadInbox();
+          })
+          .catch(function (err) { alert("Could not delete message: " + friendlyDbErr(err)); });
+      }
+    });
+  }
+
   /* ---------------- boot ---------------- */
 
   function boot() {
     wireTabs();
     wireUsers();
+    wireBulk();
     wirePaymentActions();
     wirePaySettings();
+    wireSettings();
+    wireAnnounce();
+    wireInbox();
     loadDashboard();
     loadUsers();
     loadContent();
@@ -1113,6 +1623,10 @@
       if (tab === "deposits") loadDeposits();
       if (tab === "withdrawals") loadWithdrawals();
       if (tab === "paysettings") loadPaySettings();
+      if (tab === "settings") loadSettings();
+      if (tab === "flags") loadFlags();
+      if (tab === "announce") loadAnnounce();
+      if (tab === "inbox") loadInbox();
     });
   }
 
