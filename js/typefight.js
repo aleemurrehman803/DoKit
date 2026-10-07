@@ -70,6 +70,8 @@
    * MUST go through this).
    * ------------------------------------------------------------------ */
   function esc(s) {
+    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
@@ -157,35 +159,38 @@
     var db = DKF.db();
     var col = ledgerRef(uid);
     var userRef = db.collection("users").doc(uid);
-    // Read the latest entry to chain the hash. Order by clientTs desc, limit 1.
-    return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
-      var prevHash = "GENESIS";
-      snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
-      var clientTs = Date.now();
-      var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
-      return sha256(payload).then(function (hash) {
-        var entry = {
-          amount: amount,
-          reason: reason,
-          clientTs: clientTs,
-          ts: firebase.firestore.FieldValue.serverTimestamp(),
-          prevHash: prevHash,
-          hash: hash
-        };
-        // Use a transaction: append ledger entry AND sync users/{uid}.coins
-        // This unifies the balance - ledger is audit trail, users.coins is spendable.
-        // Withdrawals check users/{uid}.coins, so earned coins become withdrawable.
-        return db.runTransaction(function (tx) {
-          return tx.get(userRef).then(function (userDoc) {
-            var currentCoins = 0;
-            if (userDoc.exists) {
-              currentCoins = userDoc.data().coins | 0;
-            }
-            var newCoins = currentCoins + amount;
-            // Prevent negative balance (defense in depth - rules should also enforce)
-            if (newCoins < 0) {
-              throw new Error("Insufficient balance: cannot go negative");
-            }
+    /* prevHash is read INSIDE the transaction (via tx.get on the query) so
+     * concurrent appends serialize correctly — no chain forks. The hash is
+     * computed from the tx-read prevHash before writing. */
+    return db.runTransaction(function (tx) {
+      var lastQuery = col.orderBy("clientTs", "desc").limit(1);
+      return tx.get(lastQuery).then(function (snap) {
+        var prevHash = "GENESIS";
+        snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
+        return tx.get(userRef).then(function (userDoc) {
+          var currentCoins = 0;
+          if (userDoc.exists) {
+            currentCoins = userDoc.data().coins | 0;
+          }
+          var newCoins = currentCoins + amount;
+          // Prevent negative balance (defense in depth - rules should also enforce)
+          if (newCoins < 0) {
+            throw new Error("Insufficient balance: cannot go negative");
+          }
+          var clientTs = Date.now();
+          var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
+          /* NOTE: sha256 is async; Firestore transactions retry the function on
+           * contention, so we compute the hash inside using the tx-consistent
+           * prevHash. Each retry re-reads prevHash, keeping the chain linear. */
+          return sha256(payload).then(function (hash) {
+            var entry = {
+              amount: amount,
+              reason: reason,
+              clientTs: clientTs,
+              ts: firebase.firestore.FieldValue.serverTimestamp(),
+              prevHash: prevHash,
+              hash: hash
+            };
             tx.set(col.doc(), entry);
             tx.set(userRef, { coins: newCoins }, { merge: true });
             return entry;
@@ -252,7 +257,9 @@
         if (e.prevHash !== prevHash) { brokenAt = i; return Promise.resolve({ ok: false, checked: chain.length, brokenAt: brokenAt }); }
         var payload = e.prevHash + "|" + uid + "|" + e.amount + "|" + e.reason + "|" + e.clientTs;
         return sha256(payload).then(function (h) {
-          if (h !== e.hash) { brokenAt = i; }
+          /* Record only the FIRST break (where tampering started); keep scanning
+           * to count all entries but don't overwrite brokenAt. */
+          if (h !== e.hash) { if (brokenAt === -1) brokenAt = i; }
           else { prevHash = e.hash; }
           i++;
           return step();
@@ -418,7 +425,7 @@
 
   /** Public verify URL for a certificate ID. */
   function verifyUrl(certId) {
-    return "https://aleemurrehman803.github.io/DoKit/typefight/verify/?id=" + encodeURIComponent(certId);
+    return "https://aleemurrehman803.github.io/dokit/typefight/verify/?id=" + encodeURIComponent(certId);
   }
 
   /* ------------------------------------------------------------------
