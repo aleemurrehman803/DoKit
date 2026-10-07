@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/dashboard.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/account/dashboard.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Dashboard — DoKit">
 <meta property="og:description" content="Your DoKit dashboard: profile, usage stats and coins.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/account/dashboard.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/account/dashboard.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -40,36 +40,36 @@
   <section class="section">
     <div class="container">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Account</span>
-        <h1>Dashboard</h1>
-        <p>Your profile, usage and rewards at a glance.</p>
+        <span class="eyebrow" data-i18n="acct_dash_eyebrow">Account</span>
+        <h1 data-i18n="acct_dash_h1">Dashboard</h1>
+        <p data-i18n="acct_dash_sub">Your profile, usage and rewards at a glance.</p>
       </div>
 
       <div class="grid" style="margin-bottom:var(--sp-5)">
         <div class="card">
-          <h3>👤 Profile</h3>
+          <h3 data-i18n="acct_dash_profile">👤 Profile</h3>
           <div style="display:flex;gap:var(--sp-3);align-items:center;margin-bottom:var(--sp-2)">
-            <img id="dashPhoto" alt="Profile photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg-muted);display:none">
+            <img loading="lazy" decoding="async" id="dashPhoto" alt="Profile photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg-muted);display:none">
             <div id="dashPhotoFallback" style="width:64px;height:64px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;flex:none">?</div>
             <div>
-              <p style="margin:0"><strong id="dashName">Guest</strong><br><span id="dashEmail" style="color:var(--text-muted)">Not signed in</span></p>
+              <p style="margin:0"><strong id="dashName">Guest</strong><br><span id="dashEmail" style="color:var(--text-muted)" data-i18n="acct_dash_notsigned">Not signed in</span></p>
             </div>
           </div>
           <p id="dashBioWrap" style="color:var(--text-muted);font-size:var(--fs-sm);display:none;margin:0 0 var(--sp-1)">Bio: <span id="dashBio"></span></p>
           <p id="dashPhoneWrap" style="color:var(--text-muted);font-size:var(--fs-sm);display:none;margin:0 0 var(--sp-1)">Phone: <span id="dashPhone"></span></p>
           <p style="color:var(--text-muted);font-size:var(--fs-sm)">Member since: <span id="dashSince">—</span></p>
           <p style="margin-bottom:0">
-            <a class="btn btn-sm" href="login.html" id="dashAuthBtn">Log in</a>
-            <button class="btn btn-sm" id="editProfileBtn" type="button" style="display:none;margin-inline-start:var(--sp-2)">Update Profile</button>
+            <a class="btn btn-sm" href="login.html" id="dashAuthBtn" data-i18n="acct_login_link">Log in</a>
+            <button class="btn btn-sm" id="editProfileBtn" type="button" style="display:none;margin-inline-start:var(--sp-2)" data-i18n="acct_dash_update">Update Profile</button>
           </p>
         </div>
         <div class="card">
-          <h3>🪙 Coins</h3>
+          <h3 data-i18n="acct_dash_coins">🪙 Coins</h3>
           <p style="font-size:2rem;font-weight:700" id="dashCoins">0</p>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Earn coins by using tools and inviting friends.</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="acct_dash_coins_d">Earn coins by using tools and inviting friends.</p>
         </div>
         <div class="card">
-          <h3>📊 Usage</h3>
+          <h3 data-i18n="acct_dash_usage">📊 Usage</h3>
           <ul style="list-style:none;padding:0;margin:0">
             <li>Tools used: <strong id="dashToolsUsed">0</strong></li>
             <li>Images processed: <strong id="dashImages">0</strong></li>
@@ -79,53 +79,54 @@
       </div>
 
       <div class="card" style="margin-bottom:var(--sp-5)">
-        <h2 style="margin-top:0">🕰️ Your Journey</h2>
+        <h2 style="margin-top:0" data-i18n="acct_dash_journey">🕰️ Your Journey</h2>
         <ul class="journey-timeline" id="journeyList"></ul>
-        <p id="journeyEmpty" style="color:var(--text-muted);margin-bottom:0">Your journey starts here — use any tool and it'll appear here.</p>
+        <p id="journeyEmpty" style="color:var(--text-muted);margin-bottom:0" data-i18n="acct_dash_journey_empty">Your journey starts here — use any tool and it'll appear here.</p>
       </div>
 
       <div class="card" id="profileFormCard" style="display:none;margin-bottom:var(--sp-5)">
-        <h3>✏️ Update Profile</h3>
+        <h3 data-i18n="acct_dash_edit">✏️ Update Profile</h3>
         <form id="profileForm" novalidate>
           <div class="field">
-            <label for="pfName">Name</label>
+            <label for="pfName" data-i18n="acct_field_name">Name</label>
             <input class="form-control text-input" id="pfName" type="text" autocomplete="name" maxlength="60">
             <div class="form-error" id="err-pfName" role="alert"></div>
           </div>
           <div class="field">
-            <label for="pfBio">Bio</label>
+            <label for="pfBio" data-i18n="acct_field_bio">Bio</label>
             <textarea class="form-control text-input" id="pfBio" rows="2" maxlength="200" placeholder="Tell us about yourself (optional)"></textarea>
           </div>
           <div class="field">
-            <label for="pfPhone">Phone</label>
+            <label for="pfPhone" data-i18n="acct_field_phone">Phone</label>
             <input class="form-control text-input" id="pfPhone" type="tel" autocomplete="tel" maxlength="20" placeholder="Optional">
           </div>
           <div class="field">
-            <label for="pfPhoto">Profile photo</label>
+            <label for="pfPhoto" data-i18n="acct_field_photo">Profile photo</label>
             <input id="pfPhoto" type="file" accept="image/*">
             <div class="form-error" id="err-pfPhoto" role="alert"></div>
           </div>
           <div class="field">
-            <label for="pfPassword">New password <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
+            <label for="pfPassword">New password <span style="color:var(--text-muted)" data-i18n="acct_dash_keep">(leave blank to keep current)</span></label>
             <input class="form-control text-input" id="pfPassword" type="password" autocomplete="new-password" placeholder="Minimum 6 characters">
             <div class="form-error" id="err-pfPassword" role="alert"></div>
           </div>
           <div class="form-error" id="err-pfGeneral" role="alert" style="margin-bottom:var(--sp-2)"></div>
           <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
-            <button class="btn btn-primary" type="submit" id="pfSaveBtn">Save Changes</button>
-            <button class="btn" type="button" id="pfCancelBtn">Cancel</button>
+            <button class="btn btn-primary" type="submit" id="pfSaveBtn" data-i18n="acct_dash_save">Save Changes</button>
+            <button class="btn" type="button" id="pfCancelBtn" data-i18n="acct_dash_cancel">Cancel</button>
           </div>
         </form>
       </div>
 
       <div class="card">
-        <h3>🔗 Your referral link</h3>
-        <p style="color:var(--text-muted);font-size:var(--fs-sm)">Share it — you earn coins when friends join.</p>
+        <h3>🎁 Referral</h3>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="acct_dash_referral_d">Share it — you earn coins when friends join.</p>
         <p><code id="dashRefLink" style="word-break:break-all">—</code></p>
-        <button class="btn btn-sm" id="copyRefBtn" type="button">Copy link</button>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)">Friends joined: <strong id="dashRefCount">0</strong></p>
+        <button class="btn btn-sm" id="copyRefBtn" type="button" data-i18n="acct_dash_copylink">Copy link</button>
       </div>
 
-      <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
+      <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)" data-i18n="acct_dash_sync">
         Profile and stats sync with your Firebase account. Local demo data is shown when offline or signed out.
       </p>
     </div>
@@ -133,6 +134,8 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
@@ -143,6 +146,7 @@
 <script src="../js/journey.js" defer></script>
 <script src="../js/cloud-sync.js" defer></script>
 <script src="../js/dk-utils.js" defer></script>
+<script src="../js/referral.js" defer></script>
 <script src="../js/pages/dashboard.js" defer></script>
 </body>
 </html>
