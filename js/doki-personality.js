@@ -60,8 +60,23 @@
    */
   function init() {
     // Update FAB button to show Doki branding
+    // WHY retry: assistant.js builds #dk-assistant-root asynchronously;
+    // if it's not here yet, wait for it instead of giving up.
     var root = document.getElementById("dk-assistant-root");
-    if (!root) return;
+    if (!root) {
+      var tries = 0;
+      var waiter = setInterval(function () {
+        tries++;
+        var r = document.getElementById("dk-assistant-root");
+        if (r) { clearInterval(waiter); initWithRoot(r); }
+        else if (tries > 100) { clearInterval(waiter); } /* ~10s max */
+      }, 100);
+      return;
+    }
+    initWithRoot(root);
+  }
+
+  function initWithRoot(root) {
 
     var observer = new MutationObserver(function () {
       var fab = root.querySelector(".dk-fab");
@@ -77,6 +92,13 @@
       }
     });
     observer.observe(root, { childList: true, subtree: true });
+
+    // Also check immediately in case FAB already exists
+    var fabNow = root.querySelector(".dk-fab");
+    if (fabNow && !fabNow.dataset.doki) {
+      fabNow.dataset.doki = "1";
+      enhanceFab(fabNow);
+    }
 
     // Add Doki CSS animations
     addDokiStyles();
