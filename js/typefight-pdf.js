@@ -53,7 +53,7 @@
     if (!window.jspdf || !window.jspdf.jsPDF) {
       return Promise.reject(new Error("PDF library not loaded"));
     }
-    var verifyUrl = "https://aleemurrehman803.github.io/DoKit/typefight/verify/?id=" + certId;
+    var verifyUrl = "https://aleemurrehman803.github.io/dokit/typefight/verify/?id=" + certId;
 
     return qrDataUrl(verifyUrl).then(function (qrImg) {
       var doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
@@ -143,7 +143,7 @@
       doc.text("Scan to verify, or enter the registration number at:", cx, y, { align: "center" });
       y += 6;
       doc.setTextColor(brand[0], brand[1], brand[2]);
-      doc.text("aleemurrehman803.github.io/DoKit/typefight/verify/", cx, y, { align: "center" });
+      doc.text("aleemurrehman803.github.io/dokit/typefight/verify/", cx, y, { align: "center" });
       y += 20;
 
       /* --- Signature line --- */
