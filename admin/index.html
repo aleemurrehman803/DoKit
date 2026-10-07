@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/admin/">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/admin/">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Admin — DoKit">
 <meta property="og:description" content="DoKit admin panel — manage users, content, deposits, withdrawals, and system settings. Restricted access.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/admin/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/admin/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -24,6 +24,7 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="../css/admin.css">
 <style>
 /* Admin-only styles */
 .adm-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:var(--sp-4);border-bottom:2px solid var(--border,#e5e7eb);padding-bottom:.5rem}
@@ -66,7 +67,9 @@
       <div class="section-head" style="text-align:start;margin-inline:0">
         <span class="eyebrow" data-i18n="admin_eyebrow">Internal</span>
         <h1 data-i18n="admin_h1">Admin panel</h1>
-        <p data-i18n="admin_sub">Site overview, user management, content toggles and audit log. Live data from Firestore.</p>
+        <p data-i18n="admin_sub">Site overview, user management, content toggles and audit log. Live data from Firestore.
+          <span id="admPresence" class="adm-presence" title="Admins currently online"><span class="dot" aria-hidden="true"></span><span id="admPresenceText">…</span></span>
+        </p>
       </div>
 
       <div id="adminGate" style="margin-bottom:var(--sp-5)">
@@ -80,6 +83,7 @@
 
       <div class="adm-tabs" id="admTabs" role="tablist" aria-label="Admin sections">
         <button type="button" class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true" data-i18n="admin_tab_dash">📊 Dashboard</button>
+        <button type="button" class="adm-tab" data-tab="analytics" role="tab" aria-selected="false">📈 Analytics</button>
         <button type="button" class="adm-tab" data-tab="users" role="tab" aria-selected="false" data-i18n="admin_tab_users">👥 Users</button>
         <button type="button" class="adm-tab" data-tab="content" role="tab" aria-selected="false" data-i18n="admin_tab_content">🧩 Content</button>
         <button type="button" class="adm-tab" data-tab="audit" role="tab" aria-selected="false" data-i18n="admin_tab_audit">📜 Audit log</button>
@@ -91,6 +95,20 @@
         <button type="button" class="adm-tab" data-tab="flags" role="tab" aria-selected="false">🚩 Feature flags</button>
         <button type="button" class="adm-tab" data-tab="announce" role="tab" aria-selected="false">📢 Announcement</button>
         <button type="button" class="adm-tab" data-tab="inbox" role="tab" aria-selected="false">📥 Inbox</button>
+        <button type="button" class="adm-tab" data-tab="competitors" role="tab" aria-selected="false">👀 Competitors</button>
+        <button type="button" class="adm-tab" data-tab="alerts" role="tab" aria-selected="false">🔔 Alerts</button>
+        <button type="button" class="adm-tab" data-tab="ab" role="tab" aria-selected="false">🎯 A/B tests</button>
+        <button type="button" class="adm-tab" data-tab="cohorts" role="tab" aria-selected="false">📊 Cohorts</button>
+        <button type="button" class="adm-tab" data-tab="fraud" role="tab" aria-selected="false">🛡️ Fraud</button>
+        <button type="button" class="adm-tab" data-tab="tickets" role="tab" aria-selected="false">🎫 Tickets</button>
+        <button type="button" class="adm-tab" data-tab="changelog" role="tab" aria-selected="false">📝 Changelog</button>
+        <button type="button" class="adm-tab" data-tab="referrals" role="tab" aria-selected="false">🔗 Referrals</button>
+        <button type="button" class="adm-tab" data-tab="tiers" role="tab" aria-selected="false">🎖️ Tiers</button>
+        <button type="button" class="adm-tab" data-tab="kb" role="tab" aria-selected="false">🧠 Knowledge</button>
+        <button type="button" class="adm-tab" data-tab="i18n" role="tab" aria-selected="false">🌍 Translations</button>
+        <button type="button" class="adm-tab" data-tab="import" role="tab" aria-selected="false">📤 Import</button>
+        <button type="button" class="adm-tab" data-tab="og" role="tab" aria-selected="false">🖼️ OG images</button>
+        <button type="button" class="adm-tab" data-tab="views" role="tab" aria-selected="false">🗂️ Views</button>
       </div>
 
       <!-- 1. Dashboard -->
@@ -105,6 +123,29 @@
         <div class="card">
           <h3 data-i18n="admin_recent">⚡ Recent activity</h3>
           <div id="admActivity"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+        <div class="card" style="margin-top:var(--sp-5)">
+          <h3 style="margin-top:0">💾 Backup</h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Last backup: <strong id="admBackupWhen">Never</strong></p>
+          <p style="margin-bottom:var(--sp-2)"><button class="btn btn-sm" type="button" id="admBackupBtn">⬇️ Export now (JSON)</button></p>
+          <p class="adm-muted" style="margin-bottom:0">Exports site settings (announcement + flags) and counts of newsletter/feedback docs. No user PII is included.</p>
+        </div>
+      </section>
+
+      <!-- 13. Analytics -->
+      <section id="admTab-analytics" role="tabpanel" style="display:none">
+        <div class="grid" style="margin-bottom:var(--sp-5)">
+          <div class="card"><h3>👁️ Page views</h3><p style="font-size:2rem;font-weight:700" id="statPageViews">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All time (privacy-friendly telemetry — no PII)</p></div>
+          <div class="card"><h3>📅 Views today</h3><p style="font-size:2rem;font-weight:700" id="statViewsToday">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 24 hours</p></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🔥 Top pages</h3>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>Page</th><th>Views</th><th>Last seen</th></tr></thead>
+              <tbody id="admAnalyticsBody"><tr><td colspan="3"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -319,6 +360,10 @@
             <p><label for="admAnnStart">Start date</label><br><input class="text-input" type="date" id="admAnnStart"></p>
             <p><label for="admAnnEnd">End date</label><br><input class="text-input" type="date" id="admAnnEnd"></p>
           </div>
+          <div class="adm-row">
+            <p><label for="admAnnPublishAt">Publish at (schedule — optional)</label><br><input class="text-input" type="datetime-local" id="admAnnPublishAt">
+              <br><span class="adm-muted">Future date = <strong>scheduled</strong> (goes live when the admin panel runs its due-check, or via Cloud Function).</span></p>
+          </div>
           <p id="admAnnMsg" role="status" style="display:none"></p>
           <p><button class="btn btn-primary btn-sm" type="button" id="admAnnSave">Save announcement</button></p>
         </div>
@@ -335,6 +380,293 @@
               <tbody id="admInboxBody"><tr><td colspan="7"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- 14. Competitor watch -->
+      <section id="admTab-competitors" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-5)">
+          <h3 style="margin-top:0">➕ Add competitor</h3>
+          <form id="admCompForm" novalidate>
+            <div class="adm-row">
+              <p style="flex:1;min-width:180px"><label for="admCompName">Name</label><br>
+                <input class="text-input" type="text" id="admCompName" maxlength="80" style="width:100%" required></p>
+              <p style="flex:2;min-width:220px"><label for="admCompUrl">URL</label><br>
+                <input class="text-input" type="url" id="admCompUrl" maxlength="200" style="width:100%" placeholder="https://…" required></p>
+            </div>
+            <p><label for="admCompNotes">Notes</label><br>
+              <input class="text-input" type="text" id="admCompNotes" maxlength="500" style="width:100%" placeholder="What they do, pricing, strengths…"></p>
+            <p id="admCompMsg" role="status" style="display:none"></p>
+            <p style="margin-bottom:0"><button class="btn btn-primary btn-sm" type="submit">Add competitor</button></p>
+          </form>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">👀 Competitors <span class="adm-muted" style="font-weight:400" id="admCompCount"></span></h3>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>Name</th><th>URL</th><th>Notes</th><th>Updated</th><th>Actions</th></tr></thead>
+              <tbody id="admCompBody"><tr><td colspan="5"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15. Alerts (critical-event push rules; sending needs a Cloud Function) -->
+      <section id="admTab-alerts" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🔔 Critical alerts</h3>
+          <p class="adm-muted">Rules are stored per-admin (<code>admins/{uid}/alertRules</code>). Push delivery runs in a Cloud Function (TODO — needs Blaze plan).</p>
+          <div id="admAlertList"><span class="adm-spin" aria-hidden="true"></span></div>
+          <hr>
+          <h4>Add rule</h4>
+          <div class="adm-row">
+            <select id="admAlertEvent" class="text-input" aria-label="Event type">
+              <option value="big_deposit">Big deposit</option>
+              <option value="failed_logins">Failed logins spike</option>
+              <option value="new_user_spike">New-user spike</option>
+              <option value="withdrawal_request">Withdrawal request</option>
+            </select>
+            <input id="admAlertThreshold" class="text-input" type="number" min="1" value="5000" style="max-width:140px" aria-label="Threshold">
+            <button type="button" class="btn btn-sm btn-primary" id="admAlertAdd">Add rule</button>
+          </div>
+          <p id="admAlertMsg" role="status" style="display:none"></p>
+        </div>
+      </section>
+
+      <!-- 16. A/B tests -->
+      <section id="admTab-ab" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🎯 A/B tests</h3>
+          <p class="adm-muted">Deterministic bucketing via <code>js/feature-flags.js</code> (<code>hash(uid)%100</code>). Results counted from the <code>events</code> collection.</p>
+          <div class="adm-row">
+            <input id="admAbName" class="text-input" type="text" maxlength="60" placeholder="Experiment name" style="flex:2;min-width:180px">
+            <select id="admAbGoal" class="text-input" aria-label="Goal metric">
+              <option value="announcement_click">Announcement click</option>
+              <option value="tool_use">Tool use</option>
+              <option value="signup">Sign-up</option>
+            </select>
+          </div>
+          <div class="adm-row">
+            <input id="admAbA" class="text-input" type="text" maxlength="120" placeholder="Variant A text" style="flex:1;min-width:160px">
+            <input id="admAbB" class="text-input" type="text" maxlength="120" placeholder="Variant B text" style="flex:1;min-width:160px">
+          </div>
+          <div class="adm-row">
+            <label for="admAbSplit">B traffic: <strong id="admAbSplitVal">50%</strong></label>
+            <input id="admAbSplit" type="range" min="10" max="90" value="50" style="flex:1;min-width:160px">
+            <button type="button" class="btn btn-sm btn-primary" id="admAbCreate">Create experiment</button>
+          </div>
+          <p id="admAbMsg" role="status" style="display:none"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🧪 Running & past experiments</h3>
+          <div id="admAbList"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- 17. Cohorts -->
+      <section id="admTab-cohorts" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">📊 Cohort retention</h3>
+          <p class="adm-muted">Rows = signup month, columns = months since signup. Cell = % of cohort active that month (from <code>tool_runs</code>).</p>
+          <div class="adm-tablewrap"><table class="adm-table"><thead><tr id="admCohortHead"><th>Cohort</th></tr></thead><tbody id="admCohortBody"><tr><td><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- 18. Fraud -->
+      <section id="admTab-fraud" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🛡️ Fraud rules</h3>
+          <p class="adm-muted">Rules are evaluated by a Cloud Function on deposit/withdrawal create (TODO — needs Blaze plan). The review queue below works now.</p>
+          <div class="adm-row">
+            <select id="admFraudKind" class="text-input" aria-label="Rule type">
+              <option value="deposits_per_day">Deposits per day per user</option>
+              <option value="withdrawal_new_account">Withdrawal from new account (days)</option>
+              <option value="amount_spike">Single amount above (Rs)</option>
+            </select>
+            <input id="admFraudThreshold" class="text-input" type="number" min="1" value="5" style="max-width:140px" aria-label="Threshold">
+            <button type="button" class="btn btn-sm btn-primary" id="admFraudAdd">Add rule</button>
+          </div>
+          <div id="admFraudRules" style="margin-top:var(--sp-3)"><span class="adm-spin" aria-hidden="true"></span></div>
+          <p id="admFraudMsg" role="status" style="display:none"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🚩 Flagged transactions <span class="adm-muted" style="font-weight:400" id="admFraudCount"></span></h3>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>When</th><th>Type</th><th>User</th><th>Amount</th><th>Reason</th><th>Risk</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admFraudQueue"><tr><td colspan="8"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19. Tickets -->
+      <section id="admTab-tickets" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <div class="adm-row" style="justify-content:space-between">
+            <h3 style="margin:0">🎫 Support tickets</h3>
+            <button type="button" class="btn btn-sm btn-primary" id="admTicketNew">+ New ticket</button>
+          </div>
+          <p class="adm-muted">The contact form creates both a <code>contact_messages</code> entry and a ticket. Tickets older than 24h and still open show a red SLA badge.</p>
+          <div class="adm-kanban">
+            <div class="adm-kanban-col"><h4>📥 Open</h4><div id="admTicketOpen"></div></div>
+            <div class="adm-kanban-col"><h4>🔄 In progress</h4><div id="admTicketProg"></div></div>
+            <div class="adm-kanban-col"><h4>✅ Closed</h4><div id="admTicketClosed"></div></div>
+          </div>
+        </div>
+        <div class="card" id="admTicketDetailWrap" style="display:none">
+          <h3 style="margin-top:0">Ticket detail</h3>
+          <div id="admTicketDetail"></div>
+        </div>
+      </section>
+
+      <!-- 20. Changelog -->
+      <section id="admTab-changelog" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">📝 Changelog entries</h3>
+          <div class="adm-row">
+            <input id="admClVersion" class="text-input" type="text" maxlength="20" placeholder="v1.4.0" style="max-width:130px">
+            <input id="admClDate" class="text-input" type="date" aria-label="Release date">
+            <input id="admClPublishAt" class="text-input" type="datetime-local" aria-label="Publish at (optional schedule)">
+          </div>
+          <p><label for="admClItems">Changes (one per line)</label><br>
+            <textarea id="admClItems" class="text-input" rows="4" style="width:100%" placeholder="New: Image Upscaler tool&#10;Fixed: login redirect loop"></textarea></p>
+          <p><label class="adm-row" style="cursor:pointer"><input type="checkbox" id="admClPublished" checked style="width:1.1rem;height:1.1rem"> <strong>Published</strong></label>
+            <span class="adm-muted">Untick + set "Publish at" to schedule for later (goes live when the admin panel runs its due-check, or via Cloud Function).</span></p>
+          <p id="admClMsg" role="status" style="display:none"></p>
+          <p style="margin-bottom:0"><button type="button" class="btn btn-sm btn-primary" id="admClSave">Save entry</button></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">📜 Entries</h3>
+          <div id="admClList"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- 21. Referrals -->
+      <section id="admTab-referrals" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🔗 Referral program</h3>
+          <p class="adm-muted">Rules in <code>site_settings/referral</code>. Reward payout runs in a Cloud Function (TODO — abuse-proof).</p>
+          <div class="adm-row">
+            <p style="flex:1;min-width:150px"><label for="admRefReward">Reward (coins each)</label><br>
+              <input id="admRefReward" class="text-input" type="number" min="0" value="20" style="width:100%"></p>
+            <p style="flex:1;min-width:150px"><label for="admRefMax">Max rewards / user</label><br>
+              <input id="admRefMax" class="text-input" type="number" min="1" value="50" style="width:100%"></p>
+            <p style="flex:1;min-width:150px"><label for="admRefMinDays">Referee account age (days)</label><br>
+              <input id="admRefMinDays" class="text-input" type="number" min="0" value="0" style="width:100%"></p>
+          </div>
+          <p id="admRefMsg" role="status" style="display:none"></p>
+          <p style="margin-bottom:0"><button type="button" class="btn btn-sm btn-primary" id="admRefSave">Save rules</button></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🏆 Top referrers</h3>
+          <div id="admRefBoard"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- 22. Tiers -->
+      <section id="admTab-tiers" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🎖️ Loyalty tiers</h3>
+          <p class="adm-muted">Stored in <code>site_settings/tiers</code>. Tier recalculation runs in a Cloud Function (TODO).</p>
+          <div id="admTierList"><span class="adm-spin" aria-hidden="true"></span></div>
+          <hr>
+          <h4>Add / update tier</h4>
+          <div class="adm-row">
+            <input id="admTierName" class="text-input" type="text" maxlength="30" placeholder="Gold" style="max-width:130px">
+            <input id="admTierThreshold" class="text-input" type="number" min="0" value="1000" style="max-width:150px" aria-label="Tool runs threshold">
+            <input id="admTierPerks" class="text-input" type="text" maxlength="160" placeholder="2x coins, priority support" style="flex:2;min-width:180px">
+            <input id="admTierColor" class="text-input" type="color" value="#C9A227" style="max-width:60px" aria-label="Tier color">
+            <button type="button" class="btn btn-sm btn-primary" id="admTierSave">Save tier</button>
+          </div>
+          <p id="admTierMsg" role="status" style="display:none"></p>
+        </div>
+      </section>
+
+      <!-- 23. Knowledge base -->
+      <section id="admTab-kb" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🧠 Doki knowledge base</h3>
+          <p class="adm-muted">Entries in <code>ai_knowledge</code>. Doki consults them via <code>window.DKKbSearch()</code> (keyword overlap) before its built-in answers.</p>
+          <div class="adm-row">
+            <input id="admKbQ" class="text-input" type="text" maxlength="160" placeholder="Question / keywords" style="flex:2;min-width:180px">
+            <input id="admKbCat" class="text-input" type="text" maxlength="40" placeholder="Category" style="max-width:150px">
+          </div>
+          <p><textarea id="admKbA" class="text-input" rows="3" style="width:100%" maxlength="2000" placeholder="Answer…"></textarea></p>
+          <p id="admKbMsg" role="status" style="display:none"></p>
+          <p style="margin-bottom:0"><button type="button" class="btn btn-sm btn-primary" id="admKbSave">Save entry</button></p>
+        </div>
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🔍 Test search</h3>
+          <div class="adm-row">
+            <input id="admKbTestQ" class="text-input" type="text" maxlength="160" placeholder="Ask something…" style="flex:2;min-width:180px">
+            <button type="button" class="btn btn-sm" id="admKbTestBtn">Test</button>
+          </div>
+          <div id="admKbTestOut" style="margin-top:var(--sp-2)"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">📚 Entries</h3>
+          <div id="admKbList"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- 24. Translations -->
+      <section id="admTab-i18n" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">🌍 Translation status</h3>
+          <p class="adm-muted">Click a cell to toggle done/pending. Stored in <code>i18n_status</code> as <code>{pageId}_{lang}</code>.</p>
+          <div class="adm-tablewrap"><table class="adm-table adm-matrix"><thead><tr id="admI18nHead"><th>Page</th></tr></thead><tbody id="admI18nBody"><tr><td><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- 25. CSV import -->
+      <section id="admTab-import" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">📤 Bulk CSV import</h3>
+          <p class="adm-muted">Coupons: batched writes (admin-allowed). User creation needs a Cloud Function — validate only for users.</p>
+          <div class="adm-row">
+            <input id="admCsvFile" type="file" accept=".csv,text/csv" aria-label="CSV file">
+            <select id="admCsvTarget" class="text-input" aria-label="Import target">
+              <option value="coupons">Coupons (code,reward,maxUses,expiry)</option>
+              <option value="users">Users (validate only)</option>
+            </select>
+            <button type="button" class="btn btn-sm btn-primary" id="admCsvImport">Import</button>
+          </div>
+          <div id="admCsvPreview" style="margin-top:var(--sp-3)"></div>
+          <div id="admCsvReport" style="margin-top:var(--sp-3)"></div>
+        </div>
+      </section>
+
+      <!-- 26. OG images -->
+      <section id="admTab-og" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">🖼️ Social preview (OG) generator</h3>
+          <p class="adm-muted">1200×630 canvas. Download the PNG, upload it to Storage (<code>og/</code>), then set the URL in the page's meta (SEO tab / page_meta).</p>
+          <div class="adm-row">
+            <select id="admOgTool" class="text-input" aria-label="Tool"></select>
+            <select id="admOgTemplate" class="text-input" aria-label="Template">
+              <option value="gradient">Gradient</option>
+              <option value="dark">Dark</option>
+            </select>
+            <button type="button" class="btn btn-sm btn-primary" id="admOgGen">Generate</button>
+            <button type="button" class="btn btn-sm" id="admOgGenAll">Generate all</button>
+          </div>
+          <p style="margin-top:var(--sp-3)"><canvas id="admOgCanvas" width="1200" height="630" style="max-width:100%;height:auto;border:1px solid var(--border,#e5e7eb);border-radius:.5rem"></canvas></p>
+          <p style="margin-bottom:0"><a id="admOgDownload" class="btn btn-sm" href="#" download="og.png">⬇️ Download PNG</a></p>
+        </div>
+      </section>
+
+      <!-- 27. Saved views -->
+      <section id="admTab-views" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">🗂️ Saved views</h3>
+          <p class="adm-muted">Save the current filter state of Users / Deposits / Withdrawals, then jump back to it in one click. Stored per-admin.</p>
+          <div class="adm-row">
+            <button type="button" class="btn btn-sm" id="admViewSaveUsers">💾 Save Users view</button>
+            <button type="button" class="btn btn-sm" id="admViewSaveDeposits">💾 Save Deposits view</button>
+            <button type="button" class="btn btn-sm" id="admViewSaveWithdrawals">💾 Save Withdrawals view</button>
+          </div>
+          <div id="admViewsList" style="margin-top:var(--sp-3)"><span class="adm-spin" aria-hidden="true"></span></div>
         </div>
       </section>
 
@@ -358,6 +690,8 @@
 <script src="../js/firebase.js?v=20261007i" defer></script>
 <script src="../js/pages/admin.js" defer></script>
 <script src="../js/dk-utils.js" defer></script>
+<script src="../js/feature-flags.js" defer></script>
 <script src="../js/pages/admin-full.js" defer></script>
+<script src="../js/pages/admin-plus.js" defer></script>
 </body>
 </html>
