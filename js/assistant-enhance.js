@@ -1,10 +1,42 @@
-/* DoKit — Assistant enhancements: Voice input + File upload.
-   Adds 🎤 (speech-to-text) and 📎 (file attach) to the assistant panel footer.
-   Works alongside the existing assistant.js (does not modify it).
-*/
+/**
+ * DoKit — Assistant Enhancement Module (Voice + File Upload)
+ * ============================================================
+ * WHAT: Adds voice input (🎤) and file upload (📎) buttons to Doki assistant.
+ *       Works alongside assistant.js without modifying it (progressive enhancement).
+ *
+ * WHY: Modern assistants (ChatGPT, etc.) support voice and files. Users expect
+ *      these features. Voice helps mobile users; file upload helps with images.
+ *
+ * HOW IT WORKS:
+ *   1. MutationObserver watches for .dk-panel__foot (assistant footer)
+ *   2. When found, injects 🎤 voice button and 📎 file button
+ *   3. VOICE: Uses Web Speech API (SpeechRecognition) → transcribes to text input
+ *      - Auto-detects language (ur-PK for Urdu, en-US otherwise)
+ *      - Visual feedback: 🎤 → 🔴 while recording
+ *   4. FILE: Hidden <input type="file"> → on select:
+ *      - Images: shown as preview in chat + contextual tool suggestions
+ *      - Other files: shown as attachment + generic help message
+ *
+ * BROWSER SUPPORT:
+ *   - Voice: Chrome/Edge (webkitSpeechRecognition). Others show alert.
+ *   - File: All modern browsers (FileReader API)
+ *
+ * SECURITY:
+ *   - Files never uploaded to server (preview via data URL only)
+ *   - Image preview uses FileReader (no server round-trip)
+ *
+ * @module AssistantEnhance
+ */
 (function () {
   "use strict";
 
+  /**
+   * Initialize enhancements. Called on DOMContentLoaded (or immediately).
+   * WHY MutationObserver: assistant.js builds the panel footer asynchronously.
+   * We observe #dk-assistant-root and enhance the footer the moment it appears.
+   * The dataset.enhanced flag prevents double-enhancement if the observer fires twice.
+   * If #dk-assistant-root doesn't exist (page without assistant), we exit silently.
+   */
   function init() {
     var root = document.getElementById("dk-assistant-root");
     if (!root) return;
@@ -20,6 +52,14 @@
     observer.observe(root, { childList: true, subtree: true });
   }
 
+  /**
+   * Inject voice (🎤) and file (📎) buttons into the assistant's input footer.
+   * WHY separate module (not editing assistant.js): assistant.js is shared and
+   * minified in places. This progressive-enhancement approach adds features
+   * without touching the core — if this script fails, the assistant still works.
+   * Buttons are inserted BEFORE the send button for natural left-to-right order.
+   * @param {HTMLElement} foot - The .dk-panel__foot element containing input + send btn.
+   */
   function enhanceFooter(foot) {
     var input = foot.querySelector("input");
     var sendBtn = foot.querySelector("button.btn-primary");
@@ -142,6 +182,17 @@
       fileInput.value = ""; // reset
     });
 
+    /**
+     * Generate Doki's response after a user uploads a file.
+     * WHY contextual (not generic): If it's an image, we link the 3 image tools
+     * directly — that's almost certainly what they want. For other files, we
+     * suggest text tools. The 600ms delay feels natural (like Doki "read" the file).
+     * WHY FileReader (not upload): Files never leave the device. Preview is via
+     * data URL. Privacy-preserving by design — matches DoKit's "files never leave
+     * your browser" promise.
+     * @param {File} file - The uploaded file object.
+     * @param {HTMLElement} body - Chat body element to append messages to.
+     */
     function respondToFile(file, body) {
       // Bot response with helpful suggestions
       var botDiv = document.createElement("div");
