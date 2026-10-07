@@ -349,6 +349,12 @@
    * @param {string} [status] - thinking, searching, writing (or an
    *   activity type like typing -- mapped automatically).
    */
+  function escHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
   function circleStart(status) {
     circleStop(); // clear any previous run
     var fab = findFab();
@@ -357,7 +363,8 @@
       try { fab.setAttribute("aria-busy", "true"); } catch (e2) {}
     }
     var pill = ensureStatusPill();
-    pill.textContent = circleStatusText(status);
+    pill.innerHTML = '<span class="doki-status-name">' + escHtml(DOKI_NAME) + '</span>' +
+      '<span class="doki-status-text">✨ ' + escHtml(circleStatusText(status)) + '</span>';
     void pill.offsetWidth; // restart the fade transition
     pill.classList.add("show");
   }
@@ -373,7 +380,8 @@
     pill.classList.remove("show");
     setTimeout(function () {
       if (!pill.isConnected) return;
-      pill.textContent = txt;
+      pill.innerHTML = '<span class="doki-status-name">' + escHtml(DOKI_NAME) + '</span>' +
+        '<span class="doki-status-text">✨ ' + escHtml(txt) + '</span>';
       void pill.offsetWidth;
       pill.classList.add("show");
     }, circleReduceMotion ? 0 : 160);
