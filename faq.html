@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <title>FAQ — DoKit</title>
 <meta name="description" content="DoKit FAQ: is it free, where do files go, accounts, browsers, TypeMaster, mobile app.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/faq.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/faq.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="FAQ — DoKit">
 <meta property="og:description" content="DoKit FAQ: is it free, where do files go, accounts, browsers, TypeMaster, mobile app.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/faq.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/faq.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="FAQ — DoKit">
 <meta name="twitter:description" content="DoKit FAQ: is it free, where do files go, accounts, browsers, TypeMaster, mobile app.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
@@ -44,27 +44,27 @@
       <p style="color:var(--text-muted)" data-i18n="faq_sub">Everything people usually want to know about DoKit.</p>
       <div class="faq-accordion" id="faqList">
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq1_a">Yes. Every tool here is free — no accounts, no watermarks.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq2_q">Where do my files go?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq2_q">Where do my files go?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq2_a">Nowhere. Everything is processed inside your browser.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq3_q">Do I need an account?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq3_q">Do I need an account?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq3_a">No. Open any tool and start working.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq4_q">Which browsers are supported?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq4_q">Which browsers are supported?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq4_a">Recent Chrome, Edge, Firefox, and Safari.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq5_q">Is there a mobile app?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq5_q">Is there a mobile app?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq5_a">Not yet — but the whole site works well in your phone's browser.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false"><span data-i18n="fq6_q">What is TypeMaster?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="fq6_q">What is TypeMaster?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq6_a">Our flagship typing school inside DoKit.</div>
         </div>
       </div>
@@ -74,17 +74,14 @@
 <footer id="site-foot"></footer>
 <div id="dk-assistant-root"></div>
 <script src="js/i18n-v2.js" defer></script>
-<script src="js/i18n-ar.js" defer></script>
-<script src="js/i18n-hi.js" defer></script>
-<script src="js/i18n-es.js" defer></script>
-<script src="js/i18n-fr.js" defer></script>
-<script src="js/i18n-pt.js" defer></script>
-<script src="js/i18n-de.js" defer></script>
-<script src="js/i18n-tr.js" defer></script>
-<script src="js/i18n-ru.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
 </body>
 </html>
