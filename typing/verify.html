@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typing/verify.html">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Certificate Verification — TypeMaster</title>
+<meta name="description" content="Verify a TypeMaster typing certificate by its registration number.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Certificate Verification — TypeMaster">
+<meta property="og:description" content="Verify a TypeMaster typing certificate by its registration number.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typing/verify.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Certificate Verification — TypeMaster">
+<meta name="twitter:description" content="Verify a TypeMaster typing certificate by its registration number.">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="container">
+
+  <div class="page-header center">
+    <p class="eyebrow" data-i18n="d_eyebrow_cert">Achievement</p>
+    <h1 data-i18n="verify_title">Certificate Verification</h1>
+    <p class="page-sub" data-i18n="verify_sub">Enter a registration number to check a TypeMaster certificate.</p>
+  </div>
+
+  <form id="verifyForm" class="card verify-form" autocomplete="off">
+    <label for="regInput" data-i18n="cert_reg_no">Registration No.</label>
+    <input id="regInput" class="text-input" type="text" data-i18n-ph="verify_ph" placeholder="e.g. DK-2026-AB12CD" spellcheck="false" autocapitalize="characters">
+    <button class="btn btn-primary" type="submit" data-i18n="verify_btn">Verify</button>
+  </form>
+
+  <div id="verifyResult" class="verify-result" aria-live="polite"></div>
+
+</main>
+<div id="site-foot"></div>
+<script src="js/urdu.js"></script>
+<script src="js/urdu2.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/certificate.js"></script>
+<script src="js/pages/verify.js"></script>
+</body>
+</html>

@@ -1006,3 +1006,92 @@ p.form-note, .form-note.text-center { margin-top: 14px; }
 @media (prefers-reduced-motion:no-preference){
   body{transition:background-color .25s ease,color .25s ease}
 }
+
+/* ================= Certificate: registration, QR, verification ================= */
+.cert-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin: 4px 0 20px;
+  flex-wrap: wrap;
+}
+.cert-qr {
+  width: 130px;
+  height: 130px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px;
+  flex: none;
+}
+.cert-meta-info {
+  text-align: start;
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+.cert-reg { font-size: 1.02rem; color: var(--muted); }
+.cert-reg strong {
+  letter-spacing: 0.06em;
+  color: var(--primary-800);
+  font-size: 1.18rem;
+  font-weight: 800;
+}
+[data-theme="dark"] .cert-reg strong { color: var(--primary-200); }
+.cert-issued { color: var(--muted); font-size: var(--fs-small); }
+.cert-verify {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.7;
+}
+.cert-verify a {
+  color: var(--primary);
+  word-break: break-all;
+  text-decoration: underline;
+}
+@media (max-width: 560px) {
+  .cert-meta { flex-direction: column; gap: 14px; }
+  .cert-meta-info { text-align: center; }
+}
+@media print {
+  .cert-qr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cert-reg strong { color: #1f3568; }
+  .cert-verify { color: #333; }
+  .cert-verify a { color: #2458d6; }
+}
+
+/* ================= Verify page ================= */
+.verify-form {
+  max-width: 520px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+.verify-form label { font-weight: 700; }
+.verify-result { max-width: 560px; margin: 26px auto 0; }
+.verify-card { text-align: center; }
+.verify-valid { border: 2px solid var(--success, #2FA36B); }
+.verify-invalid { border: 2px solid var(--danger, #D64545); }
+.verify-badge { font-size: 3rem; line-height: 1; margin-bottom: 10px; }
+.verify-card h2 { margin-bottom: 14px; }
+.verify-details {
+  display: grid;
+  gap: 8px;
+  text-align: start;
+  margin-top: 6px;
+}
+.verify-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.verify-row:last-child { border-bottom: none; }
+.verify-row .k { color: var(--muted); }
+.verify-row .v { font-weight: 700; }
+.verify-reg { letter-spacing: 0.05em; }
