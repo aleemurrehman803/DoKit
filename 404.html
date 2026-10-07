@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <title>Page not found — DoKit</title>
+<meta name="description" content="That DoKit page doesn't exist. Go home or jump straight into a popular free tool.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,20 +21,49 @@
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
-    <div class="container" style="max-width:36rem;text-align:center">
-      <div style="font-size:4rem" aria-hidden="true">🧭</div>
-      <h1 data-i18n="e404_t">Lost? Let's get you back.</h1>
-      <p style="color:var(--text-muted)" data-i18n="e404_d">That page doesn't exist (or it moved). Try one of these instead:</p>
-      <p style="display:flex;gap:var(--sp-3);justify-content:center;flex-wrap:wrap">
-        <a class="btn btn-primary" href="./" data-i18n="e404_home">Go home</a>
-        <a class="btn btn-ghost" href="tools/" data-i18n="e404_tools">Browse tools</a>
+    <div class="container e404">
+      <p class="e404-code" aria-hidden="true">404</p>
+      <div class="e404-emoji" aria-hidden="true">🧭</div>
+      <h1 data-i18n="tools2.e404_title">Lost? Let's get you back.</h1>
+      <p class="e404-sub" data-i18n="tools2.e404_sub">That page doesn't exist — or it moved. Here are some handy places to go instead.</p>
+      <p class="e404-actions">
+        <a class="btn btn-primary" href="./" data-i18n="tools2.e404_home">Go home</a>
+        <a class="btn btn-ghost" href="tools/" data-i18n="tools2.e404_tools">Browse all tools</a>
       </p>
+      <h2 class="e404-pop" data-i18n="tools2.e404_popular">Popular tools right now</h2>
+      <div class="e404-grid">
+        <a class="tool-card" href="tools/image-resizer/">
+          <span class="tool-card__icon" aria-hidden="true">🖼️</span>
+          <h3 class="tool-card__name" data-i18n="tool_resizer_name">Image Resizer</h3>
+          <p class="tool-card__desc" data-i18n="tool_resizer_desc">Resize images in bulk</p>
+        </a>
+        <a class="tool-card" href="tools/image-compressor/">
+          <span class="tool-card__icon" aria-hidden="true">🗜️</span>
+          <h3 class="tool-card__name" data-i18n="tool_compressor_name">Image Compressor</h3>
+          <p class="tool-card__desc" data-i18n="tool_compressor_desc">Shrink image file sizes</p>
+        </a>
+        <a class="tool-card" href="tools/image-converter/">
+          <span class="tool-card__icon" aria-hidden="true">🔄</span>
+          <h3 class="tool-card__name" data-i18n="tool_converter_name">Image Converter</h3>
+          <p class="tool-card__desc" data-i18n="tool_converter_desc">Convert PNG, JPEG, WebP</p>
+        </a>
+        <a class="tool-card" href="tools/word-counter/">
+          <span class="tool-card__icon" aria-hidden="true">🔢</span>
+          <h3 class="tool-card__name" data-i18n="tool_counter_name">Word Counter</h3>
+          <p class="tool-card__desc" data-i18n="tool_counter_desc">Count words &amp; characters</p>
+        </a>
+        <a class="tool-card" href="tools/case-converter/">
+          <span class="tool-card__icon" aria-hidden="true">🔠</span>
+          <h3 class="tool-card__name" data-i18n="tool_case_name">Case Converter</h3>
+          <p class="tool-card__desc" data-i18n="tool_case_desc">Change text letter case</p>
+        </a>
+      </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <div id="dk-assistant-root"></div>
-<script src="js/i18n.js" defer></script>
+<script src="js/i18n-v2.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="js/assistant-kb.js" defer></script>
