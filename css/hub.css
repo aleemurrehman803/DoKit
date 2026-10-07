@@ -190,9 +190,9 @@ a.tool-card:hover { text-decoration: none; transform: translateY(-4px) scale(1.0
   color: var(--primary);
   white-space: nowrap;
 }
-.badge-amber, .pill-amber { background: var(--accent); color: var(--dk-ink); }
+.badge-amber { background: var(--accent); color: var(--dk-ink); }
 .badge-green { background: rgba(47, 163, 107, 0.15); color: var(--success-text); }
-.badge-red { background: rgba(214, 69, 69, 0.12); color: var(--danger); }
+/* (.badge-red removed Oct 7, 2026: unused) */
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: var(--sp-2); margin-block-end: var(--sp-4); }
@@ -216,30 +216,16 @@ a.tool-card:hover { text-decoration: none; transform: translateY(-4px) scale(1.0
 .textarea { min-block-size: 7rem; resize: vertical; }
 
 /* Slider */
-.slider-row { display: flex; align-items: center; gap: var(--sp-3); }
+/* (.slider-row/.slider-val removed Oct 7, 2026: unused) */
 input[type="range"].slider {
   flex: 1;
   accent-color: var(--primary);
   block-size: 2rem;
 }
-.slider-val { font-variant-numeric: tabular-nums; font-weight: 700; min-inline-size: 3.5rem; text-align: end; }
+/* (.slider-val removed Oct 7, 2026: unused) */
 
 /* File dropzone */
-.file-dropzone {
-  border: 2px dashed var(--border);
-  border-radius: var(--r-lg);
-  padding: var(--sp-8) var(--sp-4);
-  text-align: center;
-  cursor: pointer;
-  background: var(--surface);
-  transition: border-color 0.15s, background 0.15s;
-}
-.file-dropzone:hover, .file-dropzone.dragover {
-  border-color: var(--primary);
-  background: var(--dk-violet-soft);
-}
-.file-dropzone:focus-visible { outline: 3px solid var(--dk-amber); outline-offset: 2px; }
-.file-dropzone__hint { color: var(--text-muted); font-size: var(--fs-sm); margin: var(--sp-2) 0 0; }
+/* (.file-dropzone styles removed Oct 7, 2026: unused) */
 
 /* ---------- FAQ accordion ---------- */
 .faq-accordion { border-block-start: 1px solid var(--border); }
@@ -297,17 +283,7 @@ input[type="range"].slider {
 }
 
 /* ---------- Modal (confirm only) ---------- */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(23, 20, 46, 0.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 250;
-  padding: var(--sp-4);
-}
-.modal-backdrop.open { display: flex; }
+/* (.modal-backdrop removed Oct 7, 2026: unused — DKModal uses .modal directly) */
 .modal {
   background: var(--surface);
   border-radius: var(--r-xl);
@@ -318,7 +294,7 @@ input[type="range"].slider {
   border: 1px solid var(--border);
 }
 .modal h3 { margin-block-start: 0; }
-.modal__actions { display: flex; gap: var(--sp-3); justify-content: flex-end; margin-block-start: var(--sp-5); }
+/* (.modal__actions removed Oct 7, 2026: unused) */
 
 /* ---------- Stat ---------- */
 .stat {
@@ -334,14 +310,13 @@ input[type="range"].slider {
 .stat__label { color: var(--text-muted); font-size: var(--fs-sm); margin-block-start: var(--sp-2); }
 
 /* ---------- Empty / error states ---------- */
-.empty-state, .error-state {
+.empty-state {
   text-align: center;
   padding: var(--sp-8) var(--sp-4);
   color: var(--text-muted);
 }
-.empty-state__icon, .error-state__icon { font-size: 3rem; display: block; margin-block-end: var(--sp-3); }
-.error-state { color: var(--danger); }
-.error-state p { color: var(--text-muted); }
+.empty-state__icon { font-size: 3rem; display: block; margin-block-end: var(--sp-3); }
+/* (.error-state removed Oct 7, 2026: unused) */
 
 /* ---------- Breadcrumb ---------- */
 .breadcrumb {
@@ -364,20 +339,7 @@ input[type="range"].slider {
 .breadcrumb [aria-current="page"] { color: var(--text); font-weight: 600; }
 
 /* ---------- Progress bar ---------- */
-.progress-bar {
-  block-size: 0.625rem;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  overflow: hidden;
-}
-.progress-bar > span {
-  display: block;
-  block-size: 100%;
-  inline-size: 0;
-  background: linear-gradient(90deg, var(--dk-violet), var(--dk-violet-deep));
-  border-radius: var(--r-pill);
-  transition: inline-size 0.3s ease;
-}
+/* (.progress-bar removed Oct 7, 2026: unused) */
 
 /* ---------- Tabs ---------- */
 .tabs { display: flex; flex-wrap: wrap; gap: var(--sp-2); border-block-end: 2px solid var(--border); margin-block-end: var(--sp-5); }
@@ -486,6 +448,8 @@ input[type="range"].slider {
   background: var(--bg-soft);
   margin-block-start: var(--sp-10);
   padding-block: var(--sp-8) var(--sp-5);
+  /* Clearance for fixed chat FAB (3.5rem + sp-5 offset) so it never covers footer text */
+  padding-block-end: calc(var(--sp-5) + 4.5rem);
 }
 .footer-grid {
   display: grid;
@@ -556,6 +520,9 @@ input[type="range"].slider {
 /* Category chips */
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; margin-block: var(--sp-5); }
 .chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   border-radius: var(--r-pill);
   border: 1px solid var(--border);
@@ -634,26 +601,7 @@ input[type="range"].slider {
 [dir="ltr"] .nav-links a::after { transform-origin: left center; }
 
 /* ---------- Language select ---------- */
-.lang-select {
-  appearance: none;
-  -webkit-appearance: none;
-  max-inline-size: 7.5rem;
-  padding: var(--sp-2) var(--sp-3);
-  padding-inline-end: 1.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--r-pill);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236C4CF1' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-}
-[dir="rtl"] .lang-select { background-position: left 0.7rem center; }
-.lang-select:hover { border-color: var(--primary); }
+/* (.lang-select removed Oct 7, 2026: unused) */
 
 /* ---------- DoKit Assistant ---------- */
 .dk-fab {
@@ -765,7 +713,6 @@ input[type="range"].slider {
 @media (max-width: 559px) {
   .nav-cta { display: none; } /* mobile menu carries the links */
   .brand span:last-child { font-size: var(--fs-base); }
-  .lang-select { max-inline-size: 4.5rem; }
   .hero-cta .btn { inline-size: 100%; }
   .dk-panel {
     inset-inline: var(--sp-3);
@@ -1064,4 +1011,101 @@ input[type="range"].slider {
     padding: var(--sp-10) var(--sp-8);
   }
   .cta-band__action { justify-self: end; }
+}
+
+/* ============================================================
+   ANIMATIONS & MICRO-INTERACTIONS
+   Premium hover effects across the site. Subtle & professional.
+   All transitions 0.2–0.3s. Respects prefers-reduced-motion
+   (covered by the global rule above).
+   ============================================================ */
+
+/* ---------- 1. Buttons: press-down on active ---------- */
+.btn { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, filter 0.2s ease; }
+.btn:active { transform: translateY(0) scale(0.97); }
+.btn-primary:active, .btn-accent:active { box-shadow: var(--shadow-sm); }
+.btn-ghost:active { background: var(--dk-violet-soft); }
+
+/* ---------- 2. Tool cards: icon pop on hover ---------- */
+.tool-card__icon { transition: transform 0.25s ease; display: inline-block; }
+a.tool-card:hover .tool-card__icon { transform: scale(1.12) rotate(-4deg); }
+
+/* ---------- 3. Nav items: background tint on hover ---------- */
+.nav-links a { border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); transition: color 0.2s ease, background-color 0.2s ease; }
+.nav-links a:hover { background: var(--dk-violet-soft); }
+
+/* ---------- 4. Images & thumbnails: subtle zoom ---------- */
+.tool-card img, .card img, .thumb, .preview img, img.zoom-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.tool-card:hover img, .card:hover img.zoom-hover, .thumb:hover, .preview img:hover {
+  transform: scale(1.03);
+}
+
+/* ---------- 5. Form inputs: smooth focus glow ---------- */
+.text-input, .select, .textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.text-input:hover, .select:hover, .textarea:hover { border-color: var(--primary); }
+
+/* ---------- 6. Content links: animated underline ---------- */
+main p a, .prose a, .faq-a a {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  transition: background-size 0.25s ease, color 0.2s ease;
+  text-decoration: none;
+  padding-block-end: 1px;
+}
+main p a:hover, .prose a:hover, .faq-a a:hover {
+  background-size: 100% 1px;
+  text-decoration: none;
+}
+[dir="rtl"] main p a, [dir="rtl"] .prose a, [dir="rtl"] .faq-a a { background-position: right bottom; }
+
+/* ---------- 7. Tabs, chips, toggles: smooth feedback ---------- */
+.tab, .chip, .toggle-btn, .lang-btn {
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+.tab:hover, .chip:hover { transform: translateY(-1px); }
+.tab:active, .chip:active { transform: translateY(0) scale(0.98); }
+
+/* ---------- 8. Footer links: slide-in effect ---------- */
+.footer-col a { transition: color 0.2s ease, padding-inline-start 0.2s ease; }
+.footer-col a:hover { padding-inline-start: var(--sp-2); }
+
+/* ---------- 9. Page load: subtle fade-in ---------- */
+@keyframes dk-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+main { animation: dk-fade-in 0.4s ease-out; }
+
+/* ---------- 10. Section reveal on scroll (progressive) ---------- */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; transition-delay: var(--reveal-delay, 0ms); }
+.reveal.visible, .reveal.in-view { opacity: 1; transform: translateY(0); }
+/* Fallback: if no JS adds .visible, show after 1s */
+@keyframes dk-reveal-fallback { to { opacity: 1; transform: translateY(0); } }
+.reveal { animation: dk-reveal-fallback 0.5s ease 1.2s forwards; }
+.reveal.visible, .reveal.in-view { animation: none; }
+
+/* ---------- 11. Assistant FAB: gentle pulse on hover ---------- */
+.dk-fab { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.dk-fab:hover { transform: scale(1.08); box-shadow: var(--shadow-lg); }
+.dk-fab:active { transform: scale(0.95); }
+
+/* ---------- 12. Dropdown menus: smooth open ---------- */
+.nav-dropdown__menu {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.nav-dropdown.open .nav-dropdown__menu,
+.nav-dropdown:hover .nav-dropdown__menu,
+.nav-dropdown:focus-within .nav-dropdown__menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
