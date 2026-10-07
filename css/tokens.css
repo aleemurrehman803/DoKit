@@ -50,9 +50,10 @@
   --primary: #6C4CF1;
   --primary-contrast: #FFFFFF;
   --accent: #FFC531;
-  --danger: #D64545;
+  --danger: #C93A3A;
   --error: var(--danger);          /* semantic alias */
   --success: #2FA36B;
+  --success-text: #1F7A4D;
   --warning: #B7791F;              /* text on light surfaces: pair with dark text or use on --accent tints */
   --info: #2669B8;                 /* 5.5:1 on white */
 
