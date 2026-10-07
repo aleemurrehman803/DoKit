@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Fighter Profile — TypeFight — DoKit</title>
+<meta name="description" content="Build your TypeFight fighter profile. Required before earning certificates.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/profile.html">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="./tool.css">
+<style>
+  .avatar-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:.4rem; margin:.5rem 0; }
+  .avatar-grid button { font-size:1.6rem; padding:.4rem; border:2px solid var(--border); border-radius:.6rem; background:var(--bg); cursor:pointer; }
+  .avatar-grid button[aria-pressed="true"] { border-color:var(--brand); background:var(--brand-soft); }
+  .tf-nav-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:var(--sp-3); margin-bottom:var(--sp-5); }
+  .tf-nav-card { display:block; text-decoration:none; color:inherit; }
+  .field { margin-bottom:var(--sp-3); }
+  .field label { display:block; font-weight:600; margin-bottom:.3rem; }
+  .field input, .field select, .field textarea { width:100%; }
+  .field .hint { font-size:var(--fs-sm); color:var(--text-muted); }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="../">Home</a></li>
+          <li><a href="./">TypeFight</a></li>
+          <li aria-current="page">Fighter profile</li>
+        </ol>
+      </nav>
+
+      <h1>⚔️ Fighter profile</h1>
+      <p style="color:var(--text-muted)">Your battle identity. A profile is <strong>required before certificates</strong> can be issued.</p>
+
+      <div class="tf-nav-cards">
+        <a class="card tf-nav-card" href="./battle.html"><h3>⚔️ Battle</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">Race bots, win coins</p></a>
+        <a class="card tf-nav-card" href="./wallet.html"><h3>🪙 Wallet</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">Balance &amp; history</p></a>
+        <a class="card tf-nav-card" href="./certificate.html"><h3>🏆 Certificates</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">QR-verified awards</p></a>
+      </div>
+
+      <!-- Sign-in gate -->
+      <div id="tfGate" style="display:none">
+        <div class="card" style="text-align:center">
+          <h3>🔒 Sign in required</h3>
+          <p style="color:var(--text-muted)">TypeFight profiles live in your account so your coins and certificates follow you across devices.</p>
+          <p><a class="btn btn-primary" href="../account/login.html">Log in</a></p>
+        </div>
+      </div>
+
+      <!-- App -->
+      <div id="tfApp" style="display:none">
+        <div class="card">
+          <form id="profileForm" novalidate>
+            <div class="field">
+              <label for="pfUsername">Battle username</label>
+              <input class="text-input" id="pfUsername" name="username" maxlength="20" required
+                     placeholder="e.g. SpeedDemon" autocomplete="off">
+              <p class="hint">3–20 characters: letters, numbers, underscore. Shown on leaderboards &amp; certificates.</p>
+            </div>
+            <div class="field">
+              <label>Avatar</label>
+              <div class="avatar-grid" id="avatarGrid" role="radiogroup" aria-label="Choose avatar"></div>
+            </div>
+            <div class="field">
+              <label for="pfCountry">Country</label>
+              <select class="text-input" id="pfCountry" name="country"></select>
+            </div>
+            <div class="field">
+              <label for="pfBio">Bio <span style="color:var(--text-muted)">(optional)</span></label>
+              <textarea class="text-input" id="pfBio" name="bio" rows="2" maxlength="140"
+                        placeholder="A line about you…"></textarea>
+              <p class="hint"><span id="bioCount">0</span>/140</p>
+            </div>
+            <p id="formMsg" role="status" style="min-height:1.5em"></p>
+            <p>
+              <button class="btn btn-primary" type="submit" id="saveBtn">Save profile</button>
+              <a class="btn btn-ghost" href="./battle.html" style="margin-inline-start:.5rem">Go battle →</a>
+            </p>
+          </form>
+        </div>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)">🪙 Virtual coins only — no cash value, cannot be withdrawn.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/typefight.js" defer></script>
+<script src="../js/pages/typefight-profile.js" defer></script>
+</body>
+</html>
