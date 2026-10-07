@@ -1,3 +1,11 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "sub_signin": "Sign in to get your link",
+  "sub_copied": "Copied ✓",
+  "sub_copy": "Copy",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — Subscription page controller (Phase 6 scaffold).
  *
  * What this page does:
@@ -46,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       if (window.DKReferral) {
         var link = DKReferral.myLink();
-        if (refLink) refLink.value = link || "Sign in to get your link";
+        if (refLink) refLink.value = link || dkT("sub_signin");
         DKReferral.myReferrals().then(function (list) {
           if (refCount) refCount.textContent = String(list.length);
         }).catch(function () {});
@@ -64,8 +72,8 @@ document.addEventListener("DOMContentLoaded", function () {
           } else {
             document.execCommand("copy");
           }
-          refCopy.textContent = "Copied ✓";
-          setTimeout(function () { refCopy.textContent = "Copy"; }, 1500);
+          refCopy.textContent = dkT("sub_copied");
+          setTimeout(function () { refCopy.textContent = dkT("sub_copy"); }, 1500);
         }
       } catch (e) {}
     });
