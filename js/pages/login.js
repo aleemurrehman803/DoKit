@@ -26,6 +26,17 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
+  // Handle return from Google redirect sign-in.
+  if (window.DKF && DKF.auth()) {
+    DKF.auth().getRedirectResult().then(function (result) {
+      if (result && result.user) {
+        return DKF.ensureUserDoc(result.user).then(function () {
+          window.location.href = "dashboard.html";
+        });
+      }
+    }).catch(function () { /* ignore */ });
+  }
+
   // Already signed in? Skip to dashboard.
   if (window.DKF) {
     DKF.onUser(function (user) {
@@ -67,15 +78,16 @@ document.addEventListener("DOMContentLoaded", function () {
   if (gBtn) {
     gBtn.addEventListener("click", function () {
       if (!window.DKF || !DKF.auth()) return;
-      if (gErr) gErr.textContent = "";
+      // CAPTCHA is required every time, including Google sign-in.
+      if (cErr) cErr.textContent = "";
+      if (!cap || !cap.validate()) {
+        if (cErr) cErr.textContent = "Please enter the security code shown above.";
+        if (cap) cap.refresh();
+        return;
+      }
       gBtn.disabled = true;
-      DKF.auth().signInWithPopup(DKF.googleProvider())
-        .then(function (cred) { return DKF.ensureUserDoc(cred.user); })
-        .then(function () { window.location.href = "dashboard.html"; })
-        .catch(function (err) {
-          gBtn.disabled = false;
-          if (gErr) gErr.textContent = DKF.friendlyError(err);
-        });
+      // Redirect flow (no popup): reliable on all browsers, incl. mobile.
+      DKF.auth().signInWithRedirect(DKF.googleProvider());
     });
   }
 });
