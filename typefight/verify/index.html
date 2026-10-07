@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/verify/">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Verify Certificate — TypeFight — DoKit</title>
+<meta name="description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Verify Certificate — TypeFight — DoKit">
+<meta property="og:description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typefight/verify/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Verify Certificate — TypeFight — DoKit">
+<meta name="twitter:description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
+<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="stylesheet" href="../../css/tokens.css">
+<link rel="stylesheet" href="../../css/hub.css">
+<style>
+  .verdict { border-radius:1rem; padding:2rem; text-align:center; }
+  .verdict-valid { border:3px solid #1F7A4D; background:#eef7f0; }
+  .verdict-invalid { border:3px solid #C93A3A; background:#fdf0f0; }
+  .verdict h2 { margin:.25rem 0 1rem; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:40rem">
+      <h1>🔍 Verify certificate</h1>
+      <p style="color:var(--text-muted)">Scan result checker — confirms a TypeFight certificate is genuine.</p>
+
+      <div id="verifyLoading" class="card" style="text-align:center">
+        <p style="color:var(--text-muted)">Checking certificate…</p>
+      </div>
+
+      <div id="verifyResult" style="display:none"></div>
+
+      <div class="card" style="margin-top:var(--sp-4)">
+        <h3>Check another</h3>
+        <form id="verifyForm">
+          <p><input class="text-input" id="verifyId" placeholder="Certificate ID or Reg. No (e.g. DK-2026-000001)" style="width:100%" autocomplete="off" aria-label="Certificate ID or registration number"></p>
+          <p><button class="btn btn-primary" type="submit">Verify</button></p>
+        </form>
+      </div>
+      <p style="margin-top:var(--sp-3)"><a href="../">← TypeFight home</a></p>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../../js/i18n-v2.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../../js/firebase.js?v=20261007i" defer></script>
+<script src="../../js/dk-utils.js" defer></script>
+<script src="../../js/typefight.js" defer></script>
+<script src="../../js/pages/typefight-verify.js" defer></script>
+</body>
+</html>
