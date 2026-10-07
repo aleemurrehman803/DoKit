@@ -1,3 +1,20 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "db_login_link": "Log in to get your link",
+  "db_member": "Member",
+  "db_logout": "Log out",
+  "db_name": "Please enter your name.",
+  "db_pw": "Password must be at least 6 characters.",
+  "db_photo_type": "Please choose an image file.",
+  "db_photo_size": "Photo must be smaller than 2MB.",
+  "db_saving": "Saving…",
+  "db_save": "Save Changes",
+  "db_relogin": "For security, please log out and log back in, then change your password.",
+  "db_save_fail": "Could not save. Please try again.",
+  "db_storage": "Photo storage is not ready yet. Details were saved without the photo.",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — dashboard (Firebase Auth + Firestore profile). Keeps the old
    localStorage fallbacks for guests / offline. */
 document.addEventListener("DOMContentLoaded", function () {
@@ -6,13 +23,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
 
   /* ---- Your Journey timeline ---- */
-  function esc(s) {
-    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
-    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
-  }
+  };
   function renderJourney() {
     var list = document.getElementById("journeyList");
     var empty = document.getElementById("journeyEmpty");
@@ -86,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function setRefLink(uid) {
     var link = uid
       ? ("https://aleemurrehman803.github.io/dokit/?ref=" + uid)
-      : "Log in to get your link";
+      : dkT("db_login_link");
     refEl.textContent = link;
     copyBtn.onclick = function () {
       if (uid && navigator.clipboard) navigator.clipboard.writeText(link).catch(function () {});
@@ -96,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Guest/local fallbacks (unchanged behavior).
   var acct = lsGet("dk_account", null);
   if (acct) {
-    nameEl.textContent = acct.name || acct.email || "Member";
+    nameEl.textContent = acct.name || acct.email || dkT("db_member");
     emailEl.textContent = acct.email || "";
     sinceEl.textContent = acct.ts ? new Date(acct.ts).toLocaleDateString() : "—";
   }
@@ -126,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
       sinceEl.textContent = (user.metadata && user.metadata.creationTime)
         ? new Date(user.metadata.creationTime).toLocaleDateString() : "—";
     } catch (e) {}
-    authBtn.textContent = "Log out";
+    authBtn.textContent = dkT("db_logout");
     authBtn.href = "#";
     authBtn.onclick = function (ev) {
       ev.preventDefault();
@@ -199,20 +215,20 @@ document.addEventListener("DOMContentLoaded", function () {
       var newPw = pfPassword.value;
       var file = pfPhoto.files && pfPhoto.files[0];
 
-      if (nm.length < 2) { err("err-pfName", "Please enter your name."); ok = false; }
-      if (newPw && newPw.length < 6) { err("err-pfPassword", "Password must be at least 6 characters."); ok = false; }
+      if (nm.length < 2) { err("err-pfName", dkT("db_name")); ok = false; }
+      if (newPw && newPw.length < 6) { err("err-pfPassword", dkT("db_pw")); ok = false; }
       if (file) {
-        if (file.type.indexOf("image/") !== 0) { err("err-pfPhoto", "Please choose an image file."); ok = false; }
-        else if (file.size > 2 * 1024 * 1024) { err("err-pfPhoto", "Photo must be smaller than 2MB."); ok = false; }
+        if (file.type.indexOf("image/") !== 0) { err("err-pfPhoto", dkT("db_photo_type")); ok = false; }
+        else if (file.size > 2 * 1024 * 1024) { err("err-pfPhoto", dkT("db_photo_size")); ok = false; }
       }
       if (!ok) return;
 
       saveBtn.disabled = true;
-      saveBtn.textContent = "Saving…";
+      saveBtn.textContent = dkT("db_saving");
 
       function finish(msg) {
         saveBtn.disabled = false;
-        saveBtn.textContent = "Save Changes";
+        saveBtn.textContent = dkT("db_save");
         if (msg) err("err-pfGeneral", msg);
       }
 
@@ -241,7 +257,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!newPw) return null;
         return user.updatePassword(newPw).catch(function (e) {
           if (e && e.code === "auth/requires-recent-login") {
-            throw { friendly: "For security, please log out and log back in, then change your password." };
+            throw { friendly: dkT("db_relogin") };
           }
           throw e;
         });
@@ -251,9 +267,9 @@ document.addEventListener("DOMContentLoaded", function () {
         profileForm.reset();
         location.reload(); // show fresh profile
       }).catch(function (e) {
-        var msg = (e && e.friendly) || (window.DKF && DKF.friendlyError(e)) || "Could not save. Please try again.";
+        var msg = (e && e.friendly) || (window.DKF && DKF.friendlyError(e)) || dkT("db_save_fail");
         // storage-not-enabled hint
-        if (e && e.code === "storage/unknown") msg = "Photo storage is not ready yet. Details were saved without the photo.";
+        if (e && e.code === "storage/unknown") msg = dkT("db_storage");
         finish(msg);
       });
     });
