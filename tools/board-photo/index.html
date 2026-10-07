@@ -129,7 +129,10 @@
     <div class="bstep" id="resultStep" hidden>
       <h3 class="bstep-h"><span class="bstep-n">3</span> <span data-i18n="bp.step3">Download your board photo</span></h3>
       <div class="bpreview">
-        <img id="resultImg" alt="Your board-ready photo"/>
+        <div class="bpreview-wrap" id="previewWrap">
+          <img id="resultImg" alt="Your board-ready photo"/>
+          <div class="bface-guide" id="faceGuide" hidden aria-hidden="true"></div>
+        </div>
         <div class="bresult-meta">
           <span class="bpill" id="pillDims">–</span>
           <span class="bpill" id="pillSize">–</span>
@@ -150,6 +153,91 @@
           <button type="button" class="tbtn tbtn-ghost" id="sheetBtn" data-i18n="bp.print_sheet">Print Sheet (4×6)</button>
           <button type="button" class="tbtn tbtn-ghost" id="waBtn" data-i18n="bp.share_wa">Share on WhatsApp</button>
           <button type="button" class="tbtn tbtn-ghost" id="againBtn" data-i18n="bp.again">Use another photo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced options -->
+    <div class="badv" id="advSection">
+      <button type="button" class="badv-toggle" id="advToggle" aria-expanded="false" aria-controls="advBody">
+        <span data-i18n="bp.adv_title">⚙️ Mazeed Options (Advanced)</span>
+        <span class="badv-chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="badv-body" id="advBody" hidden>
+        <div class="badv-inner">
+          <div class="badv-grid">
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">✨</div>
+              <h4 data-i18n="bp.enhance_t">Auto Enhance</h4>
+              <p data-i18n="bp.enhance_d">One-click brightness &amp; contrast fix</p>
+              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn" data-i18n="bp.enhance_btn">Enhance photo</button>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">🔄</div>
+              <h4 data-i18n="bp.rot_t">Rotate &amp; Flip</h4>
+              <p data-i18n="bp.rot_d">Fix a tilted photo</p>
+              <div class="tbtnrow" style="margin-block-start:0">
+                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotL" data-i18n-aria="bp.rot_l" aria-label="Rotate left">⟲</button>
+                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotR" data-i18n-aria="bp.rot_r" aria-label="Rotate right">⟳</button>
+                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="flipH" data-i18n="bp.flip_h">⇋ Flip</button>
+              </div>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">📏</div>
+              <h4 data-i18n="bp.preset_t">My Presets</h4>
+              <p data-i18n="bp.preset_d">Save the current size for reuse</p>
+              <div class="trow" style="margin-block-end:.5rem">
+                <div class="tfield" style="margin:0;flex:1"><input class="tinput" id="presetName" data-i18n-ph="bp.preset_name_ph" placeholder="Preset name (optional)"/></div>
+                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="savePresetBtn" data-i18n="bp.preset_save">Save preset</button>
+              </div>
+              <div class="bchips" id="presetRow"></div>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">🏷️</div>
+              <h4 data-i18n="bp.stamp_t">Name / Date Stamp</h4>
+              <p data-i18n="bp.stamp_d">Print name &amp; date on the photo</p>
+              <div class="tfield" style="margin-block-end:.5rem"><input class="tinput" id="stampName" data-i18n-ph="bp.stamp_name_ph" placeholder="Your name"/></div>
+              <label class="tcheck"><input type="checkbox" id="stampDate"/> <span data-i18n="bp.stamp_date">Add today's date</span></label>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">📸</div>
+              <h4 data-i18n="bp.cam_t">Camera</h4>
+              <p data-i18n="bp.cam_d">Take a photo right now</p>
+              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="camBtn" data-i18n="bp.cam_btn">Use Camera</button>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">🌓</div>
+              <h4 data-i18n="bp.bw_t">Black &amp; White</h4>
+              <p data-i18n="bp.bw_d">Grayscale mode</p>
+              <label class="bswitch"><input type="checkbox" id="bwToggle"/><span class="btrack" aria-hidden="true"></span><span data-i18n="bp.bw_t">Black &amp; White</span></label>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">📐</div>
+              <h4 data-i18n="bp.guide_t">Face Guide</h4>
+              <p data-i18n="bp.guide_d">Show head-position oval</p>
+              <label class="bswitch"><input type="checkbox" id="guideToggle"/><span class="btrack" aria-hidden="true"></span><span data-i18n="bp.guide_t">Face Guide</span></label>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">📧</div>
+              <h4 data-i18n="bp.email_t">Email Photo</h4>
+              <p data-i18n="bp.email_d">Open your mail app</p>
+              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="emailBtn" data-i18n="bp.email_btn">Email photo</button>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">💾</div>
+              <h4 data-i18n="bp.hist_t">Recent Photos</h4>
+              <p data-i18n="bp.hist_d">Last 5 processed photos</p>
+              <div class="bhist" id="histRow"><p class="thint" style="margin:0" data-i18n="bp.hist_empty">No recent photos yet.</p></div>
+            </div>
+            <div class="badv-card">
+              <div class="bicon" aria-hidden="true">📦</div>
+              <h4 data-i18n="bp.batch_t">Batch Mode</h4>
+              <p data-i18n="bp.batch_d">Process many photos at once</p>
+              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="batchBtn" data-i18n="bp.batch_btn">Choose photos</button>
+              <input type="file" id="batchInput" accept="image/png,image/jpeg,image/webp" multiple hidden/>
+              <ul class="bbatch" id="batchList"></ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -198,6 +286,18 @@
     </div>
   </section>
 </main>
+<div class="btoast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="bcam-modal" id="camModal" hidden>
+  <div class="bcam-box" role="dialog" aria-modal="true" aria-labelledby="camTitle">
+    <h3 id="camTitle" data-i18n="bp.cam_title">Take a photo</h3>
+    <video id="camVideo" playsinline autoplay muted></video>
+    <p class="thint" id="camErr" hidden></p>
+    <div class="tbtnrow" style="justify-content:center">
+      <button type="button" class="tbtn tbtn-primary" id="camShot" data-i18n="bp.cam_shot">Capture</button>
+      <button type="button" class="tbtn tbtn-ghost" id="camClose" data-i18n="bp.cam_close">Close</button>
+    </div>
+  </div>
+</div>
 <footer id="dk-footer"></footer>
 </body>
 </html>

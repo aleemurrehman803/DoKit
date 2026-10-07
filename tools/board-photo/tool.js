@@ -112,7 +112,59 @@
       "bp.faq_a5": "The tool auto-crops to your board's exact dimensions, keeping the head fully in frame with headroom — your face is never altered or cut.",
       "bp.faq_q6": "What file format do I get?",
       "bp.faq_a6": "A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal.",
-      "bp.related": "Related tools"
+      "bp.related": "Related tools",
+      "bp.adv_title": "⚙️ Mazeed Options (Advanced)",
+      "bp.enhance_t": "Auto Enhance",
+      "bp.enhance_d": "One-click brightness & contrast fix",
+      "bp.enhance_btn": "Enhance photo",
+      "bp.rot_t": "Rotate & Flip",
+      "bp.rot_d": "Fix a tilted photo",
+      "bp.rot_l": "Rotate left",
+      "bp.rot_r": "Rotate right",
+      "bp.flip_h": "⇋ Flip",
+      "bp.preset_t": "My Presets",
+      "bp.preset_d": "Save the current size for reuse",
+      "bp.preset_name_ph": "Preset name (optional)",
+      "bp.preset_save": "Save preset",
+      "bp.stamp_t": "Name / Date Stamp",
+      "bp.stamp_d": "Print name & date on the photo",
+      "bp.stamp_name_ph": "Your name",
+      "bp.stamp_date": "Add today's date",
+      "bp.custom_note": "Your custom size. Confirm exact specs with your board.",
+      "bp.cam_t": "Camera",
+      "bp.cam_d": "Take a photo right now",
+      "bp.cam_btn": "Use Camera",
+      "bp.cam_title": "Take a photo",
+      "bp.cam_shot": "Capture",
+      "bp.cam_close": "Close",
+      "bp.cam_err": "Camera not available on this device.",
+      "bp.bw_t": "Black & White",
+      "bp.bw_d": "Grayscale mode",
+      "bp.guide_t": "Face Guide",
+      "bp.guide_d": "Show head-position oval",
+      "bp.email_t": "Email Photo",
+      "bp.email_d": "Open your mail app",
+      "bp.email_btn": "Email photo",
+      "bp.email_sub": "My Board Photo",
+      "bp.email_body": "Please find my board photo attached.",
+      "bp.email_note": "Note: attach the downloaded JPG manually — browsers cannot attach files automatically.",
+      "bp.hist_t": "Recent Photos",
+      "bp.hist_d": "Last 5 processed photos",
+      "bp.hist_empty": "No recent photos yet.",
+      "bp.batch_t": "Batch Mode",
+      "bp.batch_d": "Process many photos at once",
+      "bp.batch_btn": "Choose photos",
+      "bp.batch_empty": "No photos yet — choose some above.",
+      "bp.need_photo": "Please upload a photo first.",
+      "bp.toast_enhanced": "Photo enhanced!",
+      "bp.toast_bw_on": "B&W mode on",
+      "bp.toast_bw_off": "B&W mode off",
+      "bp.toast_guide_on": "Face guide on",
+      "bp.toast_guide_off": "Face guide off",
+      "bp.toast_preset": "Preset saved!",
+      "bp.toast_rotated": "Photo rotated",
+      "bp.toast_flipped": "Photo flipped",
+      "bp.toast_captured": "Photo captured!"
     });
     window.DKI18N.add("ur", {
       "bp.select_placeholder": "اپنا بورڈ / یونیورسٹی منتخب کریں",
@@ -129,7 +181,59 @@
       "bp.bg_original": "اصل رکھیں",
       "bp.print_sheet": "پرنٹ شیٹ (4×6)",
       "bp.share_wa": "واٹس ایپ پر شیئر کریں",
-      "bp.share_msg": "میں نے DoKit Board Photo سے اپنی بورڈ فوٹو بنائی"
+      "bp.share_msg": "میں نے DoKit Board Photo سے اپنی بورڈ فوٹو بنائی",
+      "bp.adv_title": "⚙️ مزید آپشنز (ایڈوانسڈ)",
+      "bp.enhance_t": "آٹو انہانس",
+      "bp.enhance_d": "ایک کلک میں چمک اور کنٹراسٹ ٹھیک کریں",
+      "bp.enhance_btn": "فوٹو بہتر بنائیں",
+      "bp.rot_t": "گھمائیں اور پلٹیں",
+      "bp.rot_d": "ٹیڑھی فوٹو سیدھی کریں",
+      "bp.rot_l": "بائیں گھمائیں",
+      "bp.rot_r": "دائیں گھمائیں",
+      "bp.flip_h": "⇋ پلٹیں",
+      "bp.preset_t": "میرے پری سیٹ",
+      "bp.preset_d": "موجودہ سائز محفوظ کریں",
+      "bp.preset_name_ph": "پری سیٹ کا نام (اختیاری)",
+      "bp.preset_save": "محفوظ کریں",
+      "bp.stamp_t": "نام / تاریخ کی مہر",
+      "bp.stamp_d": "فوٹو پر نام اور تاریخ لکھیں",
+      "bp.stamp_name_ph": "آپ کا نام",
+      "bp.stamp_date": "آج کی تاریخ شامل کریں",
+      "bp.custom_note": "آپ کا کسٹم سائز۔ اپنے بورڈ سے تفصیلات کی تصدیق کریں۔",
+      "bp.cam_t": "کیمرہ",
+      "bp.cam_d": "ابھی فوٹو لیں",
+      "bp.cam_btn": "کیمرہ استعمال کریں",
+      "bp.cam_title": "فوٹو لیں",
+      "bp.cam_shot": "کیپچر",
+      "bp.cam_close": "بند کریں",
+      "bp.cam_err": "اس ڈیوائس پر کیمرہ دستیاب نہیں۔",
+      "bp.bw_t": "بلیک اینڈ وائٹ",
+      "bp.bw_d": "گرے اسکیل موڈ",
+      "bp.guide_t": "چہرہ گائیڈ",
+      "bp.guide_d": "سر کی پوزیشن والی بیضوی لائن دکھائیں",
+      "bp.email_t": "ای میل کریں",
+      "bp.email_d": "میل ایپ کھولیں",
+      "bp.email_btn": "فوٹو ای میل کریں",
+      "bp.email_sub": "میری بورڈ فوٹو",
+      "bp.email_body": "میری بورڈ فوٹو منسلک ہے۔",
+      "bp.email_note": "نوٹ: ڈاؤن لوڈ شدہ JPG خود منسلک کریں — براؤزر خود فائل نہیں لگا سکتا۔",
+      "bp.hist_t": "حالیہ فوٹوز",
+      "bp.hist_d": "آخری 5 تیار شدہ فوٹوز",
+      "bp.hist_empty": "ابھی کوئی حالیہ فوٹو نہیں۔",
+      "bp.batch_t": "بیچ موڈ",
+      "bp.batch_d": "ایک ساتھ کئی فوٹوز تیار کریں",
+      "bp.batch_btn": "فوٹوز منتخب کریں",
+      "bp.batch_empty": "ابھی کوئی فوٹو نہیں — اوپر سے منتخب کریں۔",
+      "bp.need_photo": "پہلے فوٹو اپ لوڈ کریں۔",
+      "bp.toast_enhanced": "فوٹو بہتر ہو گئی!",
+      "bp.toast_bw_on": "بلیک اینڈ وائٹ آن",
+      "bp.toast_bw_off": "بلیک اینڈ وائٹ آف",
+      "bp.toast_guide_on": "گائیڈ آن",
+      "bp.toast_guide_off": "گائیڈ آف",
+      "bp.toast_preset": "پری سیٹ محفوظ ہو گیا!",
+      "bp.toast_rotated": "فوٹو گھوم گئی",
+      "bp.toast_flipped": "فوٹو پلٹ گئی",
+      "bp.toast_captured": "فوٹو لی گئی!"
     });
   }
 
@@ -160,6 +264,13 @@
   var currentName = "board-photo.jpg";
   var processing = false;
   var bgOverride = null; // null = board's spec bg; "original" = no fill; else a css colour
+  var enhanceOn = false;
+  var rotation = 0;      // 0 / 90 / 180 / 270
+  var flipH = false;
+  var bwOn = false;
+  var stampOn = false;
+  var stampText = "";
+  var stampDateOn = false;
 
   function genericBoard() {
     for (var i = 0; i < BOARDS.length; i++) {
@@ -357,57 +468,98 @@
   });
 
   /* ---------------- processing ---------------- */
-  function canvasToBlob(canvas, quality) {
+  /* Build the final board photo canvas: crop + bg + rotate/flip + filters + stamp. */
+  function buildPhotoCanvas(img) {
+    var b = selected || genericBoard();
+    var rot = ((rotation % 360) + 360) % 360;
+    var outW = (rot === 90 || rot === 270) ? b.h : b.w;
+    var outH = (rot === 90 || rot === 270) ? b.w : b.h;
+
+    /* head-safe cover crop: fill outW×outH, bias crop toward the top so the head keeps headroom */
+    var scale = Math.max(outW / img.naturalWidth, outH / img.naturalHeight);
+    var cw = Math.round(outW / scale), ch = Math.round(outH / scale);
+    var sx = Math.max(0, Math.round((img.naturalWidth - cw) / 2));
+    var sy = Math.max(0, Math.round((img.naturalHeight - ch) * 0.32));
+
+    var canvas = document.createElement("canvas");
+    canvas.width = outW; canvas.height = outH;
+    var ctx = canvas.getContext("2d");
+    /* background fill: user override > board spec bg > white. "original" = no fill */
+    var fill = bgOverride === "original" ? null : (bgOverride || b.bg || "#ffffff");
+    if (fill) { ctx.fillStyle = fill; ctx.fillRect(0, 0, outW, outH); }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    var filters = [];
+    if (bwOn) filters.push("grayscale(1)");
+    if (enhanceOn) filters.push("brightness(1.06) contrast(1.12) saturate(1.08)");
+    ctx.filter = filters.length ? filters.join(" ") : "none";
+
+    ctx.save();
+    ctx.translate(outW / 2, outH / 2);
+    if (flipH) ctx.scale(-1, 1);
+    ctx.rotate(rot * Math.PI / 180);
+    ctx.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
+    ctx.restore();
+    ctx.filter = "none";
+
+    /* name / date stamp, bottom-right */
+    if (stampOn && (stampText || stampDateOn)) {
+      var pad = Math.max(6, Math.round(outH * 0.03));
+      var fs = Math.max(10, Math.round(outH * 0.055));
+      var lines = [];
+      if (stampText) lines.push(stampText);
+      if (stampDateOn) {
+        var d = new Date();
+        lines.push(("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + d.getFullYear());
+      }
+      var label = lines.join("  •  ");
+      ctx.font = "600 " + fs + "px system-ui, -apple-system, sans-serif";
+      ctx.textBaseline = "bottom";
+      var tw = ctx.measureText(label).width;
+      var bx = outW - tw - pad * 1.2, by = outH - pad * 0.9;
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(bx - pad * 0.6, by - fs - pad * 0.7, tw + pad * 1.2, fs + pad * 0.9);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(label, bx, by);
+    }
+    return { canvas: canvas, b: b };
+  }
+
+  /* Binary-search JPEG quality to fit the KB target. Resolves {blob, over}. */
+  function fitBlob(canvas, targetBytes) {
     return new Promise(function (resolve) {
-      canvas.toBlob(function (b) { resolve(b); }, "image/jpeg", quality);
+      var lo = 0.05, hi = 0.95, best = null;
+      function attempt(q) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { resolve({ blob: null, over: true }); return; }
+          if (blob.size <= targetBytes) {
+            best = blob;
+            if (hi - lo < 0.02) { resolve({ blob: best, over: false }); return; }
+            lo = q; attempt((q + hi) / 2);
+          } else {
+            if (hi - lo < 0.02) {
+              if (best) { resolve({ blob: best, over: false }); return; }
+              canvas.toBlob(function (b2) { resolve({ blob: b2, over: true }); }, "image/jpeg", lo);
+              return;
+            }
+            hi = q; attempt((lo + q) / 2);
+          }
+        }, "image/jpeg", q);
+      }
+      attempt((lo + hi) / 2);
     });
   }
 
   function processImage(img, silent) {
     if (!img) return;
-    var b = selected || genericBoard();
-    var W = b.w, H = b.h;
-    var target = b.kb * 1024;
-
-    /* head-safe cover crop: fill W×H, bias crop toward the top so the head keeps headroom */
-    var scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
-    var cw = Math.round(W / scale), ch = Math.round(H / scale);
-    var sx = Math.max(0, Math.round((img.naturalWidth - cw) / 2));
-    var sy = Math.max(0, Math.round((img.naturalHeight - ch) * 0.32));
-
-    var canvas = document.createElement("canvas");
-    canvas.width = W; canvas.height = H;
-    var ctx = canvas.getContext("2d");
-    /* background fill: user override > board spec bg > white. "original" = no fill */
-    var fill = bgOverride === "original" ? null : (bgOverride || b.bg || "#ffffff");
-    if (fill) { ctx.fillStyle = fill; ctx.fillRect(0, 0, W, H); }
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, sx, sy, cw, ch, 0, 0, W, H);
-
-    /* binary-search JPEG quality to fit the KB target */
-    var lo = 0.05, hi = 0.95, best = null, bestQ = lo;
-    function step() {
-      if (hi - lo < 0.02) return finish();
-      var q = (lo + hi) / 2;
-      canvasToBlob(canvas, q).then(function (blob) {
-        if (!blob) return finish();
-        if (blob.size <= target) { best = blob; bestQ = q; lo = q; }
-        else { hi = q; }
-        step();
-      });
-    }
-    function finish() {
-      if (!best) {
-        canvasToBlob(canvas, lo).then(function (blob) { showResult(blob || null, b, true, silent); });
-      } else {
-        showResult(best, b, false, silent);
-      }
-    }
-    step();
+    var built = buildPhotoCanvas(img);
+    fitBlob(built.canvas, built.b.kb * 1024).then(function (res) {
+      showResult(res.blob, built.b, res.over, silent, silent);
+    });
   }
 
-  function showResult(blob, b, overTarget, silent) {
+  function showResult(blob, b, overTarget, silent, noHist) {
     var step = $("resultStep");
     if (!blob) {
       showErr(t("bp.err_read", "This image couldn't be read — the file may be corrupted."));
@@ -436,6 +588,11 @@
       note.hidden = true;
     }
     step.hidden = false;
+    var wrap = $("previewWrap");
+    wrap.classList.remove("pop");
+    void wrap.offsetWidth;
+    wrap.classList.add("pop");
+    if (!silent && !noHist) pushHistory(b);
     if (!silent) step.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
@@ -534,17 +691,292 @@
     var btn = e.target.closest("button[data-id]");
     if (btn) selectBoard(btn.getAttribute("data-id"));
   });
-  $("customBtn").addEventListener("click", function () {
-    var w = Math.max(10, Math.min(4000, parseInt($("cw").value, 10) || 200));
-    var h = Math.max(10, Math.min(4000, parseInt($("ch").value, 10) || 230));
-    var kb = Math.max(1, Math.min(10240, parseInt($("ckb").value, 10) || 50));
-    selected = { id: "custom", name: "Custom (" + w + "×" + h + ")", w: w, h: h, kb: kb, bg: "#ffffff", bgName: "white", verified: false, note: "Your custom size. Confirm exact specs with your board.", source: "Custom" };
+  function applyCustomSpec(name, w, h, kb, idp) {
+    selected = { id: (idp || "custom") + "-" + w + "x" + h, name: name, w: w, h: h, kb: kb, bg: "#ffffff", bgName: "white", verified: false, note: t("bp.custom_note", "Your custom size. Confirm exact specs with your board."), source: "Custom" };
     bgOverride = null;
     syncToggleLabel();
     renderList("");
     renderSpec();
     syncBgBtns();
     if (lastImage) processImage(lastImage, true);
+  }
+  $("customBtn").addEventListener("click", function () {
+    var w = Math.max(10, Math.min(4000, parseInt($("cw").value, 10) || 200));
+    var h = Math.max(10, Math.min(4000, parseInt($("ch").value, 10) || 230));
+    var kb = Math.max(1, Math.min(10240, parseInt($("ckb").value, 10) || 50));
+    applyCustomSpec("Custom (" + w + "×" + h + ")", w, h, kb, "custom");
+  });
+
+  /* ---------------- toast ---------------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $("toast");
+    el.textContent = msg;
+    el.hidden = false;
+    el.classList.remove("show");
+    void el.offsetWidth;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.classList.remove("show");
+      setTimeout(function () { el.hidden = true; }, 320);
+    }, 2200);
+  }
+  function needPhoto() {
+    if (!lastImage) { toast(t("bp.need_photo", "Please upload a photo first.")); return true; }
+    return false;
+  }
+
+  /* ---------------- advanced section toggle ---------------- */
+  var advOpen = false, advTimer = null;
+  $("advToggle").addEventListener("click", function () {
+    advOpen = !advOpen;
+    var sec = $("advSection"), body = $("advBody");
+    clearTimeout(advTimer);
+    if (advOpen) {
+      body.hidden = false;
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { sec.classList.add("open"); });
+      });
+    } else {
+      sec.classList.remove("open");
+      advTimer = setTimeout(function () { if (!advOpen) body.hidden = true; }, 340);
+    }
+    $("advToggle").setAttribute("aria-expanded", advOpen ? "true" : "false");
+  });
+
+  /* ---------------- FEATURE: auto enhance ---------------- */
+  $("enhanceBtn").addEventListener("click", function () {
+    if (needPhoto()) return;
+    enhanceOn = !enhanceOn;
+    $("enhanceBtn").classList.toggle("active", enhanceOn);
+    $("enhanceBtn").setAttribute("aria-pressed", enhanceOn ? "true" : "false");
+    processImage(lastImage, true);
+    if (enhanceOn) toast(t("bp.toast_enhanced", "Photo enhanced!"));
+  });
+
+  /* ---------------- FEATURE: rotate / flip ---------------- */
+  $("rotL").addEventListener("click", function () {
+    if (needPhoto()) return;
+    rotation = (rotation + 270) % 360;
+    processImage(lastImage, true);
+    toast(t("bp.toast_rotated", "Photo rotated"));
+  });
+  $("rotR").addEventListener("click", function () {
+    if (needPhoto()) return;
+    rotation = (rotation + 90) % 360;
+    processImage(lastImage, true);
+    toast(t("bp.toast_rotated", "Photo rotated"));
+  });
+  $("flipH").addEventListener("click", function () {
+    if (needPhoto()) return;
+    flipH = !flipH;
+    $("flipH").classList.toggle("active", flipH);
+    processImage(lastImage, true);
+    toast(t("bp.toast_flipped", "Photo flipped"));
+  });
+
+  /* ---------------- FEATURE: my presets ---------------- */
+  function loadPresets() {
+    try { var v = JSON.parse(localStorage.getItem("bp_presets") || "[]"); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function savePresets(p) {
+    try { localStorage.setItem("bp_presets", JSON.stringify(p.slice(0, 12))); } catch (e) {}
+  }
+  function renderPresets() {
+    var row = $("presetRow"), list = loadPresets(), html = "";
+    for (var i = 0; i < list.length; i++) {
+      html += '<span class="bchip"><button type="button" data-i="' + i + '">' + esc(list[i].name) +
+        ' <small>' + list[i].w + "×" + list[i].h + '</small></button><button type="button" class="bx" data-del="' + i + '" aria-label="Delete">×</button></span>';
+    }
+    row.innerHTML = html;
+  }
+  $("presetRow").addEventListener("click", function (e) {
+    var del = e.target.closest("[data-del]");
+    if (del) {
+      var l = loadPresets();
+      l.splice(parseInt(del.getAttribute("data-del"), 10), 1);
+      savePresets(l); renderPresets();
+      return;
+    }
+    var btn = e.target.closest("[data-i]");
+    if (btn) {
+      var p = loadPresets()[parseInt(btn.getAttribute("data-i"), 10)];
+      if (p) { applyCustomSpec(p.name, p.w, p.h, p.kb, "preset"); toast(p.name); }
+    }
+  });
+  $("savePresetBtn").addEventListener("click", function () {
+    var b = selected || genericBoard();
+    var name = $("presetName").value.trim() || (b.w + "×" + b.h);
+    var list = loadPresets();
+    list.unshift({ name: name, w: b.w, h: b.h, kb: b.kb });
+    savePresets(list); renderPresets();
+    $("presetName").value = "";
+    toast(t("bp.toast_preset", "Preset saved!"));
+  });
+
+  /* ---------------- FEATURE: name/date stamp ---------------- */
+  $("stampName").addEventListener("input", function () {
+    stampText = $("stampName").value.trim();
+    stampOn = !!(stampText || stampDateOn);
+    if (lastImage) processImage(lastImage, true);
+  });
+  $("stampDate").addEventListener("change", function () {
+    stampDateOn = $("stampDate").checked;
+    stampOn = !!(stampText || stampDateOn);
+    if (lastImage) processImage(lastImage, true);
+  });
+
+  /* ---------------- FEATURE: B&W toggle ---------------- */
+  $("bwToggle").addEventListener("change", function () {
+    bwOn = $("bwToggle").checked;
+    if (lastImage) processImage(lastImage, true);
+    toast(t(bwOn ? "bp.toast_bw_on" : "bp.toast_bw_off", bwOn ? "B&W mode on" : "B&W mode off"));
+  });
+
+  /* ---------------- FEATURE: face guide ---------------- */
+  $("guideToggle").addEventListener("change", function () {
+    var on = $("guideToggle").checked;
+    $("faceGuide").hidden = !on;
+    toast(t(on ? "bp.toast_guide_on" : "bp.toast_guide_off", on ? "Face guide on" : "Face guide off"));
+  });
+
+  /* ---------------- FEATURE: email ---------------- */
+  $("emailBtn").addEventListener("click", function () {
+    var sub = encodeURIComponent(t("bp.email_sub", "My Board Photo"));
+    var body = encodeURIComponent(t("bp.email_body", "Please find my board photo attached.") + "\n\n" + t("bp.email_note", "Note: attach the downloaded JPG manually — browsers cannot attach files automatically."));
+    window.location.href = "mailto:?subject=" + sub + "&body=" + body;
+  });
+
+  /* ---------------- FEATURE: camera capture ---------------- */
+  var camStream = null;
+  function stopCam() {
+    if (camStream) { camStream.getTracks().forEach(function (tr) { tr.stop(); }); camStream = null; }
+    var v = $("camVideo");
+    if (v) v.srcObject = null;
+  }
+  function closeCam() { $("camModal").hidden = true; stopCam(); }
+  $("camBtn").addEventListener("click", function () {
+    $("camErr").hidden = true;
+    $("camModal").hidden = false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      $("camErr").textContent = t("bp.cam_err", "Camera not available on this device.");
+      $("camErr").hidden = false;
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false }).then(function (stream) {
+      camStream = stream;
+      $("camVideo").srcObject = stream;
+    }).catch(function () {
+      $("camErr").textContent = t("bp.cam_err", "Camera not available on this device.");
+      $("camErr").hidden = false;
+    });
+  });
+  $("camClose").addEventListener("click", closeCam);
+  $("camModal").addEventListener("click", function (e) { if (e.target === $("camModal")) closeCam(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("camModal").hidden) closeCam(); });
+  $("camShot").addEventListener("click", function () {
+    var v = $("camVideo");
+    if (!v.videoWidth) return;
+    var c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
+    var img = new Image();
+    img.onload = function () {
+      closeCam();
+      lastImage = img;
+      clearErr();
+      processImage(img, false);
+      toast(t("bp.toast_captured", "Photo captured!"));
+    };
+    img.src = c.toDataURL("image/jpeg", 0.92);
+  });
+
+  /* ---------------- FEATURE: history ---------------- */
+  function loadHist() {
+    try { var v = JSON.parse(localStorage.getItem("bp_history") || "[]"); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function renderHist() {
+    var row = $("histRow"), list = loadHist();
+    if (!list.length) {
+      row.innerHTML = '<p class="thint" style="margin:0">' + esc(t("bp.hist_empty", "No recent photos yet.")) + '</p>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < list.length; i++) {
+      html += '<button type="button" data-h="' + i + '" title="' + esc(list[i].name || "") + '"><img src="' + list[i].url + '" alt="Recent photo ' + (i + 1) + '"/></button>';
+    }
+    row.innerHTML = html;
+  }
+  function pushHistory(b) {
+    try {
+      var img = $("resultImg");
+      if (!img.naturalWidth) return;
+      var max = 240, r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      var th = document.createElement("canvas");
+      th.width = Math.max(1, Math.round(img.naturalWidth * r));
+      th.height = Math.max(1, Math.round(img.naturalHeight * r));
+      th.getContext("2d").drawImage(img, 0, 0, th.width, th.height);
+      var list = loadHist();
+      list.unshift({ name: b.name, w: b.w, h: b.h, url: th.toDataURL("image/jpeg", 0.72) });
+      localStorage.setItem("bp_history", JSON.stringify(list.slice(0, 5)));
+      renderHist();
+    } catch (e) {}
+  }
+  $("histRow").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-h]");
+    if (!btn) return;
+    var item = loadHist()[parseInt(btn.getAttribute("data-h"), 10)];
+    if (!item) return;
+    fetch(item.url).then(function (r) { return r.blob(); }).then(function (blob) {
+      showResult(blob, { id: "history", name: item.name, w: item.w, h: item.h, kb: 99999 }, false, false, true);
+    }).catch(function () {});
+  });
+
+  /* ---------------- FEATURE: batch mode ---------------- */
+  function validFileSilent(f) {
+    return f && /^image\/(png|jpeg|webp)$/.test(f.type) && f.size <= 25 * 1024 * 1024;
+  }
+  $("batchBtn").addEventListener("click", function () { $("batchInput").click(); });
+  $("batchInput").addEventListener("change", function () {
+    var files = Array.prototype.slice.call($("batchInput").files || [], 0, 10).filter(validFileSilent);
+    $("batchInput").value = "";
+    var list = $("batchList");
+    list.innerHTML = "";
+    if (!files.length) {
+      list.innerHTML = '<li class="thint">' + esc(t("bp.batch_empty", "No photos yet — choose some above.")) + '</li>';
+      return;
+    }
+    files.forEach(function (f, idx) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="thint">…</span>';
+      list.appendChild(li);
+      decodeFile(f).then(function (img) {
+        var built = buildPhotoCanvas(img);
+        return fitBlob(built.canvas, built.b.kb * 1024).then(function (res) {
+          if (!res.blob) { li.innerHTML = '<span class="thint">' + esc(f.name) + '</span>'; return; }
+          var url = URL.createObjectURL(res.blob);
+          li.innerHTML = "";
+          var th = document.createElement("img");
+          th.src = url; th.alt = f.name;
+          var nm = document.createElement("span");
+          nm.className = "bqname"; nm.textContent = f.name;
+          var dl = document.createElement("button");
+          dl.type = "button"; dl.className = "tbtn tbtn-ghost tbtn-sm";
+          dl.textContent = t("bp.download", "Download JPG");
+          dl.addEventListener("click", function () {
+            var a = document.createElement("a");
+            a.href = url; a.download = "board-photo-" + (idx + 1) + ".jpg";
+            document.body.appendChild(a); a.click(); a.remove();
+          });
+          li.appendChild(th); li.appendChild(nm); li.appendChild(dl);
+        });
+      }).catch(function () {
+        li.innerHTML = '<span class="thint">' + esc(f.name) + '</span>';
+      });
+    });
   });
 
   /* ---------------- init ---------------- */
@@ -554,4 +986,6 @@
   renderList("");
   renderSpec();
   syncBgBtns();
+  renderPresets();
+  renderHist();
 })();
