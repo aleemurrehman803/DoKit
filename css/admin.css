@@ -1,0 +1,151 @@
+/* DoKit — Admin panel responsive/mobile-first layer.
+ * Loaded by admin/index.html AFTER the inline admin styles, so these rules
+ * win on small screens. Desktop layout is untouched.
+ * CSP: external stylesheet from 'self' is allowed (style-src 'self').
+ */
+
+.adm-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 999px;
+  padding: .3rem .7rem;
+  margin-inline-start: .6rem;
+  vertical-align: middle;
+}
+.adm-presence .dot {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 50%;
+  background: #1F7A4D;
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, .18);
+}
+.adm-presence .avatar {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--primary, #6C4CF1);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Kanban (tickets) */
+.adm-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.adm-kanban-col {
+  background: var(--bg-muted);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: .6rem;
+  padding: .6rem;
+  min-height: 8rem;
+}
+.adm-kanban-col h4 { margin: 0 0 .5rem; font-size: .9rem; }
+.adm-ticket {
+  background: var(--bg, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: .5rem;
+  padding: .55rem .65rem;
+  margin-bottom: .5rem;
+  cursor: pointer;
+}
+.adm-ticket:hover { border-color: var(--primary, #6C4CF1); }
+.adm-sla { color: #C93A3A; font-weight: 700; }
+
+/* i18n matrix */
+.adm-matrix td:first-child, .adm-matrix th:first-child { text-align: start; }
+.adm-cell {
+  width: 2rem; height: 2rem; border-radius: .35rem; border: 1px solid var(--border, #e5e7eb);
+  background: #e5e7eb; cursor: pointer; padding: 0;
+}
+.adm-cell.done { background: #1F7A4D; border-color: #1F7A4D; }
+
+/* Badges (used by maker-checker, fraud risk, A/B winners) */
+.badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  background: var(--primary, #6C4CF1);
+  color: #fff;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.badge-amber { background: #B7791F; }
+
+/* Rollout slider row inside flag rows */
+.adm-rollout { display: flex; align-items: center; gap: .5rem; margin-top: .35rem; font-size: .82rem; color: var(--text-muted); }
+.adm-rollout input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--primary, #6C4CF1); }
+
+/* Receipt print view */
+@media print {
+  body * { visibility: hidden; }
+  #admReceiptPrint, #admReceiptPrint * { visibility: visible; }
+  #admReceiptPrint {
+    position: absolute; inset: 0; padding: 2rem;
+    font-family: system-ui, sans-serif; color: #000; background: #fff;
+  }
+}
+
+/* ============ Mobile (<=768px): app-like admin ============ */
+@media (max-width: 768px) {
+  /* Sticky, horizontally scrollable tab bar */
+  .adm-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg, #fff);
+    padding: .5rem .25rem;
+    margin: 0 calc(-1 * var(--sp-4, 1rem)) var(--sp-4);
+    padding-inline: var(--sp-4, 1rem);
+    scrollbar-width: none;
+  }
+  .adm-tabs::-webkit-scrollbar { display: none; }
+  .adm-tab {
+    flex: none;
+    min-height: 44px;
+    padding: .6rem .9rem;
+    font-size: .92rem;
+    white-space: nowrap;
+  }
+
+  /* Touch targets */
+  .btn, .btn-sm { min-height: 44px; }
+  .text-input, select.text-input, input[type="text"], input[type="number"],
+  input[type="email"], input[type="date"], input[type="datetime-local"], textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+    width: 100%;
+    max-width: none !important;
+  }
+  .adm-row { gap: .6rem; }
+  .adm-row > * { margin-bottom: .25rem; }
+
+  /* Tables become swipeable cards area (keep table, allow x-scroll) */
+  .adm-tablewrap { margin: 0 -.5rem; padding: 0 .5rem; }
+  .adm-table { font-size: .88rem; min-width: 640px; }
+
+  /* Single-column layouts */
+  .grid, .grid-2 { grid-template-columns: 1fr !important; }
+  .adm-kanban { grid-template-columns: 1fr; }
+
+  /* Detail drawer + cards full width */
+  .card { padding: 1rem; }
+
+  /* Bottom padding so sticky bars never cover content */
+  #adminPanel { padding-bottom: 5rem; }
+
+  /* Section headings compact */
+  .section-head h1 { font-size: 1.5rem; }
+}

@@ -1,0 +1,350 @@
+rules_version = '2';
+// DoKit — Firestore Security Rules (project: dokit-app-2e81d, free Spark plan).
+//
+// PRINCIPLES
+// 1. Admins are defined by an EXISTING doc at `admins/{uid}` (created manually
+//    by the site owner in the Firebase console — no client can create one).
+// 2. Admins get READ access to every operational collection (this fixes the
+//    "Permission denied" the owner saw in the admin panel) and WRITE access
+//    where the admin panel needs it.
+// 3. Regular users can read/write ONLY their own data, and can NEVER touch
+//    balance or suspension fields directly.
+// 4. Public (signed-out) access exists ONLY where the live site requires it:
+//    site_settings + config (announcement bar, maintenance mode, tool config),
+//    contact form submissions, and client telemetry (security_events).
+//
+// !!! PRODUCTION NOTE — balances !!!
+// Coin/balance mutations (users.coins, pending_withdrawal, coin_ledger) MUST
+// move into Cloud Functions. The rules below still allow ADMIN client writes
+// because the current admin panel (approveDeposit, bulk coin grants) does them
+// from the browser; that is a stopgap. Once the functions ship, tighten the
+// users/coin_ledger update rules to `allow write: if false` for clients.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ---------- helpers ---------- */
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // True when the signed-in user has an `admins/{uid}` document.
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Fields a regular user must never change on their own profile.
+    function privilegedUserKeys() {
+      return ['coins', 'suspended', 'suspendReason', 'suspendUntil'];
+    }
+
+    /* ---------- admin registry ---------- */
+
+    match /admins/{uid} {
+      // Admins read their OWN doc only (used by the admin gate check).
+      allow get: if isOwner(uid);
+      allow list: if false;
+      // Owner creates admin docs manually in the Firebase console.
+      allow create, update, delete: if false;
+    }
+
+    /* ---------- users ---------- */
+
+    match /users/{uid} {
+      // Owner reads own profile; admins read everything (dashboard, detail).
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+
+      // Owner creates own profile doc (sign-up). No privileged fields, and no
+      // starting balance other than 0.
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny(['suspended', 'suspendReason', 'suspendUntil'])
+        && (!('coins' in request.resource.data) || request.resource.data.coins == 0);
+
+      // Owner may update own profile (name/photo/lastLogin, withdrawal locks)
+      // but NEVER balance or suspension fields. Admins may write anything
+      // (coin grants, suspend/unsuspend, resets).
+      allow update: if isAdmin()
+        || (isOwner(uid)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(privilegedUserKeys()));
+
+      allow delete: if false;
+
+      // Per-user tool run history (written by trackToolUse).
+      match /tool_runs/{runId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create: if isOwner(uid);
+        allow update, delete: if false;
+      }
+
+      // Hash-chained coin ledger. Admin client writes today (see note above);
+      // users can only read their own.
+      match /coin_ledger/{entryId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, update: if isAdmin(); // TODO: Cloud Functions only
+        allow delete: if false;
+      }
+
+      // Per-user API keys (api-keys.js) — owner manages own keys.
+      match /api_keys/{keyId} {
+        allow read, create, update, delete: if isOwner(uid) || isAdmin();
+      }
+    }
+
+    // Admin dashboard scans tool_runs across users (collectionGroup query).
+    match /{path=**}/tool_runs/{runId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    /* ---------- deposits & withdrawals ---------- */
+
+    match /deposits/{depId} {
+      // Owner reads own requests (history query: where userId == uid).
+      // Admin reads everything (review queue: where status == pending).
+      allow get: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Owner submits own request. Must be pending, positive amount, no
+      // review fields.
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && !request.resource.data.keys()
+             .hasAny(['reviewedBy', 'reviewedAt', 'reviewedAtMs', 'rejectReason']);
+      // Only admins approve/reject.
+      allow update, delete: if isAdmin();
+    }
+
+    match /withdrawals/{wdId} {
+      allow get: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && !request.resource.data.keys()
+             .hasAny(['processedBy', 'processedAt', 'processedAtMs', 'rejectReason']);
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------- contact inbox ---------- */
+
+    match /contact_messages/{msgId} {
+      // Public form: anyone may submit (with sane validation).
+      allow create: if request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 5000;
+      // Inbox is admin-only (mark read / delete).
+      allow read, update, delete: if isAdmin();
+    }
+
+    /* ---------- audit & security telemetry ---------- */
+
+    match /admin_audit/{entryId} {
+      // Written by the admin panel's logAudit() AND by the client-side
+      // FinSec.auditLog() on financial actions — so create stays open with
+      // size validation. Reads are admin-only.
+      allow create: if request.resource.data.action is string
+        && request.resource.data.action.size() <= 80
+        && (!('details' in request.resource.data)
+          || request.resource.data.details.size() <= 500);
+      allow read: if isAdmin();
+      allow update, delete: if false; // append-only
+    }
+
+    match /security_events/{eventId} {
+      // Client-side fraud telemetry (FinSec) — create is open with validation.
+      allow create: if request.resource.data.action is string
+        && request.resource.data.action.size() <= 80;
+      allow read: if isAdmin();
+      allow update, delete: if false; // append-only
+    }
+
+    match /auth_logs/{logId} {
+      // Login-attempt logging (plan #44).
+      allow create: if isSignedIn();
+      allow read: if isAdmin();
+      allow update, delete: if false; // append-only
+    }
+
+    /* ---------- site settings & public config ---------- */
+
+    // Public reads REQUIRED: announcement bar (js/site-wide.js) and
+    // maintenance mode (js/maintenance.js) run for signed-out visitors.
+    // Writes are admin-only.
+    match /site_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public reads REQUIRED: the site reads config/tools (tool toggles) and
+    // config/payments (deposit page) on public pages. Writes admin-only.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* ---------- newsletter, feedback, analytics, competitors, notify, referrals ---------- */
+
+    // Newsletter signup (footer form) — public subscribe, admin manages.
+    match /newsletter/{subId} {
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() > 3
+        && request.resource.data.email.size() <= 120;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // "Kaisa laga?" feedback widget — public submit, admin reads.
+    match /feedback/{fbId} {
+      allow create: if request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && (!('comment' in request.resource.data)
+          || (request.resource.data.comment is string
+            && request.resource.data.comment.size() <= 500));
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Privacy-friendly page-view telemetry — public create (no PII by
+    // contract: page, ts, ref, lang only), admin reads for the dashboard.
+    // Append-only.
+    match /analytics/{evtId} {
+      allow create: if request.resource.data.page is string
+        && request.resource.data.page.size() > 0
+        && request.resource.data.page.size() <= 200;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Competitor watch list — admin only.
+    match /competitors/{compId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // Notify-me list (API launch, coming-soon pages) — public subscribe.
+    match /notify/{nId} {
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() > 3
+        && request.resource.data.email.size() <= 120;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Legacy notify-me list (js/pages/notify.js) — same shape as /notify.
+    match /notify_list/{nId} {
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() > 3
+        && request.resource.data.email.size() <= 120;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Referrals — created once at signup when a ?ref= was captured.
+    // Doc id = new user's uid; fields: { referrerUid, createdAt, rewarded }.
+    match /referrals/{uid} {
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.referrerUid is string
+        && request.resource.data.referrerUid.size() > 0
+        && request.resource.data.referrerUid != uid;
+      // Referred user reads own doc; admins read everything (dashboard count).
+      allow get: if isOwner(uid) || isAdmin();
+      // Referrers may list ONLY docs where they are the referrer
+      // (dashboard "Friends joined" count uses where("referrerUid","==",uid)).
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.referrerUid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------- admin panel improvements (20-item batch) ---------- */
+
+    // A/B experiments — admin-only.
+    match /experiments/{expId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Public changelog — anyone reads published entries; admins write.
+    match /changelog/{entryId} {
+      allow get: if resource.data.published == true;
+      allow list: if resource.data.published == true;
+      allow write: if isAdmin();
+    }
+
+    // Support tickets — created by the contact form (public, validated);
+    // managed by admins.
+    match /tickets/{ticketId} {
+      allow create: if isAdmin()
+        || (request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 120
+          && request.resource.data.message is string
+          && request.resource.data.message.size() > 0
+          && request.resource.data.message.size() <= 5000
+          && request.resource.data.status == 'open');
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Doki AI knowledge base — admin-only.
+    match /ai_knowledge/{entryId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Translation status matrix — admin-only.
+    match /i18n_status/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Fraud review queue — admin-only (detection runs in Cloud Functions).
+    match /flagged_transactions/{flagId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin presence — admins see who's online; each admin writes own doc.
+    match /admin_presence/{uid} {
+      allow read: if isAdmin();
+      allow create, update: if isOwner(uid);
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Saved admin views live under each admin's own doc.
+    match /admins/{uid}/savedViews/{viewId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Admin alert rules live under each admin's own doc.
+    match /admins/{uid}/alertRules/{ruleId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    /* ---------- default deny ---------- */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+/* REQUIRED COMPOSITE INDEXES (create in Firebase console → Firestore → Indexes):
+ * 1. Collection `deposits`:        status ASC,  createdAtMs DESC   (admin queue)
+ * 2. Collection `withdrawals`:     status ASC,  createdAtMs DESC   (admin queue)
+ * 3. Collection group `tool_runs`: ts DESC                        (admin dashboard scan)
+ * Single-field orderBys (users.createdAt, contact_messages.createdAt,
+ * admin_audit.timestamp, security_events.ts) are auto-indexed.
+ */
