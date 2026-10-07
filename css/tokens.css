@@ -176,11 +176,7 @@ html {
 /* NOTE: global :focus-visible (3px amber ring) and .skip-link live in css/hub.css
    which loads after this file — both are solid and are intentionally not redefined here. */
 
-/* ---------- 100dvh utility (point 57) ---------- */
-.min-h-dvh {
-  min-height: 100vh;   /* fallback */
-  min-height: 100dvh;
-}
+/* (100dvh utility removed Oct 7, 2026: unused) */
 
 /* ---------- Skeleton shimmer (point 17) ---------- */
 .skeleton {
@@ -331,45 +327,7 @@ html.js .reveal.visible {
   block-size: auto;
   pointer-events: none;
 }
-.ba-before { position: relative; }
-.ba-after {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  inline-size: var(--ba-pos, 50%);
-  overflow: hidden;
-}
-.ba-after img {
-  inline-size: 100cqi; /* match slider width so the layer aligns with .ba-before */
-  max-inline-size: none;
-}
-.ba-divider {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: var(--ba-pos, 50%);
-  inline-size: 2px;
-  background: #fff;
-  box-shadow: var(--shadow-md);
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-.ba-handle {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: var(--ba-pos, 50%);
-  transform: translate(-50%, -50%);
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
-  border-radius: var(--r-pill);
-  background: var(--surface);
-  border: var(--border-width) solid var(--border);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary);
-  pointer-events: none;
-}
+/* (ba-before/ba-after/ba-divider/ba-handle removed Oct 7, 2026: no page renders this markup) */
 
 /* ---------- Empty state (point 22) ----------
    Base .empty-state exists in hub.css; these BEM children formalize the
@@ -427,12 +385,10 @@ html.js .reveal.visible {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }
-.input[aria-invalid="true"],
-.input-error {
+.input[aria-invalid="true"] {
   border-color: var(--danger);
 }
-.input[aria-invalid="true"]:focus,
-.input-error:focus {
+.input[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
 }
 .hint {
@@ -506,7 +462,7 @@ html.js .reveal.visible {
 
 /* ---------- Language dropdown (custom button + menu, replaces native select) ---------- */
 .lang-drop{position:relative}
-.lang-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .7rem;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-sm);cursor:pointer;white-space:nowrap}
+.lang-btn{display:inline-flex;align-items:center;min-height:44px;gap:.35rem;padding:.45rem .7rem;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-sm);cursor:pointer;white-space:nowrap}
 .lang-btn:hover{border-color:var(--primary)}
 .lang-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .lang-menu{position:absolute;inset-inline-end:0;top:calc(100% + .4rem);z-index:70;min-inline-size:11rem;max-block-size:60vh;overflow:auto;margin:0;padding:.35rem;list-style:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md)}
@@ -649,7 +605,6 @@ html.js .reveal.visible {
 html:not([data-theme="dark"]) .badge-green { color: var(--success-text); }
 html:not([data-theme="dark"]) .price-features li::before { color: var(--success-text); }
 /* was --danger #D64545 = 4.38:1 on white */
-html:not([data-theme="dark"]) .error-state { color: var(--danger-text); }
 
 /* --- typing-area text usages (typing/css/main.css, player.css) --- */
 html:not([data-theme="dark"]) .form-error { color: var(--danger-text); }
@@ -1064,55 +1019,7 @@ input[type="range"].tslider { padding-block: 12px; background-clip: content-box;
    RTL-safe (logical properties only), dark-mode aware, respects
    prefers-reduced-motion. Merge into the shared stylesheet. */
 
-/* ---------- Terminal typing demo (hero) ---------- */
-.term-card {
-  background: var(--dk-ink);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  inline-size: 100%;
-  max-inline-size: 26rem;
-  margin-inline: auto;
-  text-align: start;
-}
-.term-card__bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
-  background: rgba(255, 255, 255, 0.06);
-}
-.term-card__bar > span { inline-size: 0.7rem; block-size: 0.7rem; border-radius: 50%; }
-.term-card__bar > span:nth-child(1) { background: #FF5F57; }
-.term-card__bar > span:nth-child(2) { background: #FEBC2E; }
-.term-card__bar > span:nth-child(3) { background: #28C840; }
-.term-card__title {
-  margin-inline-start: auto;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-}
-.term-card__body {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-5) var(--sp-4);
-  min-block-size: 4.5rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: var(--fs-base);
-  color: #fff;
-}
-.term-card__prompt { color: var(--accent); font-weight: 700; white-space: nowrap; }
-.term-card__line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.type-caret {
-  inline-size: 0.6em;
-  block-size: 1.15em;
-  flex: none;
-  background: var(--accent);
-  animation: dk-caret 1s steps(1) infinite;
-}
-@keyframes dk-caret { 50% { opacity: 0; } }
+/* (Terminal typing demo hero styles removed Oct 7, 2026: hero now uses .hero-illustration) */
 
 /* ---------- Stats strip (compact hero bar) ---------- */
 .stat-strip {
@@ -1143,7 +1050,6 @@ input[type="range"].tslider { padding-block: 12px; background-clip: content-box;
   color: var(--primary);
   font-variant-numeric: tabular-nums;
 }
-.stat-strip__tick { color: var(--success); font-weight: 800; font-size: var(--fs-lg); }
 .stat-strip__ic { font-size: var(--fs-base); line-height: 1; }
 /* Subtle variant: single-line proof strip under the hero headline (no card chrome). */
 .stat-strip--subtle {
@@ -1247,37 +1153,7 @@ input[type="range"].tslider { padding-block: 12px; background-clip: content-box;
   font-style: italic;
 }
 
-/* ---------- Hero illustration slot (480x360) ----------
-   .illus-slot frames whatever visual is inside (currently the live typing
-   demo). To swap in the custom illustration later:
-     <img class="illus-slot__img" src="…" alt="…">
-   .illus-slot--empty shows the soft-gradient placeholder with an icon. */
-.illus-slot {
-  inline-size: 100%;
-  max-inline-size: 30rem;
-  margin-inline: auto;
-  aspect-ratio: 4 / 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--sp-4);
-  overflow: hidden;
-  border-radius: var(--r-xl);
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--dk-violet-soft), var(--surface-2) 60%, var(--bg-soft));
-  box-shadow: var(--shadow-md);
-}
-.illus-slot .term-card { margin: 0; max-inline-size: 100%; }
-.illus-slot__img {
-  inline-size: 100%;
-  block-size: 100%;
-  object-fit: contain;
-  border-radius: var(--r-lg);
-}
-.illus-slot--empty .illus-slot__ph {
-  font-size: 3.5rem;
-  opacity: 0.5;
-}
+/* (Hero illustration slot styles removed Oct 7, 2026: hero now uses .hero-illustration) */
 
 /* ---------- Recently used row ---------- */
 .recent-row {
@@ -1321,6 +1197,5 @@ input[type="range"].tslider { padding-block: 12px; background-clip: content-box;
 
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .type-caret { animation: none; }
   .recent-chip:hover { transform: none; }
 }
