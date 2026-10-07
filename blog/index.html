@@ -9,12 +9,12 @@
 <link rel="apple-touch-icon" href="../assets/icon.svg">
 <title>Blog — DoKit</title>
 <meta name="description" content="DoKit blog: practical tips on images, writing, typing and getting more done in your browser.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/blog/">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/blog/">
 <meta property="og:title" content="Blog — DoKit">
 <meta property="og:description" content="DoKit blog: practical tips on images, writing, typing and getting more done in your browser.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/blog/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/blog/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Blog — DoKit">
 <meta name="twitter:description" content="DoKit blog: practical tips on images, writing, typing and getting more done in your browser.">
@@ -31,29 +31,35 @@
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
           <li><a href="../">Home</a></li>
-          <li aria-current="page">Blog</li>
+          <li aria-current="page" data-i18n="blog_idx_crumb">Blog</li>
         </ol>
       </nav>
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Blog</span>
-        <h1>Notes &amp; how-tos</h1>
-        <p>Practical posts about images, writing and typing. Short reads, zero fluff.</p>
+        <span class="eyebrow" data-i18n="blog_idx_crumb">Blog</span>
+        <h1 data-i18n="blog_idx_h1">Notes &amp; how-tos</h1>
+        <p data-i18n="blog_idx_sub">Practical posts about images, writing and typing. Short reads, zero fluff.</p>
       </div>
       <div class="grid">
         <a class="trel-card" href="website-images-too-big.html">
-          <span class="badge">Images</span>
-          <h2>Why your website images are too big (and how to fix it)</h2>
-          <p>Oversized photos are the #1 reason pages load slowly. Here's a 5-minute routine to shrink them without losing quality.</p>
+          <span class="badge" data-i18n="blog_idx_cat_images">Images</span>
+          <h2 data-i18n="blog_idx_card_images_t">Why your website images are too big (and how to fix it)</h2>
+          <p data-i18n="blog_idx_card_images_d">Oversized photos are the #1 reason pages load slowly. Here's a 5-minute routine to shrink them without losing quality.</p>
         </a>
         <a class="trel-card" href="word-count-targets.html">
-          <span class="badge">Writing</span>
-          <h2>Word count targets that actually make sense</h2>
-          <p>From tweets to theses — sensible length targets for common writing tasks, and how to hit them.</p>
+          <span class="badge" data-i18n="blog_idx_cat_writing">Writing</span>
+          <h2 data-i18n="blog_idx_card_words_t">Word count targets that actually make sense</h2>
+          <p data-i18n="blog_idx_card_words_d">From tweets to theses — sensible length targets for common writing tasks, and how to hit them.</p>
         </a>
         <a class="trel-card" href="touch-typing-30-days.html">
-          <span class="badge">Typing</span>
-          <h2>Touch typing in 30 days: a realistic plan</h2>
-          <p>No gimmicks — a day-by-day practice routine built on TypeMaster's lessons and smart drills.</p>
+          <span class="badge" data-i18n="blog_idx_cat_typing">Typing</span>
+          <h2 data-i18n="blog_idx_card_typing_t">Touch typing in 30 days: a realistic plan</h2>
+          <p data-i18n="blog_idx_card_typing_d">No gimmicks — a day-by-day practice routine built on TypeMaster's lessons and smart drills.</p>
+        </a>
+        <!-- Urdu article: intentionally Urdu-only, no i18n keys (stays Urdu in both languages). -->
+        <a class="trel-card" href="urdu-image-compress.html" lang="ur" dir="rtl">
+          <span class="badge">اردو</span>
+          <h2>تصویر کمپریس کرنے کا آسان طریقہ</h2>
+          <p>بھاری تصویریں ویب سائٹ کو سست کرتی ہیں۔ جانیں کہ بغیر معیار کھوئے تصویر کا سائز کیسے کم کریں — صرف 3 آسان مراحل میں۔</p>
         </a>
       </div>
     </div>
@@ -61,6 +67,8 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-blog.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("blog"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
 </body>
