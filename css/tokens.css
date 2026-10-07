@@ -636,6 +636,65 @@ html:not([data-theme="dark"]) .type-text .ch.bad { color: var(--danger-text); }
   .dk-navbtn__label { display: none; }
 }
 
+/* ---------- Navbar avatar button (Google-style profile chip) ---------- */
+/* The corner profile entry is a proper circular avatar — not a square
+ * toggle button. Gradient ring in DoKit brand colours, clean user icon
+ * (or the user's initial), coin count as a small badge on the corner.
+ * Logical properties throughout so it is RTL-safe. */
+.dk-avatarbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.625rem;   /* 42px — comfortable tap target */
+  block-size: 2.625rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(135deg, #7d5cff, #4a2fd6) border-box;
+  color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.dk-avatarbtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(125, 92, 255, 0.35);
+}
+.dk-avatarbtn:active { transform: translateY(0) scale(0.97); }
+.dk-avatarbtn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.dk-avatarbtn .dk-avatarbtn__icon { inline-size: 1.3rem; block-size: 1.3rem; }
+.dk-avatarbtn__initial {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
+}
+.dk-avatarbtn__badge {
+  position: absolute;
+  inset-block-end: -5px;
+  inset-inline-end: -7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-inline-size: 1.4rem;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: #ffb020;   /* amber coin badge */
+  color: #4a2c00;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.5;
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.dk-avatarbtn__badge .ic { inline-size: 0.75rem; block-size: 0.75rem; }
+@media (prefers-reduced-motion: reduce) {
+  .dk-avatarbtn { transition: none; }
+  .dk-avatarbtn:hover { transform: none; }
+}
+
 /* ---------- Modal typography helpers ---------- */
 .dk-mtitle {
   display: flex;
