@@ -57,17 +57,31 @@
   }
 
   function esc(s) {
+    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
 
-  /* Validate amount using FinSec (falls back to local check if FinSec missing). */
+  /* Validate amount using FinSec (falls back to local check if FinSec missing).
+   * NOTE: FinSec.validateAmount THROWS on invalid and RETURNS the clean
+   * integer on success (it does NOT return {ok,value,error}). This adapter
+   * converts to the {ok,value,error} shape used by callers below.
+   * It also enforces the caller-supplied minimum (FinSec only knows max).
+   */
   function validAmount(raw, min) {
     var n = Number(raw);
     if (window.FinSec && FinSec.validateAmount) {
-      var r = FinSec.validateAmount(n, { min: min, max: MAX_AMOUNT });
-      return r; // { ok: bool, value: int, error: string }
+      try {
+        var clean = FinSec.validateAmount(n, { max: MAX_AMOUNT });
+        if (clean < min) {
+          return { ok: false, value: 0, error: "Minimum amount is " + min + "." };
+        }
+        return { ok: true, value: clean, error: null };
+      } catch (e) {
+        return { ok: false, value: 0, error: (e && e.message) || "Invalid amount." };
+      }
     }
     // Fallback validation
     if (!isFinite(n) || n < min || n > MAX_AMOUNT || Math.floor(n) !== n) {
