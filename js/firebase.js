@@ -1,3 +1,20 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "ferr_used": "This email is already registered. Try logging in instead.",
+  "ferr_email": "Please enter a valid email address.",
+  "ferr_pw": "Password must be at least 6 characters.",
+  "ferr_nouser": "No account found with this email.",
+  "ferr_wrongpw": "Incorrect password. Please try again.",
+  "ferr_cred": "Incorrect email or password. Please try again.",
+  "ferr_many": "Too many attempts. Please wait a little and try again.",
+  "ferr_closed": "The Google sign-in window was closed before finishing.",
+  "ferr_cancel": "Sign-in was cancelled. Please try again.",
+  "ferr_blocked": "Your browser blocked the sign-in popup. Please allow popups and retry.",
+  "ferr_net": "Network error. Check your connection and try again.",
+  "ferr_unknown": "Something went wrong. Please try again.",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit Firebase — project "dokit-app" (dokit-app-2e81d), free Spark plan.
    Loaded AFTER the firebase-*-compat.js CDN scripts. Exposes window.DKF. */
 (function () {
@@ -19,9 +36,6 @@
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
-        // Bot protection: Firebase App Check (reCAPTCHA Enterprise).
-        // Requests to Auth/Firestore carry an App Check token; the
-        // Firebase console enforces it once "Enforce" is turned on.
         // Bot protection: Firebase App Check (reCAPTCHA Enterprise).
         // Requests to Auth/Firestore carry an App Check token; the
         // Firebase console enforces it once "Enforce" is turned on.
@@ -107,19 +121,19 @@
     friendlyError: function (err) {
       var code = (err && err.code) || "";
       var map = {
-        "auth/email-already-in-use": "This email is already registered. Try logging in instead.",
-        "auth/invalid-email": "Please enter a valid email address.",
-        "auth/weak-password": "Password must be at least 6 characters.",
-        "auth/user-not-found": "No account found with this email.",
-        "auth/wrong-password": "Incorrect password. Please try again.",
-        "auth/invalid-credential": "Incorrect email or password. Please try again.",
-        "auth/too-many-requests": "Too many attempts. Please wait a little and try again.",
-        "auth/popup-closed-by-user": "The Google sign-in window was closed before finishing.",
-        "auth/cancelled-popup-request": "Sign-in was cancelled. Please try again.",
-        "auth/popup-blocked": "Your browser blocked the sign-in popup. Please allow popups and retry.",
-        "auth/network-request-failed": "Network error. Check your connection and try again."
+        "auth/email-already-in-use": dkT("ferr_used"),
+        "auth/invalid-email": dkT("ferr_email"),
+        "auth/weak-password": dkT("ferr_pw"),
+        "auth/user-not-found": dkT("ferr_nouser"),
+        "auth/wrong-password": dkT("ferr_wrongpw"),
+        "auth/invalid-credential": dkT("ferr_cred"),
+        "auth/too-many-requests": dkT("ferr_many"),
+        "auth/popup-closed-by-user": dkT("ferr_closed"),
+        "auth/cancelled-popup-request": dkT("ferr_cancel"),
+        "auth/popup-blocked": dkT("ferr_blocked"),
+        "auth/network-request-failed": dkT("ferr_net")
       };
-      return map[code] || ((err && err.message) || "Something went wrong. Please try again.");
+      return map[code] || ((err && err.message) || dkT("ferr_unknown"));
     }
   };
 
