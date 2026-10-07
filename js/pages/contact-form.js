@@ -84,38 +84,15 @@
         var DKF = window.DKF;
         var db = (DKF && typeof DKF.db === "function") ? DKF.db() : null;
         if (db) {
-          var stamp = payload.createdAt;
-          var ticket = {
-            subject: subject,
-            message: message,
-            name: name,
-            email: email,
-            status: "open",
-            messages: [],
-            createdAt: stamp,
-            updatedAt: stamp
-          };
-          // Write BOTH contact_messages (existing inbox) AND a support ticket
-          // (admin kanban). Either write succeeding counts as "sent".
-          var results = { contact: null, ticket: null };
-          function settled() {
-            if (results.contact === null || results.ticket === null) return;
-            if (results.contact || results.ticket) {
-              form.reset();
-              showResult(true, name);
-              toast("Message sent \u2014 thank you!");
-            } else {
-              mailtoFallback();
-            }
-          }
-          function mark(key) {
-            return function () { results[key] = true; settled(); };
-          }
-          function unmark(key) {
-            return function () { results[key] = false; settled(); };
-          }
-          db.collection("contact_messages").add(payload).then(mark("contact"), unmark("contact"));
-          db.collection("tickets").add(ticket).then(mark("ticket"), unmark("ticket"));
+          // Inbox-only (owner decision Oct 7, 2026): the Tickets tab is hidden,
+          // so messages go to contact_messages (admin Inbox tab) only.
+          db.collection("contact_messages").add(payload).then(function () {
+            form.reset();
+            showResult(true, name);
+            toast("Message sent \u2014 thank you!");
+          }, function () {
+            mailtoFallback();
+          });
           return;
         }
       } catch (err) { /* fall through to mailto */ }

@@ -198,6 +198,32 @@
     { id: "views",     label: "🗂️ Views" },
     { id: "certs",     label: "🎓 Certificates" }
   ];
+  /* ---- Owner decision (Oct 7, 2026): show only the essential tabs ----
+     Day-to-day admin needs just these 12. The other tabs (analytics,
+     competitors, alerts, ab, cohorts, fraud, tickets, changelog, referrals,
+     tiers, kb, i18n, import, og, views, certs) stay fully implemented in
+     js/pages/admin-plus.js — re-add an id to CORE_TABS to restore its tab. */
+  var CORE_TABS = ["dashboard", "users", "content", "audit", "security",
+    "deposits", "withdrawals", "paysettings", "settings", "flags",
+    "announce", "inbox"];
+
+  TABS = TABS.filter(function (t) { return CORE_TABS.indexOf(t.id) !== -1; });
+
+  function isCoreTab(id) { return CORE_TABS.indexOf(id) !== -1; }
+
+  /* Hide non-core tab buttons + sections (they stay in the HTML). */
+  function applyCoreTabs() {
+    var bar = $("admTabs");
+    if (bar) {
+      Array.prototype.forEach.call(bar.querySelectorAll("[data-tab]"), function (btn) {
+        if (!isCoreTab(btn.getAttribute("data-tab"))) btn.style.display = "none";
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("[id^='admTab-']"), function (sec) {
+      if (!isCoreTab(sec.id.replace("admTab-", ""))) sec.style.display = "none";
+    });
+  }
+
 
   function wireTabs() {
     var bar = $("admTabs");
@@ -1991,6 +2017,7 @@
   /* ---------------- boot ---------------- */
 
   function boot() {
+    applyCoreTabs();
     wireTabs();
     wireUsers();
     wireBulk();
