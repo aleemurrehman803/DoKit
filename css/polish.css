@@ -1,0 +1,418 @@
+/* DoKit — Visual Polish Pack (css/polish.css)
+ * 50 design ideas: hover effects, animations, illustrations, icons,
+ * micro-interactions. Loaded on every page via js/ui.js loader.
+ *
+ * RULES:
+ * - Uses only tokens.css variables (theme-aware, dark-mode safe).
+ * - Logical properties only (RTL-safe).
+ * - prefers-reduced-motion respected globally at the bottom.
+ * - Desktop-only heavy effects gated behind (hover:hover) and (pointer:fine).
+ * - Additive only: never overrides hub.css core layout, only enhances.
+ */
+
+/* ============ 2. Buttons: gradient shift on hover ============ */
+.btn-primary {
+  background-image: linear-gradient(135deg, var(--dk-violet) 0%, var(--dk-violet-deep) 100%);
+  background-size: 100% 100%;
+  transition: transform .18s ease, box-shadow .18s ease, background-size .35s ease, filter .2s ease;
+}
+.btn-primary:hover {
+  background-image: linear-gradient(135deg, var(--dk-violet-deep) 0%, #8b5cf6 55%, var(--dk-violet) 100%);
+  filter: brightness(1.06);
+}
+
+/* ============ 3. Navbar links: underline slide-in ============ */
+.nav-links > a {
+  position: relative;
+}
+.nav-links > a::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: -3px;
+  inline-size: 100%;
+  block-size: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: inset-inline-start;
+  transition: transform .25s ease;
+}
+.nav-links > a:hover::after,
+.nav-links > a:focus-visible::after,
+.nav-links > a.active::after {
+  transform: scaleX(1);
+}
+[dir="rtl"] .nav-links > a::after { transform-origin: right; }
+
+/* ============ 4. Images: zoom + overlay ============ */
+.zoom-wrap {
+  overflow: hidden;
+  border-radius: var(--r-lg, .75rem);
+  position: relative;
+  display: block;
+}
+.zoom-wrap img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  transition: transform .45s cubic-bezier(.2,.7,.3,1);
+}
+.zoom-wrap:hover img, .zoom-wrap:focus-within img { transform: scale(1.05); }
+.zoom-wrap::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(23,20,46,.45), transparent 55%);
+  opacity: 0; transition: opacity .35s ease;
+  pointer-events: none;
+}
+.zoom-wrap:hover::after, .zoom-wrap:focus-within::after { opacity: 1; }
+
+/* ============ 5. FAQ: hover background lighten ============ */
+.faq-item { transition: background-color .2s ease; border-radius: var(--r-md, .5rem); }
+.faq-item:hover { background: var(--bg-soft); }
+[data-theme="dark"] .faq-item:hover { background: rgba(108,76,241,.08); }
+
+/* ============ 6. Typewriter caret ============ */
+.typewriter { display: inline-block; }
+.typewriter-caret {
+  display: inline-block; inline-size: .55ch; margin-inline-start: 2px;
+  border-inline-end: 3px solid var(--primary);
+  animation: dk-caret-blink 1s steps(1) infinite;
+  vertical-align: -0.1em; min-block-size: 1em;
+}
+@keyframes dk-caret-blink { 50% { opacity: 0; } }
+
+/* ============ 8. Skeleton shimmer (supplements hub.css) ============ */
+.skeleton-shimmer {
+  position: relative; overflow: hidden;
+  background: var(--neutral-200, #E4DFF5);
+  border-radius: var(--r-md, .5rem);
+  min-block-size: 1rem;
+}
+.skeleton-shimmer::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skeleton-sheen, rgba(255,255,255,.55)), transparent);
+  animation: dk-shimmer 1.6s infinite;
+}
+[dir="rtl"] .skeleton-shimmer::after { animation-name: dk-shimmer-rtl; }
+@keyframes dk-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes dk-shimmer-rtl { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+/* ============ 9. Confetti canvas ============ */
+#dk-confetti {
+  position: fixed; inset: 0; inline-size: 100%; block-size: 100%;
+  pointer-events: none; z-index: 9999;
+}
+
+/* ============ 10. Dark mode smooth transition (scoped, cheap) ============ */
+body, .site-header, .site-footer, .card, .tool-card, .faq-item, .btn {
+  transition: background-color .5s ease, border-color .5s ease, color .3s ease;
+}
+
+/* ============ 11/12/13. Illustration containers ============ */
+.dk-illustration { display: block; max-inline-size: 100%; block-size: auto; margin-inline: auto; }
+.empty-state { text-align: center; padding: var(--sp-8, 2rem) var(--sp-4, 1rem); color: var(--text-muted); }
+.empty-state svg { inline-size: 96px; block-size: 96px; opacity: .85; margin-block-end: var(--sp-3, .75rem); }
+.error-illustration { inline-size: min(22rem, 80vw); block-size: auto; margin: var(--sp-6, 1.5rem) auto; display: block; }
+
+/* ============ 14. Animated success checkmark ============ */
+.check-anim { inline-size: 72px; block-size: 72px; }
+.check-anim circle {
+  fill: none; stroke: var(--success, #2FA36B); stroke-width: 3;
+  stroke-dasharray: 166; stroke-dashoffset: 166;
+  animation: dk-draw .7s ease forwards;
+}
+.check-anim path {
+  fill: none; stroke: var(--success, #2FA36B); stroke-width: 4; stroke-linecap: round;
+  stroke-dasharray: 60; stroke-dashoffset: 60;
+  animation: dk-draw .45s .55s ease forwards;
+}
+@keyframes dk-draw { to { stroke-dashoffset: 0; } }
+
+/* ============ 15. Avatar initials ============ */
+.avatar-initials {
+  display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 2.75rem; block-size: 2.75rem; border-radius: 50%;
+  background: linear-gradient(135deg, var(--dk-violet), var(--dk-violet-deep));
+  color: #fff; font-weight: 700; font-size: var(--fs-sm);
+  flex: none; user-select: none;
+}
+
+/* ============ 16. Tool icons: 3D pop ============ */
+.tool-card__icon {
+  filter: drop-shadow(0 6px 10px rgba(76,41,213,.25));
+  transition: transform .25s cubic-bezier(.2,.7,.3,1.4), filter .25s ease;
+}
+.tool-card:hover .tool-card__icon { transform: scale(1.15) rotate(-6deg); filter: drop-shadow(0 10px 16px rgba(76,41,213,.35)); }
+
+/* ============ 17. Custom check bullets ============ */
+.check-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--sp-2, .5rem); }
+.check-list li {
+  position: relative; padding-inline-start: 1.9rem; line-height: 1.55;
+}
+.check-list li::before {
+  content: ""; position: absolute; inset-inline-start: 0; inset-block-start: .2em;
+  inline-size: 1.15rem; block-size: 1.15rem; border-radius: 50%;
+  background: var(--success, #2FA36B)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l3 3 5-7' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 62% no-repeat;
+}
+
+/* ============ 18. Social icons: fill on hover ============ */
+.social-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 2.5rem; block-size: 2.5rem; border-radius: 50%;
+  border: 1px solid var(--border); color: var(--text-muted);
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
+}
+.social-icon:hover { background: var(--primary); border-color: var(--primary); color: #fff; transform: translateY(-3px); }
+.social-icon svg { inline-size: 1.15rem; block-size: 1.15rem; fill: currentColor; }
+
+/* ============ 19. Status spinner ============ */
+@keyframes dk-spin { to { transform: rotate(360deg); } }
+.spinner-ring {
+  display: inline-block; inline-size: 1.25rem; block-size: 1.25rem; border-radius: 50%;
+  border: 3px solid var(--border); border-block-start-color: var(--primary);
+  animation: dk-spin .7s linear infinite; vertical-align: middle;
+}
+
+/* ============ 20. Category icons: unique hues ============ */
+.cat-icon { display: inline-flex; align-items: center; justify-content: center; inline-size: 2.5rem; block-size: 2.5rem; border-radius: var(--r-lg, .75rem); font-size: 1.35rem; }
+.cat-icon[data-cat="image"]  { background: rgba(108,76,241,.12); }
+.cat-icon[data-cat="text"]   { background: rgba(38,105,184,.12); }
+.cat-icon[data-cat="typing"] { background: rgba(47,163,107,.14); }
+.cat-icon[data-cat="game"]   { background: rgba(255,197,49,.20); }
+.cat-icon[data-cat="soon"]   { background: rgba(183,121,31,.14); }
+[data-theme="dark"] .cat-icon { filter: brightness(1.25); }
+
+/* ============ 21. Cursor glow (desktop only) ============ */
+#cursor-glow {
+  position: fixed; inset-block-start: 0; inset-inline-start: 0;
+  inline-size: 340px; block-size: 340px; margin: -170px 0 0 -170px;
+  border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle, rgba(108,76,241,.10), transparent 65%);
+  opacity: 0; transition: opacity .4s ease;
+}
+@media (hover: none), (pointer: coarse) { #cursor-glow { display: none; } }
+
+/* ============ 22. Animated gradient background ============ */
+.anim-gradient {
+  background: linear-gradient(120deg, var(--dk-violet-soft, #EFEAFF), #fff, #FFF7E6, var(--dk-violet-soft, #EFEAFF));
+  background-size: 300% 300%;
+  animation: dk-grad-pan 18s ease infinite;
+}
+[data-theme="dark"] .anim-gradient {
+  background: linear-gradient(120deg, #1d1840, #17142e, #241a4d, #1d1840);
+  background-size: 300% 300%;
+}
+@keyframes dk-grad-pan { 0%,100% { background-position: 0% 40%; } 50% { background-position: 100% 60%; } }
+
+/* ============ 26. Text stroke headings ============ */
+.stroke-text {
+  color: transparent; -webkit-text-stroke: 2px var(--primary);
+  transition: color .3s ease;
+}
+.stroke-text:hover { color: var(--primary); }
+@supports not (-webkit-text-stroke: 1px black) {
+  .stroke-text { color: var(--primary); -webkit-text-stroke: 0; }
+}
+
+/* ============ 27. Glow border CTA ============ */
+.btn-glow:hover, .btn-glow:focus-visible {
+  box-shadow: 0 0 0 3px rgba(108,76,241,.25), 0 0 24px rgba(108,76,241,.55), var(--shadow-lg, 0 10px 25px rgba(0,0,0,.12));
+}
+
+/* ============ 30. Scroll progress bar ============ */
+#scroll-progress {
+  position: fixed; inset-block-start: 0; inset-inline-start: 0;
+  block-size: 3px; inline-size: 0; z-index: 1000;
+  background: linear-gradient(90deg, var(--dk-violet), #ec4899);
+  border-start-end-radius: 3px; border-end-end-radius: 3px;
+}
+
+/* ============ 31. Logo marquee ============ */
+.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.marquee-track { display: flex; gap: var(--sp-8, 2rem); inline-size: max-content; animation: dk-marquee 28s linear infinite; align-items: center; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes dk-marquee { to { transform: translateX(-50%); } }
+[dir="rtl"] .marquee-track { animation-name: dk-marquee-rtl; }
+@keyframes dk-marquee-rtl { to { transform: translateX(50%); } }
+
+/* ============ 32. Click ripple ============ */
+.ripple-ink {
+  position: absolute; border-radius: 50%; transform: scale(0);
+  background: currentColor; opacity: .25; pointer-events: none;
+  animation: dk-ripple .6s ease-out forwards;
+}
+@keyframes dk-ripple { to { transform: scale(3.2); opacity: 0; } }
+.btn { position: relative; overflow: hidden; }
+
+/* ============ 33. Glassmorphism ============ */
+.glass {
+  background: rgba(255,255,255,.62);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,.5);
+}
+[data-theme="dark"] .glass {
+  background: rgba(23,20,46,.55);
+  border-color: rgba(255,255,255,.12);
+}
+@supports not (backdrop-filter: blur(1px)) { .glass { background: var(--surface); } }
+
+/* ============ 36. Dark section ============ */
+.section-dark {
+  background: linear-gradient(160deg, #1d1840, #12102a);
+  color: #f2f0ff; border-radius: var(--r-xl, 1rem);
+}
+.section-dark h2, .section-dark h3 { color: #fff; }
+.section-dark p, .section-dark li { color: #cfc9f2; }
+
+/* ============ 39. Toggle switch ============ */
+.switch { position: relative; display: inline-block; inline-size: 3rem; block-size: 1.65rem; flex: none; }
+.switch input { opacity: 0; inline-size: 0; block-size: 0; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 999px; cursor: pointer;
+  background: var(--neutral-300, #CFC8E9); transition: background-color .3s ease;
+}
+.switch .track::before {
+  content: ""; position: absolute; block-size: 1.25rem; inline-size: 1.25rem;
+  inset-inline-start: .2rem; inset-block-start: .2rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  transition: transform .3s cubic-bezier(.2,.7,.3,1.2);
+}
+.switch input:checked + .track { background: var(--primary); }
+.switch input:checked + .track::before { transform: translateX(1.35rem); }
+[dir="rtl"] .switch input:checked + .track::before { transform: translateX(-1.35rem); }
+.switch input:focus-visible + .track { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ============ 40. CSS tooltips ============ */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; inset-block-end: calc(100% + 8px); inset-inline-start: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--dk-ink, #17142E); color: #fff;
+  font-size: var(--fs-xs); font-weight: 500; line-height: 1.4;
+  padding: .4rem .65rem; border-radius: var(--r-md, .5rem);
+  white-space: nowrap; max-inline-size: 16rem; white-space: normal;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  z-index: 50;
+}
+[dir="rtl"] [data-tip]::after { transform: translateX(50%) translateY(4px); }
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+[dir="rtl"] [data-tip]:hover::after, [dir="rtl"] [data-tip]:focus-visible::after { transform: translateX(50%) translateY(0); }
+
+/* ============ 42. Back to top ============ */
+#back-to-top {
+  position: fixed; inset-block-end: 1.25rem; inset-inline-end: 1.25rem; z-index: 900;
+  inline-size: 3rem; block-size: 3rem; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--primary); color: #fff; font-size: 1.3rem; line-height: 1;
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,.15));
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+}
+#back-to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+#back-to-top:hover { transform: translateY(-3px); }
+
+/* ============ 43. Sticky nav shrink ============ */
+.site-header { transition: box-shadow .3s ease, background-color .5s ease; }
+.site-header.shrunk { box-shadow: var(--shadow-md, 0 4px 14px rgba(0,0,0,.08)); }
+.site-header.shrunk .nav-inner { padding-block: .4rem; }
+.site-header .nav-inner { transition: padding .3s ease; }
+
+/* ============ 45. Testimonial slider ============ */
+.testimonial-slider { position: relative; overflow: hidden; }
+.testimonial-track { display: flex; transition: transform .55s cubic-bezier(.2,.7,.3,1); }
+.testimonial-slide { flex: 0 0 100%; padding: var(--sp-4, 1rem); }
+.testimonial-dots { display: flex; gap: .5rem; justify-content: center; margin-block-start: var(--sp-3, .75rem); }
+.testimonial-dots button {
+  inline-size: .65rem; block-size: .65rem; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--neutral-300, #CFC8E9); transition: background-color .25s ease, transform .25s ease; padding: 0;
+}
+.testimonial-dots button.active { background: var(--primary); transform: scale(1.25); }
+
+/* ============ 46. Pricing toggle ============ */
+.pricing-toggle { display: inline-flex; align-items: center; gap: var(--sp-3, .75rem); font-weight: 600; }
+.price-yearly { display: none; }
+.pricing-annual .price-monthly { display: none; }
+.pricing-annual .price-yearly { display: inline; }
+
+/* ============ 47. Search highlight ============ */
+mark.search-hit { background: #ffe58a; color: inherit; border-radius: 2px; padding: 0 1px; }
+[data-theme="dark"] mark.search-hit { background: #8a6d00; color: #fff; }
+
+/* ============ 48. Avatar stack ============ */
+.avatar-stack { display: inline-flex; align-items: center; }
+.avatar-stack > * {
+  border: 2px solid var(--bg); border-radius: 50%; margin-inline-start: -0.7rem;
+  inline-size: 2.5rem; block-size: 2.5rem; object-fit: cover;
+  transition: transform .2s ease;
+}
+.avatar-stack > *:first-child { margin-inline-start: 0; }
+.avatar-stack > *:hover { transform: translateY(-4px); z-index: 2; position: relative; }
+.avatar-stack .more {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); color: var(--text-muted);
+  font-size: var(--fs-xs); font-weight: 700;
+}
+
+/* ============ 49. Timeline ============ */
+.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.timeline::before {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: .8rem;
+  inline-size: 2px; background: var(--border);
+}
+.timeline > li { position: relative; padding-inline-start: 2.6rem; padding-block-end: var(--sp-5, 1.25rem); }
+.timeline > li::before {
+  content: ""; position: absolute; inset-inline-start: .42rem; inset-block-start: .3rem;
+  inline-size: .8rem; block-size: .8rem; border-radius: 50%;
+  background: var(--primary); box-shadow: 0 0 0 4px var(--dk-violet-soft, #EFEAFF);
+}
+.timeline > li:last-child { padding-block-end: 0; }
+
+/* ============ 50. Floating background shapes ============ */
+.float-wrap { position: relative; overflow: hidden; }
+.float-shape {
+  position: absolute; border-radius: 50%; pointer-events: none; opacity: .5;
+  filter: blur(2px);
+  animation: dk-float 14s ease-in-out infinite;
+}
+.float-shape.s2 { animation-duration: 19s; animation-delay: -6s; }
+.float-shape.s3 { animation-duration: 23s; animation-delay: -11s; }
+@keyframes dk-float {
+  0%,100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-26px) translateX(14px); }
+}
+
+/* ============ 25. Image reveal (second image on hover) ============ */
+.img-reveal { position: relative; display: block; overflow: hidden; border-radius: var(--r-lg, .75rem); }
+.img-reveal img { display: block; inline-size: 100%; block-size: auto; transition: opacity .4s ease; }
+.img-reveal .img-alt { position: absolute; inset: 0; opacity: 0; object-fit: cover; }
+.img-reveal:hover .img-alt, .img-reveal:focus-within .img-alt { opacity: 1; }
+
+/* ============ 38. Copy feedback ============ */
+.copy-btn { position: relative; }
+.copy-btn.copied { border-color: var(--success, #2FA36B); color: var(--success-text, #1F7A4D); }
+
+/* ============ Desktop-only heavy effects ============ */
+@media (hover: hover) and (pointer: fine) {
+  /* 23. Magnetic buttons: JS sets --mx/--my */
+  .magnetic { transition: transform .18s ease-out; will-change: transform; }
+  /* 24. Card 3D tilt: JS sets --rx/--ry */
+  .tilt { transition: transform .18s ease-out; transform-style: preserve-3d; will-change: transform; }
+}
+@media (hover: none), (pointer: coarse) {
+  .magnetic, .tilt { transform: none !important; }
+}
+
+/* ============ Reduced motion: kill all polish animation ============ */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track, .anim-gradient, .float-shape, .skeleton-shimmer::after,
+  .typewriter-caret, .spinner-ring, .check-anim circle, .check-anim path {
+    animation: none !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  *, *::before, *::after { transition-duration: .01ms !important; }
+}
