@@ -49,27 +49,22 @@ img{max-width:100%;height:auto}
     <div class="container hero__grid">
       <div class="hero__copy">
         <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
-        <h1>Get everyday tasks done in seconds — <span class="hero-free">free.</span></h1>
+        <h1>Get everyday tasks done in seconds — <span class="hero-sep">|</span> <span class="hero-free">free.</span></h1>
 <style>
 .hero-free {
-  position: relative;
   color: #dc2626;
   font-weight: 800;
 }
-.hero-free::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
-  height: 4px;
-  background: #dc2626;
-  border-radius: 2px;
-  animation: blink-line 1s infinite;
+.hero-sep {
+  color: #dc2626;
+  font-weight: 800;
+  font-size: 1.2em;
+  animation: blink-sep 1s infinite;
+  margin: 0 4px;
 }
-@keyframes blink-line {
+@keyframes blink-sep {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
+  50% { opacity: 0; }
 }
 </style>
         <p class="tagline">Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.</p>
