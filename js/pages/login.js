@@ -94,12 +94,22 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(function () { window.location.href = "dashboard.html"; })
         .catch(function (err) {
           var c = err && err.code;
+          // DIAGNOSTIC (2026-10-07): show full error detail on page for root-cause analysis.
+          var detail = "code=" + c + " | message=" + (err && err.message) +
+            " | customData=" + JSON.stringify(err && err.customData || null);
           if (c === "auth/popup-blocked" || c === "auth/popup-closed-by-user" ||
               c === "auth/cancelled-popup-request" || c === "auth/internal-error") {
-            DKF.auth().signInWithRedirect(provider);
+            if (gErr) gErr.textContent = "DIAG: " + detail + " — trying redirect…";
+            try {
+              DKF.auth().signInWithRedirect(provider);
+            } catch (e2) {
+              gBtn.disabled = false;
+              if (gErr) gErr.textContent = "DIAG redirect also failed: code=" +
+                (e2 && e2.code) + " | message=" + (e2 && e2.message);
+            }
           } else {
             gBtn.disabled = false;
-            if (gErr) gErr.textContent = DKF.friendlyError(err);
+            if (gErr) gErr.textContent = "DIAG: " + detail;
           }
         });
     });
