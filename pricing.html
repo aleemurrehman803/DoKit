@@ -56,24 +56,24 @@
       <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
 
       <div class="section-head">
-        <h1>Simple, honest pricing</h1>
-        <p>Start free and stay free for as long as you like. Pay only if you want the extras — and cancel anytime.</p>
+        <h1 data-i18n="pricing_title">Simple, honest pricing</h1>
+        <p data-i18n="pricing_sub">Start free and stay free for as long as you like. Pay only if you want the extras — and cancel anytime.</p>
       </div>
 
       <div class="price-grid">
-        <div class="card price-card">
-          <h2>Free</h2>
-          <div class="price">Rs 0 <small>forever</small></div>
+        <div class="card price-card featured">
+          <span class="plan-badge badge badge-amber">Most popular</span>
+          <h2 data-i18n="free_t">Free</h2>
+          <div class="price">Rs 0 <small data-i18n="free_forever">forever</small></div>
           <ul class="price-features">
-            <li>All 6 tools, unlimited normal use</li>
+            <li data-i18n="free_f1">All 6 tools, unlimited normal use</li>
             <li>No account needed</li>
             <li>Files never leave your device</li>
             <li>10 languages</li>
           </ul>
           <a class="btn btn-ghost btn-block" href="signup.html">Start free</a>
         </div>
-        <div class="card price-card featured">
-          <span class="plan-badge badge badge-amber">Most popular</span>
+        <div class="card price-card">
           <h2>Pro <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
           <div class="price">Rs 300 <small>/month</small></div>
           <ul class="price-features">
@@ -84,7 +84,7 @@
             <li>Early access to new tools</li>
           </ul>
           <a class="btn btn-primary btn-block" href="signup.html">Join the waitlist</a>
-          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0">Pro is not on sale yet — everything listed here is already free today.</p>
+          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0" data-i18n="pro_note">Pro is not on sale yet — everything listed here is already free today.</p>
         </div>
         <div class="card price-card">
           <h2>Team <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
@@ -164,6 +164,7 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <div id="dk-assistant-root"></div>
