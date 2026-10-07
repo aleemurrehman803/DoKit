@@ -1,0 +1,47 @@
+<section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+  <h2 id="faq-h">Frequently asked questions</h2>
+  <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
+    <button type="button" class="faq-lang-btn is-active" data-faq-lang="en" aria-pressed="true">English</button>
+    <button type="button" class="faq-lang-btn" data-faq-lang="ur" aria-pressed="false">اردو</button>
+  </div>
+  <div class="faq-en">
+    <details><summary>How much smaller will my image get?</summary><p class="tfaq-a">It depends on the photo, but quality 80 JPEG is usually 40–70% smaller than the original with no visible difference. PNG screenshots often shrink even more when converted to WebP.</p></details>
+    <details><summary>What does target-size mode do?</summary><p class="tfaq-a">You type a maximum file size (for example 200 KB) and DoKit automatically searches for the highest quality setting that fits under it — handy for upload limits on forms and profiles.</p></details>
+    <details><summary>Will compression remove metadata?</summary><p class="tfaq-a">Yes. The image is redrawn on a fresh canvas, which strips EXIF data including GPS location.</p></details>
+    <details><summary>Is there a limit on how many images I can compress?</summary><p class="tfaq-a">No daily limits and no sign-up. Compress one image at a time here, or use the Image Converter to batch-convert up to 10 images at once.</p></details>
+  </div>
+  <div class="faq-ur" hidden>
+    <details><summary lang="ur" dir="rtl">میری تصویر کتنی چھوٹی ہوگی؟</summary><p class="tfaq-a" lang="ur" dir="rtl">تصویر پر منحصر ہے، لیکن 80 کوالٹی والی JPEG عام طور پر اصل سے 40–70٪ چھوٹی ہوتی ہے اور فرق نظر نہیں آتا۔ WebP میں تبدیل کرنے پر PNG اسکرین شاٹس اکثر اس سے بھی زیادہ چھوٹے ہوتے ہیں۔</p></details>
+    <details><summary lang="ur" dir="rtl">ہدف سائز موڈ کیا کرتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">آپ زیادہ سے زیادہ فائل سائز لکھتے ہیں (مثلاً 200 KB) اور DoKit خودکار طور پر وہ سب سے بہترین کوالٹی تلاش کرتا ہے جو اس حد میں فٹ ہو — فارم اور پروفائل کی اپ لوڈ حدود کے لیے کارآمد۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا کمپریشن میٹا ڈیٹا ختم کر دیتی ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">جی ہاں۔ تصویر نئے کینوس پر دوبارہ بنائی جاتی ہے، جس سے GPS لوکیشن سمیت EXIF ڈیٹا ختم ہو جاتا ہے۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا تصاویر کمپریس کرنے کی کوئی حد ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">کوئی روزانہ حد نہیں اور نہ سائن اپ درکار۔ یہاں ایک وقت میں ایک تصویر کمپریس کریں، یا امیج کنورٹر سے ایک ساتھ 10 تصاویر تبدیل کریں۔</p></details>
+  </div>
+  <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+<script>
+/* FAQ language toggle (EN/UR). NOTE: tool pages use CSP script-src 'self' (no inline JS).
+   If the toggle does not work, move this block into the tool's tool.js file. */
+(function () {
+  function init(sec) {
+    if (!sec || sec.dataset.faqToggleInit) return;
+    sec.dataset.faqToggleInit = "1";
+    var btns = sec.querySelectorAll(".faq-lang-btn");
+    var en = sec.querySelector(".faq-en");
+    var ur = sec.querySelector(".faq-ur");
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        btns.forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle("is-active", on);
+          x.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        var lang = b.getAttribute("data-faq-lang");
+        if (en) en.hidden = lang !== "en";
+        if (ur) ur.hidden = lang !== "ur";
+        sec.querySelectorAll("details[open]").forEach(function (d) { d.open = false; });
+      });
+    });
+  }
+  document.querySelectorAll("section.tfaq").forEach(init);
+})();
+</script>
+</section>
