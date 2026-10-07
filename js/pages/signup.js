@@ -1,3 +1,19 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "su_busy": "Creating account…",
+  "su_create": "Create Account",
+  "su_gfail": "Google sign-in failed to load. Check connection and try again.",
+  "su_name": "Please enter your name.",
+  "su_email": "Please enter a valid email address.",
+  "su_pw": "Password must be at least 6 characters.",
+  "su_captcha": "Please enter the security code shown above.",
+  "su_loading": "Sign-up is still loading. Please wait a moment and try again.",
+  "su_gopen": "Opening Google sign-in…",
+  "su_gcancel": "Google sign-in was cancelled.",
+  "su_gstart": "Google sign-in could not start. Please try again.",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — signup page (Firebase Auth: create account + Google). */
 document.addEventListener("DOMContentLoaded", function () {
   try { window.DKUI && (DKUI.renderNav("signup"), DKUI.renderFooter(), DKUI.init()); } catch (e) {}
@@ -15,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function setBusy(b) {
     submitBtn.disabled = b;
-    submitBtn.textContent = b ? "Creating account…" : "Create Account";
+    submitBtn.textContent = b ? dkT("su_busy") : dkT("su_create");
   }
 
   // CAPTCHA is required on every signup attempt.
@@ -40,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
     s.onload = fn;
     s.onerror = function () {
       gBtn.disabled = false;
-      if (gErr) gErr.textContent = "Google sign-in failed to load. Check connection and try again.";
+      if (gErr) gErr.textContent = dkT("su_gfail");
     };
     document.head.appendChild(s);
   }
@@ -59,17 +75,17 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cErr) cErr.textContent = "";
     var nm = nameEl.value.trim();
     var em = email.value.trim();
-    if (nm.length < 2) { nErr.textContent = "Please enter your name."; ok = false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { eErr.textContent = "Please enter a valid email address."; ok = false; }
-    if (pw.value.length < 6) { pErr.textContent = "Password must be at least 6 characters."; ok = false; }
+    if (nm.length < 2) { nErr.textContent = dkT("su_name"); ok = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { eErr.textContent = dkT("su_email"); ok = false; }
+    if (pw.value.length < 6) { pErr.textContent = dkT("su_pw"); ok = false; }
     if (!cap || !cap.validate()) {
-      if (cErr) cErr.textContent = "Please enter the security code shown above.";
+      if (cErr) cErr.textContent = dkT("su_captcha");
       if (cap) cap.refresh();
       ok = false;
     }
     if (!ok) return;
     if (!window.DKF || !DKF.auth()) {
-      if (gErr) gErr.textContent = "Sign-up is still loading. Please wait a moment and try again.";
+      if (gErr) gErr.textContent = dkT("su_loading");
       return;
     }
     setBusy(true);
@@ -94,12 +110,12 @@ document.addEventListener("DOMContentLoaded", function () {
       if (cErr) cErr.textContent = "";
       if (gErr) gErr.textContent = "";
       if (!cap || !cap.validate()) {
-        if (cErr) cErr.textContent = "Please enter the security code shown above.";
+        if (cErr) cErr.textContent = dkT("su_captcha");
         if (cap) cap.refresh();
         return;
       }
       gBtn.disabled = true;
-      if (gErr) gErr.textContent = "Opening Google sign-in…";
+      if (gErr) gErr.textContent = dkT("su_gopen");
       withGIS(function () {
         try {
           var tokenClient = google.accounts.oauth2.initTokenClient({
@@ -109,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
             callback: function (tokenResp) {
               if (!tokenResp || !tokenResp.access_token) {
                 gBtn.disabled = false;
-                if (gErr) gErr.textContent = "Google sign-in was cancelled.";
+                if (gErr) gErr.textContent = dkT("su_gcancel");
                 return;
               }
               var cred = firebase.auth.GoogleAuthProvider.credential(null, tokenResp.access_token);
@@ -126,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
           tokenClient.requestAccessToken();
         } catch (e) {
           gBtn.disabled = false;
-          if (gErr) gErr.textContent = "Google sign-in could not start. Please try again.";
+          if (gErr) gErr.textContent = dkT("su_gstart");
         }
       });
     });
