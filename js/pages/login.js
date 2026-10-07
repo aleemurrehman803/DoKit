@@ -26,26 +26,20 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // Handle return from Google redirect sign-in.
-  if (window.DKF && DKF.auth()) {
-    try {
-      var dbgEl = document.getElementById("err-general");
-      DKF.auth().getRedirectResult().then(function (result) {
-        if (result && result.user) {
-          if (dbgEl) dbgEl.textContent = "Redirect OK: " + result.user.email + " — finishing…";
-          return DKF.ensureUserDoc(result.user).then(function () {
-            window.location.href = "dashboard.html";
-          });
-        } else {
-          // Visible diagnostic: no pending redirect found.
-          if (dbgEl) dbgEl.textContent = "DIAG: getRedirectResult returned empty (no pending redirect). URL=" +
-            window.location.href.substring(0, 120);
-        }
-      }).catch(function (err) {
-        if (dbgEl) dbgEl.textContent = DKF.friendlyError(err) +
-          " (code: " + (err && err.code) + ")";
-      });
-    } catch (e) { /* ignore */ }
+  // Google Identity Services (GIS): direct Google sign-in, bypassing the
+  // Firebase auth handler entirely. Permanent solution.
+  var GIS_CLIENT_ID = "890427724515-j312112q9sf8c9cmq3mfq5k2gi8dadhc.apps.googleusercontent.com";
+  function withGIS(fn) {
+    if (window.google && google.accounts && google.accounts.oauth2) return fn();
+    var s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true; s.defer = true;
+    s.onload = fn;
+    s.onerror = function () {
+      gBtn.disabled = false;
+      if (gErr) gErr.textContent = "Google sign-in failed to load. Check connection and try again.";
+    };
+    document.head.appendChild(s);
   }
 
   // Already signed in? Skip to dashboard.
@@ -91,34 +85,43 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!window.DKF || !DKF.auth()) return;
       // CAPTCHA is required every time, including Google sign-in.
       if (cErr) cErr.textContent = "";
+      if (gErr) gErr.textContent = "";
       if (!cap || !cap.validate()) {
         if (cErr) cErr.textContent = "Please enter the security code shown above.";
         if (cap) cap.refresh();
         return;
       }
       gBtn.disabled = true;
-      var provider = DKF.googleProvider();
-      // Popup first (standard Google account-chooser + consent like other sites).
-      // If the popup is blocked or fails, fall back to full-page redirect.
-      DKF.auth().signInWithPopup(provider)
-        .then(function (cred) { return DKF.ensureUserDoc(cred.user); })
-        .then(function () { window.location.href = "dashboard.html"; })
-        .catch(function (err) {
-          var c = err && err.code;
-          if (c === "auth/popup-blocked" || c === "auth/popup-closed-by-user" ||
-              c === "auth/cancelled-popup-request" || c === "auth/internal-error") {
-            // Popup unavailable/blocked: fall back to full-page Google sign-in.
-            try {
-              DKF.auth().signInWithRedirect(provider);
-            } catch (e2) {
-              gBtn.disabled = false;
-              if (gErr) gErr.textContent = DKF.friendlyError(e2);
+      if (gErr) gErr.textContent = "Opening Google sign-in…";
+      withGIS(function () {
+        try {
+          var tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GIS_CLIENT_ID,
+            scope: "openid email profile",
+            ux_mode: "popup",
+            callback: function (tokenResp) {
+              if (!tokenResp || !tokenResp.access_token) {
+                gBtn.disabled = false;
+                if (gErr) gErr.textContent = "Google sign-in was cancelled.";
+                return;
+              }
+              var cred = firebase.auth.GoogleAuthProvider.credential(null, tokenResp.access_token);
+              DKF.auth().signInWithCredential(cred)
+                .then(function (uc) { return DKF.ensureUserDoc(uc.user); })
+                .then(function () { window.location.href = "dashboard.html"; })
+                .catch(function (err) {
+                  gBtn.disabled = false;
+                  if (cap) cap.refresh();
+                  if (gErr) gErr.textContent = DKF.friendlyError(err);
+                });
             }
-          } else {
-            gBtn.disabled = false;
-            if (gErr) gErr.textContent = DKF.friendlyError(err);
-          }
-        });
+          });
+          tokenClient.requestAccessToken();
+        } catch (e) {
+          gBtn.disabled = false;
+          if (gErr) gErr.textContent = "Google sign-in could not start. Please try again.";
+        }
+      });
     });
   }
 });
