@@ -122,7 +122,7 @@
       var v = lookup(key);
       var tag = el.tagName;
       var orig = snapshot.get(el) || {};
-      if (v !== null && v !== key && v.indexOf('.') < 0) {
+      if (v !== null && v !== key) {
         if (tag === 'INPUT' || tag === 'TEXTAREA') { el.setAttribute('placeholder', v); }
         else { el.textContent = v; }
       } else {
@@ -140,7 +140,7 @@
       var key = el.getAttribute('data-i18n-ph');
       var v = lookup(key);
       var orig = snapshot.get(el) || {};
-      if (v !== null && v !== key && v.indexOf('.') < 0) { el.setAttribute('placeholder', v); }
+      if (v !== null && v !== key) { el.setAttribute('placeholder', v); }
       else if (orig.phAttr != null) { el.setAttribute('placeholder', orig.phAttr); }
     });
 
@@ -149,7 +149,7 @@
       var key = el.getAttribute('data-i18n-title');
       var v = lookup(key);
       var orig = snapshot.get(el) || {};
-      if (v !== null && v !== key && v.indexOf('.') < 0) { el.setAttribute('title', v); }
+      if (v !== null && v !== key) { el.setAttribute('title', v); }
       else if (orig.title != null) { el.setAttribute('title', orig.title); }
     });
 
@@ -158,7 +158,7 @@
       var key = el.getAttribute('data-i18n-aria');
       var v = lookup(key);
       var orig = snapshot.get(el) || {};
-      if (v !== null && v !== key && v.indexOf('.') < 0) { el.setAttribute('aria-label', v); }
+      if (v !== null && v !== key) { el.setAttribute('aria-label', v); }
       else if (orig.aria != null) { el.setAttribute('aria-label', orig.aria); }
     });
   }
