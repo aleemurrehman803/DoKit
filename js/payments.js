@@ -52,6 +52,33 @@
       createCheckout: function (order) {
         return Promise.reject(new Error("Card provider not configured yet."));
       }
+    },
+    /* Stripe card checkout (dedicated bank-style page).
+     *
+     * Unlike the "card" stub above, this provider is LIVE as soon as the
+     * admin sets `stripe_pk` in Firestore config/payments — the checkout
+     * page itself verifies availability and shows a graceful notice when
+     * Stripe is blocked or unconfigured, so redirecting is always safe.
+     *
+     * NOTE: Stripe does not support Pakistan-registered businesses directly.
+     * See js/stripe-pay.js header for workarounds (Paddle recommended).
+     * Real charging still needs the backend PaymentIntent endpoint; until
+     * then the checkout page honestly reports "not connected". */
+    stripe: {
+      id: "stripe",
+      name: "Card (Stripe)",
+      currencies: ["USD"],
+      isConfigured: function () { return true; },
+      createCheckout: function (order) {
+        var plan = (order && order.planId) || "pro";
+        var url = (typeof window.DKU === "function")
+          ? window.DKU("/account/stripe-checkout.html")
+          : "/account/stripe-checkout.html";
+        try {
+          window.location.href = url + "?plan=" + encodeURIComponent(plan);
+        } catch (e) {}
+        return Promise.resolve({ status: "redirecting", message: "Opening secure card checkout…" });
+      }
     }
   };
 
