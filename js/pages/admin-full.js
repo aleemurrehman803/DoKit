@@ -54,13 +54,12 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function esc(s) {
-    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
-    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
-  }
+  };
 
   function db() {
     try { return (window.DKF && DKF.db()) || null; } catch (e) { return null; }
@@ -708,6 +707,14 @@
   function approveDeposit(depId, amount, userId) {
     var d = db();
     if (!d) return;
+    /* Defense in depth: the amount arrives via DOM data attributes — coerce
+     * and validate here so a tampered value can never corrupt the ledger
+     * (string concatenation) or mint a bad balance. */
+    amount = Math.floor(Number(amount)) || 0;
+    if (amount <= 0 || !userId || typeof userId !== "string") {
+      alert("Invalid deposit data. Aborted.");
+      return;
+    }
     if (!window.confirm("Approve deposit of Rs " + amount + "?\n\nThis will credit " + amount + " coins to the user.")) return;
 
     var adminUid = currentAdminUid();
@@ -1033,22 +1040,6 @@
 
   function fmtTime(ms) {
     try { return new Date(Number(ms) || 0).toLocaleString(); } catch (e) { return "—"; }
-  }
-
-  /**
-   * Simple non-crypto hash for ledger chaining display.
-   * NOTE: production should use SHA-256 (see typefight.js TFT.hash).
-   */
-  function simpleHash(str) {
-    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-    for (var i = 0; i < str.length; i++) {
-      var ch = str.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
   }
 
   /**
