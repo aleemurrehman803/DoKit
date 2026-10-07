@@ -301,7 +301,7 @@
 
   function syncToggleLabel() {
     if (selected && selected.id !== "generic") {
-      toggleLabel.textContent = selected.name;
+      toggleLabel.textContent = String(selected.name);
       toggle.classList.add("has-value");
     } else {
       toggleLabel.textContent = t("bp.select_placeholder", "Select your board / university");
@@ -359,9 +359,9 @@
       var b = BOARDS[i];
       if (q && b.name.toLowerCase().indexOf(q) === -1) continue;
       count++;
-      html += '<li><button type="button" data-id="' + esc(b.id) + '"' +
+      html += '<li><button type="button" data-id="' + esc(String(b.id)) + '"' +
         (selected && selected.id === b.id ? ' aria-selected="true"' : "") +
-        '><span>' + esc(b.name) + "</span>" + badgeHTML(b) + "</button></li>";
+        '><span>' + esc(String(b.name)) + "</span>" + badgeHTML(b) + "</button></li>";
     }
     list.innerHTML = html;
     $("boardNone").hidden = count > 0;
@@ -874,6 +874,7 @@
     });
   });
   $("camClose").addEventListener("click", closeCam);
+  $("camX").addEventListener("click", closeCam);
   $("camModal").addEventListener("click", function (e) { if (e.target === $("camModal")) closeCam(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("camModal").hidden) closeCam(); });
   $("camShot").addEventListener("click", function () {
