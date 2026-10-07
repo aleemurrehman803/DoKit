@@ -13,6 +13,13 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<style>
+.guide-lang-toggle{display:flex;gap:.5rem;margin:.75rem 0 1.25rem}
+.guide-lang-btn{padding:.4rem 1.1rem;border:1px solid var(--dk-border,#d0d0d0);border-radius:999px;background:transparent;cursor:pointer;font:inherit}
+.guide-lang-btn.is-active{font-weight:700;border-color:var(--dk-primary,#6C4CF1)}
+.guide-ur[dir="rtl"]{text-align:right}
+.guide-ur .breadcrumb{direction:ltr;text-align:left}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -27,44 +34,91 @@
           <li aria-current="page">Count words</li>
         </ol>
       </nav>
-      <span class="eyebrow">Guide</span>
-      <h1>How to count words</h1>
-      <p class="tagline">Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.</p>
-      <p><a class="btn btn-primary" href="../tools/word-counter/">Open Word Counter</a></p>
+      <section class="tsection guide-lang" aria-label="Guide content">
+        <div class="guide-lang-toggle" role="group" aria-label="Guide language">
+          <button type="button" class="guide-lang-btn is-active" data-guide-lang="en" aria-pressed="true">English</button>
+          <button type="button" class="guide-lang-btn" data-guide-lang="ur" aria-pressed="false">اردو</button>
+        </div>
+        <div class="guide-en">
+          <span class="eyebrow">Guide</span>
+          <h1>How to count words</h1>
+          <p class="tagline">Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.</p>
+          <p><a class="btn btn-primary" href="../tools/word-counter/">Open Word Counter</a></p>
 
-      <section class="tsection" aria-labelledby="steps-h">
-        <h2 id="steps-h">Steps</h2>
-        <ol class="thowto">
+          <section class="tsection" aria-labelledby="steps-h">
+            <h2 id="steps-h">Steps</h2>
+<ol class="thowto">
           <li><div><h3>1. Paste or type your text</h3><p>Drop an essay, article, caption or script into the box. Stats update live as you type.</p></div></li>
           <li><div><h3>2. Read the headline stats</h3><p>Words, characters, sentences, paragraphs, reading time and speaking time appear instantly.</p></div></li>
           <li><div><h3>3. Check keyword density</h3><p>See your top 10 keywords — handy for SEO checks and spotting overused words.</p></div></li>
           <li><div><h3>4. Hit your target length</h3><p>Writing to a limit? Watch the counter as you trim or expand to land exactly on target.</p></div></li>
           <li><div><h3>5. Copy the report</h3><p>One click copies the full statistics to your clipboard for reports and submissions.</p></div></li>
         </ol>
-      </section>
+          </section>
 
-      <section class="tsection collapsible" aria-labelledby="tips-h">
-        <h2 id="tips-h">Pro tips</h2>
-        <ul>
+          <section class="tsection collapsible" aria-labelledby="tips-h">
+            <h2 id="tips-h">Pro tips</h2>
+<ul>
           <li><strong>Reading time ≈ words ÷ 200.</strong> Speaking time is slower — about 130 words per minute.</li>
           <li><strong>Watch keyword stuffing.</strong> If one word dominates the top-10 list, vary your vocabulary.</li>
           <li><strong>Works with Urdu text too.</strong> Paste Urdu script and get accurate counts.</li>
         </ul>
-      </section>
+          </section>
 
-      <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-        <h2 id="faq-h">Frequently asked questions</h2>
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+            <h2 id="faq-h">Frequently asked questions</h2>
         <details><summary>Is my text uploaded anywhere?</summary><p class="tfaq-a">No — counting happens entirely in your browser. Your text never leaves your device.</p></details>
         <details><summary>What counts as a word?</summary><p class="tfaq-a">Sequences of letters/numbers separated by spaces or punctuation. Hyphenated words count as one.</p></details>
         <details><summary>Can I count words in a PDF or Word file?</summary><p class="tfaq-a">Copy the text out of the document and paste it into the counter — formatting is ignored, only text is counted.</p></details>
-      </section>
+          </section>
 
-      <section class="tsection" aria-labelledby="rel-h">
-        <h2 id="rel-h">Related tools</h2>
-        <div class="trelated">
+          <section class="tsection" aria-labelledby="rel-h">
+            <h2 id="rel-h">Related tools</h2>
+<div class="trelated">
           <a class="trel-card" href="../tools/word-counter/"><h3>Word Counter</h3><p>Live word, character, and reading-time stats.</p></a>
           <a class="trel-card" href="../tools/case-converter/"><h3>Case Converter</h3><p>UPPER, lower, Title Case and more.</p></a>
         </div>
+          </section>        </div>
+        <div class="guide-ur" hidden lang="ur" dir="rtl">
+          <span class="eyebrow">رہنمائی</span>
+          <h1>الفاظ کیسے گنیں</h1>
+          <p class="tagline">مضامین، آرٹیکلز، کیپشنز اور اسکرپٹس کے لیے فوری لفظ گنتی، پڑھنے کا وقت اور کلیدی لفظ کے اعداد۔</p>
+          <p><a class="btn btn-primary" href="../tools/word-counter/">ورڈ کاؤنٹر کھولیں</a></p>
+
+          <section class="tsection" aria-labelledby="steps-h-ur">
+            <h2 id="steps-h-ur">مراحل</h2>
+<ol class="thowto">
+          <li><div><h3>اپنا متن چسپاں کریں یا لکھیں</h3><p>باکس میں مضمون، آرٹیکل، کیپشن یا اسکرپٹ ڈالیں۔ لکھتے ہی اعداد براہ راست اپ ڈیٹ ہوتے ہیں۔</p></div></li>
+          <li><div><h3>اہم اعداد پڑھیں</h3><p>الفاظ، حروف، جملے، پیراگراف، پڑھنے کا وقت اور بولنے کا وقت فوراً ظاہر ہوتے ہیں۔</p></div></li>
+          <li><div><h3>کلیدی لفظ کی کثافت چیک کریں</h3><p>اپنے ٹاپ 10 کلیدی الفاظ دیکھیں — SEO چیک اور بار بار استعمال ہونے والے الفاظ پکڑنے کے لیے مفید۔</p></div></li>
+          <li><div><h3>ہدف لمبائی حاصل کریں</h3><p>کسی حد کے مطابق لکھ رہے ہیں؟ ہدف پر عین اترنے کے لیے تراشتے یا بڑھاتے وقت کاؤنٹر دیکھیں۔</p></div></li>
+          <li><div><h3>رپورٹ کاپی کریں</h3><p>ایک کلک سے مکمل اعداد آپ کے کلپ بورڈ میں کاپی ہو جاتے ہیں — رپورٹس اور جمع کرانے کے لیے۔</p></div></li>
+        </ol>
+          </section>
+
+          <section class="tsection collapsible" aria-labelledby="tips-h-ur">
+            <h2 id="tips-h-ur">ماہرانہ مشورے</h2>
+<ul>
+          <li><strong>پڑھنے کا وقت ≈ الفاظ ÷ 200۔</strong> بولنے کا وقت سست ہوتا ہے — تقریباً 130 الفاظ فی منٹ۔</li>
+          <li><strong>کلیدی لفظ بھرنے سے ہوشیار رہیں۔</strong> اگر ایک لفظ ٹاپ 10 فہرست پر حاوی ہو تو ذخیرہ الفاظ متنوع کریں۔</li>
+          <li><strong>اردو متن کے ساتھ بھی کام کرتا ہے۔</strong> اردو رسم الخط چسپاں کریں اور درست گنتی حاصل کریں۔</li>
+        </ul>
+          </section>
+
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h-ur">
+            <h2 id="faq-h-ur">اکثر پوچھے گئے سوالات</h2>
+        <details><summary>کیا میرا متن کہیں اپ لوڈ ہوتا ہے؟</summary><p class="tfaq-a">نہیں — گنتی مکمل طور پر آپ کے براؤزر میں ہوتی ہے۔ آپ کا متن آپ کے آلے سے کبھی باہر نہیں جاتا۔</p></details>
+        <details><summary>لفظ کسے شمار کیا جاتا ہے؟</summary><p class="tfaq-a">حروف/اعداد کے تسلسل جو خالی جگہ یا علامات سے الگ ہوں۔ ہائفن والے الفاظ ایک شمار ہوتے ہیں۔</p></details>
+        <details><summary>کیا میں PDF یا Word فائل میں الفاظ گن سکتا ہوں؟</summary><p class="tfaq-a">دستاویز سے متن کاپی کر کے کاؤنٹر میں چسپاں کریں — فارمیٹنگ نظر انداز ہوتی ہے، صرف متن گنا جاتا ہے۔</p></details>
+          </section>
+
+          <section class="tsection" aria-labelledby="rel-h-ur">
+            <h2 id="rel-h-ur">متعلقہ ٹولز</h2>
+<div class="trelated">
+          <a class="trel-card" href="../tools/word-counter/"><h3>ورڈ کاؤنٹر</h3><p>براہ راست لفظ، حرف اور پڑھنے کے وقت کے اعداد۔</p></a>
+          <a class="trel-card" href="../tools/case-converter/"><h3>کیس کنورٹر</h3><p>UPPER، lower، Title Case اور مزید۔</p></a>
+        </div>
+          </section>        </div>
       </section>
     </div>
   </section>
@@ -72,6 +126,7 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
+<script src="../js/guide-toggle.js" defer></script>
 <script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("guides"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
 </body>
 </html>
