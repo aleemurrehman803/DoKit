@@ -607,9 +607,9 @@ input[type="range"].slider {
 .dk-fab {
   position: fixed;
   inset-block-end: var(--sp-5);
-  inset-inline-end: var(--sp-5);
-  inline-size: 3.5rem;
-  block-size: 3.5rem;
+  inset-inline-start: var(--sp-5);
+  inline-size: 4rem;
+  block-size: 4rem;
   border-radius: 50%;
   border: none;
   overflow: hidden;
