@@ -32,6 +32,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   renderJourney();
 
+  /* ---- Cloud sync: merge Firestore history when signed in ---- */
+  function doCloudSync() {
+    if (!window.DKSync) return;
+    try {
+      DKSync.sync().then(function () {
+        renderJourney(); // re-render with merged data
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  // Sync after a short delay (let Firebase auth initialize)
+  setTimeout(doCloudSync, 2000);
+  // Also sync when page becomes visible again
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) doCloudSync();
+  });
+
   var nameEl = document.getElementById("dashName");
   var emailEl = document.getElementById("dashEmail");
   var sinceEl = document.getElementById("dashSince");
