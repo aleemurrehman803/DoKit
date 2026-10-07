@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typing/games.html">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#6C4CF1">
@@ -11,6 +12,16 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>Typing Games — TypeMaster</title>
 <meta name="description" content="Make typing practice fun with TypeMaster games: falling words and word sprint challenges with live scores.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Typing Games — TypeMaster">
+<meta property="og:description" content="Make typing practice fun with TypeMaster games: falling words and word sprint challenges with live scores.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typing/games.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Typing Games — TypeMaster">
+<meta name="twitter:description" content="Make typing practice fun with TypeMaster games: falling words and word sprint challenges with live scores.">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -28,13 +39,13 @@
       <h2 class="section-title" data-i18n="wf_title">Word Fall</h2>
       <p class="text-muted" data-i18n="wf_desc">Type falling words before they reach the bottom.</p>
       <p class="best-line"><span data-i18n="wf_best">Best</span>: <strong id="wfBest">0</strong></p>
-      <button class="btn btn-primary" id="wfStart" data-i18n="wf_start">Play</button>
+      <button type="button" class="btn btn-primary" id="wfStart" data-i18n="wf_start">Play</button>
     </div>
     <div class="card lift game-card">
       <h2 class="section-title" data-i18n="ws_title">Word Sprint</h2>
       <p class="text-muted" data-i18n="ws_desc">Type as many words as you can in 60 seconds.</p>
       <p class="best-line"><span data-i18n="ws_best">Best</span>: <strong id="wsBest">0</strong></p>
-      <button class="btn btn-primary" id="wsStart" data-i18n="ws_start">Play</button>
+      <button type="button" class="btn btn-primary" id="wsStart" data-i18n="ws_start">Play</button>
     </div>
   </div>
 
@@ -51,7 +62,7 @@
         <h2 class="section-title" id="goTitle">Game Over</h2>
         <p class="mt-2"><span data-i18n="d_go_score">Score</span>: <strong id="goScore">0</strong></p>
         <p class="text-muted"><span data-i18n="d_go_best">Best</span>: <strong id="goBest">0</strong></p>
-        <button class="btn btn-primary mt-2" id="playAgain" data-i18n="play_again">Play again</button>
+        <button type="button" class="btn btn-primary mt-2" id="playAgain" data-i18n="play_again">Play again</button>
       </div>
     </div>
   </section>
