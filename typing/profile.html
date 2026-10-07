@@ -10,19 +10,34 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Profile — TypeMaster</title>
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typing/profile.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typing/profile.html">
 <meta name="description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Profile — TypeMaster">
 <meta property="og:description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typing/profile.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typing/profile.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Profile — TypeMaster">
 <meta name="twitter:description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
 <link rel="stylesheet" href="css/main.css">
+<style>
+  /* Highlighted when arriving from the certificate page with an incomplete name. */
+  #nameCard.name-required {
+    border: 2px solid var(--warning, #E0A100);
+    box-shadow: 0 0 0 4px rgba(224, 161, 0, .15);
+  }
+  #nameCard .name-required-hint {
+    margin-top: .5rem;
+    font-size: .9rem;
+    color: var(--warning-text, #9A6B00);
+  }
+  [data-theme="dark"] #nameCard .name-required-hint {
+    color: var(--warning, #E0A100);
+  }
+</style>
 </head>
 <body>
 <div id="site-nav"></div>
@@ -33,13 +48,14 @@
     <p class="page-sub" id="userSub"></p>
   </div>
 
-  <div class="card mb-3">
+  <div class="card mb-3" id="nameCard">
     <h2 class="section-title" data-i18n="change_name">Change name</h2>
     <div class="field">
       <div class="picker-row" style="margin-bottom:0">
         <input type="text" id="nameInput" class="form-control" style="max-width:280px" data-i18n-ph="new_name" placeholder="New name">
         <button type="button" class="btn btn-primary btn-sm" id="nameBtn" data-i18n="save">Save</button>
       </div>
+      <p class="name-required-hint hidden" id="nameRequiredHint" data-i18n="profile_highlight_name">Please add your name — it is needed for your certificate.</p>
     </div>
   </div>
 
