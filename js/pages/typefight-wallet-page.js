@@ -1,3 +1,21 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "tfw_verified": "⛓ Ledger verified ({n} entries)",
+  "tfw_broken": "⚠ Chain broken at entry {n}",
+  "tfw_hist_fail": "Could not load history.",
+  "tfw_r_test": "Typing test complete",
+  "tfw_r_streak": "Daily streak",
+  "tfw_r_lesson": "Lesson complete",
+  "tfw_r_battle": "Battle — {place}",
+  "tfw_r_played": "played",
+  "tfw_ready": "Ready to claim.",
+  "tfw_wait": "Available in {wait}.",
+  "tfw_cooldown": "On cooldown — come back later",
+  "tfw_coins": "+{n} coins!",
+  "tfw_claim_fail": "Claim failed — try again",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — TypeFight wallet page controller.
  *
  * WHAT THIS DOES:
@@ -34,10 +52,10 @@ document.addEventListener("DOMContentLoaded", function () {
       chainBadge.style.display = "";
       if (r.ok) {
         chainBadge.className = "chain-badge chain-ok";
-        chainBadge.textContent = "⛓ Ledger verified (" + r.checked + " entries)";
+        chainBadge.textContent = dkT("tfw_verified").replace("{n}", r.checked);
       } else {
         chainBadge.className = "chain-badge chain-bad";
-        chainBadge.textContent = "⚠ Chain broken at entry " + (r.brokenAt + 1);
+        chainBadge.textContent = dkT("tfw_broken").replace("{n}", (r.brokenAt + 1));
       }
     }).catch(function () { chainBadge.style.display = "none"; });
 
@@ -55,19 +73,19 @@ document.addEventListener("DOMContentLoaded", function () {
                '<td style="text-align:end" class="' + cls + '">' + sign + amt + "</td></tr>";
       }).join("");
     }).catch(function () {
-      txnLoading.innerHTML = "<p style='color:var(--text-muted)'>Could not load history.</p>";
+      txnLoading.innerHTML = "<p style='color:var(--text-muted)'>" + dkT("tfw_hist_fail") + "</p>";
     });
   }
 
   /* Turn ledger reason codes into friendly labels. */
   function humanReason(reason) {
     var r = String(reason || "");
-    if (r.indexOf("earn:typing_test") === 0) return "Typing test complete";
-    if (r.indexOf("earn:daily_streak") === 0) return "Daily streak";
-    if (r.indexOf("earn:lesson_") === 0) return "Lesson complete";
+    if (r.indexOf("earn:typing_test") === 0) return dkT("tfw_r_test");
+    if (r.indexOf("earn:daily_streak") === 0) return dkT("tfw_r_streak");
+    if (r.indexOf("earn:lesson_") === 0) return dkT("tfw_r_lesson");
     if (r.indexOf("battle_") === 0) {
       var m = /place(\d)/.exec(r);
-      return "Battle — " + (m ? ("#" + m[1] + " place") : "played");
+      return dkT("tfw_r_battle").replace("{place}", (m ? ("#" + m[1] + " place") : dkT("tfw_r_played")));
     }
     return r;
   }
@@ -80,23 +98,23 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!currentUser) return;
       TF.getProfile(currentUser.uid).then(function (p) {
         var c = TFWallet.canEarn(p, key);
-        if (c.ok) { note.textContent = "Ready to claim."; btn.disabled = false; }
-        else { note.textContent = "Available in " + TFWallet.fmtWait(c.waitMs) + "."; btn.disabled = true; }
+        if (c.ok) { note.textContent = dkT("tfw_ready"); btn.disabled = false; }
+        else { note.textContent = dkT("tfw_wait").replace("{wait}", TFWallet.fmtWait(c.waitMs)); btn.disabled = true; }
       }).catch(function () {});
     }
     btn.addEventListener("click", function () {
       btn.disabled = true;
       TFWallet.claim(currentUser.uid, key).then(function (res) {
         if (res.error === "cooldown") {
-          note.textContent = "Available in " + TFWallet.fmtWait(res.waitMs) + ".";
-          toast("On cooldown — come back later");
+          note.textContent = dkT("tfw_wait").replace("{wait}", TFWallet.fmtWait(res.waitMs));
+          toast(dkT("tfw_cooldown"));
         } else {
-          toast("+" + res.coins + " coins!");
+          toast(dkT("tfw_coins").replace("{n}", res.coins));
           refresh(currentUser.uid);
         }
         updateNote();
       }).catch(function () {
-        toast("Claim failed — try again");
+        toast(dkT("tfw_claim_fail"));
         btn.disabled = false;
       });
     });
