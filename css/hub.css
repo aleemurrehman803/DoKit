@@ -139,7 +139,7 @@ img, svg { max-inline-size: 100%; block-size: auto; }
   animation: dk-spin 0.7s linear infinite;
 }
 @keyframes dk-spin { to { transform: rotate(360deg); } }
-.btn-sm { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
+.btn-sm { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 .btn-block { inline-size: 100%; }
 
 /* ---------- Card ---------- */
