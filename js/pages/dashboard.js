@@ -5,6 +5,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
 
+  /* ---- Your Journey timeline ---- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function renderJourney() {
+    var list = document.getElementById("journeyList");
+    var empty = document.getElementById("journeyEmpty");
+    if (!list || !empty) return;
+    var items = (window.Journey && Journey.get()) || [];
+    if (!items.length) {
+      list.innerHTML = "";
+      empty.style.display = "";
+      return;
+    }
+    empty.style.display = "none";
+    list.innerHTML = items.map(function (it) {
+      var icon = window.Journey ? Journey.iconFor(it.tool) : "🧰";
+      var when = window.Journey ? Journey.relTime(it.ts) : "";
+      return '<li class="journey-item"><span class="journey-dot" aria-hidden="true">' + icon +
+        '</span><p><strong>' + esc(it.tool) + "</strong> — " + esc(it.action) +
+        '</p><p class="journey-time">' + esc(when) + "</p></li>";
+    }).join("");
+  }
+  renderJourney();
+
   var nameEl = document.getElementById("dashName");
   var emailEl = document.getElementById("dashEmail");
   var sinceEl = document.getElementById("dashSince");
