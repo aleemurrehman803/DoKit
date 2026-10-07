@@ -113,44 +113,49 @@
         <h1 data-i18n="faq_title">Frequently asked questions</h1>
         <p data-i18n="faq_subtitle">Everything you need to know about DoKit.</p>
       </div>
+      <!-- Scroll-reveal: each FAQ item fades/slides in with an 80ms stagger as it
+           enters the viewport. Handled by the shared .reveal system
+           (css/hub.css + js/ui.js initReveal): IntersectionObserver adds
+           .visible, data-delay sets the stagger, prefers-reduced-motion and
+           no-JS fallbacks are built in. -->
       <div class="faq-accordion" id="faqList">
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="0">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q1">Is DoKit free?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a1">Yes! All basic tools are completely free. Pro plans unlock premium features.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="80">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q2">Where do my files go?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a2">Your files are processed in your browser and never uploaded to our servers. Your privacy is guaranteed.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="160">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q3">Do I need an account?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a3">No for basic tools. Account needed for saving progress, coins, and premium features.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="240">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q4">Which browsers are supported?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a4">All modern browsers: Chrome, Firefox, Safari, Edge.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="320">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q5">Is there a mobile app?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a5">No native app yet, but the website works perfectly on mobile.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="400">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q6">What is TypeMaster?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a6">Our typing tutor section with lessons, tests, and games.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="480">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q7">How do I earn coins?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a7">Compete in TypeFight typing battles, check in every day for streak rewards, and invite friends with your referral link. Coins unlock premium perks and extras — no purchase ever needed.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="560">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q8">What payment methods do you accept?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a8">We accept Easypaisa, JazzCash, bank transfer, USDT, and credit/debit cards for Pro and Team plans — so you can pay the way that's easiest for you.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="640">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q9">Is my data safe?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p data-i18n="faq_a9">Yes. DoKit is privacy-first: your files are processed in your browser and never uploaded, and any account data is protected by secured Firebase rules. We never sell your data, and we show no ads and run no tracking scripts.</p></div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="720">
           <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="faq_q10">How do I contact support?</span><span class="faq-icon" aria-hidden="true">+</span></button>
           <div class="faq-a"><p><span data-i18n="faq_a10a">Email us anytime at</span> <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a> <span data-i18n="faq_a10b">— we read every message personally and usually reply within 24–48 hours.</span></p></div>
         </div>
@@ -161,6 +166,7 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
 <script src="js/i18n-faq-en.js" defer></script>
 <script src="js/i18n-faq-ur.js" defer></script>
 <script src="js/ui.js" defer></script>
