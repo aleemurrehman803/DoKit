@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typing/certificate.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typing/certificate.html">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#6C4CF1">
@@ -15,8 +15,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Typing Certificate — TypeMaster">
 <meta property="og:description" content="Earn your TypeMaster typing certificate: your name, best WPM, accuracy, and date on a printable award.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typing/certificate.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typing/certificate.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -51,8 +51,16 @@
     </div>
   </div>
 
-  <div class="text-center mt-3">
+  <div class="text-center mt-3" id="printWrap">
     <button type="button" class="btn btn-primary btn-lg no-print" id="printBtn" data-i18n="cert_print">Print Certificate</button>
+  </div>
+
+  <div id="certProfile" class="hidden card text-center mt-3" style="border:2px solid var(--warning,#E0A100)">
+    <div style="font-size:2.5rem" aria-hidden="true">📝</div>
+    <h2 data-i18n="cert_profile_title">Complete Your Profile</h2>
+    <p data-i18n="cert_profile_msg">Your name is required for the certificate.</p>
+    <p class="text-muted" data-i18n="cert_profile_note">Add your full name so it appears on your certificate.</p>
+    <a class="btn btn-primary mt-2" href="profile.html?from=certificate" data-i18n="cert_profile_btn">Update Profile</a>
   </div>
 
   <div id="certLogin" class="hidden card text-center mt-3">
