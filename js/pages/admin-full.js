@@ -166,7 +166,10 @@
     { id: "users",     label: "👥 Users" },
     { id: "content",   label: "🧩 Content" },
     { id: "audit",     label: "📜 Audit log" },
-    { id: "security",  label: "🔐 Security" }
+    { id: "security",  label: "🔐 Security" },
+    { id: "deposits",  label: "💰 Deposits" },
+    { id: "withdrawals", label: "💸 Withdrawals" },
+    { id: "paysettings", label: "⚙️ Pay settings" }
   ];
 
   function wireTabs() {
@@ -613,6 +616,427 @@
       });
   }
 
+  /* ================= 6. DEPOSITS (manual verification) ================= */
+
+  /**
+   * Load pending deposits for admin review.
+   * Each row shows user info, amount, method, txn ID, sender, and screenshot.
+   * Admin can Approve (credits coins 1:1 via atomic transaction) or Reject.
+   */
+  function loadDeposits() {
+    var d = db();
+    var body = $("admDepBody");
+    if (!body) return;
+    if (!d) { body.innerHTML = '<tr><td colspan="8">' + errHtml("Database unavailable.") + "</td></tr>"; return; }
+
+    body.innerHTML = '<tr><td colspan="8"><span class="adm-spin" aria-hidden="true"></span></td></tr>';
+
+    d.collection("deposits").where("status", "==", "pending")
+      .orderBy("createdAtMs", "desc").limit(50).get()
+      .then(function (snap) {
+        var countEl = $("admDepCount");
+        if (countEl) countEl.textContent = "(" + snap.size + " pending)";
+
+        if (snap.empty) {
+          body.innerHTML = '<tr><td colspan="8" style="color:var(--text-muted)">No pending deposits. 🎉</td></tr>';
+          return;
+        }
+
+        // Resolve user names for display
+        var rows = [];
+        var promises = [];
+        snap.forEach(function (doc) {
+          var dep = Object.assign({ id: doc.id }, doc.data());
+          promises.push(
+            d.collection("users").doc(dep.userId).get().then(function (uSnap) {
+              var uname = "Unknown";
+              var uemail = "";
+              if (uSnap.exists) {
+                var ud = uSnap.data() || {};
+                uname = ud.displayName || ud.name || "User";
+                uemail = ud.email || "";
+              }
+              rows.push({ dep: dep, uname: uname, uemail: uemail });
+            }).catch(function () {
+              rows.push({ dep: dep, uname: "Unknown", uemail: "" });
+            })
+          );
+        });
+
+        Promise.all(promises).then(function () {
+          // Sort by createdAtMs desc (already ordered, but ensure after async)
+          rows.sort(function (a, b) { return (b.dep.createdAtMs || 0) - (a.dep.createdAtMs || 0); });
+          body.innerHTML = rows.map(function (r) {
+            var dep = r.dep;
+            var shotBtn = dep.screenshot
+              ? '<button class="btn btn-sm" type="button" data-shot="' + dep.id + '">🖼️ View</button>'
+              : '<span style="color:var(--text-muted)">—</span>';
+            return "<tr>" +
+              "<td>" + fmtTime(dep.createdAtMs) + "</td>" +
+              "<td>" + esc(r.uname) + "<br><small style='color:var(--text-muted)'>" + esc(r.uemail) + "</small></td>" +
+              "<td><strong>Rs " + esc(dep.amount) + "</strong></td>" +
+              "<td>" + esc(dep.method) + "</td>" +
+              "<td><code>" + esc(dep.txnId) + "</code></td>" +
+              "<td><code>" + esc(dep.sender) + "</code></td>" +
+              "<td>" + shotBtn + "</td>" +
+              "<td style='white-space:nowrap'>" +
+              '<button class="btn btn-sm btn-primary" type="button" data-approve-dep="' + dep.id + '" data-amt="' + dep.amount + '" data-uid="' + dep.userId + '">✅ Approve</button> ' +
+              '<button class="btn btn-sm" type="button" data-reject-dep="' + dep.id + '">❌ Reject</button>' +
+              "</td></tr>";
+          }).join("");
+
+          // Store screenshots for the view buttons
+          rows.forEach(function (r) {
+            if (r.dep.screenshot) {
+              var btn = body.querySelector('[data-shot="' + r.dep.id + '"]');
+              if (btn) btn._shotData = r.dep.screenshot;
+            }
+          });
+        });
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="8">' + errHtml("Could not load deposits. " + friendlyDbErr(err)) + "</td></tr>";
+      });
+  }
+
+  /**
+   * Approve a deposit: atomically credit coins 1:1 + hash-chained ledger entry
+   * + mark deposit as approved. Uses a Firestore transaction (all-or-nothing).
+   */
+  function approveDeposit(depId, amount, userId) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm("Approve deposit of Rs " + amount + "?\n\nThis will credit " + amount + " coins to the user.")) return;
+
+    var adminUid = currentAdminUid();
+    var depRef = d.collection("deposits").doc(depId);
+    var userRef = d.collection("users").doc(userId);
+    var ledgerRef = userRef.collection("coin_ledger").doc();
+
+    d.runTransaction(function (tx) {
+      return tx.get(depRef).then(function (depSnap) {
+        if (!depSnap.exists) throw new Error("Deposit not found.");
+        var depData = depSnap.data();
+        if (depData.status !== "pending") throw new Error("Deposit is no longer pending.");
+
+        return tx.get(userRef).then(function (userSnap) {
+          var udata = userSnap.exists ? userSnap.data() : {};
+          var curCoins = Number(udata.coins) || 0;
+          var lastHash = udata.wallet_lastHash || "GENESIS";
+          var newCoins = curCoins + amount;
+
+          // Hash-chained ledger entry (tamper-evident)
+          var entryData = {
+            type: "deposit",
+            amount: amount,
+            prevHash: lastHash,
+            timestamp: Date.now(),
+            depositId: depId
+          };
+          var entryHash = simpleHash(JSON.stringify(entryData) + lastHash);
+
+          // Atomic: update balance + ledger + deposit status
+          tx.update(userRef, {
+            coins: newCoins,
+            wallet_lastHash: entryHash
+          });
+          tx.set(ledgerRef, Object.assign({}, entryData, { hash: entryHash }));
+          tx.update(depRef, {
+            status: "approved",
+            reviewedBy: adminUid,
+            reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            reviewedAtMs: Date.now()
+          });
+        });
+      });
+    }).then(function () {
+      auditAdmin("deposit_approved", { depositId: depId, userId: userId, amount: amount });
+      loadDeposits();
+      loadDashboard();
+    }).catch(function (err) {
+      alert("Failed to approve: " + (err.message || "Unknown error"));
+    });
+  }
+
+  /**
+   * Reject a deposit with a reason. No coins are credited.
+   */
+  function rejectDeposit(depId) {
+    var d = db();
+    if (!d) return;
+    var reason = window.prompt("Rejection reason (shown to user):", "Transaction not found");
+    if (reason === null) return; // cancelled
+
+    d.collection("deposits").doc(depId).update({
+      status: "rejected",
+      rejectReason: String(reason).slice(0, 200),
+      reviewedBy: currentAdminUid(),
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedAtMs: Date.now()
+    }).then(function () {
+      auditAdmin("deposit_rejected", { depositId: depId, reason: reason });
+      loadDeposits();
+    }).catch(function (err) {
+      alert("Failed to reject: " + (err.message || "Unknown error"));
+    });
+  }
+
+  /* ================= 7. WITHDRAWALS (manual processing) ================= */
+
+  /**
+   * Load pending withdrawals for admin review.
+   * Admin sends money manually, then marks as processed.
+   * Rejecting refunds the locked coins back to available balance.
+   */
+  function loadWithdrawals() {
+    var d = db();
+    var body = $("admWdBody");
+    if (!body) return;
+    if (!d) { body.innerHTML = '<tr><td colspan="6">' + errHtml("Database unavailable.") + "</td></tr>"; return; }
+
+    body.innerHTML = '<tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr>';
+
+    d.collection("withdrawals").where("status", "==", "pending")
+      .orderBy("createdAtMs", "desc").limit(50).get()
+      .then(function (snap) {
+        var countEl = $("admWdCount");
+        if (countEl) countEl.textContent = "(" + snap.size + " pending)";
+
+        if (snap.empty) {
+          body.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted)">No pending withdrawals. 🎉</td></tr>';
+          return;
+        }
+
+        var rows = [];
+        var promises = [];
+        snap.forEach(function (doc) {
+          var wd = Object.assign({ id: doc.id }, doc.data());
+          promises.push(
+            d.collection("users").doc(wd.userId).get().then(function (uSnap) {
+              var uname = "Unknown", uemail = "";
+              if (uSnap.exists) {
+                var ud = uSnap.data() || {};
+                uname = ud.displayName || ud.name || "User";
+                uemail = ud.email || "";
+              }
+              rows.push({ wd: wd, uname: uname, uemail: uemail });
+            }).catch(function () {
+              rows.push({ wd: wd, uname: "Unknown", uemail: "" });
+            })
+          );
+        });
+
+        Promise.all(promises).then(function () {
+          rows.sort(function (a, b) { return (b.wd.createdAtMs || 0) - (a.wd.createdAtMs || 0); });
+          body.innerHTML = rows.map(function (r) {
+            var wd = r.wd;
+            return "<tr>" +
+              "<td>" + fmtTime(wd.createdAtMs) + "</td>" +
+              "<td>" + esc(r.uname) + "<br><small style='color:var(--text-muted)'>" + esc(r.uemail) + "</small></td>" +
+              "<td><strong>Rs " + esc(wd.amount) + "</strong></td>" +
+              "<td>" + esc(wd.method) + "</td>" +
+              "<td><code>" + esc(wd.account) + "</code></td>" +
+              "<td style='white-space:nowrap'>" +
+              '<button class="btn btn-sm btn-primary" type="button" data-process-wd="' + wd.id + '" data-amt="' + wd.amount + '">✅ Processed</button> ' +
+              '<button class="btn btn-sm" type="button" data-reject-wd="' + wd.id + '" data-uid="' + wd.userId + '" data-amt="' + wd.amount + '">❌ Reject</button>' +
+              "</td></tr>";
+          }).join("");
+        });
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="6">' + errHtml("Could not load withdrawals. " + friendlyDbErr(err)) + "</td></tr>";
+      });
+  }
+
+  /**
+   * Mark a withdrawal as processed (admin has sent the money manually).
+   * The locked coins stay deducted (they were already removed from available).
+   */
+  function processWithdrawal(wdId, amount) {
+    var d = db();
+    if (!d) return;
+    if (!window.confirm(
+      "Mark withdrawal of Rs " + amount + " as PROCESSED?\n\n" +
+      "Only click this AFTER you have manually sent the money to the user's account."
+    )) return;
+
+    var wdRef = d.collection("withdrawals").doc(wdId);
+
+    d.runTransaction(function (tx) {
+      return tx.get(wdRef).then(function (snap) {
+        if (!snap.exists) throw new Error("Withdrawal not found.");
+        if (snap.data().status !== "pending") throw new Error("Withdrawal is no longer pending.");
+        tx.update(wdRef, {
+          status: "processed",
+          processedBy: currentAdminUid(),
+          processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          processedAtMs: Date.now()
+        });
+      });
+    }).then(function () {
+      auditAdmin("withdrawal_processed", { withdrawalId: wdId, amount: amount });
+      loadWithdrawals();
+    }).catch(function (err) {
+      alert("Failed: " + (err.message || "Unknown error"));
+    });
+  }
+
+  /**
+   * Reject a withdrawal: refund the locked coins back to available balance.
+   * Atomically decrements pending_withdrawal (coins become available again).
+   */
+  function rejectWithdrawal(wdId, userId, amount) {
+    var d = db();
+    if (!d) return;
+    var reason = window.prompt("Rejection reason (shown to user):", "Invalid account details");
+    if (reason === null) return;
+
+    var wdRef = d.collection("withdrawals").doc(wdId);
+    var userRef = d.collection("users").doc(userId);
+    amount = Number(amount) || 0;
+
+    d.runTransaction(function (tx) {
+      return tx.get(wdRef).then(function (wdSnap) {
+        if (!wdSnap.exists) throw new Error("Withdrawal not found.");
+        if (wdSnap.data().status !== "pending") throw new Error("Withdrawal is no longer pending.");
+
+        return tx.get(userRef).then(function (userSnap) {
+          var udata = userSnap.exists ? userSnap.data() : {};
+          var pending = Number(udata.pending_withdrawal) || 0;
+
+          // Refund: reduce the locked amount (coins become available again)
+          tx.update(userRef, {
+            pending_withdrawal: Math.max(0, pending - amount)
+          });
+          tx.update(wdRef, {
+            status: "rejected",
+            rejectReason: String(reason).slice(0, 200),
+            processedBy: currentAdminUid(),
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            processedAtMs: Date.now()
+          });
+        });
+      });
+    }).then(function () {
+      auditAdmin("withdrawal_rejected", { withdrawalId: wdId, userId: userId, amount: amount, reason: reason });
+      loadWithdrawals();
+    }).catch(function (err) {
+      alert("Failed: " + (err.message || "Unknown error"));
+    });
+  }
+
+  /* ================= 8. PAYMENT SETTINGS ================= */
+
+  /**
+   * Load current payment accounts into the admin form.
+   */
+  function loadPaySettings() {
+    var d = db();
+    if (!d) return;
+    d.collection("config").doc("payments").get().then(function (snap) {
+      var c = snap.exists ? snap.data() : {};
+      var e1 = $("admPayEasypaisa"), e2 = $("admPayJazzcash"), e3 = $("admPayUsdt");
+      if (e1) e1.value = c.easypaisa_number || "";
+      if (e2) e2.value = c.jazzcash_number || "";
+      if (e3) e3.value = c.usdt_address || "";
+    }).catch(function () {});
+  }
+
+  /**
+   * Save payment accounts. Validates non-empty before writing.
+   */
+  function wirePaySettings() {
+    var form = $("admPayForm");
+    if (!form || form.dataset.wired) return;
+    form.dataset.wired = "1";
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var d = db();
+      if (!d) return;
+      var msg = $("admPayMsg");
+
+      var ep = ($("admPayEasypaisa").value || "").trim();
+      var jc = ($("admPayJazzcash").value || "").trim();
+      var usdt = ($("admPayUsdt").value || "").trim();
+
+      if (!ep || !jc || !usdt) {
+        if (msg) { msg.textContent = "All three accounts are required."; msg.style.display = ""; msg.style.color = "#C93A3A"; }
+        return;
+      }
+
+      d.collection("config").doc("payments").set({
+        easypaisa_number: ep,
+        jazzcash_number: jc,
+        usdt_address: usdt,
+        updatedBy: currentAdminUid(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).then(function () {
+        auditAdmin("payment_settings_updated", {});
+        if (msg) { msg.textContent = "✅ Payment accounts saved."; msg.style.display = ""; msg.style.color = "#1F7A4D"; }
+      }).catch(function (err) {
+        if (msg) { msg.textContent = "Failed: " + (err.message || "Unknown"); msg.style.display = ""; msg.style.color = "#C93A3A"; }
+      });
+    });
+  }
+
+  /* ---- shared helpers for the payment tabs ---- */
+
+  function currentAdminUid() {
+    try {
+      var a = (window.DKF && DKF.auth && DKF.auth()) || null;
+      return (a && a.currentUser && a.currentUser.uid) || "unknown";
+    } catch (e) { return "unknown"; }
+  }
+
+  function fmtTime(ms) {
+    try { return new Date(Number(ms) || 0).toLocaleString(); } catch (e) { return "—"; }
+  }
+
+  /**
+   * Simple non-crypto hash for ledger chaining display.
+   * NOTE: production should use SHA-256 (see typefight.js TFT.hash).
+   */
+  function simpleHash(str) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < str.length; i++) {
+      var ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
+  }
+
+  /**
+   * Wire click handlers for deposit/withdrawal action buttons (event delegation).
+   */
+  function wirePaymentActions() {
+    document.addEventListener("click", function (ev) {
+      var t = ev.target.closest("[data-approve-dep],[data-reject-dep],[data-process-wd],[data-reject-wd],[data-shot]");
+      if (!t) return;
+
+      if (t.hasAttribute("data-approve-dep")) {
+        approveDeposit(t.getAttribute("data-approve-dep"),
+          Number(t.getAttribute("data-amt")) || 0,
+          t.getAttribute("data-uid"));
+      } else if (t.hasAttribute("data-reject-dep")) {
+        rejectDeposit(t.getAttribute("data-reject-dep"));
+      } else if (t.hasAttribute("data-process-wd")) {
+        processWithdrawal(t.getAttribute("data-process-wd"),
+          Number(t.getAttribute("data-amt")) || 0);
+      } else if (t.hasAttribute("data-reject-wd")) {
+        rejectWithdrawal(t.getAttribute("data-reject-wd"),
+          t.getAttribute("data-uid"),
+          Number(t.getAttribute("data-amt")) || 0);
+      } else if (t.hasAttribute("data-shot") && t._shotData) {
+        // Open screenshot in a new window
+        var w = window.open("", "_blank", "width=600,height=600");
+        if (w) w.document.write('<img src="' + t._shotData + '" style="max-width:100%">');
+      }
+    });
+  }
+
   function friendlyDbErr(err) {
     var code = (err && err.code) || "";
     if (code === "permission-denied") return "Permission denied — check Firestore security rules for admin reads.";
@@ -625,15 +1049,25 @@
   function boot() {
     wireTabs();
     wireUsers();
+    wirePaymentActions();
+    wirePaySettings();
     loadDashboard();
     loadUsers();
     loadContent();
     loadAudit();
-    // Refresh audit when its tab is opened (it may have new entries).
+    loadSecurityEvents();
+    loadPaySettings();
+    // Refresh tabs when opened (new entries may exist).
     var bar = $("admTabs");
     if (bar) bar.addEventListener("click", function (ev) {
       var btn = ev.target.closest("[data-tab]");
-      if (btn && btn.getAttribute("data-tab") === "audit") loadAudit();
+      if (!btn) return;
+      var tab = btn.getAttribute("data-tab");
+      if (tab === "audit") loadAudit();
+      if (tab === "security") loadSecurityEvents();
+      if (tab === "deposits") loadDeposits();
+      if (tab === "withdrawals") loadWithdrawals();
+      if (tab === "paysettings") loadPaySettings();
     });
   }
 
