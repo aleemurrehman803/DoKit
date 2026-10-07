@@ -13,11 +13,12 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
   /* ---------- tiny helpers ---------- */
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-  function esc(s) {
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
-  }
+  };
   function t(key, fallback) {
     try {
       if (window.DKI18N && typeof window.DKI18N.t === "function") {
@@ -688,11 +689,7 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
   function refreshI18n() {
     try { if (window.DKI18N && typeof window.DKI18N.refresh === "function") window.DKI18N.refresh(); } catch (e) {}
   }
-  function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
+  /* (duplicate esc removed Oct 7, 2026 — identical definition at top of this IIFE) */
   function lsGet(key, dflt) {
     try {
       var v = window.localStorage.getItem(key);
