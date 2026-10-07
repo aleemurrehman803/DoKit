@@ -41,24 +41,24 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
           <li><a href="./">Home</a></li>
-          <li aria-current="page">Contact us</li>
+          <li aria-current="page" data-i18n="contact_title">Contact us</li>
         </ol>
       </nav>
       <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
-      <h1>We'd love to hear from you!</h1>
-      <p style="color:var(--text-muted)">Questions, ideas, bug reports, tool suggestions — every message is read personally. Nothing goes to a bot; your note reaches the person who built DoKit.</p>
+      <h1 data-i18n="contact_title">We'd love to hear from you!</h1>
+      <p style="color:var(--text-muted)" data-i18n="contact_sub">Questions, ideas, bug reports, tool suggestions — every message is read personally. Nothing goes to a bot; your note reaches the person who built DoKit.</p>
 
       <form id="dk-contact-form" class="card" style="margin-block:var(--sp-5)" novalidate>
         <div class="field">
-          <label for="cfName">Your name</label>
+          <label for="cfName" data-i18n="form_name">Your name</label>
           <input class="text-input" type="text" id="cfName" name="name" required autocomplete="name" maxlength="80">
         </div>
         <div class="field">
-          <label for="cfEmail">Your email</label>
+          <label for="cfEmail" data-i18n="form_email">Your email</label>
           <input class="text-input" type="email" id="cfEmail" name="email" required autocomplete="email" dir="ltr" maxlength="120">
         </div>
         <div class="field">
-          <label for="cfSubject">Subject</label>
+          <label for="cfSubject" data-i18n="form_subject">Subject</label>
           <select class="text-input" id="cfSubject" name="subject" required>
             <option value="Question">Question</option>
             <option value="Bug report">Bug report</option>
@@ -68,10 +68,10 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
           </select>
         </div>
         <div class="field">
-          <label for="cfMessage">Message</label>
+          <label for="cfMessage" data-i18n="form_message">Message</label>
           <textarea class="textarea" id="cfMessage" name="message" required maxlength="5000" rows="5" placeholder="Tell us what's on your mind…"></textarea>
         </div>
-        <button class="btn btn-primary btn-block" type="submit">Send message</button>
+        <button class="btn btn-primary btn-block" type="submit" data-i18n="form_send">Send message</button>
         <p style="margin:var(--sp-3) 0 0;color:var(--text-muted);font-size:var(--fs-sm)">Your message is saved securely; if anything goes wrong, your email app opens with everything pre-filled instead — so you never lose your words.</p>
       </form>
 
@@ -81,7 +81,7 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
       </div>
 
       <div class="card" style="margin-top:var(--sp-5)">
-        <h3 style="margin-top:0">Prefer email directly?</h3>
+        <h3 style="margin-top:0" data-i18n="contact_note_t">Prefer email directly?</h3>
         <p style="margin:0">Write to <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a> — we usually reply within 24–48 hours.</p>
       </div>
       <p style="margin-top:var(--sp-4);color:var(--text-muted);font-size:var(--fs-sm)">⏱️ Response time: most messages get a personal reply within 24–48 hours, usually much sooner.</p>
@@ -90,6 +90,7 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
