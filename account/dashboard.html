@@ -12,6 +12,15 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<style>
+  .journey-timeline { list-style:none; padding:0; margin:var(--sp-3) 0 0; position:relative; }
+  .journey-timeline::before { content:""; position:absolute; top:8px; bottom:8px; inset-inline-start:15px; width:2px; background:var(--dk-border,#e3e1f0); border-radius:2px; }
+  .journey-item { position:relative; padding-inline-start:44px; padding-bottom:var(--sp-3); }
+  .journey-item:last-child { padding-bottom:0; }
+  .journey-dot { position:absolute; inset-inline-start:8px; top:2px; width:16px; height:16px; border-radius:50%; background:var(--dk-primary,#6C4CF1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.7rem; flex:none; }
+  .journey-item p { margin:0; }
+  .journey-time { color:var(--text-muted); font-size:var(--fs-sm); }
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -56,6 +65,12 @@
             <li>Current streak: <strong id="dashStreak">0 days</strong></li>
           </ul>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:var(--sp-5)">
+        <h2 style="margin-top:0">🕰️ Your Journey</h2>
+        <ul class="journey-timeline" id="journeyList"></ul>
+        <p id="journeyEmpty" style="color:var(--text-muted);margin-bottom:0">Your journey starts here — use any tool and it'll appear here.</p>
       </div>
 
       <div class="card" id="profileFormCard" style="display:none;margin-bottom:var(--sp-5)">
@@ -122,6 +137,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/journey.js" defer></script>
 <script src="../js/pages/dashboard.js" defer></script>
 </body>
 </html>
