@@ -17,7 +17,20 @@
   function ready() {
     if (!window.firebase) return false;
     try {
-      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        // Bot protection: Firebase App Check (reCAPTCHA Enterprise).
+        // Requests to Auth/Firestore carry an App Check token; the
+        // Firebase console enforces it once "Enforce" is turned on.
+        try {
+          if (firebase.appCheck) {
+            firebase.appCheck().activate(
+              new firebase.appCheck.ReCaptchaEnterpriseProvider("6LcljOItAAAAAASwSZRF2YrGeqG_8NgrWJiJctnb"),
+              true /* auto-refresh tokens */
+            );
+          }
+        } catch (e) { /* App Check optional: app still works unenforced */ }
+      }
       return true;
     } catch (e) { return false; }
   }
