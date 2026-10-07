@@ -32,23 +32,32 @@
   var aiReady = false;
 
   function init() {
+    // Model is provided by assistant-ai-init.js (module script)
+    // which loads the Firebase AI SDK and sets window.DKAI_MODEL
     try {
-      // Firebase AI Logic — uses firebase-ai.js SDK (loaded separately)
-      if (!window.firebase || !firebase.ai) return false;
-      if (!window.DKF || !DKF.app) return false;
-
-      var ai = firebase.ai.getAI(DKF.app());
-      // Use gemini-3.5-flash-lite (free tier, latest stable — 2.0 models deprecated Jun 2026)
-      model = firebase.ai.getGenerativeModel(ai, {
-        model: "gemini-3.5-flash-lite",
-        systemInstruction: SYSTEM_PROMPT
+      if (window.DKAI_MODEL) {
+        model = window.DKAI_MODEL;
+        aiReady = true;
+        return true;
+      }
+      // Wait for the module to load (async)
+      document.addEventListener("dk-ai-ready", function () {
+        if (window.DKAI_MODEL) {
+          model = window.DKAI_MODEL;
+          aiReady = true;
+        }
       });
-      aiReady = true;
-      return true;
+      return false;
     } catch (e) {
       aiReady = false;
       return false;
     }
+  }
+
+  // Called by the module script when model is ready
+  function onModelReady(m) {
+    model = m;
+    aiReady = true;
   }
 
   // Ask Gemini. Returns Promise<string|null> (null = failed, use fallback)
@@ -87,10 +96,18 @@
 
   window.DKAI = {
     init: init,
+    onModelReady: onModelReady,
     ask: ask,
     isReady: function () { return aiReady; },
     isOutOfScope: isOutOfScope,
     outOfScopeReply: OUT_OF_SCOPE_REPLY,
     systemPrompt: SYSTEM_PROMPT
   };
+
+  // Auto-init on load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
