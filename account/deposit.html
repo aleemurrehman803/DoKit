@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/deposit.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -49,8 +50,16 @@
               <option value="easypaisa">💚 Easypaisa</option>
               <option value="jazzcash">❤️ JazzCash</option>
               <option value="usdt">₮ USDT (TRC20)</option>
+              <option value="stripe">💳 Card (Stripe)</option>
             </select>
           </p>
+          <div id="stripeHint" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:0.75rem 1rem;margin-bottom:var(--sp-3)">
+            <p style="margin:0 0 0.5rem;font-size:var(--fs-sm)">
+              💳 Card payments use our secure Stripe checkout (bank-style form, 3-D Secure).
+              <span style="color:var(--text-muted)">Note: Stripe needs a supported-country account; Pakistan businesses should use Paddle or the manual methods above.</span>
+            </p>
+            <p style="margin:0"><a class="btn btn-primary btn-sm" href="stripe-checkout.html">Continue to secure card checkout →</a></p>
+          </div>
           <p>
             <label for="depTxn">Transaction ID / TID</label><br>
             <input class="text-input" type="text" id="depTxn" maxlength="64" placeholder="From your payment receipt" required style="width:100%">
@@ -85,6 +94,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/dk-utils.js" defer></script>
 <script src="../js/finsec.js" defer></script>
 <script src="../js/payments-real.js" defer></script>
 <script src="../js/pages/deposit.js" defer></script>
