@@ -42,6 +42,15 @@
       <h1>🪙 Coin wallet</h1>
       <p style="color:var(--text-muted)"><strong>Virtual coins only</strong> — no cash value, cannot be withdrawn or exchanged.</p>
 
+      <div class="card" style="margin-bottom:var(--sp-5);border-inline-start:4px solid #c93a3a">
+        <h3 style="margin-top:0">💸 Withdrawals — 🔒 LOCKED</h3>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:0">
+          Real-money withdrawals are <strong>locked</strong> pending legal clearance and payment rails.
+          When unlocked, a <strong>24-hour cooldown</strong> will apply between withdrawal requests,
+          and only verified deposits will be eligible. Virtual coins can never be withdrawn.
+        </p>
+      </div>
+
       <div id="tfGate" style="display:none">
         <div class="card" style="text-align:center">
           <h3>🔒 Sign in required</h3>
@@ -107,6 +116,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
 <script src="../js/typefight.js" defer></script>
+<script src="../js/finsec.js" defer></script>
 <script src="../js/typefight-wallet.js" defer></script>
 <script src="../js/pages/typefight-wallet-page.js" defer></script>
 </body>
