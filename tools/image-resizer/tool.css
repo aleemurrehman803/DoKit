@@ -412,3 +412,9 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
 .tqinfo{display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem;margin:.4rem 0 0;padding:.5rem .6rem;font-size:.8rem;background:var(--surface2,var(--surface));border-radius:.4rem;width:100%}
 .tqinfo dt{font-weight:600;opacity:.75}
 .tqinfo dd{margin:0;overflow-wrap:anywhere}
+
+/* FAQ language toggle (EN/UR) */
+.faq-lang-toggle { display:flex; gap:.5rem; margin:.5rem 0 1rem; }
+.faq-lang-btn { padding:.4rem 1.1rem; border:1px solid var(--dk-border,#d0d0d0); border-radius:999px; background:transparent; cursor:pointer; font:inherit; }
+.faq-lang-btn.is-active { font-weight:700; border-color:var(--dk-primary,#6C4CF1); }
+.faq-ur[lang="ur"] { text-align:right; }
