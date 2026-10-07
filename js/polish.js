@@ -471,23 +471,27 @@
 
   /* ============ Boot ============ */
   function boot() {
-    try {
-      initTypewriter();
-      initReveal();
-      initConfettiHook();
-      initCursorGlow();
-      initMagnetic();
-      initTilt();
-      initParallax();
-      initScrollProgress();
-      initRipple();
-      initCopyFeedback();
-      initBackToTop();
-      initNavShrink();
-      initTestimonialSlider();
-      initPricingToggle();
-      initSearchHighlight();
-    } catch (e) { /* polish is progressive enhancement; never break the page */ }
+    // Each init is isolated: one failure must not block the others.
+    var inits = [
+      initTypewriter,
+      initReveal,
+      initConfettiHook,
+      initCursorGlow,
+      initMagnetic,
+      initTilt,
+      initParallax,
+      initScrollProgress,
+      initRipple,
+      initCopyFeedback,
+      initBackToTop,
+      initNavShrink,
+      initTestimonialSlider,
+      initPricingToggle,
+      initSearchHighlight
+    ];
+    for (var i = 0; i < inits.length; i++) {
+      try { inits[i](); } catch (e) { /* polish is progressive enhancement; never break the page */ }
+    }
   }
 
   // Re-run reveal for dynamically injected content (SPA-ish page scripts).
