@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo Certificate — TypeMaster</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Georgia,serif;background:#f0ebff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.cert{background:#fff;border:3px solid #6C4CF1;border-radius:12px;max-width:700px;width:100%;padding:40px;text-align:center;box-shadow:0 10px 40px rgba(108,76,241,.2)}
+.cert h1{color:#6C4CF1;font-size:28px;margin-bottom:5px}
+.cert .sub{color:#666;font-size:14px;margin-bottom:20px}
+.cert .presented{font-style:italic;color:#888;margin:15px 0 5px}
+.cert .name{font-size:36px;color:#1a1a2e;margin:5px 0 15px;border-bottom:2px solid #6C4CF1;display:inline-block;padding-bottom:5px;min-width:300px}
+.stats{display:flex;justify-content:center;gap:30px;margin:20px 0}
+.stat{text-align:center}
+.stat .val{font-size:28px;font-weight:bold;color:#6C4CF1}
+.stat .lbl{font-size:12px;color:#888;text-transform:uppercase}
+.meta{margin:15px 0;font-size:14px;color:#555}
+.meta strong{color:#1a1a2e}
+.qr{margin:15px auto}
+.qr img{width:120px;height:120px;border:1px solid #ddd;border-radius:8px}
+.verify{margin-top:15px;padding-top:15px;border-top:1px dashed #ccc;font-size:13px;color:#666}
+.verify a{color:#6C4CF1;word-break:break-all}
+.reg{font-family:monospace;background:#f5f3ff;padding:5px 15px;border-radius:20px;display:inline-block;margin:10px 0;color:#6C4CF1;font-weight:bold}
+.demo-badge{background:#ff6b6b;color:#fff;padding:5px 20px;border-radius:20px;font-size:12px;display:inline-block;margin-bottom:15px;font-family:sans-serif}
+</style>
+</head>
+<body>
+<div class="cert">
+<div class="demo-badge">DEMO</div>
+<h1>🏆 Certificate of Typing Achievement</h1>
+<p class="sub">TypeMaster Certification Board</p>
+<p class="presented">Proudly presented to</p>
+<div class="name">Malik Jalil</div>
+<div class="stats">
+<div class="stat"><div class="val">65</div><div class="lbl">WPM</div></div>
+<div class="stat"><div class="val">98.5%</div><div class="lbl">Accuracy</div></div>
+</div>
+<div class="meta">Registration No: <span class="reg">DK-2026-A7X9K2</span></div>
+<div class="meta">Issued: <strong>October 7, 2026 at 7:38 PM</strong></div>
+<div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://aleemurrehman803.github.io/DoKit/typing/verify.html?reg=DK-2026-A7X9K2" alt="QR Code"></div>
+<div class="verify">Verify this certificate at:<br><a href="#">https://aleemurrehman803.github.io/DoKit/typing/verify.html?reg=DK-2026-A7X9K2</a></div>
+</div>
+</body>
+</html>
