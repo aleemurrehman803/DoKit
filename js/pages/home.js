@@ -23,7 +23,7 @@ var esc = (window.DKUtils && DKUtils.esc) || function(s){ return String(s).repla
    pastel: soft circular icon background per category (point: pastel icon cards). */
 var CATS=[
   {id:"image", icon:"\uD83D\uDDBC\uFE0F", pastel:"pastel-blue", titleKey:"cat_image_t", subKey:"cat_image_d",
-   tools:["image-resizer","image-compressor","image-converter"]},
+   tools:["image-resizer","image-compressor","image-converter","board-photo"]},
   {id:"text", icon:"\u270D\uFE0F", pastel:"pastel-mint", titleKey:"cat_text_t", subKey:"cat_text_d",
    tools:["word-counter","case-converter"]},
   {id:"typing", icon:"\u2328\uFE0F", pastel:"pastel-peach", titleKey:"cat_typing_t", subKey:"cat_typing_d",
