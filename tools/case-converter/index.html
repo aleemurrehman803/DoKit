@@ -130,12 +130,24 @@
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h">Frequently asked questions</h2>
-    <details><summary>How does Title Case handle hyphenated words?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>What is iNVERSE cAsE?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Does it work with Urdu text?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Is my text uploaded anywhere?</summary><p class="tfaq-a">…</p></details>
-      <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+  <h2 id="faq-h">Frequently asked questions</h2>
+  <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
+    <button type="button" class="faq-lang-btn is-active" data-faq-lang="en" aria-pressed="true">English</button>
+    <button type="button" class="faq-lang-btn" data-faq-lang="ur" aria-pressed="false">اردو</button>
+  </div>
+  <div class="faq-en">
+    <details><summary>How does Title Case handle hyphenated words?</summary><p class="tfaq-a">Each part gets capitalized separately — “well-known” becomes “Well-Known”. This matches standard title-case rules.</p></details>
+    <details><summary>What is iNVERSE cAsE?</summary><p class="tfaq-a">It flips the case of every letter: uppercase becomes lowercase and lowercase becomes uppercase. Numbers and symbols stay the same.</p></details>
+    <details><summary>Does it work with Urdu text?</summary><p class="tfaq-a">Urdu script has no upper/lowercase distinction, so Urdu words pass through unchanged while Latin words are converted.</p></details>
+    <details><summary>Is my text uploaded anywhere?</summary><p class="tfaq-a">Never — conversion happens entirely in your browser.</p></details>
+  </div>
+  <div class="faq-ur" hidden>
+    <details><summary lang="ur" dir="rtl">Title Case ہائفن والے الفاظ کے ساتھ کیسا سلوک کرتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">ہر حصہ الگ سے بڑے حرف میں لکھا جاتا ہے — “well-known” سے “Well-Known” بن جاتا ہے۔ یہ عنوانی حروف کے معیاری اصولوں کے مطابق ہے۔</p></details>
+    <details><summary lang="ur" dir="rtl">iNVERSE cAsE کیا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">یہ ہر حرف کا کیس الٹ دیتا ہے: بڑا حرف چھوٹا اور چھوٹا حرف بڑا ہو جاتا ہے۔ اعداد اور علامات ویسے ہی رہتے ہیں۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا یہ اردو متن کے ساتھ کام کرتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">اردو رسم الخط میں بڑے/چھوٹے حروف کا فرق نہیں ہوتا، اس لیے اردو الفاظ ویسے ہی رہتے ہیں جبکہ انگریزی الفاظ تبدیل ہو جاتے ہیں۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا میرا متن کہیں اپ لوڈ ہوتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">کبھی نہیں — تبدیلی مکمل طور پر آپ کے براؤزر میں ہوتی ہے۔</p></details>
+  </div>
+  <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
@@ -149,5 +161,6 @@
   </section>
 </main>
 <footer id="dk-footer"></footer>
+  <script src="../../js/faq-toggle.js" defer></script>
 </body>
 </html>

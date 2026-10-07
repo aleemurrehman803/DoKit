@@ -252,3 +252,9 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
   padding: 1rem 1.1rem; }
 .ttips strong { color: var(--dk-text); }
 .ttips span { color: var(--dk-muted); font-size: .92rem; }
+
+/* FAQ language toggle (EN/UR) */
+.faq-lang-toggle { display:flex; gap:.5rem; margin:.5rem 0 1rem; }
+.faq-lang-btn { padding:.4rem 1.1rem; border:1px solid var(--dk-border,#d0d0d0); border-radius:999px; background:transparent; cursor:pointer; font:inherit; }
+.faq-lang-btn.is-active { font-weight:700; border-color:var(--dk-primary,#6C4CF1); }
+.faq-ur[lang="ur"] { text-align:right; }

@@ -129,12 +129,24 @@
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h">Frequently asked questions</h2>
-    <details><summary>Is my text uploaded anywhere?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>How is reading time calculated?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Does it work with Urdu text?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>What counts as a word?</summary><p class="tfaq-a">…</p></details>
-      <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+  <h2 id="faq-h">Frequently asked questions</h2>
+  <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
+    <button type="button" class="faq-lang-btn is-active" data-faq-lang="en" aria-pressed="true">English</button>
+    <button type="button" class="faq-lang-btn" data-faq-lang="ur" aria-pressed="false">اردو</button>
+  </div>
+  <div class="faq-en">
+    <details><summary>Is my text uploaded anywhere?</summary><p class="tfaq-a">Never. All counting happens in your browser with JavaScript — your text never leaves your device.</p></details>
+    <details><summary>How is reading time calculated?</summary><p class="tfaq-a">Based on an average adult reading speed of 200 words per minute; speaking time is calculated at 130 words per minute, the average speech rate.</p></details>
+    <details><summary>Does it work with Urdu text?</summary><p class="tfaq-a">Yes. Word, character, sentence, and paragraph counts work for Urdu, and common Urdu words are filtered out of the keyword list.</p></details>
+    <details><summary>What counts as a word?</summary><p class="tfaq-a">Any sequence of letters or numbers separated by spaces or punctuation. Hyphenated words count as one word; numbers like “2026” count as words too.</p></details>
+  </div>
+  <div class="faq-ur" hidden>
+    <details><summary lang="ur" dir="rtl">کیا میرا متن کہیں اپ لوڈ ہوتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">کبھی نہیں۔ ساری گنتی آپ کے براؤزر میں جاوا اسکرپٹ سے ہوتی ہے — آپ کا متن آپ کے آلے سے باہر نہیں جاتا۔</p></details>
+    <details><summary lang="ur" dir="rtl">پڑھنے کا وقت کیسے نکالا جاتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">بالغ کی اوسط رفتار 200 الفاظ فی منٹ پر؛ بولنے کا وقت 130 الفاظ فی منٹ پر، جو تقریر کی عام رفتار ہے۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا یہ اردو متن کے ساتھ کام کرتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">جی ہاں۔ الفاظ، حروف، جملوں اور پیراگراف کی گنتی اردو کے لیے کام کرتی ہے، اور عام اردو الفاظ کلیدی الفاظ کی فہرست سے خارج کر دیے جاتے ہیں۔</p></details>
+    <details><summary lang="ur" dir="rtl">لفظ کسے شمار کیا جاتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">حروف یا اعداد کا کوئی بھی سلسلہ جو خالی جگہ یا علامات سے الگ ہو۔ ہائفن والے الفاظ ایک لفظ شمار ہوتے ہیں؛ “2026” جیسے اعداد بھی الفاظ میں گنے جاتے ہیں۔</p></details>
+  </div>
+  <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
@@ -148,5 +160,6 @@
   </section>
 </main>
 <footer id="dk-footer"></footer>
+  <script src="../../js/faq-toggle.js" defer></script>
 </body>
 </html>
