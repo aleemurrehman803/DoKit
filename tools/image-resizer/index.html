@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Free Image Resizer Online — Bulk Resize, Crop, Background Remover | DoKit</title>
 <meta name="description" content="Resize many images at once, crop, remove backgrounds, hit an exact file size (MB→KB), and download everything as a ZIP. Free, private, in your browser."/>
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/image-resizer/"/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/image-resizer/"/>
 <link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
 <meta name="theme-color" content="#6C4CF1"/>
 <link rel="manifest" href="../../manifest.webmanifest"/>
@@ -15,7 +15,7 @@
 <meta property="og:title" content="Free Image Resizer Online — Bulk, Crop & Background Tools | DoKit"/>
 <meta property="og:description" content="Resize many images at once, crop, remove backgrounds, hit an exact KB target, and download all as ZIP."/>
 <meta property="og:type" content="website"/>
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg"/>
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
 <link rel="stylesheet" href="../../css/tokens.css"/>
 <link rel="stylesheet" href="../../css/hub.css"/>
@@ -45,15 +45,13 @@
 {"@type":"Question","name":"How does background removal work? Is it AI?","acceptedAnswer":{"@type":"Answer","text":"It is not AI — it is color-based. Click the background to sample its color, adjust the tolerance, and matching pixels become transparent. It works best on plain, single-color backgrounds. For tricky edges, use the manual eraser brush. You can then keep transparency or replace the background with any solid color."}},
 {"@type":"Question","name":"How do I make an image exactly under 100 KB?","acceptedAnswer":{"@type":"Answer","text":"Enter your target in the “Target file size (KB)” field. For JPEG and WebP the tool automatically finds the best quality that fits at or under your target. PNG is lossless, so an exact target isn't possible there — you'll get a note instead."}},
 {"@type":"Question","name":"Can I download the results as RAR instead of ZIP?","acceptedAnswer":{"@type":"Answer","text":"No — RAR is a proprietary format that can't be created in a browser. ZIP opens on every phone and computer without extra software, so the tool offers “Download all as ZIP”."}},
-{"@type":"Question","name":"Which boards and universities are included?","acceptedAnswer":{"@type":"Answer","text":"BISE Peshawar (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Balochistan (white background) and BISE Bahawalpur (100–150×150–200 px, 8–22 KB, blue background) use verified specs. All other boards and universities use the common Pakistani exam standard and are marked ‘typical’ — please confirm with your board."}},
-{"@type":"Question","name":"What if my board is missing?","acceptedAnswer":{"@type":"Answer","text":"Type your board's width, height, background color and KB target directly into the batch settings — every field is editable. Or pick the generic ‘Pakistani admission’ preset as a starting point."}}]}
+]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"HowTo","name":"How to resize images in bulk","step":[
 {"@type":"HowToStep","name":"Upload your images","text":"Drag & drop one or many PNG, JPEG, or WebP files (up to 25 MB each) into the box, or click to browse your files."},
 {"@type":"HowToStep","name":"Crop or clean up (optional)","text":"Open any image in the editor to crop it, remove its background, or erase parts manually."},
 {"@type":"HowToStep","name":"Set the size","text":"Type exact pixel dimensions or a percentage. Keep the aspect-ratio lock on to avoid stretching. Optionally set a target file size in KB."},
-{"@type":"HowToStep","name":"Board or university photo","text":"Open the Board / University photo section, search your board, and apply its preset. One-click automatic crop, background, and enhance are available — your face is never altered."},
 {"@type":"HowToStep","name":"Download","text":"Process all, then download each image separately or everything together as a ZIP — watermark-free."}]}
 </script>
 </head>
@@ -278,34 +276,7 @@
           </div>
         </div>
       </details>
-      <details class="tdetails tdetails--prominent" id="boardDetails" open>
-        <summary><span data-i18n="resizer.board_title">🎓 Board / University photo</span> </summary>
-        <p class="tnotice" data-i18n="resizer.integrity_note">Your face is never altered — only size, background and framing change.</p>
-        <div class="tfield field">
-          <label class="label" for="boardSearch" data-i18n="resizer.board_search_label">Find your board or university</label>
-          <input class="tinput input" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search…" data-i18n-ph="resizer.board_search_ph"/>
-        </div>
-        <ul class="tboardlist" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
-        <p class="thint" id="boardNone" hidden data-i18n="resizer.board_none">No match — fill the fields manually below.</p>
-        <div class="tnotice" id="boardInfo" hidden></div>
-        <div class="tfield">
-          <span style="font-weight:600;font-size:.9rem" data-i18n="resizer.board_passport">35×45 mm passport</span>
-          <div class="tbtnrow" style="margin-block-start:.4rem">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="pp3545">35×45 mm</button>
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="pp2x2" data-i18n="resizer.board_2x2">2×2 inch</button>
-          </div>
-          <p class="thint">35×45 mm → 413×531 px · 2×2 in → 600×600 px (300 DPI)</p>
-        </div>
-        <div class="tfield">
-          <span style="font-weight:600;font-size:.9rem" data-i18n="resizer.board_autos">One-click automatic</span>
-          <div class="tbtnrow" style="margin-block-start:.4rem">
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoCrop" data-i18n="resizer.board_auto_crop">✂️ Auto-crop (passport-safe)</button><small class="tautonote"></small></span>
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoBg" data-i18n="resizer.board_auto_bg">🖼️ Auto background</button><small class="tautonote"></small></span>
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoEnhance" data-i18n="resizer.board_auto_enhance">✨ Auto-enhance</button><small class="tautonote"></small></span>
-          </div>
-          <p class="thint" data-i18n="resizer.board_crop_note">Keeps the head fully in frame with headroom — never cuts the face.</p>
-        </div>
-      </details>
+
       <div class="tbtnrow">
         <button type="button" class="tbtn tbtn-primary" id="applyAllBtn" data-i18n="resizer.apply_all">Apply to all</button>
       </div>
@@ -503,7 +474,7 @@
           </div>
         </div>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn" data-i18n="resizer.board_auto_enhance">✨ Auto-enhance</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn" data-i18n="resizer.enhance">✨ Auto-enhance</button>
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="compareBtn" aria-pressed="false" data-i18n="resizer.compare_btn">Compare before/after</button>
         </div>
         <p class="tautonote" style="margin-block-start:.25rem"></p>
@@ -582,8 +553,6 @@
     <details><summary data-i18n="resizer.faq_q6">How does background removal work? Is it AI?</summary><p class="tfaq-a" data-i18n="resizer.faq_a6">It is not AI — it is color-based. Click the background to sample its color, adjust the tolerance, and matching pixels become transparent. It works best on plain, single-color backgrounds. For tricky edges, use the manual eraser brush. You can then keep transparency or replace the background with any solid color.</p></details>
     <details><summary data-i18n="resizer.faq_q7">How do I make an image exactly under 100 KB?</summary><p class="tfaq-a" data-i18n="resizer.faq_a7">Enter your target in the “Target file size (KB)” field. For JPEG and WebP the tool automatically finds the best quality that fits at or under your target. PNG is lossless, so an exact target isn’t possible there — you’ll get a note instead.</p></details>
     <details><summary data-i18n="resizer.faq_q8">Can I download the results as RAR instead of ZIP?</summary><p class="tfaq-a" data-i18n="resizer.faq_a8">No — RAR is a proprietary format that browsers can’t create. ZIP is the open standard: it opens on every phone and computer without extra software.</p></details>
-    <details><summary data-i18n="resizer.faq_q9">Which boards and universities are included?</summary><p class="tfaq-a" data-i18n="resizer.faq_a9">BISE Peshawar (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Balochistan (white background) and BISE Bahawalpur (100–150×150–200 px, 8–22 KB, blue background) use verified specs. All other boards and universities use the common Pakistani exam standard and are marked ‘typical’ — please confirm with your board.</p></details>
-    <details><summary data-i18n="resizer.faq_q10">What if my board is missing?</summary><p class="tfaq-a" data-i18n="resizer.faq_a10">Type your board’s width, height, background color and KB target directly into the batch settings — every field is editable. Or pick the generic ‘Pakistani admission’ preset as a starting point.</p></details>
 
   <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
 </section>

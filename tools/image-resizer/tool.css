@@ -389,13 +389,6 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
 .tmodal-tools { display: flex; gap: .4rem; }
 .tmodal-tools .tbtn:disabled { opacity: .4; }
 
-/* ---- board / university presets ---- */
-.tboardlist{list-style:none;margin:.4rem 0;padding:0;max-height:220px;overflow:auto;display:flex;flex-direction:column;gap:.3rem}
-.tboarditem{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;text-align:start;padding:.5rem .6rem;border:1px solid var(--border);border-radius:.5rem;background:var(--surface);color:var(--text);font-size:.85rem;cursor:pointer;min-height:44px}
-.tboarditem:hover{border-color:var(--accent)}
-.tboardname{font-weight:600}
-.tboardtag{font-size:.68rem;opacity:.7;white-space:nowrap;border:1px solid var(--border);border-radius:99px;padding:.1rem .45rem}
-.tboardtag.ok{opacity:1;border-color:var(--accent);color:var(--accent)}
 .tautowrap{display:inline-flex;flex-direction:column;gap:.15rem;align-items:flex-start}
 .tautonote{font-size:.72rem;opacity:.75;line-height:1.3}
 /* ---- queue: reorder / focus / info ---- */
@@ -413,3 +406,9 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
 .faq-lang-btn { padding:.4rem 1.1rem; border:1px solid var(--dk-border,#d0d0d0); border-radius:999px; background:transparent; cursor:pointer; font:inherit; }
 .faq-lang-btn.is-active { font-weight:700; border-color:var(--dk-primary,#6C4CF1); }
 .faq-ur[lang="ur"] { text-align:right; }
+
+/* ---- touch targets: 44px minimum on coarse pointers (WCAG 2.5.8) ---- */
+@media (pointer: coarse) {
+  .tbtn-sm { min-height: 44px; padding: .7rem 1rem; }
+  .faq-lang-btn { min-height: 44px; }
+}

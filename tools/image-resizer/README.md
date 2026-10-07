@@ -5,9 +5,14 @@ crop and edit backgrounds per image (or via batch), resize with exact pixels
 or percent, hit a target file size (MB→KB), and download results individually
 or as one ZIP. 100% client-side; files never leave the device.
 
+## Note
+
+Board/university exam-photo presets moved to the standalone **Board Photo**
+tool (`tools/board-photo/`) — this resizer no longer contains board logic.
+
 ## Files
 
-- `index.html` — tool page (batch panel, board/university presets, dropzone,
+- `index.html` — tool page (batch panel, dropzone,
   review queue, process, results, editor modal, FAQ, how-to, related tools)
 - `tool.js` — all tool logic (readable source; state machine per queue item:
   loading → ready → working → done | error)
@@ -36,54 +41,27 @@ automatically via `DKI18N.t()`.
    writes these into every queued image. **Manual by default:** nothing runs
    automatically — every auto feature is an explicit button labeled
    “Auto-…” with a “click for automatic” note.
-2. **Board / University photo section:** searchable preset list. Selecting a
-   preset fills dimensions, background color, target KB and format (all fields
-   stay manually editable). One-click explicit buttons: passport-safe
-   auto-crop, auto background, auto-enhance. Face-integrity note shown:
-   “Your face is never altered.”
-3. **Upload:** multi-file input + drag-drop (25 MB per file). Count shown
+2. **Upload:** multi-file input + drag-drop (25 MB per file). Count shown
    (“N images uploaded”).
-4. **Review:** serial-numbered thumbnails (1..N) with checkboxes, drag-reorder
+3. **Review:** serial-numbered thumbnails (1..N) with checkboxes, drag-reorder
    (desktop) / arrows (mobile), duplicate, per-image info panel + EXIF viewer.
    Tick faulty ones → “Edit selected” opens the editor for each, one by one.
    Download mode: separate files or single ZIP. “Download Now” processes
    everything, then downloads in the chosen mode.
-5. **Per-image editor modal:** Crop tab (drag box, aspect presets, touch
+4. **Per-image editor modal:** Crop tab (drag box, aspect presets, touch
    supported, face-centering guide overlay), Background tab (click-to-sample
    color + tolerance chroma removal, manual eraser brush, transparent/solid
    replace, reset), Adjust tab (rotate/flip, brightness/contrast/saturation/
    grayscale/sepia filters, auto-enhance, rounded corners, border, before/
    after compare). Undo/redo (10 steps). Edits invalidate stale results
    (dirty-flag → re-process required).
-6. **Process:** per-image crop → pad → resize (batch dims, aspect lock uses
+5. **Process:** per-image crop → pad → resize (batch dims, aspect lock uses
    each image's own ratio) → watermark → JPEG/WebP binary-search quality for
    target KB (or quality slider) → optional PNG DPI metadata → results grid
    with per-image download.
-7. **ZIP:** “Download all as ZIP” builds a real ZIP in vanilla JS (stored
+6. **ZIP:** “Download all as ZIP” builds a real ZIP in vanilla JS (stored
    entries, CRC32, UTF-8 names, images inside a `dokit-images/` folder) —
    no libraries, CSP-safe.
-
-## Board / university presets (data: `BOARD_PRESETS` in tool.js)
-
-Each preset: `{ id, name, w, h, bg, kb, fmt, verified, note }`.
-
-**Verified specs** (`verified:true`):
-- BISE Peshawar — 300×300 px, white background, JPG (official notification 2022)
-- BIE Karachi — passport-size photo, blue background (official site)
-- BBISE Quetta (Balochistan) — white background picture (portal)
-- BISE Bahawalpur — 100–150×150–200 px, 8–22 KB, blue background,
-  head-to-shoulder framing; photo must not be blurry, no makeup/niqab/mask,
-  face fully visible (Notification No. 132-Registration, 27-08-2026).
-  Format not officially specified → JPG default.
-
-**All other boards/universities** (BISE Lahore/Gujranwala/Rawalpindi/Multan/
-Faisalabad/Sargodha/D.G. Khan/Sahiwal, BISE Hyderabad/Sukkur/Larkana/
-Mirpurkhas, BISE Mardan/Swat/Kohat/Abbottabad/D.I. Khan, AJK Mirpur, FBISE,
-Punjab University, Karachi University, NUST, COMSATS, LUMS, IBA Karachi,
-UET Lahore, AIOU, plus a generic “Pakistani admission” preset) use the common
-Pakistani exam standard (200×230 px, white background, JPG, ≤50 KB),
-`verified:false`, tagged **“typical — please confirm with your board”**
-(localized). Never presented as official.
 
 ## Image pipeline
 
@@ -117,13 +95,7 @@ translated via the inlined `img.err_*` strings. Namespace: `window.Resizer`.
 - **Crop/resize/rotate/flip = pure geometric transforms.**
 - **Manual by default.** No silent auto-processing: every auto feature is a
   clearly-labeled button (“Auto-crop”, “Auto background”, “Auto-enhance”)
-  with a localized “click for automatic” note. Selecting a board preset only
-  fills settings — nothing is applied until the user clicks.
-- **Passport-safe auto-crop** keeps the top of the photo (headroom) and trims
-  from the bottom; sides are center-trimmed. It never cuts into the face
-  under normal framing (head in the upper part of the photo).
-- Visible integrity note in the Board section (localized): “Your face is
-  never altered — only size, background and framing change.”
+  with a localized “click for automatic” note. Nothing is applied until the user clicks.
 
 ## Honest limitations (surfaced in UI + FAQ)
 
@@ -139,9 +111,6 @@ translated via the inlined `img.err_*` strings. Namespace: `window.Resizer`.
   dropping transparency).
 - **DPI is written into PNG metadata (pHYs) only.** JPEG EXIF DPI embedding
   is out of scope; the UI documents this.
-- **Board presets marked “typical” are not official specs.** Only the three
-  verified presets carry confirmed specs; everything else must be confirmed
-  with the board.
 
 ## How to test
 
@@ -151,7 +120,5 @@ node --check tools/image-resizer/tool.js
 
 Behavior: open `index.html`, set batch options, drop several PNG/JPEG/WebP
 (≤25 MB each), check the count, tick a checkbox, “Edit selected”, crop/erase,
-“Apply to all”, “Download Now” as ZIP — then unzip and compare. Board flow:
-open the Board section, search “Peshawar”, select it, click the three auto
-buttons one by one, download. Re-run the language switcher — all labels
+“Apply to all”, “Download Now” as ZIP — then unzip and compare. Re-run the language switcher — all labels
 re-render from the inlined tables.
