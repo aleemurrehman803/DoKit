@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Free Image Resizer Online — Bulk Resize, Crop, Background Remover | DoKit</title>
 <meta name="description" content="Resize many images at once, crop, remove backgrounds, hit an exact file size (MB→KB), and download everything as a ZIP. Free, private, in your browser."/>
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/image-resizer/"/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/image-resizer/"/>
 <link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
 <meta name="theme-color" content="#6C4CF1"/>
 <link rel="manifest" href="../../manifest.webmanifest"/>
@@ -15,19 +15,12 @@
 <meta property="og:title" content="Free Image Resizer Online — Bulk, Crop & Background Tools | DoKit"/>
 <meta property="og:description" content="Resize many images at once, crop, remove backgrounds, hit an exact KB target, and download all as ZIP."/>
 <meta property="og:type" content="website"/>
-<meta property="og:image" content="../../assets/og-cover.jpg"/>
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
 <link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="../../css/hub.css"/>
 <link rel="stylesheet" href="tool.css"/>
 <script src="../../js/i18n-v2.js" defer></script>
-<script src="../../js/i18n-ar.js" defer></script>
-<script src="../../js/i18n-hi.js" defer></script>
-<script src="../../js/i18n-es.js" defer></script>
-<script src="../../js/i18n-fr.js" defer></script>
-<script src="../../js/i18n-pt.js" defer></script>
-<script src="../../js/i18n-de.js" defer></script>
-<script src="../../js/i18n-tr.js" defer></script>
-<script src="../../js/i18n-ru.js" defer></script>
 <script src="../../js/ui.js" defer></script>
 <script src="../../js/journey.js" defer></script>
 <script src="tool.js" defer></script>
@@ -285,7 +278,7 @@
       <p class="tdrop-title" id="dz-t">Drag &amp; drop your images here</p>
       <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
       <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB each · as many as you like</p>
-      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple/>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple aria-label="Choose images to resize"/>
     </div>
       <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
       <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
