@@ -60,6 +60,23 @@
   </nav>
 
   <div class="thero">
+  <div class="thero-icon" aria-hidden="true">
+    <!-- Image Resizer: photo frame with diagonal expand arrows = resizing -->
+    <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
+      <defs>
+        <linearGradient id="tig-resize" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
+        </linearGradient>
+      </defs>
+      <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-resize)"/>
+      <rect x="16" y="26" width="28" height="22" rx="3" fill="none" stroke="#fff" stroke-width="3"/>
+      <circle cx="23" cy="33" r="2.6" fill="#fff"/>
+      <path d="M16 44l8-8 6 6 5-5 9 9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M48 26L60 14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <path d="M54 14h6v6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M48 20v6h6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
     <h1>Image Resizer</h1>
     <p>Resize many images at once — crop, remove backgrounds, hit an exact file size, and download everything as a ZIP. Free, private, in your browser.</p>
     <p><span class="tprivacy">🔒 <span>Your files never leave your device — everything happens in your browser.</span></span></p>
@@ -256,7 +273,7 @@
         </div>
       </details>
       <details class="tdetails tdetails--prominent" id="boardDetails" open>
-        <summary><span data-i18n="resizer.board_title">🎓 Board / University photo</span> <span class="badge badge-green">21 verified</span></summary>
+        <summary><span data-i18n="resizer.board_title">🎓 Board / University photo</span> </summary>
         <p class="tnotice" data-i18n="resizer.integrity_note">Your face is never altered — only size, background and framing change.</p>
         <div class="tfield field">
           <label class="label" for="boardSearch" data-i18n="resizer.board_search_label">Find your board or university</label>
