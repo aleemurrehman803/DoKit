@@ -217,6 +217,24 @@
                              message: "Withdrawals are not active yet." });
   }
 
+  /**
+   * Award coins for a generic reason (e.g. referrals). No cooldown.
+   * Used by referral system and other one-time rewards.
+   * @param {string} uid - Recipient user ID.
+   * @param {number} coins - Amount to award (positive integer).
+   * @param {string} reason - Ledger reason label.
+   * @returns {Promise<object>} { entry, coins }
+   */
+  function award(uid, coins, reason) {
+    coins = Math.floor(Number(coins)) || 0;
+    if (coins <= 0) return Promise.resolve({ error: "invalid_amount" });
+    if (coins > 10000) return Promise.resolve({ error: "amount_too_large" });
+    var safeReason = String(reason || "award").replace(/[^a-z0-9_:\-]/gi, "").substring(0, 64);
+    return TF.ledgerAppend(uid, coins, safeReason).then(function (entry) {
+      return { entry: entry, coins: coins };
+    });
+  }
+
   window.TFWallet = {
     EARN: EARN,
     LESSON_COINS: LESSON_COINS,
@@ -224,6 +242,7 @@
     canEarn: canEarn,
     claim: claim,
     awardBattle: awardBattle,
+    award: award,
     fmtWait: fmtWait,
     withdrawalStatus: withdrawalStatus,
     requestWithdrawal: requestWithdrawal,
