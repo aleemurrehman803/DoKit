@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typing/certificate.html">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://api.qrserver.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
@@ -45,9 +45,20 @@
       <div><span class="stat-value" id="certAcc">0%</span><span class="stat-label" data-i18n="cert_l_acc">Accuracy</span></div>
       <div><span class="stat-value" id="certDate">—</span><span class="stat-label" data-i18n="cert_l_date">Date</span></div>
     </div>
+    <div class="cert-meta">
+      <img id="certQr" class="cert-qr" alt="Certificate verification QR code" width="150" height="150" loading="lazy">
+      <div class="cert-meta-info">
+        <div class="cert-reg"><span data-i18n="cert_reg_no">Registration No.</span>: <strong id="certReg">—</strong></div>
+        <div class="cert-issued" id="certIssued">—</div>
+      </div>
+    </div>
     <div class="cert-sign">
       <span class="cert-sign-line"></span>
       <p data-i18n="cert_signature">TypeMaster Certification Board</p>
+    </div>
+    <div class="cert-verify">
+      <span data-i18n="cert_verify_line">Verify this certificate at:</span>
+      <a id="certVerifyLink" href="#" rel="noopener">—</a>
     </div>
   </div>
 
