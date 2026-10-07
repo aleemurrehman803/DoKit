@@ -1563,3 +1563,25 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
     });
   });
 })();
+/* DoKit Visual Polish Pack loader (appended 2026-10-07).
+ * Loads css/polish.css + js/polish.js on every page that includes ui.js.
+ * Additive only: if files fail to load, the site works exactly as before. */
+;(function () {
+  try {
+    var U = (typeof window.DKU === "function") ? window.DKU : function (p) { return p; };
+    if (!document.querySelector('link[data-dk-polish]')) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = U("/css/polish.css");
+      link.setAttribute("data-dk-polish", "1");
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[data-dk-polish]')) {
+      var s = document.createElement("script");
+      s.src = U("/js/polish.js");
+      s.defer = true;
+      s.setAttribute("data-dk-polish", "1");
+      document.head.appendChild(s);
+    }
+  } catch (e) { /* polish is optional */ }
+})();
