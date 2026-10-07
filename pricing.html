@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <title>Pricing — DoKit</title>
 <meta name="description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
@@ -41,7 +41,7 @@
       </nav>
       <div class="section-head">
         <h1>Simple pricing</h1>
-        <p>Start free. Everything listed here stays free.</p>
+        <p>Start free. Paid plans launch soon — nothing to pay today.</p>
       </div>
       <div class="price-grid price-grid--3">
         <div class="card price-card">
@@ -58,26 +58,51 @@
         <div class="card price-card featured">
           <p><span class="badge">Coming soon</span></p>
           <h2>Pro</h2>
-          <div class="price">PKR — <small>Coming soon</small></div>
+          <div class="price">$6 <small>/month</small></div>
           <ul class="price-features">
             <li>Everything in Free</li>
             <li>Batch processing &amp; presets</li>
             <li>Priority access to new tools</li>
             <li>Cloud sync across devices <span class="badge">Coming soon</span></li>
           </ul>
-          <a class="btn btn-primary btn-block" href="tools/">Get notified at launch</a>
+          <button class="btn btn-primary btn-block" type="button" disabled>Get Pro — Coming soon</button>
           <p class="hint">Pro isn't on sale yet — and everything above is already free.</p>
         </div>
         <div class="card price-card">
           <p><span class="badge">Coming soon</span></p>
-          <h2>School</h2>
-          <div class="price">PKR — <small>Coming soon</small></div>
+          <h2>Team</h2>
+          <div class="price">$29 <small>/month</small></div>
           <ul class="price-features">
             <li>Everything in Pro</li>
             <li>Typing classrooms &amp; assignments</li>
             <li>Teacher dashboard <span class="badge">Coming soon</span></li>
           </ul>
-          <a class="btn btn-ghost btn-block" href="contact.html">Contact us</a>
+          <button class="btn btn-ghost btn-block" type="button" disabled>Contact us — Coming soon</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:56rem;margin:var(--sp-6) auto 0">
+        <h2 style="margin-block-start:0;text-align:center">Compare plans</h2>
+        <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
+          <thead>
+            <tr>
+              <th style="text-align:start;padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Feature</th>
+              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Free</th>
+              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Pro <span class="badge">Soon</span></th>
+              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Team <span class="badge">Soon</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">All 6 tools</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Batch processing &amp; zip</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">One-click presets</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Cloud history &amp; sync</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Developer API</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Typing classrooms</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
+            <tr><td style="padding:var(--sp-2)">Teacher dashboard</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✅</td></tr>
+          </tbody>
+        </table>
         </div>
       </div>
       <div class="card" style="max-width:46rem;margin:var(--sp-6) auto 0;text-align:center">
@@ -102,5 +127,10 @@
 <script src="js/pages/info.js" defer></script>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
 </body>
 </html>
