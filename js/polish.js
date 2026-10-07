@@ -469,6 +469,42 @@
     });
   }
 
+  /* ============ Page transitions: fade/slide out on internal nav ============
+     Intercepts same-origin link clicks, fades the body out (200ms), then
+     navigates. Skips: external links, downloads, new-tab, anchors,
+     non-http(s) schemes, modified clicks, and prefers-reduced-motion. */
+  function initPageTransitions() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var navigating = false;
+    document.addEventListener("click", function (e) {
+      if (navigating || e.defaultPrevented) return;
+      if (e.button !== 0) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a || !document.contains(a)) return;
+      var href = a.getAttribute("href");
+      if (!href || href.charAt(0) === "#") return;
+      if (a.hasAttribute("download")) return;
+      if (a.target === "_blank") return;
+      var url;
+      try { url = new URL(href, location.href); } catch (err) { return; }
+      if (url.protocol !== "http:" && url.protocol !== "https:") return;
+      if (url.origin !== location.origin) return;
+      if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+      e.preventDefault();
+      navigating = true;
+      document.body.classList.add("dk-page-leave");
+      var done = false;
+      function go() { if (done) return; done = true; location.href = url.href; }
+      setTimeout(go, 220);
+      /* Safety: if navigation was somehow cancelled, restore the page. */
+      setTimeout(function () {
+        navigating = false;
+        document.body.classList.remove("dk-page-leave");
+      }, 1500);
+    });
+  }
+
   /* ============ Boot ============ */
   function boot() {
     // Each init is isolated: one failure must not block the others.
@@ -487,7 +523,8 @@
       initNavShrink,
       initTestimonialSlider,
       initPricingToggle,
-      initSearchHighlight
+      initSearchHighlight,
+      initPageTransitions
     ];
     for (var i = 0; i < inits.length; i++) {
       try { inits[i](); } catch (e) { /* polish is progressive enhancement; never break the page */ }

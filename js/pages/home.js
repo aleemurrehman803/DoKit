@@ -142,7 +142,7 @@ function catCardHTML(cat){
   var exp=isActive?"true":"false";
   var label=isActive?t("cat_close"):t("cat_open");
   var pastel=cat.pastel?(" pastel "+cat.pastel):"";
-  return '<div class="cat-card'+open+'" data-cat="'+cat.id+'">'
+  return '<div class="cat-card glass'+open+'" data-cat="'+cat.id+'">'
     +'<button type="button" class="cat-head" aria-expanded="'+exp+'" aria-controls="catPanel" id="cat-btn-'+cat.id+'" aria-label="'+esc(t(cat.titleKey))+" \u2014 "+esc(label)+'">'
     +'<span class="cat-head__icon'+pastel+'" aria-hidden="true">'+cat.icon+"</span>"
     +'<span class="cat-head__text">'
@@ -160,7 +160,7 @@ function panelHTML(cat){
   var items=tools.map(toolItemHTML).join("");
   var pastel=cat.pastel?(" pastel "+cat.pastel):"";
   var closeLabel=esc(t("cat_close")+" \u2014 "+t(cat.titleKey));
-  return '<div class="cat-panel-full__card" role="region" aria-labelledby="cat-btn-'+cat.id+'">'
+  return '<div class="cat-panel-full__card glass" role="region" aria-labelledby="cat-btn-'+cat.id+'">'
     +'<div class="cat-panel-full__head">'
     +'<span class="cat-head__icon'+pastel+'" aria-hidden="true">'+cat.icon+"</span>"
     +'<span class="cat-panel-full__titles">'
@@ -202,6 +202,21 @@ function closePanel(refocus){
     var btn=document.getElementById("cat-btn-"+id);
     if(btn) btn.focus();
   }
+}
+/* ---------- Skeleton placeholders (brief shimmer while cards mount) ----------
+   Shown only on the very first paint; skipped for prefers-reduced-motion. */
+function showSkeletons(){
+  var list=document.getElementById("catList");
+  if(!list) return;
+  var html="";
+  for(var i=0;i<4;i++){
+    html+='<div class="cat-card glass skeleton-card" aria-hidden="true">'
+      +'<div class="skeleton skeleton--title"></div>'
+      +'<div class="skeleton skeleton--line"></div>'
+      +'<div class="skeleton skeleton--line short"></div>'
+      +"</div>";
+  }
+  list.innerHTML=html;
 }
 function renderCats(){
   var list=document.getElementById("catList");
@@ -354,7 +369,9 @@ function initFaq(scope){
 }
 document.addEventListener("DOMContentLoaded",function(){
   DKUI.initTheme(); DKUI.renderNav("home"); DKUI.renderFooter(); DKUI.init(); DKI18N.apply();
-  render();
+  var reducedMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reducedMotion){ render(); }
+  else { showSkeletons(); setTimeout(render,350); }
   initDemo(); initCountUp(); initHint(); initSlash();
   var si=document.getElementById("toolSearch");
   if(si) si.addEventListener("input",render);
