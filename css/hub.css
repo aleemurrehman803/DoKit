@@ -612,7 +612,8 @@ input[type="range"].slider {
   block-size: 3.5rem;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, var(--dk-violet), var(--dk-violet-deep));
+  overflow: hidden;
+  background: #fff;
   color: #fff;
   font-size: 1.5rem;
   cursor: pointer;
@@ -624,6 +625,8 @@ input[type="range"].slider {
   transition: transform 0.15s ease;
 }
 .dk-fab:hover { transform: scale(1.08); }
+.dk-fab .doki-fab-icon { display: flex; inline-size: 100%; block-size: 100%; }
+.dk-fab .doki-fab-icon img { inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: 50%; }
 .dk-panel {
   position: fixed;
   inset-block-end: calc(var(--sp-5) + 4rem);
