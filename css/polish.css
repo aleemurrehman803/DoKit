@@ -606,8 +606,8 @@ input[type="submit"]:active, input[type="button"]:active {
 /* ---- Status pill: white Muse-style pill BELOW the circle while Doki works ---- */
 .doki-status {
   position: fixed;
-  inset-block-end: calc(var(--sp-5) + 4rem);
-  inset-inline-end: var(--sp-5);
+  inset-block-end: calc(var(--sp-5) + 4.5rem);
+  inset-inline-start: var(--sp-5);
   z-index: 219;
   transform: translateX(0);
   padding: 0.5rem 1rem;
