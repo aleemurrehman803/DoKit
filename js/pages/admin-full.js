@@ -7,6 +7,8 @@
    2. Users — searchable table, detail view, coin actions
    3. Content — tool enable/disable toggles, guides/blog lists
    4. Audit log — every admin action logged to `admin_audit`
+   5. Security — 2FA / IP whitelist / rate limits / OTP (Phase 6 scaffolding;
+      UI only until launch; enforcement is server-side)
 
    All queries wrapped in try/catch with loading + error states.
    Never throws on the page; guests/non-admins see nothing. */
@@ -163,7 +165,8 @@
     { id: "dashboard", label: "📊 Dashboard" },
     { id: "users",     label: "👥 Users" },
     { id: "content",   label: "🧩 Content" },
-    { id: "audit",     label: "📜 Audit log" }
+    { id: "audit",     label: "📜 Audit log" },
+    { id: "security",  label: "🔐 Security" }
   ];
 
   function wireTabs() {
@@ -562,6 +565,51 @@
       })
       .catch(function (err) {
         body.innerHTML = '<tr><td colspan="5">' + errHtml("Could not load audit log. " + friendlyDbErr(err)) + "</td></tr>";
+      });
+  }
+
+  /* ================= 5. SECURITY EVENTS =================
+   * Reads the append-only `security_events` log (written by FinSec.auditLog
+   * on every financial action). Flagged rows (result contains "flagged",
+   * "rate_limited", or "rejected") are highlighted for admin review.
+   * This is the fraud-monitoring surface until server-side alerting ships.
+   */
+  function loadSecurityEvents() {
+    var d = db();
+    var body = $("admSecBody");
+    if (!body) return;
+    if (!d) {
+      body.innerHTML = '<tr><td colspan="6">' + errHtml("Database unavailable.") + "</td></tr>";
+      return;
+    }
+    body.innerHTML = '<tr><td colspan="6">' + SPINNER + "</td></tr>";
+    d.collection("security_events").orderBy("ts", "desc").limit(50).get()
+      .then(function (snap) {
+        if (snap.empty) {
+          body.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted)">No security events yet. Financial actions will appear here.</td></tr>';
+          return;
+        }
+        var rows = [];
+        snap.forEach(function (doc) {
+          var e = doc.data() || {};
+          var result = String(e.result || "—");
+          var flagged = /flagged|rate_limited|rejected|failed/i.test(result);
+          var badge = flagged
+            ? "<span class='badge badge-amber'>" + esc(result.slice(0, 40)) + "</span>"
+            : "<span class='badge'>" + esc(result.slice(0, 40)) + "</span>";
+          rows.push("<tr" + (flagged ? " style='background:rgba(201,58,58,.06)'" : "") + ">" +
+            "<td>" + esc(relTime(toMillis(e.serverTs) || e.ts)) + "</td>" +
+            "<td><code>" + esc(String(e.action || "—").slice(0, 40)) + "</code></td>" +
+            "<td><code>" + esc(String(e.uid || "anon").slice(0, 18)) + "</code></td>" +
+            "<td>" + (e.amount == null ? "—" : esc(String(e.amount))) + "</td>" +
+            "<td>" + badge + "</td>" +
+            "<td><code>" + esc(String(e.deviceId || "—").slice(0, 18)) + "</code></td>" +
+            "</tr>");
+        });
+        body.innerHTML = rows.join("");
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="6">' + errHtml("Could not load security events. " + friendlyDbErr(err)) + "</td></tr>";
       });
   }
 
