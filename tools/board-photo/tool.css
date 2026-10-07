@@ -261,21 +261,53 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
   .tbtn-sm { min-height: 44px; padding: .7rem 1rem; }
 }
 
-/* ---------- Board Photo: board list, spec card, preview ---------- */
+/* ---------- Board Photo: dropdown, spec card, preview ---------- */
 .bstep { margin-block-end: 1.5rem; }
 .bstep:last-child { margin-block-end: 0; }
 .bstep-h { display: flex; align-items: center; gap: .6rem; margin: 0 0 .8rem; font-size: 1.05rem; color: var(--dk-text); }
 .bstep-n { width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--dk-violet); color: #fff;
   font-size: .9rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 
-.tboardlist { list-style: none; margin: .4rem 0; padding: 0; max-height: 220px; overflow: auto;
-  display: flex; flex-direction: column; gap: .3rem; }
-.tboardlist button { width: 100%; text-align: start; font: inherit; cursor: pointer;
-  background: var(--dk-surface); border: 1px solid var(--dk-border); border-radius: 8px;
-  padding: .5rem .7rem; color: var(--dk-text); display: flex; align-items: center; gap: .5rem; }
-.tboardlist button:hover { border-color: var(--dk-violet); }
-.tboardlist button[aria-selected="true"] { border-color: var(--dk-violet);
-  background: color-mix(in srgb, var(--dk-violet) 10%, var(--dk-surface)); font-weight: 600; }
+/* --- custom dropdown --- */
+.bdrop { position: relative; }
+.bdrop-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  cursor: pointer; text-align: start; font: inherit; transition: border-color .18s ease, box-shadow .18s ease; }
+.bdrop-toggle:hover { border-color: var(--dk-violet); }
+.bdrop-toggle:focus-visible { outline: 2px solid var(--dk-violet); outline-offset: 2px; }
+.bdrop.open .bdrop-toggle { border-color: var(--dk-violet);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dk-violet) 22%, transparent); }
+.bdrop-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dk-muted); }
+.bdrop-toggle.has-value .bdrop-value { color: var(--dk-text); font-weight: 600; }
+.bdrop-caret { flex: none; color: var(--dk-muted); font-size: .85rem; transition: transform .22s ease; }
+.bdrop.open .bdrop-caret { transform: rotate(180deg); color: var(--dk-violet); }
+.bdrop-menu { position: absolute; inset-inline: 0; top: calc(100% + 6px); z-index: 50;
+  background: var(--dk-surface); border: 1px solid var(--dk-border); border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(20, 10, 60, .18); overflow: hidden;
+  transform-origin: top center; animation: bdrop-in .2s ease; }
+[dir="rtl"] .bdrop-menu { transform-origin: top center; }
+@keyframes bdrop-in {
+  from { opacity: 0; transform: translateY(-8px) scaleY(.96); }
+  to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+.bdrop-searchwrap { padding: .6rem .6rem .4rem; border-bottom: 1px solid var(--dk-border);
+  position: sticky; top: 0; background: var(--dk-surface); z-index: 2; }
+.bdrop-search { width: 100%; }
+.bdrop-list { list-style: none; margin: 0; padding: .4rem; max-height: 264px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: .25rem; scrollbar-width: thin; }
+.bdrop-list::-webkit-scrollbar { width: 8px; }
+.bdrop-list::-webkit-scrollbar-thumb { background: var(--dk-border); border-radius: 8px; }
+.bdrop-list::-webkit-scrollbar-thumb:hover { background: var(--dk-violet); }
+.bdrop-list button { width: 100%; text-align: start; font: inherit; cursor: pointer;
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  padding: .55rem .7rem; color: var(--dk-text); display: flex; align-items: center; gap: .5rem;
+  transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+.bdrop-list button:hover { background: color-mix(in srgb, var(--dk-violet) 9%, transparent);
+  border-color: color-mix(in srgb, var(--dk-violet) 40%, transparent); transform: translateX(2px); }
+[dir="rtl"] .bdrop-list button:hover { transform: translateX(-2px); }
+.bdrop-list button:focus-visible { outline: 2px solid var(--dk-violet); outline-offset: -2px; }
+.bdrop-list button[aria-selected="true"] { border-color: var(--dk-violet);
+  background: color-mix(in srgb, var(--dk-violet) 12%, transparent); font-weight: 600; }
+.bdrop-none { margin: .5rem .8rem .8rem; }
 .bmini { font-size: .72rem; font-weight: 700; padding: .12rem .5rem; border-radius: 999px; flex: none; }
 .bmini-v { background: color-mix(in srgb, var(--dk-success) 15%, transparent);
   color: var(--dk-success); border: 1px solid color-mix(in srgb, var(--dk-success) 45%, transparent); }

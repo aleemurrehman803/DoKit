@@ -47,6 +47,7 @@
       "bp.step1": "Find your board or university",
       "bp.search_label": "Search boards & universities",
       "bp.search_ph": "Type to search… e.g. BISE Lahore",
+      "bp.select_placeholder": "Select your board / university",
       "bp.no_match": "No match — pick “Pakistani admission (typical)” or set a custom size below.",
       "bp.custom_title": "Custom size (board not listed?)",
       "bp.width": "Width (px)",
@@ -104,6 +105,14 @@
       "bp.faq_a6": "A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal.",
       "bp.related": "Related tools"
     });
+    window.DKI18N.add("ur", {
+      "bp.select_placeholder": "اپنا بورڈ / یونیورسٹی منتخب کریں",
+      "bp.search_label": "بورڈز اور یونیورسٹیاں تلاش کریں",
+      "bp.search_ph": "تلاش کے لیے لکھیں… مثلاً BISE Lahore",
+      "bp.no_match": "کوئی نتیجہ نہیں — “Pakistani admission (typical)” منتخب کریں یا نیچے کسٹم سائز لکھیں۔",
+      "bp.verified": "تصدیق شدہ تفصیلات",
+      "bp.typical": "معمول — اپنے بورڈ سے تصدیق کریں"
+    });
   }
 
   /* ---------------- helpers ---------------- */
@@ -140,7 +149,70 @@
     return BOARDS[0];
   }
 
-  /* ---------------- board list ---------------- */
+  /* ---------------- board dropdown ---------------- */
+  var drop = $("boardDrop");
+  var toggle = $("boardToggle");
+  var menu = $("boardMenu");
+  var searchInput = $("boardSearch");
+  var toggleLabel = $("boardToggleLabel");
+  var dropOpen = false;
+
+  function setDropOpen(open) {
+    dropOpen = open;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    drop.classList.toggle("open", open);
+    if (open) {
+      searchInput.value = "";
+      renderList("");
+      setTimeout(function () { searchInput.focus(); }, 30);
+    }
+  }
+
+  function syncToggleLabel() {
+    if (selected && selected.id !== "generic") {
+      toggleLabel.textContent = selected.name;
+      toggle.classList.add("has-value");
+    } else {
+      toggleLabel.textContent = t("bp.select_placeholder", "Select your board / university");
+      toggle.classList.remove("has-value");
+    }
+  }
+
+  toggle.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setDropOpen(!dropOpen);
+  });
+  toggle.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!dropOpen) setDropOpen(true);
+    }
+  });
+  menu.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function (e) {
+    if (dropOpen && !drop.contains(e.target)) setDropOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && dropOpen) { setDropOpen(false); toggle.focus(); }
+  });
+  /* keyboard: arrows move through options, Enter picks */
+  searchInput.addEventListener("keydown", function (e) {
+    var items = menu.querySelectorAll("#boardList button[data-id]");
+    if (!items.length) return;
+    var idx = -1;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i] === document.activeElement) { idx = i; break; }
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      (items[idx + 1] || items[0]).focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (idx <= 0) { searchInput.focus(); }
+      else { items[idx - 1].focus(); }
+    }
+  });
   function badgeHTML(b) {
     if (b.verified) {
       return '<span class="bmini bmini-v">✓ ' + esc(t("bp.verified", "Verified specs")) + "</span>";
@@ -189,7 +261,9 @@
       if (BOARDS[i].id === id) { selected = BOARDS[i]; break; }
     }
     if (!selected) selected = genericBoard();
-    renderList($("boardSearch").value);
+    syncToggleLabel();
+    setDropOpen(false);
+    renderList("");
     renderSpec();
     if (currentBlob) processImage(lastImage, true);
   }
@@ -373,13 +447,16 @@
     var h = Math.max(10, Math.min(4000, parseInt($("ch").value, 10) || 230));
     var kb = Math.max(1, Math.min(10240, parseInt($("ckb").value, 10) || 50));
     selected = { id: "custom", name: "Custom (" + w + "×" + h + ")", w: w, h: h, kb: kb, bg: "#ffffff", bgName: "white", verified: false, note: "Your custom size. Confirm exact specs with your board.", source: "Custom" };
-    renderList($("boardSearch").value);
+    syncToggleLabel();
+    renderList("");
     renderSpec();
     if (lastImage) processImage(lastImage, true);
   });
 
   /* ---------------- init ---------------- */
   selected = genericBoard();
+  syncToggleLabel();
+  setDropOpen(false);
   renderList("");
   renderSpec();
 })();

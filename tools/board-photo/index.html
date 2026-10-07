@@ -84,11 +84,21 @@
     <div class="bstep">
       <h3 class="bstep-h"><span class="bstep-n">1</span> <span data-i18n="bp.step1">Find your board or university</span></h3>
       <div class="tfield field">
-        <label class="label" for="boardSearch" data-i18n="bp.search_label">Search boards &amp; universities</label>
-        <input class="tinput input" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search… e.g. BISE Lahore" data-i18n-ph="bp.search_ph"/>
+        <label class="label" id="boardDropLabel" data-i18n="bp.search_label">Search boards &amp; universities</label>
+        <div class="bdrop" id="boardDrop">
+          <button type="button" class="bdrop-toggle tinput" id="boardToggle" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="boardDropLabel boardToggleLabel">
+            <span class="bdrop-value" id="boardToggleLabel" data-i18n="bp.select_placeholder">Select your board / university</span>
+            <span class="bdrop-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="bdrop-menu" id="boardMenu" hidden>
+            <div class="bdrop-searchwrap">
+              <input class="tinput bdrop-search" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search… e.g. BISE Lahore" data-i18n-ph="bp.search_ph" aria-label="Search boards and universities"/>
+            </div>
+            <ul class="bdrop-list" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
+            <p class="thint bdrop-none" id="boardNone" hidden data-i18n="bp.no_match">No match — pick “Pakistani admission (typical)” or set a custom size below.</p>
+          </div>
+        </div>
       </div>
-      <ul class="tboardlist" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
-      <p class="thint" id="boardNone" hidden data-i18n="bp.no_match">No match — pick “Pakistani admission (typical)” or set a custom size below.</p>
       <div class="bspec" id="boardInfo" hidden></div>
       <details class="tdetails" style="margin-block-start:.6rem">
         <summary data-i18n="bp.custom_title">Custom size (board not listed?)</summary>
