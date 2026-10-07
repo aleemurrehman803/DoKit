@@ -129,7 +129,25 @@
     }).catch(function () { /* silent: bar is optional */ });
   }
 
-  function start() { tryLoad(0); }
+  function start() {
+    tryLoad(0);
+    // Render nav + footer on pages without a dedicated page script (e.g. tool pages).
+    // Uses dk-footer id (tool pages) or site-foot id (main pages).
+    try {
+      if (window.DKUI) {
+        if (document.getElementById("site-nav") && !document.getElementById("site-nav").hasChildNodes()) {
+          DKUI.renderNav("");
+        } else if (document.getElementById("site-nav")) {
+          // Nav placeholder exists but may be empty — render anyway if no brand link.
+          if (!document.querySelector("#site-nav .brand")) DKUI.renderNav("");
+        }
+        var footEl = document.getElementById("dk-footer") || document.getElementById("site-foot");
+        if (footEl && !footEl.hasChildNodes()) {
+          DKUI.renderFooter();
+        }
+      }
+    } catch (e) { /* silent: nav/footer are progressive enhancement */ }
+  }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
 })();
