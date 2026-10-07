@@ -73,6 +73,9 @@
         <button class="adm-tab" data-tab="content" role="tab" aria-selected="false">🧩 Content</button>
         <button class="adm-tab" data-tab="audit" role="tab" aria-selected="false">📜 Audit log</button>
         <button class="adm-tab" data-tab="security" role="tab" aria-selected="false">🔐 Security</button>
+        <button class="adm-tab" data-tab="deposits" role="tab" aria-selected="false">💰 Deposits</button>
+        <button class="adm-tab" data-tab="withdrawals" role="tab" aria-selected="false">💸 Withdrawals</button>
+        <button class="adm-tab" data-tab="paysettings" role="tab" aria-selected="false">⚙️ Pay settings</button>
       </div>
 
       <!-- 1. Dashboard -->
@@ -193,6 +196,52 @@
             </ul>
             <p style="margin-bottom:0"><span class="badge">Coming soon</span></p>
           </div>
+        </div>
+      </section>
+
+      <!-- 6. Deposits (manual verification) -->
+      <section id="admTab-deposits" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">💰 Pending deposits <span class="adm-muted" style="font-weight:400" id="admDepCount"></span></h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Verify the transaction, then approve to credit coins 1:1 (Rs 1 = 1 coin). All actions are audit-logged.</p>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>When</th><th>User</th><th>Amount</th><th>Method</th><th>Txn ID</th><th>Sender</th><th>Proof</th><th>Actions</th></tr></thead>
+              <tbody id="admDepBody"><tr><td colspan="8"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Withdrawals (manual processing) -->
+      <section id="admTab-withdrawals" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">💸 Pending withdrawals <span class="adm-muted" style="font-weight:400" id="admWdCount"></span></h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Send the money manually to the user's account, then mark as processed. Rejecting refunds the locked coins.</p>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>When</th><th>User</th><th>Amount</th><th>Method</th><th>Account</th><th>Actions</th></tr></thead>
+              <tbody id="admWdBody"><tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Payment settings -->
+      <section id="admTab-paysettings" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">⚙️ Payment accounts</h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">These accounts are shown to users on the deposit page. Update carefully.</p>
+          <form id="admPayForm">
+            <p><label for="admPayEasypaisa">Easypaisa account number</label><br>
+              <input class="text-input" type="text" id="admPayEasypaisa" maxlength="20" style="width:100%"></p>
+            <p><label for="admPayJazzcash">JazzCash account number</label><br>
+              <input class="text-input" type="text" id="admPayJazzcash" maxlength="20" style="width:100%"></p>
+            <p><label for="admPayUsdt">USDT (TRC20) wallet address</label><br>
+              <input class="text-input" type="text" id="admPayUsdt" maxlength="60" style="width:100%"></p>
+            <p id="admPayMsg" role="status" style="display:none"></p>
+            <p><button class="btn btn-primary btn-sm" type="submit">Save payment accounts</button></p>
+          </form>
         </div>
       </section>
 
