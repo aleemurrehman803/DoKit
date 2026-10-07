@@ -3,27 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
-<title>Coming Soon — DoKit</title>
-<meta name="description" content="What's next on DoKit: QR Generator, Password Generator, JSON Formatter, Unit Converter — and the TypeFight typing-battle teaser.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/coming-soon.html">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Coming Soon — DoKit">
-<meta property="og:description" content="What&#x27;s next on DoKit: QR Generator, Password Generator, JSON Formatter, Unit Converter — and the TypeFight typing-battle teaser.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/coming-soon.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Coming Soon — DoKit">
-<meta name="twitter:description" content="What&#x27;s next on DoKit: QR Generator, Password Generator, JSON Formatter, Unit Converter — and the TypeFight typing-battle teaser.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<title>Coming Soon — DoKit</title>
+<meta name="description" content="What's next on DoKit: TypeFight typing battles, QR Generator, Password Generator, JSON Formatter, Unit Converter — see the roadmap and get notified at launch.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/coming-soon.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Coming Soon — DoKit">
+<meta property="og:description" content="What's next on DoKit: TypeFight typing battles, QR Generator, Password Generator, JSON Formatter, Unit Converter — see the roadmap and get notified at launch.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/coming-soon.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Coming Soon — DoKit">
+<meta name="twitter:description" content="What's next on DoKit: TypeFight typing battles, QR Generator, Password Generator, JSON Formatter, Unit Converter — see the roadmap and get notified at launch.">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
 </head>
@@ -39,15 +39,22 @@
           <li aria-current="page" data-i18n="cs_title">Coming soon</li>
         </ol>
       </nav>
-      <h1 data-i18n="cs_title">Coming soon</h1>
-      <p style="color:var(--text-muted)" data-i18n="cs_sub">Four new tools are on the workbench. Here's a first look.</p>
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <h1 data-i18n="cs_title">Coming soon</h1>
+        <p>DoKit is growing. Here's what's on the workbench right now — and what's planned next.</p>
+      </div>
 
-      <a class="tool-card" href="typefight/" style="margin-block:var(--sp-5);border:2px solid var(--primary)">
+      <a class="tool-card" href="typefight/" style="margin-block:var(--sp-5);border:2px solid var(--primary,#6C4CF1)">
         <span class="tool-card__icon" aria-hidden="true">⚔️</span>
-        <h3 class="tool-card__name"><span data-i18n="tool_typefight_name">TypeFight</span> <span class="badge badge-amber" data-i18n="badge_soon">Coming soon</span></h3>
+        <h2 class="tool-card__name"><span data-i18n="tool_typefight_name">TypeFight</span> <span class="badge badge-amber" data-i18n="badge_soon">Coming soon</span></h2>
         <p class="tool-card__desc" data-i18n="tf_sub">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
+        <span class="tool-card__foot"><span class="btn btn-primary btn-sm">See what's planned →</span></span>
       </a>
 
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <h2>On the workbench</h2>
+        <p style="color:var(--text-muted)">Four new tools in active development. Same promise as always: free, private, and running in your browser.</p>
+      </div>
       <div class="grid">
         <div class="card">
           <div class="tool-card__icon" aria-hidden="true">📱</div>
@@ -71,9 +78,32 @@
         </div>
       </div>
 
+      <div class="section-head" style="text-align:start;margin-inline:0;margin-top:var(--sp-6)">
+        <h2>What's next</h2>
+        <p style="color:var(--text-muted)">Our public roadmap. Dates are estimates — we'll update this page as we ship.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <span class="badge badge-green">Q4 2026</span>
+          <h3 style="margin-top:var(--sp-3)">TypeFight battles + certificates</h3>
+          <p style="margin-bottom:0">Skill-based typing battles go live, with printable winner certificates and coin rewards for top typists.</p>
+        </div>
+        <div class="card">
+          <span class="badge badge-amber">Early 2027</span>
+          <h3 style="margin-top:var(--sp-3)">QR + Password tools</h3>
+          <p style="margin-bottom:0">QR Generator and Password Generator join the toolbox — still free, still fully private.</p>
+        </div>
+        <div class="card">
+          <span class="badge">Mid 2027</span>
+          <h3 style="margin-top:var(--sp-3)">Developer API + mobile apps</h3>
+          <p style="margin-bottom:0">A simple API for developers, and DoKit apps for your phone — your tools, everywhere.</p>
+        </div>
+      </div>
+
       <div class="card" style="margin-block:var(--sp-6)">
         <h2 data-i18n="notify_t">Get notified</h2>
-        <p data-i18n="notify_d">Leave your name and email. We'll send one email when new tools launch.</p>
+        <p style="color:var(--text-muted)">Leave your email — one email when new tools launch. No spam, ever.</p>
+        <div id="notifyMsg" class="card" style="display:none;border-width:2px;margin-bottom:var(--sp-4)"><p style="margin:0"></p></div>
         <form id="notifyForm">
           <div class="field">
             <label for="nName" data-i18n="notify_name">Name</label>
@@ -90,19 +120,22 @@
   </section>
 </main>
 <footer id="site-foot"></footer>
-<div id="dk-assistant-root"></div>
 <script src="js/i18n-v2.js" defer></script>
-<script src="js/i18n-ar.js" defer></script>
-<script src="js/i18n-hi.js" defer></script>
-<script src="js/i18n-es.js" defer></script>
-<script src="js/i18n-fr.js" defer></script>
-<script src="js/i18n-pt.js" defer></script>
-<script src="js/i18n-de.js" defer></script>
-<script src="js/i18n-tr.js" defer></script>
-<script src="js/i18n-ru.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="js/firebase.js?v=20261007i" defer></script>
 <script src="js/pages/info.js" defer></script>
+<script src="js/pages/notify.js" defer></script>
+<div id="dk-assistant-root"></div>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
 </body>
 </html>
