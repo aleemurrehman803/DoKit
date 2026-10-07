@@ -34,7 +34,12 @@ document.addEventListener("DOMContentLoaded", function () {
           window.location.href = "dashboard.html";
         });
       }
-    }).catch(function () { /* ignore */ });
+    }).catch(function (err) {
+      // Never swallow redirect errors silently — show them for diagnosis.
+      var gErr2 = document.getElementById("err-general");
+      if (gErr2) gErr2.textContent = DKF.friendlyError(err) +
+        " (code: " + (err && err.code) + ")";
+    });
   }
 
   // Already signed in? Skip to dashboard.
