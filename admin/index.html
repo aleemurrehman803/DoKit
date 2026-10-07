@@ -13,6 +13,38 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<style>
+/* Admin-only styles */
+.adm-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:var(--sp-4);border-bottom:2px solid var(--border,#e5e7eb);padding-bottom:.5rem}
+.adm-tab{background:none;border:none;padding:.6rem 1rem;font-size:1rem;font-weight:600;color:var(--text-muted);cursor:pointer;border-radius:.5rem .5rem 0 0}
+.adm-tab:hover{color:var(--text);background:var(--bg-muted)}
+.adm-tab.active{color:var(--primary,#6C4CF1);box-shadow:inset 0 -3px 0 var(--primary,#6C4CF1)}
+.adm-tablewrap{overflow-x:auto}
+.adm-table{width:100%;border-collapse:collapse;font-size:.95rem}
+.adm-table th,.adm-table td{padding:.6rem .75rem;text-align:start;border-bottom:1px solid var(--border,#e5e7eb);vertical-align:middle}
+.adm-table th{color:var(--text-muted);font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:.03em}
+.adm-table tbody tr:hover{background:var(--bg-muted)}
+.adm-muted{color:var(--text-muted);font-size:.85rem}
+.adm-err{color:var(--danger,#C93A3A);background:rgba(214,69,69,.08);border:1px solid rgba(214,69,69,.3);border-radius:.5rem;padding:.6rem .9rem}
+.adm-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.adm-feed{list-style:none;margin:0;padding:0}
+.adm-feed li{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-bottom:1px dashed var(--border,#e5e7eb)}
+.adm-feed li:last-child{border-bottom:none}
+.adm-feed-dot{flex:none;width:.6rem;height:.6rem;border-radius:50%;background:var(--primary,#6C4CF1);margin-top:.35rem}
+.adm-spin{display:inline-block;width:1.1rem;height:1.1rem;border:2px solid var(--border,#e5e7eb);border-top-color:var(--primary,#6C4CF1);border-radius:50%;animation:admspin .8s linear infinite;vertical-align:middle;margin-inline-end:.4rem}
+@keyframes admspin{to{transform:rotate(360deg)}}
+.sr-note{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* toggle switch */
+.adm-toolrow{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px dashed var(--border,#e5e7eb)}
+.adm-toolrow:last-of-type{border-bottom:none}
+.adm-switch{position:relative;display:inline-block;width:52px;height:28px;flex:none;cursor:pointer}
+.adm-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.adm-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s;pointer-events:none}
+.adm-slider::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.adm-switch input:checked + .adm-slider{background:var(--success-text,#1F7A4D)}
+.adm-switch input:checked + .adm-slider::before{transform:translateX(24px)}
+.adm-switch input:focus-visible + .adm-slider{outline:2px solid var(--primary,#6C4CF1);outline-offset:2px}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -23,7 +55,7 @@
       <div class="section-head" style="text-align:start;margin-inline:0">
         <span class="eyebrow">Internal</span>
         <h1>Admin panel</h1>
-        <p>Site overview and content management. Scaffold — real data via Firebase Admin SDK in production.</p>
+        <p>Site overview, user management, content toggles and audit log. Live data from Firestore.</p>
       </div>
 
       <div id="adminGate" style="margin-bottom:var(--sp-5)">
@@ -34,37 +66,84 @@
       </div>
 
       <div id="adminPanel" style="display:none">
-      <div class="grid" style="margin-bottom:var(--sp-5)">
-        <div class="card"><h3>👥 Users</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Total registered</p></div>
-        <div class="card"><h3>🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 30 days</p></div>
-        <div class="card"><h3>🪙 Coins issued</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All time</p></div>
-        <div class="card"><h3>🔗 Referrals</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All time</p></div>
+
+      <div class="adm-tabs" id="admTabs" role="tablist" aria-label="Admin sections">
+        <button class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true">📊 Dashboard</button>
+        <button class="adm-tab" data-tab="users" role="tab" aria-selected="false">👥 Users</button>
+        <button class="adm-tab" data-tab="content" role="tab" aria-selected="false">🧩 Content</button>
+        <button class="adm-tab" data-tab="audit" role="tab" aria-selected="false">📜 Audit log</button>
       </div>
 
-      <div class="card" style="margin-bottom:var(--sp-5)">
-        <h3>Tools</h3>
-        <ul>
-          <li>Image Resizer <span class="badge">live</span></li>
-          <li>Image Compressor <span class="badge">live</span></li>
-          <li>Image Converter <span class="badge">live</span></li>
-          <li>Word Counter <span class="badge">live</span></li>
-          <li>Case Converter <span class="badge">live</span></li>
-          <li>TypeMaster <span class="badge">live</span></li>
-          <li>TypeFight <span class="badge badge-amber">coming soon</span></li>
-        </ul>
-      </div>
+      <!-- 1. Dashboard -->
+      <section id="admTab-dashboard" role="tabpanel">
+        <div class="grid" style="margin-bottom:var(--sp-5)">
+          <div class="card"><h3>👥 Users</h3><p style="font-size:2rem;font-weight:700" id="statUsers">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Total registered</p></div>
+          <div class="card"><h3>🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700" id="statRuns">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 30 days</p></div>
+          <div class="card"><h3>🪙 Coins issued</h3><p style="font-size:2rem;font-weight:700" id="statCoins">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All users, all time</p></div>
+          <div class="card"><h3>✨ New users</h3><p style="font-size:2rem;font-weight:700" id="statNew">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 7 days</p></div>
+        </div>
+        <div id="admDashErr"></div>
+        <div class="card">
+          <h3>⚡ Recent activity</h3>
+          <div id="admActivity"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
 
-      <div class="card">
-        <h3>Content</h3>
-        <ul>
-          <li><a href="../guides/">Guides</a> — 3 published</li>
-          <li><a href="../blog/">Blog</a> — 3 drafts</li>
-        </ul>
-      </div>
+      <!-- 2. Users -->
+      <section id="admTab-users" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">👥 Users</h3>
+          <input id="admUserSearch" class="text-input" type="search" placeholder="Search by name or email…" aria-label="Search users" style="max-width:320px;margin-bottom:var(--sp-3)">
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Coins</th><th>Tool runs</th><th></th></tr></thead>
+              <tbody id="admUsersBody"><tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+          <div class="adm-row" style="margin-top:var(--sp-3)">
+            <button class="btn btn-sm" id="admUsersPrev">← Prev</button>
+            <span class="adm-muted" id="admUsersInfo"></span>
+            <button class="btn btn-sm" id="admUsersNext">Next →</button>
+          </div>
+        </div>
+        <div id="admUserDetail" style="display:none;margin-top:var(--sp-4)"></div>
+      </section>
+
+      <!-- 3. Content -->
+      <section id="admTab-content" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-5)">
+          <h3 style="margin-top:0">🧩 Tools — enable / disable</h3>
+          <div id="admTools"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="margin-top:0">📖 Guides</h3>
+            <div id="admGuides"></div>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">✍️ Blog posts</h3>
+            <div id="admBlog"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Audit log -->
+      <section id="admTab-audit" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">📜 Audit log <span class="adm-muted" style="font-weight:400">(latest 50)</span></h3>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+              <tbody id="admAuditBody"><tr><td colspan="5"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       </div><!-- /adminPanel -->
 
       <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
-        Access requires a signed-in admin account (Firestore → <code>admins</code> → your UID). Aggregate stats connect to Firestore in production.
+        Access requires a signed-in admin account (Firestore → <code>admins</code> → your UID). All admin actions are written to the <code>admin_audit</code> log.
       </p>
     </div>
   </section>
@@ -86,5 +165,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
 <script src="../js/pages/admin.js" defer></script>
+<script src="../js/pages/admin-full.js" defer></script>
 </body>
 </html>
