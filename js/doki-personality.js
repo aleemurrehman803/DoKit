@@ -398,6 +398,10 @@
     setStatus: circleSetStatus
   };
 
+  window.DokiRefreshFab = function (fab) {
+    if (fab && !fab.querySelector(".doki-panda")) enhanceFab(fab);
+  };
+
   window.Doki = {
     name: DOKI_NAME,
     emoji: DOKI_EMOJI,
