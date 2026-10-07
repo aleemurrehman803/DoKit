@@ -1,7 +1,7 @@
 /* DoKit — Referral system (Phase 6).
  *
  * How it works (virtual rewards for now):
- *  1. Signed-in user shares their link:  https://aleemurrehman803.github.io/DoKit/?ref={uid}
+ *  1. Signed-in user shares their link:  https://aleemurrehman803.github.io/dokit/?ref={uid}
  *  2. A visitor opens the link; the landing page stores ?ref= in localStorage.
  *  3. When the visitor signs up, a referral doc is created:
  *         referrals/{newUid} = { referrerUid, createdAt, rewarded }
@@ -14,7 +14,7 @@
   "use strict";
 
   var LS_REF = "dokit_referrer"; // captured ?ref= on landing
-  var SITE = "https://aleemurrehman803.github.io/DoKit/";
+  var SITE = "https://aleemurrehman803.github.io/dokit/";
 
   function getDb() {
     try { return (window.DKF && DKF.db) ? DKF.db() : null; } catch (e) { return null; }
@@ -69,13 +69,20 @@
       }).then(function () {
         // Reward the referrer with VIRTUAL coins (TypeFight wallet module).
         // Uses TFWallet.award() which appends to the immutable coin ledger.
+        // NOTE: under strict coin_ledger rules (owner-only create) a
+        // cross-user award is denied server-side; the status below reports
+        // the ACTUAL outcome so the UI never claims a reward that failed.
         try {
           if (window.TFWallet && TFWallet.award) {
             return TFWallet.award(ref, 25, "referral:" + uid).then(function (res) {
               if (res && !res.error) {
-                return doc.update({ rewarded: true }).catch(function () {});
+                return doc.update({ rewarded: true }).then(
+                  function () { return true; },
+                  function () { return false; }
+                );
               }
-            }).then(function () { return { status: "recorded", rewarded: true }; });
+              return false;
+            }).then(function (ok) { return { status: "recorded", rewarded: !!ok }; });
           }
         } catch (e) { /* wallet unavailable - referral still recorded */ }
         return { status: "recorded", rewarded: false };
@@ -116,3 +123,42 @@
     captureFromUrl();
   }
 })();
+
+/* ----------------------------------------------------------------------
+ * REQUIRED FIRESTORE RULES (add in Firebase console — this collection had
+ * no rules coverage before the final audit):
+ *
+ * function isAdmin() {
+ *   return request.auth != null &&
+ *     exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+ * }
+ *
+ * match /referrals/{newUid} {
+ *   // The NEW user records their own referral exactly once (doc id == uid).
+ *   // "create" on an existing doc fails by definition, so concurrent
+ *   // double-submits are rejected server-side (no double rewards).
+ *   // NOTE (M2, see js/typefight-wallet.js): nothing stops fake-account
+ *   // farming client-side. Referral rewards are VIRTUAL coins only;
+ *   // production needs phone/email verification + server-side validation.
+ *   allow create: if request.auth != null && request.auth.uid == newUid
+ *                 && request.resource.data.referredUid == request.auth.uid
+ *                 && request.resource.data.referrerUid is string
+ *                 && request.resource.data.referrerUid != request.auth.uid
+ *                 && request.resource.data.rewarded == false
+ *                 && request.resource.data.virtual == true;
+ *   // Readable by: the referred user, the referrer (their dashboard lists
+ *   // referrals via where("referrerUid","==",uid) — this rule allows it),
+ *   // and admins.
+ *   allow read: if isAdmin()
+ *               || (request.auth != null
+ *                   && (request.auth.uid == newUid
+ *                       || resource.data.referrerUid == request.auth.uid));
+ *   // Only the "rewarded" flag may flip (by the awarding flow); admins
+ *   // can correct anything.
+ *   allow update: if isAdmin()
+ *                 || (request.auth != null && request.auth.uid == newUid
+ *                     && request.resource.data.diff(resource.data)
+ *                          .affectedKeys().hasOnly(["rewarded"]));
+ *   allow delete: if false;
+ * }
+ * ---------------------------------------------------------------------- */
