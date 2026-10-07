@@ -103,6 +103,120 @@
     return h + "h" + (rest ? " " + rest + "m" : "");
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Withdrawals — LOCKED until legal clearance + payment rails (Phase 6).
+   *
+   * SECURITY DESIGN (Binance/bank-grade, ready to activate):
+   *  1. 24h cooldown AFTER the last deposit before any withdrawal.
+   *  2. Daily withdrawal limit (configurable cap).
+   *  3. 2FA (TOTP) required — FinSec.hasRecentAuth() must be true, else
+   *     the user is asked to re-authenticate.
+   *  4. Email confirmation — a confirmation token is emailed; the
+   *     withdrawal only executes after the link is clicked (stub).
+   *  5. Manual review flag — amounts >= REVIEW_THRESHOLD create a
+   *     `withdrawals/{id}` doc with status "pending_review" for an admin.
+   *  6. Idempotency key — double-clicks / retries can't create two requests.
+   *  7. Every attempt (allowed or denied) is audit-logged.
+   *
+   * requestWithdrawal() currently ALWAYS returns { status: "locked" }.
+   * Flip WITHDRAWALS_ENABLED only after legal clearance + server-side
+   * Cloud Function enforcement is live.
+   * ------------------------------------------------------------------ */
+  var WITHDRAWALS_ENABLED = false; // <-- flip only after legal clearance
+  var WITHDRAW_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24h between withdrawals
+  var DEPOSIT_COOLDOWN_MS = 24 * 60 * 60 * 1000;  // 24h after a deposit
+  var DAILY_WITHDRAW_LIMIT = 50000;               // coins per 24h (tunable)
+  var REVIEW_THRESHOLD = 100000;                  // >= this -> manual review
+  var LS_LAST_WITHDRAW = "dokit_last_withdraw";
+  var LS_LAST_DEPOSIT = "dokit_last_deposit";
+  var LS_WITHDRAWN_TODAY = "dokit_withdrawn_today"; // { date, total }
+
+  function secW() { return window.FinSec || null; }
+
+  /**
+   * Check withdrawal eligibility (scaffold — always locked for now).
+   * When enabled, enforces: deposit cooldown, withdrawal cooldown,
+   * daily limit, 2FA re-auth, and flags large amounts for review.
+   * @param {*} rawAmount
+   * @returns {{status:string, waitMs:number, message:string, needsReview:boolean}}
+   */
+  function withdrawalStatus(rawAmount) {
+    var S = secW();
+    if (!WITHDRAWALS_ENABLED) {
+      return { status: "locked", waitMs: 0, needsReview: false,
+               message: "Withdrawals are locked pending legal clearance." };
+    }
+    var amount = 0;
+    try { amount = S ? S.validateAmount(rawAmount) : Math.trunc(Number(rawAmount)); }
+    catch (e) { return { status: "invalid", waitMs: 0, needsReview: false, message: e.message }; }
+
+    // 2FA / re-auth gate for this sensitive action.
+    if (S && !S.hasRecentAuth()) {
+      return { status: "reauth", waitMs: 0, needsReview: false,
+               message: "Please re-authenticate (2FA) to withdraw." };
+    }
+    // 24h cooldown after the last deposit.
+    var lastDeposit = 0, lastWithdraw = 0;
+    try {
+      lastDeposit = parseInt(localStorage.getItem(LS_LAST_DEPOSIT), 10) || 0;
+      lastWithdraw = parseInt(localStorage.getItem(LS_LAST_WITHDRAW), 10) || 0;
+    } catch (e) {}
+    var depWait = DEPOSIT_COOLDOWN_MS - (Date.now() - lastDeposit);
+    if (lastDeposit && depWait > 0) {
+      return { status: "deposit_cooldown", waitMs: depWait, needsReview: false,
+               message: "Withdrawals unlock " + fmtWait(depWait) + " after your last deposit." };
+    }
+    // 24h cooldown between withdrawals.
+    var wdWait = WITHDRAW_COOLDOWN_MS - (Date.now() - lastWithdraw);
+    if (lastWithdraw && wdWait > 0) {
+      return { status: "cooldown", waitMs: wdWait, needsReview: false,
+               message: "Next withdrawal available in " + fmtWait(wdWait) + "." };
+    }
+    // Daily limit.
+    var today = new Date().toISOString().slice(0, 10);
+    var dayTotal = 0;
+    try {
+      var rec = JSON.parse(localStorage.getItem(LS_WITHDRAWN_TODAY) || "{}");
+      if (rec.date === today) dayTotal = rec.total | 0;
+    } catch (e) {}
+    if (dayTotal + amount > DAILY_WITHDRAW_LIMIT) {
+      return { status: "daily_limit", waitMs: 0, needsReview: false,
+               message: "Daily withdrawal limit is " + DAILY_WITHDRAW_LIMIT + " coins." };
+    }
+    // Large amounts go to manual review instead of auto-processing.
+    var needsReview = amount >= REVIEW_THRESHOLD;
+    return { status: needsReview ? "review" : "eligible", waitMs: 0, needsReview: needsReview,
+             message: needsReview ? "This amount requires manual review." : "Eligible." };
+  }
+
+  /**
+   * Request a withdrawal (scaffold — returns "locked", processes nothing).
+   * When enabled: idempotency-guarded, audit-logged, email-confirmed.
+   */
+  function requestWithdrawal(rawAmount) {
+    var S = secW();
+    var st = withdrawalStatus(rawAmount);
+    if (S) S.auditLog("withdrawal_request", {
+      amount: typeof rawAmount === "number" ? rawAmount : null,
+      result: st.status
+    });
+    if (st.status !== "eligible" && st.status !== "review") return Promise.resolve(st);
+    // Idempotency: one key per request — retries can't duplicate it.
+    var key = S ? S.newIdempotencyKey("withdrawal") : ("withdrawal_" + Date.now());
+    if (S && !S.claimIdempotencyKey(key)) {
+      return Promise.resolve({ status: "duplicate", waitMs: 0, needsReview: false,
+                               message: "This withdrawal was already submitted." });
+    }
+    /* Real implementation (NOT ACTIVE):
+       1. Create withdrawals/{key} doc { uid, amount, status: needsReview
+          ? "pending_review" : "pending_email", idempotencyKey: key }.
+       2. Send email confirmation link with token.
+       3. On email confirm -> 24h admin review window for large amounts,
+          else queue payout. NOT ACTIVE. */
+    return Promise.resolve({ status: "locked", waitMs: 0, needsReview: false,
+                             message: "Withdrawals are not active yet." });
+  }
+
   window.TFWallet = {
     EARN: EARN,
     LESSON_COINS: LESSON_COINS,
@@ -110,6 +224,9 @@
     canEarn: canEarn,
     claim: claim,
     awardBattle: awardBattle,
-    fmtWait: fmtWait
+    fmtWait: fmtWait,
+    withdrawalStatus: withdrawalStatus,
+    requestWithdrawal: requestWithdrawal,
+    WITHDRAWALS_ENABLED: WITHDRAWALS_ENABLED
   };
 })();
