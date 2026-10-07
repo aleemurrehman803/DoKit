@@ -300,12 +300,14 @@
      Exposed as window.DokiActivity = { start, stop, setStatus }. */
 
   var CIRCLE_STATUS = {
-    thinking: { en: "Doki is thinking...", ur: "\u0688\u0648\u06a9\u06cc \u0633\u0648\u0686 \u0631\u06c1\u0627 \u06c1\u06d2..." },
-    searching: { en: "Doki is searching...", ur: "\u0688\u0648\u06a9\u06cc \u062a\u0644\u0627\u0634 \u06a9\u0631 \u0631\u06c1\u0627 \u06c1\u06d2..." },
-    writing: { en: "Doki is writing...", ur: "\u0688\u0648\u06a9\u06cc \u0644\u06a9\u06be \u0631\u06c1\u0627 \u06c1\u06d2..." }
+    thinking: { en: "is thinking...", ur: "\u0633\u0648\u0686 \u0631\u06c1\u0627 \u06c1\u06d2..." },
+    searching: { en: "is searching...", ur: "\u062a\u0644\u0627\u0634 \u06a9\u0631 \u0631\u06c1\u0627 \u06c1\u06d2..." },
+    writing: { en: "is writing...", ur: "\u0644\u06a9\u06be \u0631\u06c1\u0627 \u06c1\u06d2..." },
+    working: { en: "is working", ur: "\u06a9\u0627\u0645 \u06a9\u0631 \u0631\u06c1\u0627 \u06c1\u06d2" },
+    running: { en: "Running command", ur: "\u06a9\u0645\u0627\u0646\u0688 \u0686\u0644 \u0631\u06c1\u0627 \u06c1\u06d2" }
   };
   /* showActivity types -> circle status keys (typing shows as "writing") */
-  var ACTIVITY_TO_STATUS = { thinking: "thinking", searching: "searching", typing: "writing", working: "thinking", listening: "thinking" };
+  var ACTIVITY_TO_STATUS = { thinking: "thinking", searching: "searching", typing: "writing", working: "working", running: "running", listening: "thinking" };
   var statusPill = null;
   var circleReduceMotion = false;
   try {
