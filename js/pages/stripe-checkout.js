@@ -1,3 +1,32 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "sc_pay": "🔒 Pay {amt}",
+  "sc_name": "Enter the name as printed on the card.",
+  "sc_country": "Please select your country.",
+  "sc_zip": "Enter a valid postal / ZIP code.",
+  "sc_blocked": "Stripe could not be loaded in this browser (it may be blocked by an extension or firewall).",
+  "sc_noserver": "Could not reach our servers. Please check your connection and try again.",
+  "sc_noconfig": "Card payments are not configured yet. Our team is setting up Stripe — meanwhile you can deposit with Easypaisa, JazzCash, or USDT.",
+  "sc_nostart": "Could not start the secure card form. Please try again.",
+  "sc_badnum": "Invalid card number.",
+  "sc_badexp": "Invalid expiry date.",
+  "sc_ratelimit": "Too many attempts. Please wait a moment and try again.",
+  "sc_f_number": "card number",
+  "sc_f_expiry": "expiry date",
+  "sc_f_cvc": "security code",
+  "sc_invalid_x": "Invalid {field}.",
+  "sc_required": "This field is required.",
+  "sc_fix": "Please fix the highlighted fields and try again.",
+  "sc_rejected": "Card was rejected.",
+  "sc_nobackend": "Card accepted by Stripe, but our payment server is not connected yet. No charge was made. Card payments are coming soon — please use Easypaisa / JazzCash / USDT for now.",
+  "sc_confirmed": "Payment confirmed! Your plan activates once our server verifies Stripe's webhook (usually under a minute).",
+  "sc_yourname": "YOUR NAME",
+  "sc_failed": "Payment failed.",
+  "sc_servererr": "Something went wrong talking to the payment server. No charge was made — please try again.",
+  "sc_processing": "Processing…",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — Stripe checkout page controller (bank-style form).
  *
  * WHAT THIS FILE DOES:
@@ -89,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function setBusy(busy) {
     if (payBtn) {
       payBtn.disabled = busy;
-      payBtn.textContent = busy ? "Processing…" : ("🔒 Pay " + fmtUsd(selectedPlan().plan.usd));
+      payBtn.textContent = busy ? dkT("sc_processing") : dkT("sc_pay").replace("{amt}", fmtUsd(selectedPlan().plan.usd));
     }
   }
   function fmtUsd(n) { return "$" + Number(n).toFixed(2); }
@@ -185,18 +214,18 @@ document.addEventListener("DOMContentLoaded", function () {
     var ok = true;
     var name = ($("ccName") || {}).value || "";
     if (!/^[A-Za-z][A-Za-z .'\-]{1,63}$/.test(name.trim())) {
-      fieldError("name", "Enter the name as printed on the card.");
+      fieldError("name", dkT("sc_name"));
       ok = false;
     } else fieldError("name", "");
 
     if (!$("ccCountry") || !$("ccCountry").value) {
-      fieldError("country", "Please select your country.");
+      fieldError("country", dkT("sc_country"));
       ok = false;
     } else fieldError("country", "");
 
     var zip = (($("ccZip") || {}).value || "").trim();
     if (zip.length < 3 || zip.length > 16) {
-      fieldError("zip", "Enter a valid postal / ZIP code.");
+      fieldError("zip", dkT("sc_zip"));
       ok = false;
     } else fieldError("zip", "");
     return ok;
@@ -210,18 +239,18 @@ document.addEventListener("DOMContentLoaded", function () {
     fillCountries();
     wirePreview($("ccName"));
     if (!window.StripePay) {
-      showNotice("Stripe could not be loaded in this browser (it may be blocked by an extension or firewall).");
+      showNotice(dkT("sc_blocked"));
       return;
     }
     var d = db();
     if (!d) {
-      showNotice("Could not reach our servers. Please check your connection and try again.");
+      showNotice(dkT("sc_noserver"));
       return;
     }
     d.collection("config").doc("payments").get().then(function (snap) {
       var pk = snap.exists ? ((snap.data() || {}).stripe_pk || "") : "";
       if (!pk) {
-        showNotice("Card payments are not configured yet. Our team is setting up Stripe — meanwhile you can deposit with Easypaisa, JazzCash, or USDT.");
+        showNotice(dkT("sc_noconfig"));
         return;
       }
       if (!window.StripePay.init(pk)) {
@@ -232,13 +261,13 @@ document.addEventListener("DOMContentLoaded", function () {
         { number: "card-number", expiry: "card-expiry", cvc: "card-cvc" }
       );
       if (!split) {
-        showNotice("Could not start the secure card form. Please try again.");
+        showNotice(dkT("sc_nostart"));
         return;
       }
       // Real-time validation + brand detection + preview hooks.
       split.cardNumber.on("change", function (ev) {
         stripeFieldState.number = ev;
-        fieldError("number", ev.error ? (ev.error.message || "Invalid card number.") : "");
+        fieldError("number", ev.error ? (ev.error.message || dkT("sc_badnum")) : "");
         onBrand(ev.brand);
         if (ev.empty) { digitCount = 0; renderDots(); }
         else if (!ev.complete) { digitCount = Math.min(digitCount + 1, currentBrand === "amex" ? 15 : 16); renderDots(); }
@@ -246,7 +275,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       split.cardExpiry.on("change", function (ev) {
         stripeFieldState.expiry = ev;
-        fieldError("expiry", ev.error ? (ev.error.message || "Invalid expiry date.") : "");
+        fieldError("expiry", ev.error ? (ev.error.message || dkT("sc_badexp")) : "");
         if (pvExpiry) pvExpiry.textContent = ev.complete ? "••/••" : (ev.empty ? "MM/YY" : "••/••");
       });
       split.cardCvc.on("change", function (ev) {
@@ -257,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
       wirePlanRadios();
       showGrid();
     }).catch(function () {
-      showNotice("Could not reach our servers. Please check your connection and try again.");
+      showNotice(dkT("sc_noserver"));
     });
   }
 
@@ -297,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var rl = S.checkRate("stripe_pay");
         if (!rl.ok) {
           S.auditLog("stripe_pay", { plan: sel.id, result: "rate_limited" });
-          setPayErr("Too many attempts. Please wait a moment and try again.");
+          setPayErr(dkT("sc_ratelimit"));
           return;
         }
       }
@@ -306,13 +335,13 @@ document.addEventListener("DOMContentLoaded", function () {
       var ownOk = validateOwnFields();
       // 2. Stripe fields must have no errors and not be empty.
       var stripeOk = true;
-      [["number", "card number"], ["expiry", "expiry date"], ["cvc", "security code"]].forEach(function (pair) {
+      [["number", dkT("sc_f_number")], ["expiry", dkT("sc_f_expiry")], ["cvc", dkT("sc_f_cvc")]].forEach(function (pair) {
         var st = stripeFieldState[pair[0]] || {};
-        if (st.error) { fieldError(pair[0], st.error.message || ("Invalid " + pair[1] + ".")); stripeOk = false; }
-        else if (st.empty) { fieldError(pair[0], "This field is required."); stripeOk = false; }
+        if (st.error) { fieldError(pair[0], st.error.message || dkT("sc_invalid_x").replace("{field}", pair[1])); stripeOk = false; }
+        else if (st.empty) { fieldError(pair[0], dkT("sc_required")); stripeOk = false; }
       });
       if (!ownOk || !stripeOk) {
-        setPayErr("Please fix the highlighted fields and try again.");
+        setPayErr(dkT("sc_fix"));
         return;
       }
 
@@ -328,15 +357,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!pm.ok) {
           setBusy(false);
           if (S) S.auditLog("stripe_pay", { plan: sel.id, result: "pm_failed" });
-          setPayErr(pm.error || "Card was rejected.");
+          setPayErr(pm.error || dkT("sc_rejected"));
           return null;
         }
         // 4. Backend creates the PaymentIntent (secret key never leaves server).
         if (!BACKEND_URL) {
           setBusy(false);
           if (S) S.auditLog("stripe_pay", { plan: sel.id, result: "backend_missing" });
-          setPayErr("Card accepted by Stripe, but our payment server is not connected yet. " +
-            "No charge was made. Card payments are coming soon — please use Easypaisa / JazzCash / USDT for now.");
+          setPayErr(dkT("sc_nobackend"));
           return null;
         }
         return fetch(BACKEND_URL, {
@@ -353,20 +381,20 @@ document.addEventListener("DOMContentLoaded", function () {
         setBusy(false);
         if (conf.ok) {
           if (S) S.auditLog("stripe_pay", { plan: sel.id, result: "confirmed" });
-          setPayOk("Payment confirmed! Your plan activates once our server verifies Stripe's webhook (usually under a minute).");
+          setPayOk(dkT("sc_confirmed"));
           form.reset();
           digitCount = 0; renderDots();
-          if (pvName) pvName.textContent = "YOUR NAME";
+          if (pvName) pvName.textContent = dkT("sc_yourname");
           if (pvExpiry) pvExpiry.textContent = "MM/YY";
           onBrand("unknown");
         } else {
           if (S) S.auditLog("stripe_pay", { plan: sel.id, result: "confirm_failed" });
-          setPayErr(conf.error || "Payment failed.");
+          setPayErr(conf.error || dkT("sc_failed"));
         }
       }).catch(function () {
         setBusy(false);
         if (S) S.auditLog("stripe_pay", { plan: sel.id, result: "error" });
-        setPayErr("Something went wrong talking to the payment server. No charge was made — please try again.");
+        setPayErr(dkT("sc_servererr"));
       });
     });
   }
