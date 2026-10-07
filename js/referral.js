@@ -68,14 +68,17 @@
         virtual: true
       }).then(function () {
         // Reward the referrer with VIRTUAL coins (TypeFight wallet module).
+        // Uses TFWallet.award() which appends to the immutable coin ledger.
         try {
-          if (window.DKTFWallet && DKTFWallet.awardTo) {
-            return DKTFWallet.awardTo(ref, 25, "referral").then(function () {
-              return doc.update({ rewarded: true }).catch(function () {});
-            }).then(function () { return { status: "recorded" }; });
+          if (window.TFWallet && TFWallet.award) {
+            return TFWallet.award(ref, 25, "referral:" + uid).then(function (res) {
+              if (res && !res.error) {
+                return doc.update({ rewarded: true }).catch(function () {});
+              }
+            }).then(function () { return { status: "recorded", rewarded: true }; });
           }
-        } catch (e) {}
-        return { status: "recorded" };
+        } catch (e) { /* wallet unavailable - referral still recorded */ }
+        return { status: "recorded", rewarded: false };
       });
     }).then(function (r) {
       try { localStorage.removeItem(LS_REF); } catch (e) {}
