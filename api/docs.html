@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Developer API Docs — DoKit</title>
+<meta name="description" content="DoKit Developer API documentation: authenticate, resize/compress/convert images, count words, convert case, and more.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Developer API Docs — DoKit">
+<meta property="og:description" content="DoKit Developer API documentation: authenticate, resize/compress/convert images, count words, convert case, and more.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/api/docs.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Developer API Docs — DoKit">
+<meta name="twitter:description" content="DoKit Developer API documentation: authenticate, resize/compress/convert images, count words, convert case, and more.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/api/docs.html">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<style>
+  .api-banner { background:#FFF7E6; border:1px solid #E8B93C; border-radius:12px; padding:1rem 1.25rem; margin-bottom:var(--sp-5); }
+  .endpoint { border:1px solid var(--border,#e2e2e2); border-radius:12px; padding:1.25rem; margin-bottom:var(--sp-4); }
+  .endpoint h3 { margin-top:0; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .method { font-family:ui-monospace,monospace; font-weight:700; font-size:.8rem; padding:.2rem .55rem; border-radius:6px; color:#fff; }
+  .method.post { background:#1F7A4D; } .method.get { background:#2B6CB0; }
+  pre.code { background:#1e1e2e; color:#e8e8f0; padding:1rem; border-radius:10px; overflow-x:auto; font-size:.85rem; }
+  pre.code .c { color:#8a8a9a; }
+  table.api { width:100%; border-collapse:collapse; margin-bottom:var(--sp-4); }
+  table.api th, table.api td { text-align:left; padding:.6rem .75rem; border-bottom:1px solid var(--border,#e2e2e2); font-size:.92rem; }
+  table.api th { color:var(--text-muted,#666); font-weight:600; }
+  code.inline { background:var(--bg-muted,#f1f1f1); padding:.1rem .4rem; border-radius:5px; font-size:.88em; }
+  .toc a { display:block; padding:.25rem 0; }
+@media (max-width:700px){.grid[style]{grid-template-columns:1fr!important}.toc{position:static!important}}</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:860px">
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <span class="eyebrow">Developers</span>
+        <h1>🧰 DoKit Developer API</h1>
+        <p>Put DoKit's tools inside your own apps and websites. REST + JSON, API-key auth.</p>
+      </div>
+
+      <div class="api-banner" role="note">
+        <strong>🚧 Backend in development.</strong>
+        This documentation describes the v1 API contract. The live backend at
+        <code class="inline">https://api.dokit.app/v1</code> is not serving traffic yet —
+        calls will fail until launch. The <a href="#quickstart">JS SDK</a> and
+        <a href="../account/api-keys.html">API key manager</a> are ready now so you can
+        integrate ahead of time.
+      </div>
+
+      <div class="grid" style="grid-template-columns:220px 1fr;gap:var(--sp-5);align-items:start">
+        <nav class="toc card" aria-label="On this page" style="position:sticky;top:1rem;margin:0">
+          <strong>On this page</strong>
+          <a href="#quickstart">Quickstart</a>
+          <a href="#auth">Authentication</a>
+          <a href="#ratelimits">Rate limits</a>
+          <a href="#endpoints">Endpoints</a>
+          <a href="#errors">Error codes</a>
+          <a href="#webhooks">Webhooks (planned)</a>
+        </nav>
+
+        <div>
+          <h2 id="quickstart">⚡ Quickstart</h2>
+          <p>Install the SDK (or copy <code class="inline">js/dokit-sdk.js</code> into your project):</p>
+          <pre class="code"><span class="c">// Node.js</span>
+const DoKitSDK = require("./dokit-sdk.js");
+<span class="c">// Browser: &lt;script src="https://aleemurrehman803.github.io/dokit/js/dokit-sdk.js"&gt;&lt;/script&gt;</span>
+<span class="c">// → window.DoKitSDK</span>
+
+const dokit = new DoKitSDK({ apiKey: "dk_YOUR_KEY" });
+
+<span class="c">// Count words</span>
+const stats = await dokit.countWords("Hello world");
+<span class="c">// → { words: 2, characters: 11, charactersNoSpaces: 10,</span>
+<span class="c">//     sentences: 1, readingTimeSec: 1 }</span>
+
+<span class="c">// Compress an image (browser File / Node Buffer)</span>
+const small = await dokit.compressImage(file, { quality: 0.8 });
+<span class="c">// → Blob of the compressed image</span></pre>
+          <p>Get a key: <a href="../account/api-keys.html">Account → API Keys</a> (sign in required).</p>
+
+          <h2 id="auth">🔐 Authentication</h2>
+          <p>Every request carries your key in the <code class="inline">Authorization</code> header:</p>
+          <pre class="code">Authorization: Bearer dk_9f3K…xQ2a</pre>
+          <ul>
+            <li>Keys start with <code class="inline">dk_</code> and are 35 characters long.</li>
+            <li>DoKit stores only a <strong>SHA-256 hash</strong> of your key — a leaked database reveals nothing usable.</li>
+            <li>Use one key per app. Revoke a key the moment it leaks (<a href="../account/api-keys.html">API Keys</a>).</li>
+            <li>Never put a key in client-side code that ships to browsers you don't control — call the API from your server.</li>
+          </ul>
+
+          <h2 id="ratelimits">⏱️ Rate limits</h2>
+          <table class="api">
+            <tr><th>Plan</th><th>Requests / day</th><th>Burst</th></tr>
+            <tr><td>Free</td><td>100</td><td>10 / minute</td></tr>
+            <tr><td>Pro ($6/mo)</td><td>10,000</td><td>120 / minute</td></tr>
+            <tr><td>Team ($29/mo)</td><td>100,000</td><td>600 / minute</td></tr>
+          </table>
+          <p>Over the limit you get <code class="inline">429</code> with a <code class="inline">Retry-After</code> header (seconds). The SDK surfaces it as <code class="inline">err.retryAfter</code>:</p>
+          <pre class="code">try {
+  await dokit.countWords(text);
+} catch (err) {
+  if (err.code === "rate_limited") {
+    console.log("Slow down, retry in", err.retryAfter, "seconds");
+  }
+}</pre>
+          <p>Rate limits are counted <strong>per API key</strong>, reset daily at 00:00 UTC.</p>
+
+          <h2 id="endpoints">🔌 Endpoints</h2>
+          <p>Base URL: <code class="inline">https://api.dokit.app/v1</code></p>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span> <code class="inline">/image/resize</code></h3>
+            <p>Resize an image. Multipart upload (<code class="inline">image</code> field). Returns the resized image (binary).</p>
+            <pre class="code"><span class="c"># fields</span>
+image    <span class="c">(file, required — png/jpeg/webp, ≤ 25 MB)</span>
+width    <span class="c">(int, px — width or height required)</span>
+height   <span class="c">(int, px)</span>
+fit      <span class="c">"cover" | "contain" | "fill" (default "cover")</span>
+format   <span class="c">"png" | "jpeg" | "webp" (default "png")</span></pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span> <code class="inline">/image/compress</code></h3>
+            <p>Compress an image. Returns the compressed image (binary).</p>
+            <pre class="code"><span class="c"># fields</span>
+image      <span class="c">(file, required)</span>
+quality    <span class="c">(float 0–1, default 0.8)</span>
+maxSizeKB  <span class="c">(int, optional — iteratively compress until under this size)</span></pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span> <code class="inline">/image/convert</code></h3>
+            <p>Convert between PNG, JPEG, and WebP. Returns the converted image (binary).</p>
+            <pre class="code"><span class="c"># fields</span>
+image   <span class="c">(file, required)</span>
+format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span> <code class="inline">/text/wordcount</code></h3>
+            <p>JSON body: <code class="inline">{ "text": "…" }</code> (max 1,000,000 chars).</p>
+            <pre class="code"><span class="c">→ 200 OK</span>
+{
+  "words": 2,
+  "characters": 11,
+  "charactersNoSpaces": 10,
+  "sentences": 1,
+  "readingTimeSec": 1
+}</pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span> <code class="inline">/text/caseconvert</code></h3>
+            <p>JSON body: <code class="inline">{ "text": "…", "mode": "upper|lower|title|sentence|alternating|inverse" }</code></p>
+            <pre class="code"><span class="c">→ 200 OK</span>
+{ "result": "HELLO WORLD" }</pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method get">GET</span> <code class="inline">/typing/leaderboard?game=battle&amp;limit=10</code></h3>
+            <pre class="code"><span class="c">→ 200 OK</span>
+{
+  "entries": [
+    { "rank": 1, "username": "speedy", "wpm": 112, "accuracy": 98.2 }
+  ]
+}</pre>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method get">GET</span> <code class="inline">/user/profile</code></h3>
+            <p>Returns the profile of the API key owner.</p>
+            <pre class="code"><span class="c">→ 200 OK</span>
+{ "userId": "abc123", "plan": "free", "credits": 250 }</pre>
+          </div>
+
+          <h2 id="errors">❌ Error codes</h2>
+          <table class="api">
+            <tr><th>HTTP</th><th><code class="inline">code</code></th><th>Meaning</th></tr>
+            <tr><td>400</td><td><code class="inline">invalid_argument</code></td><td>Bad input (e.g. unknown format, empty text)</td></tr>
+            <tr><td>401</td><td><code class="inline">unauthorized</code></td><td>Missing/invalid API key</td></tr>
+            <tr><td>401</td><td><code class="inline">key_revoked</code></td><td>Key was revoked — generate a new one</td></tr>
+            <tr><td>403</td><td><code class="inline">plan_required</code></td><td>Endpoint needs Pro/Team</td></tr>
+            <tr><td>413</td><td><code class="inline">file_too_large</code></td><td>Image over 25 MB</td></tr>
+            <tr><td>429</td><td><code class="inline">rate_limited</code></td><td>Too many requests — honor <code class="inline">Retry-After</code></td></tr>
+            <tr><td>500</td><td><code class="inline">internal_error</code></td><td>Something broke on our side — retry later</td></tr>
+          </table>
+          <p>Error body shape:</p>
+          <pre class="code">{ "error": { "code": "rate_limited", "message": "Daily quota exceeded" } }</pre>
+
+          <h2 id="webhooks">🔔 Webhooks (planned)</h2>
+          <p>Planned for v1.1: subscribe to events (<code class="inline">certificate.issued</code>, <code class="inline">payment.completed</code>) at a URL you own. Payloads will be signed with HMAC-SHA256 so you can verify they came from DoKit. Not live yet — see <a href="SUGGESTIONS.md">the API roadmap (SUGGESTIONS.md)</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+</body>
+</html>
