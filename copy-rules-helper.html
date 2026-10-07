@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Copy Firestore Rules</title></head>
+<body>
+<h1>Firestore Rules Copy Helper</h1>
+<p>Click the button to copy rules to clipboard, then paste into Firebase console.</p>
+<button id="copyBtn" style="padding:20px 40px;font-size:18px;">Copy Rules to Clipboard</button>
+<p id="status"></p>
+<script>
+document.getElementById('copyBtn').onclick = async () => {
+  try {
+    const r = await fetch('https://raw.githubusercontent.com/aleemurrehman803/DoKit/main/firestore.rules');
+    const text = await r.text();
+    await navigator.clipboard.writeText(text);
+    document.getElementById('status').textContent = 'Copied! ' + text.length + ' chars. Now paste into Firebase console.';
+  } catch(e) {
+    document.getElementById('status').textContent = 'Error: ' + e.message;
+  }
+};
+</script>
+</body>
+</html>
