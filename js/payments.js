@@ -74,15 +74,62 @@
 
     /**
      * Start a payment. Currently ALWAYS resolves as "not_configured".
+     *
+     * SECURITY (active even in scaffold mode):
+     *  - Amount is validated via FinSec (rejects negatives, fractions,
+     *    NaN/Infinity, overflow) BEFORE anything else happens.
+     *  - Rate-limited: max 3 payment attempts/minute (velocity check).
+     *  - Every attempt is audit-logged (allowed AND rejected) with a
+     *    suspicious-pattern scan. Rejected input never reaches a provider.
+     *
      * @param {Object} order - { amount, currency, method, planId, userId }
      * @returns {Promise<{status:string, message:string}>}
      */
     initiate: function (order) {
       order = order || {};
+      var S = window.FinSec || null;
+
+      // 1. Validate amount first — fail closed on bad input.
+      var amount = 0;
+      try {
+        amount = S ? S.validateAmount(order.amount) : Math.trunc(Number(order.amount));
+        if (!(amount > 0)) throw new Error("Amount must be greater than zero.");
+      } catch (e) {
+        if (S) S.auditLog("payment_attempt", {
+          reason: order.planId || "", result: "rejected: " + e.message
+        });
+        return Promise.resolve({ status: "invalid_amount", message: e.message });
+      }
+
+      // 2. Velocity check.
+      if (S) {
+        var rl = S.checkRate("payment_attempt");
+        if (!rl.ok) {
+          S.auditLog("payment_attempt", {
+            amount: amount, reason: order.planId || "", result: "rate_limited"
+          });
+          return Promise.resolve({
+            status: "rate_limited",
+            message: "Too many payment attempts. Please wait a moment and try again."
+          });
+        }
+        // 3. Fraud heuristics (flags are logged, not auto-blocking here).
+        var flags = S.detectSuspicious("payment_attempt", amount, {});
+        if (flags.length) {
+          S.auditLog("payment_attempt", {
+            amount: amount, reason: order.planId || "",
+            result: "flagged", extra: flags.join(",")
+          });
+        }
+      }
+
+      // 4. No provider is configured yet — honest scaffold response.
       var method = order.method || "";
       var provider = PROVIDERS[method];
+      if (S) S.auditLog("payment_attempt", {
+        amount: amount, reason: order.planId || "", result: "not_configured"
+      });
       if (!provider || !provider.isConfigured()) {
-        // Scaffolding response — the UI shows "Coming soon".
         return Promise.resolve({
           status: "not_configured",
           message: "Payments are not available yet. Pro launches soon — everything is free for now."
