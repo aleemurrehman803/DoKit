@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Coin Wallet — TypeFight — DoKit</title>
+<meta name="description" content="Your TypeFight virtual coin wallet: balance, tamper-evident history, and ways to earn.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/wallet.html">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="./tool.css">
+<style>
+  .wallet-balance { font-size:3rem; font-weight:800; }
+  .earn-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(12rem,1fr)); gap:var(--sp-3); }
+  .txn-table { width:100%; border-collapse:collapse; font-size:var(--fs-sm); }
+  .txn-table th, .txn-table td { text-align:start; padding:.5rem; border-bottom:1px solid var(--border); }
+  .txn-pos { color:var(--success-text, #1F7A4D); font-weight:700; }
+  .txn-neg { color:var(--danger-text, #C93A3A); font-weight:700; }
+  .chain-badge { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-size:var(--fs-sm); font-weight:600; }
+  .chain-ok { background:#e6f7ec; color:#1F7A4D; }
+  .chain-bad { background:#fdecec; color:#C93A3A; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="../">Home</a></li>
+          <li><a href="./">TypeFight</a></li>
+          <li aria-current="page">Wallet</li>
+        </ol>
+      </nav>
+
+      <h1>🪙 Coin wallet</h1>
+      <p style="color:var(--text-muted)"><strong>Virtual coins only</strong> — no cash value, cannot be withdrawn or exchanged.</p>
+
+      <div id="tfGate" style="display:none">
+        <div class="card" style="text-align:center">
+          <h3>🔒 Sign in required</h3>
+          <p style="color:var(--text-muted)">Your wallet lives in your account.</p>
+          <p><a class="btn btn-primary" href="../account/login.html">Log in</a></p>
+        </div>
+      </div>
+
+      <div id="tfApp" style="display:none">
+        <div class="card" style="text-align:center;margin-bottom:var(--sp-4)">
+          <p style="color:var(--text-muted);margin:0">Balance</p>
+          <p class="wallet-balance" id="wBalance">…</p>
+          <p><span class="chain-badge" id="chainBadge" style="display:none"></span></p>
+        </div>
+
+        <h2>Earn coins</h2>
+        <div class="earn-grid" style="margin-bottom:var(--sp-5)">
+          <div class="card">
+            <h3>⌨️ Typing test</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-sm)">Complete a typing test</p>
+            <p><strong>+10</strong> coins <span style="color:var(--text-muted);font-size:var(--fs-sm)">/ hour</span></p>
+            <p><button class="btn btn-sm" id="earnTest">Claim</button>
+               <a class="btn btn-sm btn-ghost" href="../typing/test.html">Take test</a></p>
+            <p class="earn-note" id="noteTest" style="font-size:var(--fs-sm);color:var(--text-muted)"></p>
+          </div>
+          <div class="card">
+            <h3>🔥 Daily streak</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-sm)">Check in every day</p>
+            <p><strong>+5</strong> coins <span style="color:var(--text-muted);font-size:var(--fs-sm)">/ day</span></p>
+            <p><button class="btn btn-sm" id="earnStreak">Claim</button></p>
+            <p class="earn-note" id="noteStreak" style="font-size:var(--fs-sm);color:var(--text-muted)"></p>
+          </div>
+          <div class="card">
+            <h3>⚔️ Win battles</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-sm)">1st: 50 · 2nd: 30 · 3rd: 20</p>
+            <p><a class="btn btn-sm btn-primary" href="./battle.html">Battle now</a></p>
+          </div>
+        </div>
+
+        <h2>History <span style="font-size:var(--fs-sm);color:var(--text-muted)">(tamper-evident ledger)</span></h2>
+        <div class="card">
+          <div id="txnLoading"><p style="color:var(--text-muted)">Loading…</p></div>
+          <table class="txn-table" id="txnTable" style="display:none">
+            <thead><tr><th>When</th><th>What</th><th style="text-align:end">Coins</th></tr></thead>
+            <tbody id="txnBody"></tbody>
+          </table>
+          <p id="txnEmpty" style="display:none;color:var(--text-muted)">No coin activity yet — earn your first coins above.</p>
+        </div>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)">
+          Every entry is hash-chained to the previous one. Entries can never be edited or deleted —
+          any tampering breaks the chain (verified above).
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/typefight.js" defer></script>
+<script src="../js/typefight-wallet.js" defer></script>
+<script src="../js/pages/typefight-wallet-page.js" defer></script>
+</body>
+</html>
