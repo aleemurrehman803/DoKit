@@ -10,6 +10,16 @@
 <link rel="apple-touch-icon" href="../assets/icon.svg">
 <title>Admin — DoKit</title>
 <meta name="description" content="DoKit admin panel — manage users, content, deposits, withdrawals, and system settings. Restricted access.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Admin — DoKit">
+<meta property="og:description" content="DoKit admin panel — manage users, content, deposits, withdrawals, and system settings. Restricted access.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/admin/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Admin — DoKit">
+<meta name="twitter:description" content="DoKit admin panel — manage users, content, deposits, withdrawals, and system settings. Restricted access.">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
@@ -69,14 +79,14 @@
       <div id="adminPanel" style="display:none">
 
       <div class="adm-tabs" id="admTabs" role="tablist" aria-label="Admin sections">
-        <button class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true">📊 Dashboard</button>
-        <button class="adm-tab" data-tab="users" role="tab" aria-selected="false">👥 Users</button>
-        <button class="adm-tab" data-tab="content" role="tab" aria-selected="false">🧩 Content</button>
-        <button class="adm-tab" data-tab="audit" role="tab" aria-selected="false">📜 Audit log</button>
-        <button class="adm-tab" data-tab="security" role="tab" aria-selected="false">🔐 Security</button>
-        <button class="adm-tab" data-tab="deposits" role="tab" aria-selected="false">💰 Deposits</button>
-        <button class="adm-tab" data-tab="withdrawals" role="tab" aria-selected="false">💸 Withdrawals</button>
-        <button class="adm-tab" data-tab="paysettings" role="tab" aria-selected="false">⚙️ Pay settings</button>
+        <button type="button" class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true">📊 Dashboard</button>
+        <button type="button" class="adm-tab" data-tab="users" role="tab" aria-selected="false">👥 Users</button>
+        <button type="button" class="adm-tab" data-tab="content" role="tab" aria-selected="false">🧩 Content</button>
+        <button type="button" class="adm-tab" data-tab="audit" role="tab" aria-selected="false">📜 Audit log</button>
+        <button type="button" class="adm-tab" data-tab="security" role="tab" aria-selected="false">🔐 Security</button>
+        <button type="button" class="adm-tab" data-tab="deposits" role="tab" aria-selected="false">💰 Deposits</button>
+        <button type="button" class="adm-tab" data-tab="withdrawals" role="tab" aria-selected="false">💸 Withdrawals</button>
+        <button type="button" class="adm-tab" data-tab="paysettings" role="tab" aria-selected="false">⚙️ Pay settings</button>
       </div>
 
       <!-- 1. Dashboard -->
@@ -106,9 +116,9 @@
             </table>
           </div>
           <div class="adm-row" style="margin-top:var(--sp-3)">
-            <button class="btn btn-sm" id="admUsersPrev">← Prev</button>
+            <button type="button" class="btn btn-sm" id="admUsersPrev">← Prev</button>
             <span class="adm-muted" id="admUsersInfo"></span>
-            <button class="btn btn-sm" id="admUsersNext">Next →</button>
+            <button type="button" class="btn btn-sm" id="admUsersNext">Next →</button>
           </div>
         </div>
         <div id="admUserDetail" style="display:none;margin-top:var(--sp-4)"></div>
@@ -263,6 +273,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
 <script src="../js/pages/admin.js" defer></script>
+<script src="../js/dk-utils.js" defer></script>
 <script src="../js/pages/admin-full.js" defer></script>
 </body>
 </html>
