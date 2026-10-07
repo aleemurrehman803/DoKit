@@ -6,14 +6,9 @@
    - Mobile-first responsive (360px / 768px / 1280px)
    ============================================================ */
 
-/* Self-hosted Noto Nastaliq Urdu (SIL OFL) — no external requests at runtime */
-@font-face {
-  font-family: "Noto Nastaliq Urdu";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("../../assets/fonts/noto-nastaliq-urdu.woff2") format("woff2");
-}
+/* NOTE: Self-hosted Noto Nastaliq Urdu (SIL OFL) @font-face removed temporarily —
+   the woff2 (>100KB) cannot be pushed via API; it will be uploaded via web UI.
+   Meanwhile Urdu falls back to system Nastaliq (Android/iOS) / Jameel Noori. */
 
 :root {
   /* ---- Refined blue-identity palette ---- */
@@ -297,7 +292,7 @@ h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -0.01em; }
   margin-bottom: 14px;
 }
 [data-theme="dark"] .eyebrow { color: var(--primary-200); }
-.page-head { margin-bottom: 26px; } /* legacy alias */
+/* (.page-head legacy alias removed Oct 7, 2026: unused) */
 
 .section-title { font-size: var(--fs-h2); font-weight: 800; letter-spacing: -0.015em; margin-bottom: 8px; }
 .section-sub { color: var(--muted); margin-bottom: 24px; font-size: 1.02rem; }
@@ -521,8 +516,8 @@ h1, h2, h3, h4 { line-height: 1.25; letter-spacing: -0.01em; }
   max-width: 480px;
   margin: 12px auto;
 }
-.field, .form-group { margin-bottom: 16px; }
-.field > label, .form-group > label {
+.field { margin-bottom: 16px; }
+.field > label {
   display: block;
   font-weight: 700;
   margin-bottom: 7px;
@@ -745,21 +740,7 @@ p.form-note, .form-note.text-center { margin-top: 14px; }
 .footer-inner a:hover { color: var(--primary); }
 
 /* ================= Pills / badges / misc ================= */
-.pill {
-  display: inline-block;
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-.pill.pill-primary { background: var(--primary-100); border-color: var(--primary-200); color: var(--primary-700); }
-[data-theme="dark"] .pill.pill-primary { color: var(--primary-200); }
-.pill.pill-success { background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 30%, transparent); color: var(--success); }
+/* (.pill family removed Oct 7, 2026: unused) */
 
 .empty-state {
   text-align: center;
@@ -779,19 +760,7 @@ p.form-note, .form-note.text-center { margin-top: 14px; }
 }
 .empty-state p { font-size: 0.96rem; max-width: 32rem; margin-inline: auto; }
 
-.progress-bar {
-  height: 10px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.progress-bar > div {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary-500), var(--accent));
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
+/* (.progress-bar removed Oct 7, 2026: unused) */
 
 .picker-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 22px; }
 .pick {
@@ -800,6 +769,10 @@ p.form-note, .form-note.text-center { margin-top: 14px; }
   color: var(--ink);
   border-radius: 11px;
   padding: 10px 19px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   font-weight: 700;
   font-family: inherit;
