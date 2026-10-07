@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Battle — TypeFight — DoKit</title>
+<meta name="description" content="60-second typing battle against bot opponents. Winner earns virtual coins.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/battle.html">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="./tool.css">
+<style>
+  .battle-text { font-size:1.15rem; line-height:1.9; background:var(--bg-muted,#f4f4f5); border-radius:.75rem; padding:1rem 1.25rem; margin-bottom:1rem; }
+  .battle-text .done { color:var(--success-text,#1F7A4D); }
+  .battle-text .current { background:var(--brand-soft,#eef); border-radius:.2rem; }
+  .battle-text .todo { color:var(--text-muted); }
+  #battleInput { width:100%; font-size:1.1rem; padding:.75rem; }
+  .lb-row { display:flex; align-items:center; gap:.75rem; padding:.5rem .25rem; border-bottom:1px solid var(--border); }
+  .lb-avatar { font-size:1.5rem; width:2.2rem; text-align:center; }
+  .lb-bar { flex:1; height:.6rem; background:var(--bg-muted,#eee); border-radius:999px; overflow:hidden; }
+  .lb-fill { height:100%; background:var(--brand,#6C4CF1); border-radius:999px; transition:width .4s; }
+  .lb-wpm { min-width:4.5rem; text-align:end; font-variant-numeric:tabular-nums; }
+  .lb-you { font-weight:700; }
+  .countdown { font-size:4rem; font-weight:800; text-align:center; }
+  .diff-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-3); margin-bottom:var(--sp-4); }
+  .diff-card { cursor:pointer; text-align:center; }
+  .diff-card[aria-pressed="true"] { border-color:var(--brand); box-shadow:0 0 0 2px var(--brand-soft,#eef); }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="../">Home</a></li>
+          <li><a href="./">TypeFight</a></li>
+          <li aria-current="page">Battle</li>
+        </ol>
+      </nav>
+
+      <h1>⚔️ Typing battle</h1>
+      <p style="color:var(--text-muted)">60 seconds. Same text. Beat the bots — <strong>1st: 50 · 2nd: 30 · 3rd: 20</strong> virtual coins.</p>
+
+      <div id="tfGate" style="display:none">
+        <div class="card" style="text-align:center">
+          <h3>🔒 Sign in required</h3>
+          <p style="color:var(--text-muted)">Battles need an account so winnings go to your wallet.</p>
+          <p><a class="btn btn-primary" href="../account/login.html">Log in</a></p>
+        </div>
+      </div>
+
+      <div id="tfApp" style="display:none">
+        <!-- Setup -->
+        <div id="battleSetup" class="card">
+          <h2>Choose difficulty</h2>
+          <div class="diff-cards" role="radiogroup" aria-label="Bot difficulty">
+            <button type="button" class="card diff-card" data-diff="easy" aria-pressed="true">
+              <div style="font-size:2rem">🐢</div><h3>Easy</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-sm)">Bots ~25 WPM</p>
+            </button>
+            <button type="button" class="card diff-card" data-diff="medium" aria-pressed="false">
+              <div style="font-size:2rem">🐇</div><h3>Medium</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-sm)">Bots ~45 WPM</p>
+            </button>
+            <button type="button" class="card diff-card" data-diff="hard" aria-pressed="false">
+              <div style="font-size:2rem">🐆</div><h3>Hard</h3>
+              <p style="color:var(--text-muted);font-size:var(--fs-sm)">Bots ~65 WPM</p>
+            </button>
+          </div>
+          <p><button class="btn btn-primary btn-lg" id="startBtn">Start battle</button></p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Anti-cheat is on: pasting is disabled and inhuman input patterns are flagged.</p>
+        </div>
+
+        <!-- Countdown -->
+        <div id="battleCountdown" class="card" style="display:none">
+          <div class="countdown" id="countNum">3</div>
+          <p style="text-align:center;color:var(--text-muted)">Get ready…</p>
+        </div>
+
+        <!-- Racing -->
+        <div id="battleRace" style="display:none">
+          <div class="card" style="margin-bottom:var(--sp-4)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+              <strong>⏱ <span id="raceTimer">60</span>s</strong>
+              <span><strong id="raceWpm">0</strong> WPM · <strong id="raceAcc">100%</strong> acc</span>
+            </div>
+            <div class="battle-text" id="raceText" aria-hidden="true"></div>
+            <label for="battleInput" class="sr-only" style="position:absolute;left:-9999px">Type the text above</label>
+            <input id="battleInput" class="text-input" autocomplete="off" autocapitalize="off" spellcheck="false"
+                   placeholder="Start typing when the race begins…">
+          </div>
+          <div class="card">
+            <h3>Live leaderboard</h3>
+            <div id="leaderboard"></div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="battleResults" class="card" style="display:none;text-align:center">
+          <h2 id="resTitle">🏁 Finished!</h2>
+          <p style="font-size:1.25rem"><strong id="resPlace"></strong></p>
+          <p><span id="resWpm"></span> WPM · <span id="resAcc"></span>% accuracy</p>
+          <p id="resCoins" style="font-size:1.5rem;font-weight:700"></p>
+          <p id="resFlag" style="display:none;color:var(--danger-text,#C93A3A)"></p>
+          <div id="resCert" style="display:none">
+            <p>🏆 You earned a certificate!</p>
+            <p><a class="btn btn-primary" id="resCertLink" href="./certificate.html">View certificate</a></p>
+          </div>
+          <p style="margin-top:var(--sp-4)">
+            <button class="btn btn-primary" id="againBtn">Battle again</button>
+            <a class="btn btn-ghost" href="./wallet.html">Wallet</a>
+          </p>
+        </div>
+      </div>
+      <p style="color:var(--text-muted);font-size:var(--fs-sm)">🪙 Virtual coins only — no cash value, cannot be withdrawn.</p>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/typefight.js" defer></script>
+<script src="../js/typefight-wallet.js" defer></script>
+<script src="../js/pages/typefight-battle.js" defer></script>
+</body>
+</html>
