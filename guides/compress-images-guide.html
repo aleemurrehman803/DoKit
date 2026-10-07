@@ -13,6 +13,13 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<style>
+.guide-lang-toggle{display:flex;gap:.5rem;margin:.75rem 0 1.25rem}
+.guide-lang-btn{padding:.4rem 1.1rem;border:1px solid var(--dk-border,#d0d0d0);border-radius:999px;background:transparent;cursor:pointer;font:inherit}
+.guide-lang-btn.is-active{font-weight:700;border-color:var(--dk-primary,#6C4CF1)}
+.guide-ur[dir="rtl"]{text-align:right}
+.guide-ur .breadcrumb{direction:ltr;text-align:left}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -27,45 +34,93 @@
           <li aria-current="page">Compress images</li>
         </ol>
       </nav>
-      <span class="eyebrow">Guide</span>
-      <h1>How to compress images</h1>
-      <p class="tagline">Make photos dramatically smaller for websites, email and messaging — without visible quality loss.</p>
-      <p><a class="btn btn-primary" href="../tools/image-compressor/">Open Image Compressor</a></p>
+      <section class="tsection guide-lang" aria-label="Guide content">
+        <div class="guide-lang-toggle" role="group" aria-label="Guide language">
+          <button type="button" class="guide-lang-btn is-active" data-guide-lang="en" aria-pressed="true">English</button>
+          <button type="button" class="guide-lang-btn" data-guide-lang="ur" aria-pressed="false">اردو</button>
+        </div>
+        <div class="guide-en">
+          <span class="eyebrow">Guide</span>
+          <h1>How to compress images</h1>
+          <p class="tagline">Make photos dramatically smaller for websites, email and messaging — without visible quality loss.</p>
+          <p><a class="btn btn-primary" href="../tools/image-compressor/">Open Image Compressor</a></p>
 
-      <section class="tsection" aria-labelledby="steps-h">
-        <h2 id="steps-h">Steps</h2>
-        <ol class="thowto">
+          <section class="tsection" aria-labelledby="steps-h">
+            <h2 id="steps-h">Steps</h2>
+<ol class="thowto">
           <li><div><h3>1. Add your images</h3><p>Drop JPG, PNG or WebP files into the tool. Batch mode handles many files at once.</p></div></li>
           <li><div><h3>2. Set a target size or quality</h3><p>Either pick a quality level (e.g. 80%) or set a target file size in KB and let DoKit find the best quality that fits.</p></div></li>
           <li><div><h3>3. Compare before &amp; after</h3><p>Zoom into details to confirm the compressed version still looks clean — text edges and faces matter most.</p></div></li>
           <li><div><h3>4. Convert format if it helps</h3><p>WebP is usually 25–35% smaller than JPEG at the same quality. Consider converting while you compress.</p></div></li>
           <li><div><h3>5. Download the results</h3><p>Download files individually or all at once. Originals on your device are never modified.</p></div></li>
         </ol>
-      </section>
+          </section>
 
-      <section class="tsection collapsible" aria-labelledby="tips-h">
-        <h2 id="tips-h">Pro tips</h2>
-        <ul>
+          <section class="tsection collapsible" aria-labelledby="tips-h">
+            <h2 id="tips-h">Pro tips</h2>
+<ul>
           <li><strong>80% JPEG quality is the sweet spot</strong> for photos — much smaller, visually identical.</li>
           <li><strong>Compress before uploading</strong> to websites and CMSs — pages load faster and rank better.</li>
           <li><strong>Keep a master copy.</strong> Compression is lossy; archive the original before shrinking.</li>
         </ul>
-      </section>
+          </section>
 
-      <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-        <h2 id="faq-h">Frequently asked questions</h2>
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+            <h2 id="faq-h">Frequently asked questions</h2>
         <details><summary>Will people notice the quality difference?</summary><p class="tfaq-a">At sensible settings (JPEG ~80%, WebP ~75%), no. Pixel-peeping at 200% zoom might reveal tiny differences, but normal viewing won't.</p></details>
         <details><summary>Can I hit an exact KB target?</summary><p class="tfaq-a">Yes — set a target size in KB and the tool adjusts quality automatically to fit. PNG files can't always reach very small targets; convert to JPEG/WebP instead.</p></details>
         <details><summary>Is compression safe for print?</summary><p class="tfaq-a">For print, keep quality at 90%+ and don't downscale. For screen use, 70–80% is plenty.</p></details>
-      </section>
+          </section>
 
-      <section class="tsection" aria-labelledby="rel-h">
-        <h2 id="rel-h">Related tools</h2>
-        <div class="trelated">
+          <section class="tsection" aria-labelledby="rel-h">
+            <h2 id="rel-h">Related tools</h2>
+<div class="trelated">
           <a class="trel-card" href="../tools/image-compressor/"><h3>Image Compressor</h3><p>Shrink file size without visible quality loss.</p></a>
           <a class="trel-card" href="../tools/image-converter/"><h3>Image Converter</h3><p>Convert between PNG, JPEG, and WebP.</p></a>
           <a class="trel-card" href="../tools/image-resizer/"><h3>Image Resizer</h3><p>Change image dimensions in pixels or percent.</p></a>
         </div>
+          </section>        </div>
+        <div class="guide-ur" hidden lang="ur" dir="rtl">
+          <span class="eyebrow">رہنمائی</span>
+          <h1>تصویروں کو کمپریس کیسے کریں</h1>
+          <p class="tagline">ویب سائٹس، ای میل اور میسجنگ کے لیے تصاویر کو نمایاں طور پر چھوٹا بنائیں — کوالٹی میں واضح فرق کے بغیر۔</p>
+          <p><a class="btn btn-primary" href="../tools/image-compressor/">امیج کمپریسر کھولیں</a></p>
+
+          <section class="tsection" aria-labelledby="steps-h-ur">
+            <h2 id="steps-h-ur">مراحل</h2>
+<ol class="thowto">
+          <li><div><h3>تصویریں شامل کریں</h3><p>ٹول میں JPG، PNG یا WebP فائلیں ڈالیں۔ بیچ موڈ ایک ساتھ کئی فائلیں سنبھال لیتا ہے۔</p></div></li>
+          <li><div><h3>ہدف سائز یا کوالٹی مقرر کریں</h3><p>یا تو کوالٹی لیول چنیں (مثلاً 80%) یا KB میں ہدف فائل سائز مقرر کریں اور DoKit کو بہترین موزوں کوالٹی تلاش کرنے دیں۔</p></div></li>
+          <li><div><h3>پہلے اور بعد کا موازنہ کریں</h3><p>تفصیلات میں زوم کر کے تصدیق کریں کہ کمپریس شدہ نسخہ اب بھی صاف لگ رہا ہے — متن کے کنارے اور چہرے سب سے اہم ہیں۔</p></div></li>
+          <li><div><h3>ضرورت ہو تو فارمیٹ تبدیل کریں</h3><p>اسی کوالٹی پر WebP عام طور پر JPEG سے 25–35% چھوٹا ہوتا ہے۔ کمپریس کرتے وقت تبدیل کرنے پر غور کریں۔</p></div></li>
+          <li><div><h3>نتائج ڈاؤن لوڈ کریں</h3><p>فائلیں الگ الگ یا ایک ساتھ ڈاؤن لوڈ کریں۔ آپ کے آلے پر موجود اصل فائلیں کبھی تبدیل نہیں ہوتیں۔</p></div></li>
+        </ol>
+          </section>
+
+          <section class="tsection collapsible" aria-labelledby="tips-h-ur">
+            <h2 id="tips-h-ur">ماہرانہ مشورے</h2>
+<ul>
+          <li><strong>تصاویر کے لیے 80% JPEG کوالٹی بہترین ہے</strong> — بہت چھوٹی، بظاہر ایک جیسی۔</li>
+          <li><strong>ویب سائٹس پر اپ لوڈ سے پہلے کمپریس کریں</strong> — صفحات تیزی سے لوڈ ہوتے ہیں اور بہتر رینک کرتے ہیں۔</li>
+          <li><strong>ماسٹر کاپی محفوظ رکھیں۔</strong> کمپریشن لاسی ہوتا ہے؛ چھوٹا کرنے سے پہلے اصل کو آرکائیو کریں۔</li>
+        </ul>
+          </section>
+
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h-ur">
+            <h2 id="faq-h-ur">اکثر پوچھے گئے سوالات</h2>
+        <details><summary>کیا لوگ کوالٹی کا فرق محسوس کریں گے؟</summary><p class="tfaq-a">معقول ترتیبات پر (JPEG ~80%، WebP ~75%) نہیں۔ 200% زوم پر باریک بینی سے معمولی فرق نظر آ سکتا ہے، لیکن عام دیکھنے میں نہیں۔</p></details>
+        <details><summary>کیا میں عین KB ہدف حاصل کر سکتا ہوں؟</summary><p class="tfaq-a">جی ہاں — KB میں ہدف سائز مقرر کریں اور ٹول خودکار طور پر کوالٹی ایڈجسٹ کر کے فٹ کر دیتا ہے۔ PNG فائلیں ہمیشہ بہت چھوٹے اہداف تک نہیں پہنچ سکتیں؛ اس کے بجائے JPEG/WebP میں تبدیل کریں۔</p></details>
+        <details><summary>کیا کمپریشن پرنٹ کے لیے محفوظ ہے؟</summary><p class="tfaq-a">پرنٹ کے لیے کوالٹی 90%+ رکھیں اور ڈاؤن اسکیل نہ کریں۔ اسکرین کے استعمال کے لیے 70–80% کافی ہے۔</p></details>
+          </section>
+
+          <section class="tsection" aria-labelledby="rel-h-ur">
+            <h2 id="rel-h-ur">متعلقہ ٹولز</h2>
+<div class="trelated">
+          <a class="trel-card" href="../tools/image-compressor/"><h3>امیج کمپریسر</h3><p>کوالٹی میں واضح فرق کے بغیر فائل سائز کم کریں۔</p></a>
+          <a class="trel-card" href="../tools/image-converter/"><h3>امیج کنورٹر</h3><p>PNG، JPEG اور WebP کے درمیان تبدیل کریں۔</p></a>
+          <a class="trel-card" href="../tools/image-resizer/"><h3>امیج ری سائزر</h3><p>پکسلز یا فیصد میں تصویر کی پیمائش بدلیں۔</p></a>
+        </div>
+          </section>        </div>
       </section>
     </div>
   </section>
@@ -73,6 +128,7 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
+<script src="../js/guide-toggle.js" defer></script>
 <script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("guides"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
 </body>
 </html>

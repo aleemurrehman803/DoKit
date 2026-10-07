@@ -13,6 +13,13 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<style>
+.guide-lang-toggle{display:flex;gap:.5rem;margin:.75rem 0 1.25rem}
+.guide-lang-btn{padding:.4rem 1.1rem;border:1px solid var(--dk-border,#d0d0d0);border-radius:999px;background:transparent;cursor:pointer;font:inherit}
+.guide-lang-btn.is-active{font-weight:700;border-color:var(--dk-primary,#6C4CF1)}
+.guide-ur[dir="rtl"]{text-align:right}
+.guide-ur .breadcrumb{direction:ltr;text-align:left}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -27,46 +34,95 @@
           <li aria-current="page">Resize images</li>
         </ol>
       </nav>
-      <span class="eyebrow">Guide</span>
-      <h1>How to resize images</h1>
-      <p class="tagline">Change any photo to the exact width and height you need — for web, print, passports or social media — right in your browser.</p>
-      <p><a class="btn btn-primary" href="../tools/image-resizer/">Open Image Resizer</a></p>
+      <section class="tsection guide-lang" aria-label="Guide content">
+        <div class="guide-lang-toggle" role="group" aria-label="Guide language">
+          <button type="button" class="guide-lang-btn is-active" data-guide-lang="en" aria-pressed="true">English</button>
+          <button type="button" class="guide-lang-btn" data-guide-lang="ur" aria-pressed="false">اردو</button>
+        </div>
+        <div class="guide-en">
+          <span class="eyebrow">Guide</span>
+          <h1>How to resize images</h1>
+          <p class="tagline">Change any photo to the exact width and height you need — for web, print, passports or social media — right in your browser.</p>
+          <p><a class="btn btn-primary" href="../tools/image-resizer/">Open Image Resizer</a></p>
 
-      <section class="tsection" aria-labelledby="steps-h">
-        <h2 id="steps-h">Steps</h2>
-        <ol class="thowto">
+          <section class="tsection" aria-labelledby="steps-h">
+            <h2 id="steps-h">Steps</h2>
+<ol class="thowto">
           <li><div><h3>1. Add your images</h3><p>Drag &amp; drop photos into the upload area, or click “Select files”. You can add many at once — everything stays on your device.</p></div></li>
           <li><div><h3>2. Pick a resize mode</h3><p>Choose <strong>pixels</strong> for exact dimensions (e.g. 1920×1080), <strong>percent</strong> to scale proportionally, or a <strong>preset</strong> for common sizes.</p></div></li>
           <li><div><h3>3. Lock the aspect ratio (optional)</h3><p>Keep “Lock aspect” on to avoid stretched images. Turn it off only when you need an exact non-proportional size.</p></div></li>
           <li><div><h3>4. Choose the output format</h3><p>Keep “Same as input”, or convert to JPEG for photos, PNG for graphics with transparency, WebP for the smallest web files.</p></div></li>
           <li><div><h3>5. Review and download</h3><p>Check each preview, fix any mistakes, then hit <strong>Download all</strong> — or download files individually.</p></div></li>
         </ol>
-      </section>
+          </section>
 
-      <section class="tsection collapsible" aria-labelledby="tips-h">
-        <h2 id="tips-h">Pro tips</h2>
-        <ul>
+          <section class="tsection collapsible" aria-labelledby="tips-h">
+            <h2 id="tips-h">Pro tips</h2>
+<ul>
           <li><strong>Start from the largest original.</strong> Downsizing keeps quality; upsizing a tiny image always looks soft.</li>
           <li><strong>Use presets for documents.</strong> Passport, ID and board-photo presets already set the right dimensions.</li>
           <li><strong>Batch mode saves hours.</strong> Apply one size to dozens of photos, then review the queue before downloading.</li>
         </ul>
-      </section>
+          </section>
 
-      <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-        <h2 id="faq-h">Frequently asked questions</h2>
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+            <h2 id="faq-h">Frequently asked questions</h2>
         <details><summary>Will resizing reduce image quality?</summary><p class="tfaq-a">Downsizing a large photo keeps it sharp. Upsizing beyond the original size will look blurry — always start from the biggest file you have.</p></details>
         <details><summary>Are my photos uploaded anywhere?</summary><p class="tfaq-a">No. DoKit processes images inside your browser. Nothing is sent to a server.</p></details>
         <details><summary>Can I resize many images at once?</summary><p class="tfaq-a">Yes — add a whole batch, apply one size to all, review each preview, then download everything together.</p></details>
         <details><summary>What size should I use for the web?</summary><p class="tfaq-a">1920px wide is plenty for full-width banners; 1200px works for article images. Keep file sizes small with the Image Compressor afterwards.</p></details>
-      </section>
+          </section>
 
-      <section class="tsection" aria-labelledby="rel-h">
-        <h2 id="rel-h">Related tools</h2>
-        <div class="trelated">
+          <section class="tsection" aria-labelledby="rel-h">
+            <h2 id="rel-h">Related tools</h2>
+<div class="trelated">
           <a class="trel-card" href="../tools/image-resizer/"><h3>Image Resizer</h3><p>Change image dimensions in pixels or percent.</p></a>
           <a class="trel-card" href="../tools/image-compressor/"><h3>Image Compressor</h3><p>Shrink file size without visible quality loss.</p></a>
           <a class="trel-card" href="../tools/image-converter/"><h3>Image Converter</h3><p>Convert between PNG, JPEG, and WebP.</p></a>
         </div>
+          </section>        </div>
+        <div class="guide-ur" hidden lang="ur" dir="rtl">
+          <span class="eyebrow">رہنمائی</span>
+          <h1>تصویروں کا سائز کیسے بدلیں</h1>
+          <p class="tagline">کسی بھی تصویر کو اپنی ضرورت کے عین مطابق چوڑائی اور اونچائی میں بدلیں — ویب، پرنٹ، پاسپورٹ یا سوشل میڈیا کے لیے — براہ راست اپنے براؤزر میں۔</p>
+          <p><a class="btn btn-primary" href="../tools/image-resizer/">امیج ری سائزر کھولیں</a></p>
+
+          <section class="tsection" aria-labelledby="steps-h-ur">
+            <h2 id="steps-h-ur">مراحل</h2>
+<ol class="thowto">
+          <li><div><h3>تصویریں شامل کریں</h3><p>اپ لوڈ والے حصے میں تصاویر ڈریگ کر کے چھوڑیں، یا “Select files” پر کلک کریں۔ آپ ایک ساتھ کئی تصاویر شامل کر سکتے ہیں — سب کچھ آپ کے آلے پر رہتا ہے۔</p></div></li>
+          <li><div><h3>ری سائز کا طریقہ چنیں</h3><p>عین پیمائش کے لیے <strong>پکسلز</strong> (مثلاً 1920×1080)، متناسب اسکیل کے لیے <strong>فیصد</strong>، یا عام سائزوں کے لیے <strong>پری سیٹ</strong> منتخب کریں۔</p></div></li>
+          <li><div><h3>تناسب مقفل رکھیں (اختیاری)</h3><p>کھنچی ہوئی تصویروں سے بچنے کے لیے “Lock aspect” آن رکھیں۔ صرف تب بند کریں جب عین غیر متناسب سائز درکار ہو۔</p></div></li>
+          <li><div><h3>آؤٹ پٹ فارمیٹ چنیں</h3><p>“Same as input” رکھیں، یا تصاویر کے لیے JPEG، شفافیت والی گرافکس کے لیے PNG، اور ویب کی چھوٹی ترین فائلوں کے لیے WebP میں تبدیل کریں۔</p></div></li>
+          <li><div><h3>جائزہ لیں اور ڈاؤن لوڈ کریں</h3><p>ہر پیش نظارہ چیک کریں، غلطیاں درست کریں، پھر <strong>Download all</strong> دبائیں — یا فائلیں الگ الگ ڈاؤن لوڈ کریں۔</p></div></li>
+        </ol>
+          </section>
+
+          <section class="tsection collapsible" aria-labelledby="tips-h-ur">
+            <h2 id="tips-h-ur">ماہرانہ مشورے</h2>
+<ul>
+          <li><strong>سب سے بڑی اصل تصویر سے شروع کریں۔</strong> سائز کم کرنے پر کوالٹی برقرار رہتی ہے؛ چھوٹی تصویر بڑی کرنے پر ہمیشہ دھندلی لگتی ہے۔</li>
+          <li><strong>دستاویزات کے لیے پری سیٹ استعمال کریں۔</strong> پاسپورٹ، شناختی کارڈ اور بورڈ فوٹو کے پری سیٹ میں پہلے سے درست پیمائش ہوتی ہے۔</li>
+          <li><strong>بیچ موڈ گھنٹوں کا وقت بچاتا ہے۔</strong> درجنوں تصویروں پر ایک سائز لگائیں، پھر ڈاؤن لوڈ سے پہلے قطار کا جائزہ لیں۔</li>
+        </ul>
+          </section>
+
+          <section class="tsection tfaq collapsible" aria-labelledby="faq-h-ur">
+            <h2 id="faq-h-ur">اکثر پوچھے گئے سوالات</h2>
+        <details><summary>کیا سائز بدلنے سے کوالٹی کم ہوگی؟</summary><p class="tfaq-a">بڑی تصویر چھوٹی کرنے پر تیز رہتی ہے۔ اصل سائز سے بڑا کرنے پر دھندلی لگے گی — ہمیشہ سب سے بڑی فائل سے شروع کریں۔</p></details>
+        <details><summary>کیا میری تصاویر کہیں اپ لوڈ ہوتی ہیں؟</summary><p class="tfaq-a">نہیں۔ DoKit تصاویر آپ کے براؤزر کے اندر پروسیس کرتا ہے۔ سرور کو کچھ نہیں بھیجا جاتا۔</p></details>
+        <details><summary>کیا میں ایک ساتھ کئی تصویریں ری سائزر کر سکتا ہوں؟</summary><p class="tfaq-a">جی ہاں — پورا بیچ شامل کریں، سب پر ایک سائز لگائیں، ہر پیش نظارہ دیکھیں، پھر سب کچھ ایک ساتھ ڈاؤن لوڈ کریں۔</p></details>
+        <details><summary>ویب کے لیے کون سا سائز استعمال کروں؟</summary><p class="tfaq-a">مکمل چوڑائی والے بینرز کے لیے 1920px کافی ہے؛ مضامین کی تصاویر کے لیے 1200px کام کرتا ہے۔ بعد میں امیج کمپریسر سے فائل سائز چھوٹا رکھیں۔</p></details>
+          </section>
+
+          <section class="tsection" aria-labelledby="rel-h-ur">
+            <h2 id="rel-h-ur">متعلقہ ٹولز</h2>
+<div class="trelated">
+          <a class="trel-card" href="../tools/image-resizer/"><h3>امیج ری سائزر</h3><p>پکسلز یا فیصد میں تصویر کی پیمائش بدلیں۔</p></a>
+          <a class="trel-card" href="../tools/image-compressor/"><h3>امیج کمپریسر</h3><p>کوالٹی میں واضح فرق کے بغیر فائل سائز کم کریں۔</p></a>
+          <a class="trel-card" href="../tools/image-converter/"><h3>امیج کنورٹر</h3><p>PNG، JPEG اور WebP کے درمیان تبدیل کریں۔</p></a>
+        </div>
+          </section>        </div>
       </section>
     </div>
   </section>
@@ -74,6 +130,7 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
+<script src="../js/guide-toggle.js" defer></script>
 <script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("guides"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
 </body>
 </html>
