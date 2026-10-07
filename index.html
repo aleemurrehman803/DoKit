@@ -23,14 +23,18 @@
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
-<style>/* Critical: prevent FOUC before hub.css loads */
+<style>/* Critical: prevent FOUC before hub.css loads.
+   Theme-aware: respects data-theme set by the early script below. */
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fff;color:#1a1a2e}
+[data-theme="dark"] body{background:#12101F;color:#F2EFFD}
 ul[class],ol[class]{list-style:none;margin:0;padding:0}
 img{max-width:100%;height:auto}
 .hero-illustration{max-width:100%}
 #site-nav{min-height:4.25rem}
 #site-foot{min-height:10rem}
 </style>
+<script>/* Early theme: apply saved theme before CSS paints (prevents white flash in dark mode) */
+(function(){try{var t=localStorage.getItem("dokit_theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.setAttribute("data-theme","dark")}}catch(e){}})();</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"DoKit","alternateName":"DoKit — Every tool you'll ever need","url":"https://aleemurrehman803.github.io/dokit/","inLanguage":["en","ur"]}
 </script>
