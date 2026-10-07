@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../assets/icon.svg">
@@ -11,7 +11,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>All Tools — DoKit | Free Online Tools</title>
 <meta name="description" content="Browse all 6 free DoKit tools: image resizer, compressor, converter, word counter, case converter, and the TypeMaster typing school.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/">
+<meta property="og:title" content="All Tools — DoKit | Free Online Tools">
+<meta property="og:description" content="Browse all 6 free DoKit tools: image resizer, compressor, converter, word counter, case converter, and the TypeMaster typing school.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/tools/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="All Tools — DoKit | Free Online Tools">
+<meta name="twitter:description" content="Browse all 6 free DoKit tools: image resizer, compressor, converter, word counter, case converter, and the TypeMaster typing school.">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
@@ -60,5 +68,10 @@
 <div id="dk-assistant-root"></div>
 <script src="../js/assistant-kb.js" defer></script>
 <script src="../js/assistant.js" defer></script>
+<script src="../js/assistant-ai.js" defer></script>
+<script src="../js/assistant-memory.js" defer></script>
+<script src="../js/assistant-enhance.js" defer></script>
+<script src="../js/doki-personality.js" defer></script>
+<script type="module" src="../js/assistant-ai-init.js"></script>
 </body>
 </html>
