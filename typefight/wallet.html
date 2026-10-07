@@ -7,7 +7,17 @@
 <meta name="theme-color" content="#6C4CF1">
 <title>Coin Wallet — TypeFight — DoKit</title>
 <meta name="description" content="Your TypeFight virtual coin wallet: balance, tamper-evident history, and ways to earn.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/wallet.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Coin Wallet — TypeFight — DoKit">
+<meta property="og:description" content="Your TypeFight virtual coin wallet: balance, tamper-evident history, and ways to earn.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typefight/wallet.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Coin Wallet — TypeFight — DoKit">
+<meta name="twitter:description" content="Your TypeFight virtual coin wallet: balance, tamper-evident history, and ways to earn.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/wallet.html">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="stylesheet" href="../css/tokens.css">
@@ -72,7 +82,7 @@
             <h3>⌨️ Typing test</h3>
             <p style="color:var(--text-muted);font-size:var(--fs-sm)">Complete a typing test</p>
             <p><strong>+10</strong> coins <span style="color:var(--text-muted);font-size:var(--fs-sm)">/ hour</span></p>
-            <p><button class="btn btn-sm" id="earnTest">Claim</button>
+            <p><button type="button" class="btn btn-sm" id="earnTest">Claim</button>
                <a class="btn btn-sm btn-ghost" href="../typing/test.html">Take test</a></p>
             <p class="earn-note" id="noteTest" style="font-size:var(--fs-sm);color:var(--text-muted)"></p>
           </div>
@@ -80,7 +90,7 @@
             <h3>🔥 Daily streak</h3>
             <p style="color:var(--text-muted);font-size:var(--fs-sm)">Check in every day</p>
             <p><strong>+5</strong> coins <span style="color:var(--text-muted);font-size:var(--fs-sm)">/ day</span></p>
-            <p><button class="btn btn-sm" id="earnStreak">Claim</button></p>
+            <p><button type="button" class="btn btn-sm" id="earnStreak">Claim</button></p>
             <p class="earn-note" id="noteStreak" style="font-size:var(--fs-sm);color:var(--text-muted)"></p>
           </div>
           <div class="card">
@@ -115,6 +125,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/dk-utils.js" defer></script>
 <script src="../js/typefight.js" defer></script>
 <script src="../js/finsec.js" defer></script>
 <script src="../js/typefight-wallet.js" defer></script>
