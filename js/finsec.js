@@ -103,20 +103,36 @@
    * @param {string} action - Key from RATE_LIMITS.
    * @returns {{ok:boolean, retryAfterMs:number}} ok=false means slow down.
    */
-  function checkRate(action) {
-    var lim = RATE_LIMITS[action] || { maxPerMinute: 10, maxPerHour: 60 };
+  function checkRate(action, maxCount, windowMs) {
+    /* Optional overrides: checkRate("x", 5, 3600000) = max 5 per hour.
+     * Without overrides, uses RATE_LIMITS[action] defaults. */
+    var lim;
+    if (typeof maxCount === "number" && typeof windowMs === "number") {
+      lim = { maxPerMinute: maxCount, maxPerHour: maxCount, windowMs: windowMs };
+    } else {
+      lim = RATE_LIMITS[action] || { maxPerMinute: 10, maxPerHour: 60 };
+    }
     var now = Date.now();
     var buckets = readBuckets();
     var b = buckets[action] || [];
-    // Keep only events from the last hour.
-    b = b.filter(function (t) { return now - t < 3600000; });
-    var lastMin = b.filter(function (t) { return now - t < 60000; }).length;
-    var lastHour = b.length;
-    if (lastMin >= lim.maxPerMinute || lastHour >= lim.maxPerHour) {
+    var window = lim.windowMs || 3600000;
+    // Keep only events within the window.
+    b = b.filter(function (t) { return now - t < window; });
+    if (lim.windowMs) {
+      // Custom window mode: simple count check.
+      if (b.length >= lim.maxPerMinute) {
+        var oldest = Math.min.apply(null, b);
+        return { ok: false, retryAfterMs: Math.max(0, oldest + window - now) };
+      }
+    } else {
+      var lastMin = b.filter(function (t) { return now - t < 60000; }).length;
+      var lastHour = b.length;
+      if (lastMin >= lim.maxPerMinute || lastHour >= lim.maxPerHour) {
       // Retry after the oldest relevant event expires.
       var oldest = b[0] || now;
       var retryAfterMs = Math.max(0, (lastMin >= lim.maxPerMinute ? oldest + 60000 : oldest + 3600000) - now);
       return { ok: false, retryAfterMs: retryAfterMs };
+      }
     }
     b.push(now);
     buckets[action] = b;
@@ -312,6 +328,8 @@
    * Prefer textContent where possible; use this when HTML is required.
    */
   function esc(s) {
+    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
