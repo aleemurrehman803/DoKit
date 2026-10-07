@@ -22,16 +22,17 @@
         // Bot protection: Firebase App Check (reCAPTCHA Enterprise).
         // Requests to Auth/Firestore carry an App Check token; the
         // Firebase console enforces it once "Enforce" is turned on.
-        // DIAGNOSTIC (2026-10-07): App Check temporarily disabled to isolate
-        // the Google sign-in auth/internal-error. Will re-enable after test.
-        // try {
-        //   if (firebase.appCheck) {
-        //     firebase.appCheck().activate(
-        //       new firebase.appCheck.ReCaptchaEnterpriseProvider("6LcljOItAAAAAASwSZRF2YrGeqG_8NgrWJiJctnb"),
-        //       true /* auto-refresh tokens */
-        //     );
-        //   }
-        // } catch (e) { /* App Check optional: app still works unenforced */ }
+        // Bot protection: Firebase App Check (reCAPTCHA Enterprise).
+        // Requests to Auth/Firestore carry an App Check token; the
+        // Firebase console enforces it once "Enforce" is turned on.
+        try {
+          if (firebase.appCheck) {
+            firebase.appCheck().activate(
+              new firebase.appCheck.ReCaptchaEnterpriseProvider("6LcljOItAAAAAASwSZRF2YrGeqG_8NgrWJiJctnb"),
+              true /* auto-refresh tokens */
+            );
+          }
+        } catch (e) { /* App Check optional: app still works unenforced */ }
       }
       return true;
     } catch (e) { return false; }
