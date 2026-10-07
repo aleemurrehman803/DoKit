@@ -8,13 +8,21 @@
  *   2. No ?id — lists all of the signed-in user's certificates.
  *
  * QR CONTENT: the public verify URL
- *   https://aleemurrehman803.github.io/DoKit/typefight/verify/?id=<certId>
+ *   https://aleemurrehman803.github.io/dokit/typefight/verify/?id=<certId>
  *
  * Certificates are created by TF.createCertificate() (see js/typefight.js)
  * after a battle win or a 60+ WPM milestone, and REQUIRE a fighter profile.
  */
 document.addEventListener("DOMContentLoaded", function () {
   try { window.DKUI && (DKUI.renderNav("typefight"), DKUI.renderFooter(), DKUI.init()); } catch (e) {}
+
+  /* HTML-escape helper: prefer shared DKUtils, fall back to local. */
+  function esc(s) {
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
 
   var currentUser = null;
 
@@ -42,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var c = res.cert;
       document.getElementById("cName").textContent = c.username;
       document.getElementById("cDetail").textContent =
-        kindLabel(c.kind) + " — " + c.wpm + " WPM · " + c.accuracy + "% accuracy";
+        kindLabel(c.kind) + " — " + esc(c.wpm) + " WPM · " + esc(c.accuracy) + "% accuracy";
       document.getElementById("cSerial").textContent = c.serial || "—";
       document.getElementById("cDate").textContent = c.date;
       document.getElementById("cId").textContent = certId;
