@@ -69,9 +69,8 @@
    * XSS-safe HTML escaping (all user content rendered via innerHTML
    * MUST go through this).
    * ------------------------------------------------------------------ */
-  function esc(s) {
-    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
-    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
