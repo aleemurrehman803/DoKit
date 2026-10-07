@@ -77,10 +77,10 @@ img{max-width:100%;height:auto}
   <section class="section cats-section" aria-labelledby="cats-h">
     <div class="container">
       <div class="section-head reveal">
-        <p class="section-kicker heading-accent" >Find your tool</p>
+        <p class="section-kicker heading-accent" data-i18n="home2.kicker_cats">Find your tool</p>
         <h2 id="cats-h" data-i18n="cats_title">Browse by category</h2>
         <div class="section-rule" aria-hidden="true"></div>
-        <p >Tap a category to see its tools — or search above.</p>
+        <p data-i18n="cats_sub">Tap a category to see its tools — or search above.</p>
       </div>
       <div class="cats-overlap">
         <div id="recentBox" hidden></div>
@@ -173,16 +173,17 @@ img{max-width:100%;height:auto}
         <h2 data-i18n="faq_teaser_t">Quick answers</h2>
         <p data-i18n="faq_teaser_sub">The three questions everyone asks first.</p>
       </div>
-      <div class="faq-accordion reveal" id="faqTeaser">
-        <div class="faq-item">
+      <div class="faq-accordion" id="faqTeaser">
+        <!-- Scroll-reveal: each item fades/slides in with stagger as it enters the viewport (see js/ui.js initReveal). -->
+        <div class="faq-item reveal" data-delay="0">
           <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq1_a">Yes — every tool listed here is free with no account, no watermarks, and no usage caps on normal use.</div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="120">
           <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq2_q">Do my files get uploaded anywhere?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq2_a">Never. Image tools process your files inside your own browser.</div>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal" data-delay="240">
           <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq3_q">Do I need to create an account?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a" data-i18n="fq3_a">No. Open a tool and use it.</div>
         </div>
@@ -207,6 +208,7 @@ img{max-width:100%;height:auto}
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
 <script src="js/i18n-patch.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/tools-data.js" defer></script>
