@@ -1,8 +1,30 @@
-/* DoKit — "Doki" Assistant personality + activity animations.
-   - Beautiful name: Doki 🌟
-   - Rich activity states: thinking, searching, typing, working
-   - Animated FAB icon with pulse
-*/
+/**
+ * DoKit — Doki Personality & Animation Module
+ * =============================================
+ * WHAT: Gives the assistant its "Doki ✨" identity with animated UI elements.
+ *       Includes floating FAB icon, activity indicators, and personality constants.
+ *
+ * WHY: A named, animated assistant feels more friendly and alive than a generic
+ *      "DoKit Assistant". The ✨ sparkle and animations create delight.
+ *      Activity indicators ("Doki is thinking...") set expectations during AI delays.
+ *
+ * HOW IT WORKS:
+ *   1. MutationObserver watches #dk-assistant-root for FAB and panel title
+ *   2. FAB: Replaces 💬 with animated ✨ (CSS float + pulse ring animations)
+ *   3. Title: Changes "DoKit Assistant" → "Doki ✨"
+ *   4. Activity API: Doki.showActivity(type) displays animated status:
+ *      - thinking 🤔, searching 🔍, typing ⌨️, working ⚙️, listening 🎤
+ *      - Each with bouncing icon + animated dots
+ *   5. Injects CSS animations via <style> tag (doki-styles)
+ *
+ * ANIMATIONS (CSS keyframes):
+ *   - doki-float: Gentle up/down + rotate on FAB icon (3s loop)
+ *   - doki-pulse: Expanding ring around FAB (2s loop)
+ *   - doki-bounce: Activity icon bounce (1s loop)
+ *   - doki-dot: Typing dots wave (1.4s staggered)
+ *
+ * @module Doki
+ */
 (function () {
   "use strict";
 
@@ -18,6 +40,14 @@
     listening: { text: "Doki is listening", icon: "🎤" }
   };
 
+  /**
+   * Initialize Doki personality. Called on DOMContentLoaded (or immediately if
+   * DOM already ready).
+   * WHY MutationObserver (not direct DOM access): The assistant panel
+   * (#dk-assistant-root content) is built asynchronously by assistant.js.
+   * We can't know when it's ready, so we observe for the FAB and title elements
+   * and enhance them as they appear. Also injects the CSS animations once.
+   */
   function init() {
     // Update FAB button to show Doki branding
     var root = document.getElementById("dk-assistant-root");
@@ -42,6 +72,13 @@
     addDokiStyles();
   }
 
+  /**
+   * Transform the generic 💬 chat button into Doki's animated ✨ identity.
+   * WHY replace content: The ✨ sparkle is Doki's brand mark. The CSS animations
+   * (doki-float + doki-pulse, injected by addDokiStyles) make it feel alive —
+   * floating gently and emitting a pulse ring every 2s to draw attention.
+   * @param {HTMLElement} fab - The .dk-fab button element.
+   */
   function enhanceFab(fab) {
     // Replace 💬 with animated Doki icon
     fab.innerHTML = '<span class="doki-fab-icon">✨</span>';
@@ -49,6 +86,13 @@
     fab.classList.add("doki-fab");
   }
 
+  /**
+   * Inject Doki's CSS animations into <head> (once, guarded by #doki-styles id).
+   * WHY inject (not a .css file): Keeps personality self-contained in one JS
+   * module — no extra HTTP request, no build step. Animations use CSS custom
+   * properties (var(--brand)) so they adapt to light/dark theme automatically.
+   * Keyframes: doki-float, doki-pulse, doki-bounce, doki-dot, doki-work.
+   */
   function addDokiStyles() {
     if (document.getElementById("doki-styles")) return;
     var s = document.createElement("style");
@@ -129,6 +173,19 @@
   }
 
   // Show activity indicator in chat
+  /**
+   * Display an animated "Doki is ..." activity indicator in the chat.
+   * WHY activity indicators: AI responses take 1-3 seconds. Without feedback,
+   * users think the app froze. "Doki is thinking..." with bouncing dots sets
+   * expectations and feels responsive. Caller must call hideActivity(el) when done.
+   * @param {string} type - One of: thinking, searching, typing, working, listening.
+   *                       Unknown types fall back to "thinking".
+   * @returns {HTMLElement|null} The indicator element (pass to hideActivity),
+   *                             or null if chat body not found.
+   * @example
+   *   var el = Doki.showActivity("thinking");
+   *   doAsyncWork().then(function () { Doki.hideActivity(el); });
+   */
   function showActivity(type) {
     var root = document.getElementById("dk-assistant-root");
     if (!root) return null;
@@ -149,6 +206,12 @@
     return div;
   }
 
+  /**
+   * Remove an activity indicator from the chat.
+   * WHY null-safe: The element may already be gone (e.g., chat cleared).
+   * Never throws — safe to call unconditionally in .finally() blocks.
+   * @param {HTMLElement|null} el - Element returned by showActivity().
+   */
   function hideActivity(el) {
     if (el && el.parentNode) el.parentNode.removeChild(el);
   }
