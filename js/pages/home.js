@@ -126,15 +126,24 @@ function peekNames(cat){
   return cat.tools.map(function(s){ var x=toolBySlug(s); return x?esc(t(x.nameKey)):""; })
     .filter(Boolean).join(" \u00B7 ");
 }
-function catCardHTML(cat, isOpen){
-  var tools=cat.tools.map(toolBySlug).filter(Boolean).sort(toolOrder);
-  var items=tools.map(toolItemHTML).join("");
-  var open=isOpen?" open":"";
-  var exp=isOpen?"true":"false";
-  var label=isOpen?t("cat_close"):t("cat_open");
+/* ---------- Full-width category panel (Oct 7, 2026) ----------
+   Category cards stay a clean equal-height grid and NEVER expand internally.
+   Tapping a card opens a full-width panel BELOW the grid with that
+   category's tools. Only one panel open at a time. */
+var activeCatId=null; /* id of the category whose panel is open; null = closed */
+function catById(id){
+  var found=null;
+  CATS.forEach(function(c){ if(c.id===id) found=c; });
+  return found;
+}
+function catCardHTML(cat){
+  var isActive=cat.id===activeCatId;
+  var open=isActive?" open":"";
+  var exp=isActive?"true":"false";
+  var label=isActive?t("cat_close"):t("cat_open");
   var pastel=cat.pastel?(" pastel "+cat.pastel):"";
   return '<div class="cat-card'+open+'" data-cat="'+cat.id+'">'
-    +'<button type="button" class="cat-head" aria-expanded="'+exp+'" aria-controls="cat-panel-'+cat.id+'" id="cat-btn-'+cat.id+'" aria-label="'+esc(t(cat.titleKey))+" \u2014 "+esc(label)+'">'
+    +'<button type="button" class="cat-head" aria-expanded="'+exp+'" aria-controls="catPanel" id="cat-btn-'+cat.id+'" aria-label="'+esc(t(cat.titleKey))+" \u2014 "+esc(label)+'">'
     +'<span class="cat-head__icon'+pastel+'" aria-hidden="true">'+cat.icon+"</span>"
     +'<span class="cat-head__text">'
     +'<span class="cat-head__title">'+esc(t(cat.titleKey))+"</span>"
@@ -144,16 +153,61 @@ function catCardHTML(cat, isOpen){
     +'<span class="cat-head__count"><span aria-hidden="true">'+cat.tools.length+"</span> "+esc(t(1===cat.tools.length?"cat_n_tool":"cat_n_tools"))+"</span>"
     +'<span class="cat-chevron" aria-hidden="true">\u25BE</span>'
     +"</button>"
-    +'<div class="cat-panel" id="cat-panel-'+cat.id+'" role="region" aria-labelledby="cat-btn-'+cat.id+'">'
-    +'<div class="cat-panel__inner"><div class="cat-divider" aria-hidden="true"></div>'
-    +'<ul class="cat-tools">'+items+"</ul></div></div></div>";
+    +"</div>";
 }
-function renderCats(openId){
+function panelHTML(cat){
+  var tools=cat.tools.map(toolBySlug).filter(Boolean).sort(toolOrder);
+  var items=tools.map(toolItemHTML).join("");
+  var pastel=cat.pastel?(" pastel "+cat.pastel):"";
+  var closeLabel=esc(t("cat_close")+" \u2014 "+t(cat.titleKey));
+  return '<div class="cat-panel-full__card" role="region" aria-labelledby="cat-btn-'+cat.id+'">'
+    +'<div class="cat-panel-full__head">'
+    +'<span class="cat-head__icon'+pastel+'" aria-hidden="true">'+cat.icon+"</span>"
+    +'<span class="cat-panel-full__titles">'
+    +'<span class="cat-panel-full__title">'+esc(t(cat.titleKey))+"</span>"
+    +'<span class="cat-panel-full__sub">'+esc(t(cat.subKey))+"</span>"
+    +"</span>"
+    +'<button type="button" class="cat-panel-full__close" data-panel-close aria-label="'+closeLabel+'">\u2715</button>'
+    +"</div>"
+    +'<ul class="cat-tools">'+items+"</ul>"
+    +"</div>";
+}
+function renderPanel(){
+  var panel=document.getElementById("catPanel");
+  if(!panel) return;
+  var cat=activeCatId?catById(activeCatId):null;
+  if(!cat){ panel.classList.remove("open"); panel.innerHTML=""; return; }
+  panel.innerHTML='<div class="cat-panel-full__inner">'+panelHTML(cat)+"</div>";
+  void panel.offsetWidth; /* reflow so the open transition plays on content swap */
+  panel.classList.add("open");
+}
+function openPanel(id){
+  if(!catById(id)) return;
+  activeCatId=id;
+  renderCats();
+  renderPanel();
+  var panel=document.getElementById("catPanel");
+  if(panel){
+    var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try{ panel.scrollIntoView({behavior:reduced?"auto":"smooth",block:"nearest"}); }catch(e){}
+  }
+}
+function closePanel(refocus){
+  if(!activeCatId) return;
+  var id=activeCatId;
+  activeCatId=null;
+  renderCats();
+  renderPanel();
+  if(refocus){
+    var btn=document.getElementById("cat-btn-"+id);
+    if(btn) btn.focus();
+  }
+}
+function renderCats(){
   var list=document.getElementById("catList");
   var empty=document.getElementById("toolsEmpty");
   if(!list) return;
-  if(!openId) openId=CATS[0].id; /* first category open by default */
-  list.innerHTML=CATS.map(function(c){ return catCardHTML(c, c.id===openId); }).join("");
+  list.innerHTML=CATS.map(function(c){ return catCardHTML(c); }).join("");
   list.classList.add("is-bento"); /* bento grid layout (desktop) */
   if(empty) empty.style.display="none";
 }
@@ -177,13 +231,11 @@ function currentQuery(){
   var si=document.getElementById("toolSearch");
   return si?(si.value||"").trim().toLowerCase():"";
 }
-function currentOpen(){
-  var o=document.querySelector("#catList .cat-card.open");
-  return o?o.getAttribute("data-cat"):null;
-}
 function render(){
   var q=currentQuery();
-  if(q) renderSearch(q); else renderCats(currentOpen());
+  if(q){ activeCatId=null; renderSearch(q); } /* searching closes the panel */
+  else renderCats();
+  renderPanel();
   renderRecent();
 }
 /* ---------- Recently used row (point 47) ----------
@@ -307,42 +359,48 @@ document.addEventListener("DOMContentLoaded",function(){
   var si=document.getElementById("toolSearch");
   if(si) si.addEventListener("input",render);
   var list=document.getElementById("catList");
+  var panel=document.getElementById("catPanel");
+  /* Category card click → toggle the full-width panel below the grid. */
   if(list) list.addEventListener("click",function(ev){
     var btn=ev.target.closest(".cat-head");
     if(!btn||!list.contains(btn)) return;
     var card=btn.closest(".cat-card");
-    var wasOpen=card.classList.contains("open");
-    list.querySelectorAll(".cat-card").forEach(function(c){
-      var b=c.querySelector(".cat-head"); if(!b) return;
-      var id=c.getAttribute("data-cat");
-      var cfg=null; CATS.forEach(function(x){ if(x.id===id) cfg=x; });
-      var willOpen=(c===card)&&!wasOpen;
-      c.classList.toggle("open",willOpen);
-      b.setAttribute("aria-expanded",willOpen?"true":"false");
-      if(cfg) b.setAttribute("aria-label",t(cfg.titleKey)+" \u2014 "+t(willOpen?"cat_close":"cat_open"));
-    });
-
+    var id=card.getAttribute("data-cat");
+    if(activeCatId===id) closePanel(false);
+    else openPanel(id);
   });
-  /* Favorites toggle + recently-used tracking (delegated, alongside accordion).
-     Fav clicks never match ".cat-head", so the accordion handler above ignores
-     them; the link default is prevented so navigation does not happen. */
-  if(list) list.addEventListener("click",function(ev){
+  /* Escape closes the open panel and returns focus to its card. */
+  document.addEventListener("keydown",function(ev){
+    if(ev.key==="Escape"&&activeCatId) closePanel(true);
+  });
+  /* Favorites toggle + recently-used tracking (delegated).
+     Shared by the category grid, the search results, and the full-width
+     panel. Fav clicks never match ".cat-head", so the panel toggle above
+     ignores them. */
+  function onToolListClick(ev, root){
     var fb=ev.target.closest(".fav-btn");
-    if(fb&&list.contains(fb)){
+    if(fb&&root.contains(fb)){
       ev.preventDefault();
       var slug=fb.getAttribute("data-fav");
       toggleFav(slug);
       render();
       /* restore focus to the re-rendered star so keyboard users don't lose place */
-      var nb=list.querySelector('.fav-btn[data-fav="'+slug+'"]');
+      var scope=document.getElementById("catPanel")||document;
+      var nb=scope.querySelector('.fav-btn[data-fav="'+slug+'"]')
+              ||document.querySelector('#catList .fav-btn[data-fav="'+slug+'"]');
       if(nb) nb.focus();
       return;
     }
     var a=ev.target.closest("a.cat-tool");
-    if(a&&list.contains(a)){
+    if(a&&root.contains(a)){
       var s2=slugForHref(a.getAttribute("href"));
       if(s2) window.DKRecent.push(s2);
     }
+  }
+  if(list) list.addEventListener("click",function(ev){ onToolListClick(ev,list); });
+  if(panel) panel.addEventListener("click",function(ev){
+    if(ev.target.closest("[data-panel-close]")){ closePanel(true); return; }
+    onToolListClick(ev,panel);
   });
   var s=DKI18N.setLang;
   DKI18N.setLang=function(l){ s(l); render(); initDemo(); initFaq(document.getElementById("faqTeaser")); DKI18N.refresh(); if(window.DKUI){DKUI.renderNav("home");DKUI.renderFooter();DKUI.initLang();} };
