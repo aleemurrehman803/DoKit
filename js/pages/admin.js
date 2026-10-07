@@ -8,6 +8,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var gate = document.getElementById("adminGate");
   var panel = document.getElementById("adminPanel");
 
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
   function deny(msg) {
     panel.style.display = "none";
     gate.style.display = "";
@@ -28,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gate.style.display = "none";
         panel.style.display = "";
       } else {
-        deny("This account (" + (user.email || "signed in") + ") is not an admin. " +
+        deny("This account (" + esc(user.email || "signed in") + ") is not an admin. " +
              "Ask the site owner to grant access in the Firebase console (Firestore → admins → your UID).");
       }
     }).catch(function () {
