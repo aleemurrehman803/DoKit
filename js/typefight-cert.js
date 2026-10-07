@@ -17,12 +17,12 @@ document.addEventListener("DOMContentLoaded", function () {
   try { window.DKUI && (DKUI.renderNav("typefight"), DKUI.renderFooter(), DKUI.init()); } catch (e) {}
 
   /* HTML-escape helper: prefer shared DKUtils, fall back to local. */
-  function esc(s) {
-    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
-  }
+  };
 
   var currentUser = null;
 
