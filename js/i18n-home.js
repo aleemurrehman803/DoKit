@@ -91,4 +91,46 @@
     "cta_d": "ہزاروں لوگ روزانہ DoKit کے مفت ٹولز استعمال کرتے ہیں۔ سائن اپ کی ضرورت نہیں۔",
     "cta_btn": "ٹولز دیکھیں"
   });
+
+  // -- home2.* keys (fix 2026-10-07) --
+  window.DKI18N.add('en', {
+    "home2.bar_free": "free",
+    "home2.bar_private": "Private by design",
+    "home2.hero_h1": "Get everyday tasks done in seconds — free.",
+    "home2.hint_a": "Tip: press",
+    "home2.hint_b": "to search",
+    "home2.kicker_cats": "Find your tool",
+    "home2.kicker_proof": "Loved in real life",
+    "home2.kicker_why": "The DoKit promise",
+    "home2.proof_sub": "Students, freelancers and shop owners reach for DoKit daily — no sign-up, no learning curve.",
+    "home2.proof_t": "Made for everyday people",
+    "home2.seg1_d": "Word counts checked and essays polished — right before the deadline, no account needed.",
+    "home2.seg1_t": "Students",
+    "home2.seg2_d": "Client images resized and compressed in the browser — nothing uploaded, nothing to explain.",
+    "home2.seg2_t": "Freelancers",
+    "home2.seg3_d": "Product photos converted and shrunk before listing — files never leave the device.",
+    "home2.seg3_t": "Small shops",
+    "home2.strip_nosignup": "No sign-up",
+    "home2.strip_tools": "tools"
+  });
+  window.DKI18N.add('ur', {
+    "home2.bar_free": "مفت",
+    "home2.bar_private": "پرائیویسی پہلے",
+    "home2.hero_h1": "روزمرہ کے کام سیکنڈوں میں نمٹائیں — مفت۔",
+    "home2.hint_a": "ٹپ: دبائیں",
+    "home2.hint_b": "تلاش کے لیے",
+    "home2.kicker_cats": "اپنا ٹول تلاش کریں",
+    "home2.kicker_proof": "حقیقی زندگی میں پسندیدہ",
+    "home2.kicker_why": "ڈوکٹ کا وعدہ",
+    "home2.proof_sub": "طلبہ، فری لانسرز اور دکان دار روزانہ ڈوکٹ استعمال کرتے ہیں۔",
+    "home2.proof_t": "عام لوگوں کے لیے بنایا گیا",
+    "home2.seg1_d": "الفاظ گنے اور مضامین سنوارے — آخری لمحے سے پہلے۔",
+    "home2.seg1_t": "طلبہ",
+    "home2.seg2_d": "کلائنٹ کی تصاویر براؤزر میں ری سائز اور کمپریس کیں۔",
+    "home2.seg2_t": "فری لانسرز",
+    "home2.seg3_d": "مصنوعات کی تصاویر لسٹنگ سے پہلے تبدیل اور چھوٹی کیں۔",
+    "home2.seg3_t": "چھوٹی دکانیں",
+    "home2.strip_nosignup": "سائن اپ نہیں",
+    "home2.strip_tools": "ٹولز"
+  });
 })();
