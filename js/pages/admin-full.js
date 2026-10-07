@@ -55,6 +55,8 @@
   function $(id) { return document.getElementById(id); }
 
   function esc(s) {
+    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
@@ -680,8 +682,8 @@
               "<td><code>" + esc(dep.sender) + "</code></td>" +
               "<td>" + shotBtn + "</td>" +
               "<td style='white-space:nowrap'>" +
-              '<button class="btn btn-sm btn-primary" type="button" data-approve-dep="' + dep.id + '" data-amt="' + dep.amount + '" data-uid="' + dep.userId + '">✅ Approve</button> ' +
-              '<button class="btn btn-sm" type="button" data-reject-dep="' + dep.id + '">❌ Reject</button>' +
+              '<button class="btn btn-sm btn-primary" type="button" data-approve-dep="' + esc(dep.id) + '" data-amt="' + esc(dep.amount) + '" data-uid="' + esc(dep.userId) + '">✅ Approve</button> ' +
+              '<button class="btn btn-sm" type="button" data-reject-dep="' + esc(dep.id) + '">❌ Reject</button>' +
               "</td></tr>";
           }).join("");
 
@@ -711,41 +713,58 @@
     var adminUid = currentAdminUid();
     var depRef = d.collection("deposits").doc(depId);
     var userRef = d.collection("users").doc(userId);
-    var ledgerRef = userRef.collection("coin_ledger").doc();
+    var ledgerCol = userRef.collection("coin_ledger");
+    var ledgerRef = ledgerCol.doc();
 
-    d.runTransaction(function (tx) {
-      return tx.get(depRef).then(function (depSnap) {
-        if (!depSnap.exists) throw new Error("Deposit not found.");
-        var depData = depSnap.data();
-        if (depData.status !== "pending") throw new Error("Deposit is no longer pending.");
+    /* Ledger schema MUST match js/typefight.js ledgerAppend/ledgerVerify:
+     * { amount, reason, clientTs, ts, prevHash, hash }
+     * hash = sha256(prevHash|uid|amount|reason|clientTs)
+     * We read the last entry for prevHash, compute the hash, THEN transact.
+     */
+    function sha256hex(str) {
+      var bytes = new TextEncoder().encode(str);
+      return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
+        var arr = new Uint8Array(buf), hex = "";
+        for (var i = 0; i < arr.length; i++) hex += ("0" + arr[i].toString(16)).slice(-2);
+        return hex;
+      });
+    }
 
-        return tx.get(userRef).then(function (userSnap) {
-          var udata = userSnap.exists ? userSnap.data() : {};
-          var curCoins = Number(udata.coins) || 0;
-          var lastHash = udata.wallet_lastHash || "GENESIS";
-          var newCoins = curCoins + amount;
+    ledgerCol.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
+      var prevHash = "GENESIS";
+      snap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
+      var clientTs = Date.now();
+      var reason = "deposit:" + depId;
+      var payload = prevHash + "|" + userId + "|" + amount + "|" + reason + "|" + clientTs;
+      return sha256hex(payload).then(function (entryHash) {
+        return d.runTransaction(function (tx) {
+          return tx.get(depRef).then(function (depSnap) {
+            if (!depSnap.exists) throw new Error("Deposit not found.");
+            var depData = depSnap.data();
+            if (depData.status !== "pending") throw new Error("Deposit is no longer pending.");
 
-          // Hash-chained ledger entry (tamper-evident)
-          var entryData = {
-            type: "deposit",
-            amount: amount,
-            prevHash: lastHash,
-            timestamp: Date.now(),
-            depositId: depId
-          };
-          var entryHash = simpleHash(JSON.stringify(entryData) + lastHash);
+            return tx.get(userRef).then(function (userSnap) {
+              var udata = userSnap.exists ? userSnap.data() : {};
+              var curCoins = Number(udata.coins) || 0;
+              var newCoins = curCoins + amount;
 
-          // Atomic: update balance + ledger + deposit status
-          tx.update(userRef, {
-            coins: newCoins,
-            wallet_lastHash: entryHash
-          });
-          tx.set(ledgerRef, Object.assign({}, entryData, { hash: entryHash }));
-          tx.update(depRef, {
-            status: "approved",
-            reviewedBy: adminUid,
-            reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            reviewedAtMs: Date.now()
+              // Atomic: update balance + ledger + deposit status
+              tx.update(userRef, { coins: newCoins });
+              tx.set(ledgerRef, {
+                amount: amount,
+                reason: reason,
+                clientTs: clientTs,
+                ts: firebase.firestore.FieldValue.serverTimestamp(),
+                prevHash: prevHash,
+                hash: entryHash
+              });
+              tx.update(depRef, {
+                status: "approved",
+                reviewedBy: adminUid,
+                reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                reviewedAtMs: Date.now()
+              });
+            });
           });
         });
       });
@@ -767,12 +786,20 @@
     var reason = window.prompt("Rejection reason (shown to user):", "Transaction not found");
     if (reason === null) return; // cancelled
 
-    d.collection("deposits").doc(depId).update({
-      status: "rejected",
-      rejectReason: String(reason).slice(0, 200),
-      reviewedBy: currentAdminUid(),
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      reviewedAtMs: Date.now()
+    /* Transactional: only reject if still pending (prevents clobbering an approval). */
+    var depRef = d.collection("deposits").doc(depId);
+    d.runTransaction(function (tx) {
+      return tx.get(depRef).then(function (snap) {
+        if (!snap.exists) throw new Error("Deposit not found.");
+        if (snap.data().status !== "pending") throw new Error("Deposit is no longer pending.");
+        tx.update(depRef, {
+          status: "rejected",
+          rejectReason: String(reason).slice(0, 200),
+          reviewedBy: currentAdminUid(),
+          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          reviewedAtMs: Date.now()
+        });
+      });
     }).then(function () {
       logAudit("deposit_rejected", depId, "reason:" + reason);
       loadDeposits();
@@ -837,8 +864,8 @@
               "<td>" + esc(wd.method) + "</td>" +
               "<td><code>" + esc(wd.account) + "</code></td>" +
               "<td style='white-space:nowrap'>" +
-              '<button class="btn btn-sm btn-primary" type="button" data-process-wd="' + wd.id + '" data-amt="' + wd.amount + '">✅ Processed</button> ' +
-              '<button class="btn btn-sm" type="button" data-reject-wd="' + wd.id + '" data-uid="' + wd.userId + '" data-amt="' + wd.amount + '">❌ Reject</button>' +
+              '<button class="btn btn-sm btn-primary" type="button" data-process-wd="' + esc(wd.id) + '" data-amt="' + esc(wd.amount) + '">✅ Processed</button> ' +
+              '<button class="btn btn-sm" type="button" data-reject-wd="' + esc(wd.id) + '" data-uid="' + esc(wd.userId) + '" data-amt="' + esc(wd.amount) + '">❌ Reject</button>' +
               "</td></tr>";
           }).join("");
         });
@@ -865,12 +892,28 @@
     d.runTransaction(function (tx) {
       return tx.get(wdRef).then(function (snap) {
         if (!snap.exists) throw new Error("Withdrawal not found.");
-        if (snap.data().status !== "pending") throw new Error("Withdrawal is no longer pending.");
-        tx.update(wdRef, {
-          status: "processed",
-          processedBy: currentAdminUid(),
-          processedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          processedAtMs: Date.now()
+        var wdData = snap.data();
+        if (wdData.status !== "pending") throw new Error("Withdrawal is no longer pending.");
+        var wdAmount = Number(wdData.amount) || 0;
+        var wdUserId = wdData.userId;
+
+        return tx.get(d.collection("users").doc(wdUserId)).then(function (userSnap) {
+          var udata = userSnap.exists ? userSnap.data() : {};
+          var coins = Number(udata.coins) || 0;
+          var pendingWd = Number(udata.pending_withdrawal) || 0;
+
+          /* Settle: remove from BOTH coins and pending_withdrawal.
+           * The coins were locked at request time; now they leave the system. */
+          tx.update(d.collection("users").doc(wdUserId), {
+            coins: Math.max(0, coins - wdAmount),
+            pending_withdrawal: Math.max(0, pendingWd - wdAmount)
+          });
+          tx.update(wdRef, {
+            status: "processed",
+            processedBy: currentAdminUid(),
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            processedAtMs: Date.now()
+          });
         });
       });
     }).then(function () {
