@@ -24,7 +24,8 @@ document.addEventListener("DOMContentLoaded", function () {
     cap = DKCaptcha.init(
       document.getElementById("capCanvas"),
       document.getElementById("capInput"),
-      document.getElementById("capRefresh")
+      document.getElementById("capRefresh"),
+      document.getElementById("capAudio")
     );
   }
 

@@ -64,19 +64,35 @@
   }
 
   window.DKCaptcha = {
-    init: function (canvas, input, refreshBtn) {
+    init: function (canvas, input, refreshBtn, audioBtn) {
       var state = { code: "" };
       function refresh() {
         state.code = makeCode();
         draw(canvas, state.code);
         if (input) input.value = "";
       }
+      function speak() {
+        if (!("speechSynthesis" in window)) return;
+        try {
+          window.speechSynthesis.cancel();
+          // Speak each character separately for clarity
+          var chars = state.code.split("").join(" ");
+          var u = new SpeechSynthesisUtterance(chars);
+          u.rate = 0.8;
+          u.lang = "en-US";
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
+      }
       if (refreshBtn) {
         refreshBtn.addEventListener("click", function (ev) { ev.preventDefault(); refresh(); });
+      }
+      if (audioBtn) {
+        audioBtn.addEventListener("click", function (ev) { ev.preventDefault(); speak(); });
       }
       refresh();
       return {
         refresh: refresh,
+        speak: speak,
         validate: function () {
           if (!input) return false;
           var v = (input.value || "").trim().toLowerCase();
