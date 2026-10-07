@@ -47,6 +47,10 @@
       return ready() ? firebase.firestore() : null;
     },
 
+    storage: function () {
+      return (ready() && firebase.storage) ? firebase.storage() : null;
+    },
+
     /* Subscribe to auth state. cb(user|null). Returns unsubscribe fn. */
     onUser: function (cb) {
       var a = DKF.auth();
