@@ -7,7 +7,17 @@
 <meta name="theme-color" content="#6C4CF1">
 <title>Certificates — TypeFight — DoKit</title>
 <meta name="description" content="Your QR-verified TypeFight certificates. Anyone can verify them online.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/certificate.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Certificates — TypeFight — DoKit">
+<meta property="og:description" content="Your QR-verified TypeFight certificates. Anyone can verify them online.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typefight/certificate.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Certificates — TypeFight — DoKit">
+<meta name="twitter:description" content="Your QR-verified TypeFight certificates. Anyone can verify them online.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/certificate.html">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="stylesheet" href="../css/tokens.css">
@@ -65,7 +75,7 @@
             <div class="cert-qr">
               <img id="cQr" alt="QR code linking to the verification page">
             </div>
-            <p class="no-print" style="font-size:var(--fs-sm)"><a id="cVerifyLink" href="#">Verify online</a></p>
+            <p class="no-print" style="font-size:var(--fs-sm)"><a id="cVerifyLink" href="./verify/">Verify online</a></p>
             <p class="no-print" style="font-size:var(--fs-sm);color:var(--text-muted)">Document ID: <code id="cId"></code></p>
           </div>
           <p class="no-print" style="margin-top:var(--sp-3)">
@@ -96,6 +106,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/dk-utils.js" defer></script>
 <script src="../js/typefight.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="../js/typefight-pdf.js" defer></script>
