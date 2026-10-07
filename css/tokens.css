@@ -12,7 +12,10 @@
 
 /* NOTE: Self-hosted Noto Nastaliq Urdu (SIL OFL) @font-face removed temporarily —
    the woff2 (>100KB) cannot be pushed via API; it will be uploaded via web UI.
-   Meanwhile --font-ur falls back to system Nastaliq (Android/iOS) / Jameel Noori. */
+   Meanwhile --font-ur falls back to system Nastaliq (Android/iOS) / Jameel Noori.
+   UPDATE Oct 7: Loading Noto Nastaliq Urdu from Google Fonts CDN (official source).
+   CSP updated to allow fonts.gstatic.com + fonts.googleapis.com. */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap');
 
 :root {
   /* Brand */
