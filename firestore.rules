@@ -333,6 +333,26 @@ service cloud.firestore {
       allow read, write: if isOwner(uid);
     }
 
+    /* ---------- typing certificates (public registry) ---------- */
+
+    // Cross-device certificate verification for TypeMaster. Reads are public
+    // so QR codes verify on ANY device. Writes are create-only (immutable
+    // once issued): the client must be signed in (anonymous auth is used by
+    // the typing section), the payload must be well-formed, and the `uid`
+    // field must match the writer's own auth uid.
+    match /certificates/{regNo} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.regNo is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.wpm is number
+        && request.resource.data.acc is number
+        && request.resource.data.issuedAt is timestamp
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     /* ---------- default deny ---------- */
 
     match /{document=**} {
