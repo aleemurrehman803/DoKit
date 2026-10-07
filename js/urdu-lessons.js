@@ -1,10 +1,31 @@
-/* DoKit — Urdu typing lessons (25).
-   Complete progression mirroring English typing tutors:
-   Beginner 1-5 (letters, home row) -> Intermediate 6-12 (words, joins,
-   special chars) -> Advanced 13-18 (sentences, paragraphs, speed) ->
-   Expert 19-25 (numbers, punctuation, complex text, timed challenges).
-   Each lesson: objective + WPM/accuracy targets to pass & unlock next.
-*/
+/**
+ * DoKit — Urdu Typing Lessons Data
+ * ==================================
+ * WHAT: 25 structured Urdu typing lessons, beginner → expert progression.
+ *       Each lesson has target text, learning objective, and pass criteria.
+ *
+ * WHY: Structured progression (like English typing tutors) takes a complete
+ *      beginner to fluent Urdu typist. Random practice doesn't build skill.
+ *
+ * LESSON STRUCTURE (25 total):
+ *   Beginner (1-5):   ا س د → ف گ ح → ج ک ل → home-row review → م ن و
+ *   Intermediate (6-12): ب پ ت ٹ, ر ز ے, special chars (ی ء ہ ھ ں),
+ *                        common words, joining practice
+ *   Advanced (13-18): Short sentences → paragraphs → speed building
+ *   Expert (19-25):   Urdu numerals ۰-۹, numbers+Urdu mix, punctuation,
+ *                     stories, timed challenges, final mastery
+ *
+ * PASS CRITERIA (must meet BOTH to unlock next lesson):
+ *   - WPM target: 8 (L1) → 35 (L25), progressive
+ *   - Accuracy target: 90% (L1) → 96% (L25), progressive
+ *
+ * Each lesson object:
+ *   { id, level, title, objective, text, targetWpm, targetAccuracy }
+ *
+ * Also includes 3 timed-test passages (1/3/5 min): روزمرہ، پاکستان، علم
+ *
+ * @module UrduLessons
+ */
 (function () {
   "use strict";
 
