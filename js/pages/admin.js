@@ -8,11 +8,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var gate = document.getElementById("adminGate");
   var panel = document.getElementById("adminPanel");
 
-  function esc(s) {
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
     });
-  }
+  };
 
   function deny(msg) {
     panel.style.display = "none";
