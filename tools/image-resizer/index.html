@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="../../css/hub.css"/>
 <link rel="stylesheet" href="tool.css"/>
 <script src="../../js/i18n-v2.js" defer></script>
+<script src="../../js/i18n-hotfix.js" defer></script>
 <script src="../../js/ui.js" defer></script>
 <script src="../../js/journey.js" defer></script>
 <!-- Instant upload preview (must load BEFORE tool.js: the tool clears
@@ -255,14 +256,14 @@
         </div>
       </details>
       <details class="tdetails tdetails--prominent" id="boardDetails" open>
-        <summary><span>🎓 Board / University photo</span> <span class="badge badge-green">21 verified</span></summary>
-        <p class="tnotice">Your face is never altered — only size, background and framing change.</p>
+        <summary><span data-i18n="resizer.board_title">🎓 Board / University photo</span> <span class="badge badge-green">21 verified</span></summary>
+        <p class="tnotice" data-i18n="resizer.integrity_note">Your face is never altered — only size, background and framing change.</p>
         <div class="tfield field">
-          <label class="label" for="boardSearch">Find your board or university</label>
-          <input class="tinput input" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search…"/>
+          <label class="label" for="boardSearch" data-i18n="resizer.board_search_label">Find your board or university</label>
+          <input class="tinput input" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search…" data-i18n-ph="resizer.board_search_ph"/>
         </div>
-        <ul class="tboardlist" id="boardList" role="listbox"></ul>
-        <p class="thint" id="boardNone" hidden>No match — fill the fields manually below.</p>
+        <ul class="tboardlist" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
+        <p class="thint" id="boardNone" hidden data-i18n="resizer.board_none">No match — fill the fields manually below.</p>
         <div class="tnotice" id="boardInfo" hidden></div>
         <div class="tfield">
           <span style="font-weight:600;font-size:.9rem">35×45 mm passport</span>
