@@ -3,95 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>About — DoKit</title>
-<meta name="description" content="About DoKit: a free browser-based tool hub built by Malik Jalil Ur Rehman Khokhar. Private by design — no sign-up, no uploads, no tracking.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/about.html">
+<meta name="description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/about.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About — DoKit">
-<meta property="og:description" content="A free browser-based tool hub built by Malik Jalil Ur Rehman Khokhar. Private by design — no sign-up, no uploads, no tracking.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/about.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta property="og:description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/about.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="About — DoKit">
-<meta name="twitter:description" content="A free browser-based tool hub built by Malik Jalil Ur Rehman Khokhar. Private by design — no sign-up, no uploads, no tracking.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta name="twitter:description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
+<style>
+.about-hero { text-align: center; padding-block: var(--sp-10) var(--sp-6); }
+.about-hero h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.15; margin-block: 0 var(--sp-4); }
+.about-hero p { color: var(--text-muted); font-size: var(--fs-lg); max-inline-size: 38rem; margin-inline: auto; }
+.stat-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(2, 1fr); margin-block: var(--sp-6); }
+@media (min-width: 768px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+.stat-card { text-align: center; }
+.stat-num { font-size: var(--fs-3xl); font-weight: 800; color: var(--primary); }
+.stat-label { color: var(--text-muted); font-size: var(--fs-sm); margin-top: var(--sp-2); }
+.values-grid { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; margin-block: var(--sp-6); }
+@media (min-width: 768px) { .values-grid { grid-template-columns: repeat(3, 1fr); } }
+.value-icon { font-size: 2.25rem; margin-bottom: var(--sp-3); }
+.founder-card { display: flex; gap: var(--sp-5); align-items: flex-start; flex-wrap: wrap; }
+.founder-avatar {
+  flex: 0 0 auto; inline-size: 5rem; block-size: 5rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, #7D5CFF, #4A2FD6);
+}
+</style>
 </head>
 <body data-nav="about">
-<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
-    <div class="container" style="max-width:46rem">
+    <div class="container" style="max-width:52rem">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="./" data-i18n="crumb_home">Home</a></li>
-          <li aria-current="page" data-i18n="about2_title">About DoKit</li>
+          <li><a href="./">Home</a></li>
+          <li aria-current="page">About</li>
         </ol>
       </nav>
-      <h1 data-i18n="about2_title">About DoKit</h1>
-      <p style="font-size:var(--fs-lg);color:var(--text-muted)" data-i18n="about2_sub">Simple tools, honestly built — by one person, for everyone.</p>
+      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
 
-      <h2 data-i18n="about2_story_t">Our story</h2>
-      <p data-i18n="about2_story1">DoKit is a free, browser-based tool hub built by Malik Jalil Ur Rehman Khokhar. It began with a simple frustration: everyday online tools were stuffed with ads, demanded an account before doing anything useful, or quietly uploaded your files to a server you never asked about.</p>
-      <p data-i18n="about2_story2">DoKit is built for the people who need honest tools the most — students preparing documents against a deadline, freelancers resizing client photos at midnight, teachers making worksheets for their classes — in Pakistan and everywhere else. If it runs in your browser and costs nothing, it belongs here.</p>
-      <p data-i18n="about2_story3">Everything happens on your device. Your photos are resized locally, your words are counted locally. There is no server to breach, no account to forget, no tracking to escape — because there is no server.</p>
+      <div class="about-hero">
+        <h1>Every tool you'll ever need.</h1>
+        <p>DoKit is a toolbox that lives in your browser — honest, free, and private. No ads, no tracking, no accounts standing between you and your work.</p>
+      </div>
 
-      <h2 data-i18n="about2_who_t">Who makes DoKit?</h2>
-      <p data-i18n="about2_who_d">DoKit is designed and built by Malik Jalil Ur Rehman Khokhar — every tool, every page. One maker, full responsibility: if something breaks or confuses you, it is on us to fix it.</p>
+      <h2>Our story</h2>
+      <p>DoKit started with a simple frustration: everyday online tools were stuffed with pop-up ads, demanded an account before doing anything useful, or quietly uploaded your files to a server you never asked about.</p>
+      <p>So we built the opposite. Every DoKit tool runs entirely on your device, inside your browser. Your photos are resized on your phone. Your words are counted on your laptop. There is no server to breach, because your files never leave your hands.</p>
+      <p>Our mission is simple: give students, freelancers, and teachers — in Pakistan and around the world — professional-quality tools that respect them. Free forever for the basics, private by design, and available in 10 languages so more people can use them comfortably.</p>
 
-      <div class="grid" style="margin-block:var(--sp-6)" role="list" aria-label="DoKit principles">
-        <div class="card" role="listitem">
-          <div class="tool-card__icon" aria-hidden="true">🔒</div>
-          <h3 data-i18n="about2_v1t">Privacy first</h3>
-          <p data-i18n="about2_v1d">Files are processed on your device and never sent anywhere.</p>
-        </div>
-        <div class="card" role="listitem">
-          <div class="tool-card__icon" aria-hidden="true">🚪</div>
-          <h3 data-i18n="about2_v2t">No sign-up, ever</h3>
-          <p data-i18n="about2_v2d">Open a tool and use it. That is all there is to it.</p>
-        </div>
-        <div class="card" role="listitem">
-          <div class="tool-card__icon" aria-hidden="true">🌐</div>
-          <h3 data-i18n="about2_v3t">Made for Pakistan &amp; beyond</h3>
-          <p data-i18n="about2_v3d">Full English and اردو interfaces, including right-to-left layout.</p>
+      <h2 style="margin-top:var(--sp-8)">The founder</h2>
+      <div class="card founder-card" style="margin-block:var(--sp-4)">
+        <span class="founder-avatar" aria-hidden="true">MJ</span>
+        <div style="flex:1;min-inline-size:16rem">
+          <h3 style="margin:0 0 var(--sp-2)">Malik Jalil Ur Rehman Khokhar</h3>
+          <p style="margin:0;color:var(--text-muted)">Malik Jalil designed and built every tool and every page on DoKit — from the image utilities to TypeMaster, the design to the code. One maker, full responsibility: when you write to us, your message reaches the person who built the thing you're asking about.</p>
         </div>
       </div>
 
-      <div class="card" style="border-color:var(--primary)">
-        <h2 data-i18n="about2_typing_t">Typing — our flagship</h2>
-        <p data-i18n="about2_typing_d">DoKit's typing section is powered by TypeMaster: structured lessons, speed tests, games, and printable certificates.</p>
-        <p style="margin:0"><a class="btn btn-primary" href="typing/" data-i18n="about2_typing_cta">Visit the typing section</a></p>
+      <h2 style="margin-top:var(--sp-8)">DoKit in numbers</h2>
+      <div class="stat-grid">
+        <div class="card stat-card"><div class="stat-num">6+</div><div class="stat-label">Free tools</div></div>
+        <div class="card stat-card"><div class="stat-num">100%</div><div class="stat-label">Private — files never uploaded</div></div>
+        <div class="card stat-card"><div class="stat-num">0</div><div class="stat-label">Sign-ups needed</div></div>
+        <div class="card stat-card"><div class="stat-num">10</div><div class="stat-label">Languages</div></div>
       </div>
 
-      <p style="margin-top:var(--sp-6)"><a class="btn" href="tools/" data-i18n="about2_tools_cta">Browse all tools</a></p>
+      <h2 style="margin-top:var(--sp-8)">What we believe</h2>
+      <div class="values-grid">
+        <div class="card">
+          <div class="value-icon" aria-hidden="true">🔒</div>
+          <h3>Privacy first</h3>
+          <p style="margin:0;color:var(--text-muted)">Your files are processed on your device and never sent anywhere. No tracking scripts, no advertising cookies, nothing to opt out of — because there's nothing to opt into.</p>
+        </div>
+        <div class="card">
+          <div class="value-icon" aria-hidden="true">🚀</div>
+          <h3>Free forever</h3>
+          <p style="margin:0;color:var(--text-muted)">Every basic tool is free with no usage caps and no watermarks. Optional Pro plans fund development — they never take away what was free.</p>
+        </div>
+        <div class="card">
+          <div class="value-icon" aria-hidden="true">🌐</div>
+          <h3>Made for everyone</h3>
+          <p style="margin:0;color:var(--text-muted)">Built for students, freelancers, and teachers in Pakistan and worldwide — in 10 languages, working on any modern phone or computer.</p>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;margin-top:var(--sp-8)">
+        <h3 style="margin-top:0">Ready to try them?</h3>
+        <p style="color:var(--text-muted)">Browse the full toolbox — no account, no waiting, no catch.</p>
+        <a class="btn btn-primary btn-lg" href="tools/">Browse all tools</a>
+      </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
-<script src="js/i18n-ar.js" defer></script>
-<script src="js/i18n-hi.js" defer></script>
-<script src="js/i18n-es.js" defer></script>
-<script src="js/i18n-fr.js" defer></script>
-<script src="js/i18n-pt.js" defer></script>
-<script src="js/i18n-de.js" defer></script>
-<script src="js/i18n-tr.js" defer></script>
-<script src="js/i18n-ru.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <div id="dk-assistant-root"></div>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
 </body>
 </html>
