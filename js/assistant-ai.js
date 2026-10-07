@@ -1,8 +1,11 @@
-/* DoKit — AI Assistant (Gemini via Firebase AI Logic).
-   - FREE tier only.
-   - STRICT scope: DoKit website/tools only. Refuses out-of-scope questions.
-   - FALLBACK: if Gemini fails (quota, network, etc.), falls back to rule-based KB.
-   - Never goes silent.
+/* DoKit — AI Assistant (Multi-provider with auto-fallback).
+   Priority:
+   1. Gemini (FREE via Firebase AI Logic) — primary
+   2. OpenAI (needs API key, user-provided) — secondary fallback
+   3. Rule-based KB — final fallback (never silent)
+   
+   - STRICT scope: DoKit website/tools only.
+   - Chat memory: remembers history via DKMemory.
 */
 (function () {
   "use strict";
@@ -28,52 +31,125 @@
     "5. Never mention you are Gemini or an AI model. You are DoKit Assistant."
   ].join("\n");
 
-  var model = null;
-  var aiReady = false;
+  var geminiModel = null;
+  var geminiReady = false;
+  var openaiKey = null; // Set via DKAI.setOpenAIKey(key)
+  var openaiReady = false;
 
   function init() {
-    // Model is provided by assistant-ai-init.js (module script)
-    // which loads the Firebase AI SDK and sets window.DKAI_MODEL
+    // Gemini: model provided by assistant-ai-init.js (module script)
     try {
       if (window.DKAI_MODEL) {
-        model = window.DKAI_MODEL;
-        aiReady = true;
+        geminiModel = window.DKAI_MODEL;
+        geminiReady = true;
+      } else {
+        document.addEventListener("dk-ai-ready", function () {
+          if (window.DKAI_MODEL) {
+            geminiModel = window.DKAI_MODEL;
+            geminiReady = true;
+          }
+        });
+      }
+    } catch (e) {}
+    
+    // OpenAI: check for saved key
+    try {
+      var k = localStorage.getItem("dokit_openai_key");
+      if (k) { openaiKey = k; openaiReady = true; }
+    } catch (e) {}
+    
+    return geminiReady || openaiReady;
+  }
+
+  function onModelReady(m) {
+    geminiModel = m;
+    geminiReady = true;
+  }
+
+  function setOpenAIKey(key) {
+    try {
+      if (key && key.trim()) {
+        openaiKey = key.trim();
+        localStorage.setItem("dokit_openai_key", openaiKey);
+        openaiReady = true;
         return true;
       }
-      // Wait for the module to load (async)
-      document.addEventListener("dk-ai-ready", function () {
-        if (window.DKAI_MODEL) {
-          model = window.DKAI_MODEL;
-          aiReady = true;
-        }
-      });
-      return false;
-    } catch (e) {
-      aiReady = false;
-      return false;
-    }
+    } catch (e) {}
+    return false;
   }
 
-  // Called by the module script when model is ready
-  function onModelReady(m) {
-    model = m;
-    aiReady = true;
-  }
-
-  // Ask Gemini. Returns Promise<string|null> (null = failed, use fallback)
-  function ask(prompt) {
-    if (!aiReady || !model) return Promise.resolve(null);
+  // Ask Gemini
+  function askGemini(prompt) {
+    if (!geminiReady || !geminiModel) return Promise.resolve(null);
     try {
-      return model.generateContent(prompt).then(function (result) {
+      // Include chat memory context
+      var ctx = "";
+      try { if (window.DKMemory) ctx = DKMemory.getContext(3); } catch (e) {}
+      var fullPrompt = ctx ? ("Recent conversation:\n" + ctx + "\n\nCurrent question: " + prompt) : prompt;
+      
+      return geminiModel.generateContent(fullPrompt).then(function (result) {
         var text = result && result.response ? result.response.text() : "";
         text = (text || "").trim();
-        // Safety: if empty or too long, treat as failure
         if (!text || text.length > 500) return null;
         return text;
       }).catch(function () { return null; });
     } catch (e) {
       return Promise.resolve(null);
     }
+  }
+
+  // Ask OpenAI (fallback)
+  function askOpenAI(prompt) {
+    if (!openaiReady || !openaiKey) return Promise.resolve(null);
+    try {
+      var ctx = "";
+      try { if (window.DKMemory) ctx = DKMemory.getContext(3); } catch (e) {}
+      
+      return fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + openaiKey
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          max_tokens: 150,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...(ctx ? [{ role: "user", content: "Context:\n" + ctx }] : []),
+            { role: "user", content: prompt }
+          ]
+        })
+      }).then(function (r) {
+        if (!r.ok) return null; // quota exceeded, invalid key, etc.
+        return r.json();
+      }).then(function (d) {
+        var text = d && d.choices && d.choices[0] && d.choices[0].message ? d.choices[0].message.content : "";
+        text = (text || "").trim();
+        if (!text || text.length > 500) return null;
+        return text;
+      }).catch(function () { return null; });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
+  }
+
+  // Main ask: tries Gemini → OpenAI → null (caller falls back to KB)
+  function ask(prompt) {
+    return askGemini(prompt).then(function (result) {
+      if (result) {
+        // Log to memory
+        try { if (window.DKMemory) DKMemory.log(prompt, result, null); } catch (e) {}
+        return result;
+      }
+      // Gemini failed, try OpenAI
+      return askOpenAI(prompt);
+    }).then(function (result) {
+      if (result) {
+        try { if (window.DKMemory) DKMemory.log(prompt, result, null); } catch (e) {}
+      }
+      return result; // null = use KB fallback
+    });
   }
 
   // Check if query is likely out-of-scope (quick heuristic before calling AI)
@@ -97,8 +173,11 @@
   window.DKAI = {
     init: init,
     onModelReady: onModelReady,
+    setOpenAIKey: setOpenAIKey,
     ask: ask,
-    isReady: function () { return aiReady; },
+    isReady: function () { return geminiReady || openaiReady; },
+    isGeminiReady: function () { return geminiReady; },
+    isOpenAIReady: function () { return openaiReady; },
     isOutOfScope: isOutOfScope,
     outOfScopeReply: OUT_OF_SCOPE_REPLY,
     systemPrompt: SYSTEM_PROMPT
