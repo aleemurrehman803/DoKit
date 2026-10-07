@@ -750,7 +750,7 @@
         });
       });
     }).then(function () {
-      auditAdmin("deposit_approved", { depositId: depId, userId: userId, amount: amount });
+      logAudit("deposit_approved", depId, "user:" + userId + " amount:" + amount);
       loadDeposits();
       loadDashboard();
     }).catch(function (err) {
@@ -774,7 +774,7 @@
       reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
       reviewedAtMs: Date.now()
     }).then(function () {
-      auditAdmin("deposit_rejected", { depositId: depId, reason: reason });
+      logAudit("deposit_rejected", depId, "reason:" + reason);
       loadDeposits();
     }).catch(function (err) {
       alert("Failed to reject: " + (err.message || "Unknown error"));
@@ -874,7 +874,7 @@
         });
       });
     }).then(function () {
-      auditAdmin("withdrawal_processed", { withdrawalId: wdId, amount: amount });
+      logAudit("withdrawal_processed", wdId, "amount:" + amount);
       loadWithdrawals();
     }).catch(function (err) {
       alert("Failed: " + (err.message || "Unknown error"));
@@ -918,7 +918,7 @@
         });
       });
     }).then(function () {
-      auditAdmin("withdrawal_rejected", { withdrawalId: wdId, userId: userId, amount: amount, reason: reason });
+      logAudit("withdrawal_rejected", wdId, "user:" + userId + " amount:" + amount + " reason:" + reason);
       loadWithdrawals();
     }).catch(function (err) {
       alert("Failed: " + (err.message || "Unknown error"));
@@ -971,7 +971,7 @@
         updatedBy: currentAdminUid(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true }).then(function () {
-        auditAdmin("payment_settings_updated", {});
+        logAudit("payment_settings_updated", "config/payments", "settings saved");
         if (msg) { msg.textContent = "✅ Payment accounts saved."; msg.style.display = ""; msg.style.color = "#1F7A4D"; }
       }).catch(function (err) {
         if (msg) { msg.textContent = "Failed: " + (err.message || "Unknown"); msg.style.display = ""; msg.style.color = "#C93A3A"; }
@@ -1030,9 +1030,20 @@
           t.getAttribute("data-uid"),
           Number(t.getAttribute("data-amt")) || 0);
       } else if (t.hasAttribute("data-shot") && t._shotData) {
-        // Open screenshot in a new window
-        var w = window.open("", "_blank", "width=600,height=600");
-        if (w) w.document.write('<img src="' + t._shotData + '" style="max-width:100%">');
+        // Open screenshot in a new window (XSS-safe: validate data URL, use Image src property)
+        var shotData = t._shotData;
+        // Strict validation: must be a valid image data URL (prevents XSS via malformed src)
+        if (/^data:image\/(png|jpeg|jpg|webp);base64,[A-Za-z0-9+\/=]+$/.test(shotData)) {
+          var w = window.open("", "_blank", "width=600,height=600");
+          if (w) {
+            var img = w.document.createElement("img");
+            img.style.maxWidth = "100%";
+            img.alt = "Deposit screenshot";
+            // Assign via property (not string concatenation) - browser handles escaping
+            img.src = shotData;
+            w.document.body.appendChild(img);
+          }
+        }
       }
     });
   }
