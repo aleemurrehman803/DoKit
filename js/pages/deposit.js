@@ -38,7 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ---- Step 1: display payment accounts ---- */
   function renderAccounts(cfg) {
     if (!accountsBox) return;
-    var e = window.DKPayReal ? DKPayReal.esc : function (s) { return String(s); };
+    var e = window.DKPayReal ? DKPayReal.esc : function (s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+      });
+    };
     accountsBox.innerHTML =
       '<div class="grid" style="gap:var(--sp-3)">' +
       '<div class="card" style="margin:0"><h4>💚 Easypaisa</h4>' +
