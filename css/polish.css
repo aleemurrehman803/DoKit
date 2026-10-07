@@ -409,10 +409,69 @@ mark.search-hit { background: #ffe58a; color: inherit; border-radius: 2px; paddi
 
 /* ============ Reduced motion: kill all polish animation ============ */
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track, .anim-gradient, .float-shape, .skeleton-shimmer::after,
+  .marquee-track, .anim-gradient, .float-shape, .skeleton-shimmer::after, .skeleton::after,
   .typewriter-caret, .spinner-ring, .check-anim circle, .check-anim path {
     animation: none !important;
   }
   .reveal { opacity: 1 !important; transform: none !important; }
   *, *::before, *::after { transition-duration: .01ms !important; }
+}
+
+/* ============ 51. Skeleton utility (brief shimmer placeholders) ============ */
+.skeleton {
+  position: relative; overflow: hidden;
+  background: var(--neutral-200, #E4DFF5);
+  border-radius: var(--r-md, .5rem);
+  min-block-size: .9rem;
+  pointer-events: none;
+}
+.skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skeleton-sheen, rgba(255,255,255,.55)), transparent);
+  animation: dk-shimmer 1.4s infinite;
+}
+[dir="rtl"] .skeleton::after { animation-name: dk-shimmer-rtl; }
+[data-theme="dark"] .skeleton { background: rgba(255,255,255,.08); }
+.skeleton-card {
+  display: flex; flex-direction: column; justify-content: center; gap: .6rem;
+  padding: 1.25rem; min-block-size: 11rem;
+}
+.skeleton--title { min-block-size: 1.4rem; inline-size: 55%; }
+.skeleton--line { min-block-size: .8rem; }
+.skeleton--line.short { inline-size: 70%; }
+
+/* ============ 52. Page transition (JS toggles .dk-page-leave on body) ============ */
+body.dk-page-leave {
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+/* ============ 53. Micro-animations: press feedback + card hover glow ============ */
+.btn:active { transform: translateY(0) scale(.96); }
+.fav-btn, .cat-head { transition: transform .15s ease; }
+.fav-btn:active { transform: scale(.85); }
+.cat-head:active { transform: scale(.985); }
+@media (hover: hover) and (pointer: fine) {
+  .cat-card:hover {
+    box-shadow: 0 12px 32px rgba(108,76,241,.22), 0 2px 8px rgba(108,76,241,.12);
+  }
+  .cat-tool:hover {
+    box-shadow: 0 6px 18px rgba(108,76,241,.16);
+  }
+}
+
+/* ============ 39. Instant feedback: press states + no tap delay ============ */
+/* touch-action: manipulation removes the 300ms mobile tap delay on buttons */
+button, .btn, .tbtn, .chip, .tbtn-ghost, .tbtn-sm,
+[role="button"], input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* visible press-down state for every button */
+button:active, .btn:active, .tbtn:active, .chip:active,
+.btn-primary:active, .btn-glow:active, .magnetic:active,
+input[type="submit"]:active, input[type="button"]:active {
+  transform: translateY(1px) scale(.98);
+  filter: brightness(.96);
+  transition: transform .08s ease-out, filter .08s ease-out;
 }

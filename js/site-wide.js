@@ -184,6 +184,47 @@
       }
     } catch (e) { /* silent: features are progressive enhancement */ }
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-  else start();
+  /* ---------- idle prefetch of likely-next pages (speed) ----------
+     Homepage  -> image-resizer + typing (most-visited next pages).
+     Tool page -> homepage (common back-nav target).
+     Uses <link rel="prefetch">, injected once on idle so it never
+     competes with critical resources. CSP-safe (link prefetch of
+     same-origin documents is allowed by default-src 'self'). */
+  function initPrefetch() {
+    try {
+      var path = location.pathname;
+      var isHome = /(^|\/)index\.html$/.test(path) || path === "/" || /\/DoKit\/?$/.test(path);
+      var isTool = path.indexOf("/tools/") !== -1;
+      var urls = [];
+      if (isHome) {
+        urls.push("/tools/image-resizer/", "/typing/");
+      } else if (isTool) {
+        urls.push("/");
+      } else {
+        return; /* other pages: nothing predictable to prefetch */
+      }
+      var U = (typeof window.DKU === "function") ? window.DKU : function (x) { return x; };
+      var run = function () {
+        var head = document.head || document.getElementsByTagName("head")[0];
+        if (!head) return;
+        urls.forEach(function (u) {
+          var href = U(u);
+          if (head.querySelector('link[rel="prefetch"][href="' + href + '"]')) return;
+          var l = document.createElement("link");
+          l.rel = "prefetch";
+          l.href = href;
+          l.setAttribute("data-dk-prefetch", "1");
+          head.appendChild(l);
+        });
+      };
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(run, { timeout: 4000 });
+      } else {
+        setTimeout(run, 2500);
+      }
+    } catch (e) { /* silent: prefetch is best-effort */ }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { start(); initPrefetch(); });
+  else { start(); initPrefetch(); }
 })();
