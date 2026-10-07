@@ -23,6 +23,14 @@
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
+<style>/* Critical: prevent FOUC before hub.css loads */
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fff;color:#1a1a2e}
+ul[class],ol[class]{list-style:none;margin:0;padding:0}
+img{max-width:100%;height:auto}
+.hero-illustration{max-width:100%}
+#site-nav{min-height:4.25rem}
+#site-foot{min-height:10rem}
+</style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"DoKit","alternateName":"DoKit — Every tool you'll ever need","url":"https://aleemurrehman803.github.io/dokit/","inLanguage":["en","ur"]}
 </script>
@@ -37,13 +45,13 @@
     <div class="container hero__grid">
       <div class="hero__copy">
         <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
-        <h1>Get everyday tasks done in seconds — free.</h1>
-        <p class="tagline" >Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.</p>
+        <h1 data-i18n="home2.hero_h1">Get everyday tasks done in seconds — free.</h1>
+        <p class="tagline" data-i18n="hero_tag">Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.</p>
         <ul class="stat-strip stat-strip--subtle" data-i18n-aria="home2.strip_label" aria-label="DoKit at a glance">
-          <li><span class="stat-strip__ic" aria-hidden="true">🧰</span><strong data-countup="6">6</strong> <span >tools</span></li>
-          <li><span class="stat-strip__ic" aria-hidden="true">🎁</span><strong><span data-countup="100">100</span>%</strong> <span >free</span></li>
-          <li><span class="stat-strip__ic" aria-hidden="true">🚫</span><span >No sign-up</span></li>
-          <li><span class="stat-strip__ic" aria-hidden="true">🔒</span><span >Private by design</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🧰</span><strong data-countup="6">6</strong> <span data-i18n="home2.strip_tools">tools</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🎁</span><strong><span data-countup="100">100</span>%</strong> <span data-i18n="home2.bar_free">free</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🚫</span><span data-i18n="home2.strip_nosignup">No sign-up</span></li>
+          <li><span class="stat-strip__ic" aria-hidden="true">🔒</span><span data-i18n="home2.bar_private">Private by design</span></li>
         </ul>
         <div class="hero-cta">
           <a class="btn btn-primary btn-lg" href="tools/" data-i18n="hero_cta_tools">Browse all tools</a>
@@ -150,6 +158,10 @@
           <span class="badge" data-i18n="home2.seg3_t">Small shops</span>
           <p data-i18n="home2.seg3_d">Product photos converted and shrunk before listing — files never leave the device.</p>
         </div>
+        <div class="card love-card">
+          <span class="badge" data-i18n="home2.seg4_t">Teachers</span>
+          <p data-i18n="home2.seg4_d">Typing lessons and practice for the whole class — free forever, no accounts to manage.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -195,6 +207,7 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-patch.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/tools-data.js" defer></script>
 <script src="js/pages/home.js" defer></script>
