@@ -895,13 +895,55 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
     b.addEventListener("click", onClick);
     return b;
   }
+  /* ---------- Navbar avatar button (Google-style profile chip) ---------- */
+  /* The corner profile entry is a proper circular avatar — not the generic
+   * square toggle button the other nav actions use. Shows the user's
+   * initial when a profile name is set, otherwise a clean user icon. The
+   * coin count rides as a small badge on the avatar corner; its inner
+   * number keeps id="dkCoinPillN" so refreshCoinPill()/emitCoins() keep
+   * working untouched. */
+  function avatarBtnInner() {
+    var name = String((getProfile() || {}).name || "").trim();
+    if (name) {
+      return '<span class="dk-avatarbtn__initial" aria-hidden="true">' +
+        esc(name.charAt(0).toUpperCase()) + "</span>";
+    }
+    return ic("user", "dk-avatarbtn__icon");
+  }
+  function makeAvatarBtn() {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.id = "dkProfBtn";
+    b.className = "dk-avatarbtn";
+    b.setAttribute("data-i18n-aria", "prof.nav");
+    b.setAttribute("aria-label", t("prof.nav"));
+    b.setAttribute("aria-haspopup", "dialog");
+    b.innerHTML = avatarBtnInner() +
+      '<span class="dk-avatarbtn__badge" data-i18n-title="prof.coins" title="' + esc(t("prof.coins")) + '">' +
+      ic("coin") + '<span id="dkCoinPillN" class="stat__num">' + getCoins() + "</span></span>";
+    b.addEventListener("click", openProfile);
+    return b;
+  }
+  /* Re-render the navbar avatar after the user saves a profile name in the
+   * profile modal. Keeps the coin badge element and listeners intact. */
+  function refreshProfAvatar() {
+    try {
+      var b = document.getElementById("dkProfBtn");
+      if (!b) return;
+      b.setAttribute("aria-label", t("prof.nav"));
+      var badge = b.querySelector(".dk-avatarbtn__badge");
+      b.innerHTML = avatarBtnInner();
+      if (badge) b.appendChild(badge);
+      refreshCoinPill();
+    } catch (e) {}
+  }
   function injectNav() {
     try {
       var actions = document.querySelector(".nav-actions");
       if (!actions) return; /* skip silently */
       if (document.getElementById("dkRefBtn") || document.getElementById("dkProfBtn")) return; /* idempotent */
       var refBtn = makeNavBtn("dkRefBtn", "gift", "ref.nav", openReferral, false);
-      var profBtn = makeNavBtn("dkProfBtn", "user", "prof.nav", openProfile, true);
+      var profBtn = makeAvatarBtn(); /* circular Google-style avatar, not a toggle */
       var theme = document.getElementById("themeToggle");
       if (theme && theme.parentNode === actions) {
         actions.insertBefore(refBtn, theme);
@@ -1223,6 +1265,7 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
         }
         if (emailEl) emailEl.removeAttribute("aria-invalid");
         lsSet("dk_profile", { name: name, email: email });
+        refreshProfAvatar(); /* navbar avatar now shows the saved initial */
         var pName = m.querySelector("#dkPName");
         if (pName) pName.textContent = name || t("prof.guest");
         var avatar = m.querySelector(".dk-avatar");
