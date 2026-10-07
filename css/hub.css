@@ -1109,3 +1109,130 @@ main { animation: dk-fade-in 0.4s ease-out; }
   transform: translateY(0);
   pointer-events: auto;
 }
+
+/* ---------- 13. Tool hero icons (inline SVG illustrations above tool titles) ----------
+   One shared style block for all tool pages (DRY): each tool's index.html
+   includes a .thero-icon div with its own inline SVG. Gentle float loop;
+   disabled for users who prefer reduced motion. */
+.thero-icon { display: flex; justify-content: center; margin-block-end: .8rem; }
+.thero-icon svg {
+  width: 76px; height: 76px; display: block;
+  filter: drop-shadow(0 8px 18px rgba(108, 76, 241, .28));
+  animation: ticon-float 4.5s ease-in-out infinite;
+}
+@keyframes ticon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thero-icon svg { animation: none; }
+}
+
+/* ============================================================
+   DARK MODE — comprehensive overrides (Oct 7, 2026)
+   The [data-theme="dark"] CSS variables in tokens.css handle most
+   theming. This section catches edge cases: hardcoded colors,
+   illustrations, and components needing dark-specific tweaks.
+   ============================================================ */
+
+/* Tool hero icons: softer glow on dark backgrounds */
+[data-theme="dark"] .thero-icon svg {
+  filter: drop-shadow(0 8px 20px rgba(139, 116, 255, .35));
+}
+
+/* Illustrations/images: prevent pure-white boxes from glaring in dark mode.
+   Only affects images with explicit .illustration class, not photos. */
+[data-theme="dark"] img.illustration {
+  filter: brightness(0.92);
+}
+
+/* Code blocks: ensure readable dark background */
+[data-theme="dark"] pre,
+[data-theme="dark"] code {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+/* Tables: dark-friendly striping */
+[data-theme="dark"] table {
+  border-color: var(--border);
+}
+[data-theme="dark"] th {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+[data-theme="dark"] td {
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Native form controls: dark color scheme for calendar pickers, etc. */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Scrollbar: darker thumb for dark mode */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--neutral-600);
+  border-color: var(--bg);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500);
+}
+
+/* Selection: keep brand color but ensure contrast */
+[data-theme="dark"] ::selection {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+
+/* Muted text on dark: ensure it stays readable (already 7:1 in tokens) */
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] small.muted {
+  color: var(--text-muted);
+}
+
+/* Dividers: subtler in dark */
+[data-theme="dark"] hr {
+  border-color: var(--border);
+  opacity: 0.6;
+}
+
+/* Skeleton loaders: dark-tinted */
+[data-theme="dark"] .skeleton {
+  background: var(--surface-2);
+}
+
+/* Focus rings: amber still works on dark, keep it */
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--dk-amber);
+}
+
+/* Toast: already handled at line 279, but ensure text contrast */
+[data-theme="dark"] .toast {
+  color: var(--text);
+}
+
+/* Chat FAB panel: ensure panel bg uses surface */
+[data-theme="dark"] .dk-panel {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Print: always light (saves ink, standard practice) */
+@media print {
+  [data-theme="dark"] {
+    --bg: #FFFFFF;
+    --bg-soft: #F6F4FF;
+    --surface: #FFFFFF;
+    --surface-2: #F1EDFF;
+    --text: #17142E;
+    --text-muted: #5C5778;
+    --border: #E4DFF5;
+  }
+}
