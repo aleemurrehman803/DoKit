@@ -39,8 +39,6 @@
   padding: .35rem .8rem; border-radius: 999px; }
 .tcard { background: var(--dk-card); border: 1px solid var(--dk-border); border-radius: var(--dk-radius);
   padding: 1.25rem; margin-block: 1rem; }
-.tgrid2 { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-@media (min-width: 720px) { .tgrid2 { grid-template-columns: 1fr 1fr; } }
 
 /* ---------- buttons ---------- */
 .tbtn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
@@ -154,7 +152,6 @@ input[type="range"].tslider::-moz-range-thumb { width: 18px; height: 18px; borde
 .tresult img { max-width: 100%; max-height: 380px; border-radius: var(--dk-radius);
   border: 1px solid var(--dk-border); background: var(--dk-surface); }
 .tempty { text-align: center; color: var(--dk-muted); padding: 2rem 1rem; }
-.tempty .tempty-icon { font-size: 2rem; margin-block-end: .5rem; }
 .terror { border: 1px solid color-mix(in srgb, var(--dk-danger) 40%, transparent);
   background: color-mix(in srgb, var(--dk-danger) 8%, transparent);
   color: var(--dk-text); border-radius: var(--dk-radius); padding: 1rem; }
@@ -260,8 +257,6 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
 .tcount { display: inline-block; min-width: 1.6rem; text-align: center; font-size: .8rem;
   font-weight: 700; color: #fff; background: var(--dk-violet); border-radius: 999px;
   padding: .1rem .5rem; vertical-align: middle; }
-.tgroup-h { font-size: 1.05rem; color: var(--dk-text); margin: 1.5rem 0 .5rem;
-  padding-block-start: 1.25rem; border-block-start: 1px solid var(--dk-border); }
 .tqthumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
   border: 1px solid var(--dk-border); background: var(--dk-bg); flex: none; }
 .tqrow { grid-template-columns: auto 1fr auto; }
