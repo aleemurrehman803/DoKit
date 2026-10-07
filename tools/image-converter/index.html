@@ -23,6 +23,10 @@
 <script src="../../js/i18n-v2.js" defer></script>
 <script src="../../js/ui.js" defer></script>
 <script src="../../js/journey.js" defer></script>
+<!-- Instant upload preview (must load BEFORE tool.js: the tool clears
+     fileInput.value in its change handler, so this listener has to be
+     registered first) -->
+<script src="../../js/tool-preview.js" defer></script>
 <script src="tool.js" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
