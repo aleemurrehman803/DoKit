@@ -8,11 +8,22 @@ document.addEventListener("DOMContentLoaded", function () {
   var eErr = document.getElementById("err-email");
   var pErr = document.getElementById("err-password");
   var gErr = document.getElementById("err-general");
+  var cErr = document.getElementById("err-captcha");
   var submitBtn = form.querySelector('button[type="submit"]');
 
   function setBusy(b) {
     submitBtn.disabled = b;
     submitBtn.textContent = b ? "Logging in…" : "Log In";
+  }
+
+  // CAPTCHA is required on every login attempt.
+  var cap = null;
+  if (window.DKCaptcha) {
+    cap = DKCaptcha.init(
+      document.getElementById("capCanvas"),
+      document.getElementById("capInput"),
+      document.getElementById("capRefresh")
+    );
   }
 
   // Already signed in? Skip to dashboard.
@@ -27,9 +38,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var ok = true;
     eErr.textContent = ""; pErr.textContent = "";
     if (gErr) gErr.textContent = "";
+    if (cErr) cErr.textContent = "";
     var em = email.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { eErr.textContent = "Please enter a valid email address."; ok = false; }
     if (pw.value.length < 6) { pErr.textContent = "Password must be at least 6 characters."; ok = false; }
+    if (!cap || !cap.validate()) {
+      if (cErr) cErr.textContent = "Please enter the security code shown above.";
+      if (cap) cap.refresh();
+      ok = false;
+    }
     if (!ok) return;
     if (!window.DKF || !DKF.auth()) {
       if (gErr) gErr.textContent = "Sign-in is still loading. Please wait a moment and try again.";
@@ -41,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(function () { window.location.href = "dashboard.html"; })
       .catch(function (err) {
         setBusy(false);
+        if (cap) cap.refresh(); // fresh code for the next attempt
         if (gErr) gErr.textContent = DKF.friendlyError(err);
       });
   });
