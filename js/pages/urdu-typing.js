@@ -1,10 +1,51 @@
-/* DoKit — Urdu typing page controller.
-   Lessons (25, unlock-by-pass) + timed tests (1/3/5 min).
-   Word-level highlighting keeps Urdu/Nastaliq shaping intact across browsers.
-*/
+/**
+ * DoKit — Urdu Typing Page Controller
+ * =====================================
+ * WHAT: Interactive Urdu typing tutor — lessons, timed tests, progress tracking.
+ *       Renders the typing interface on typing/urdu.html.
+ *
+ * WHY: Guided practice with immediate feedback (WPM, accuracy) is how people
+ *      learn typing. This controller manages the full learning loop.
+ *
+ * FEATURES:
+ *   1. LESSONS (25, unlock-by-pass progression):
+ *      - Grid shows 🔒 locked / ✅ completed / ▶ available states
+ *      - Click lesson → practice view with target text
+ *      - Live stats: WPM, accuracy, elapsed time
+ *      - On finish: checks vs lesson targets → pass/fail → unlock next
+ *      - Progress saved to localStorage (dokit_urdu_progress)
+ *   2. TIMED TESTS (1/3/5 min):
+ *      - Passage picker, countdown timer
+ *      - Results: WPM, accuracy, characters typed
+ *   3. KEYBOARD INTEGRATION:
+ *      - Uses UrduKeyboard module for transliteration + visual keyboard
+ *      - Next-key highlight during practice
+ *      - RTL textarea for Urdu input
+ *   4. JOURNEY LOGGING:
+ *      - Logs completed lessons/tests to Journey timeline
+ *
+ * RTL & SHAPING (CRITICAL):
+ *   - Uses WORD-level highlighting (not char-level spans)
+ *   - Why: Splitting Urdu into per-character spans BREAKS Nastaliq letter
+ *     joining in some browsers. Word-level keeps shaping intact.
+ *   - Target text and input both dir="rtl", font: Noto Nastaliq Urdu
+ *
+ * DEPENDENCIES:
+ *   - UrduKeyboard (js/urdu-keyboard.js) — transliteration + visual keyboard
+ *   - UrduLessons (js/urdu-lessons.js) — lesson data
+ *   - Journey (js/journey.js) — activity logging (optional)
+ *
+ * @module UrduTypingPage
+ */
 (function () {
   "use strict";
 
+  /**
+   * Shorthand for document.getElementById.
+   * WHY: Used 20+ times in this file. Shorter = more readable.
+   * @param {string} id - Element ID.
+   * @returns {HTMLElement|null} The element, or null if not found.
+   */
   function $(id) { return document.getElementById(id); }
   var LS_PROG = "dokit_urdu_progress";
   var LS_UI = "dokit_urdu_ui";
@@ -13,6 +54,12 @@
   var uiLang = "ur";
   try { uiLang = localStorage.getItem(LS_UI) || "ur"; } catch (e) {}
 
+  /**
+   * Load lesson progress from localStorage.
+   * WHY localStorage: Progress must persist across sessions without requiring
+   * sign-in. Shape: { completed: [1,2,3], wpm: {1: 12, 2: 15} }.
+   * @returns {{completed: Array<number>, wpm: Object}} Progress object.
+   */
   function getProgress() {
     try {
       var p = JSON.parse(localStorage.getItem(LS_PROG));
@@ -20,9 +67,23 @@
     } catch (e) {}
     return { lessons: {}, tests: [] };
   }
+  /**
+   * Save lesson progress to localStorage.
+   * WHY try/catch: Storage may be unavailable (private mode). Progress loss is
+   * acceptable; breaking the lesson is not.
+   * @param {{completed: Array<number>, wpm: Object}} p - Progress to save.
+   */
   function saveProgress(p) {
     try { localStorage.setItem(LS_PROG, JSON.stringify(p)); } catch (e) {}
   }
+  /**
+   * Check if a lesson is unlocked (lesson 1 always unlocked; others require
+   * previous lesson completed).
+   * WHY sequential unlock: Prevents beginners from jumping to expert lessons
+   * and getting frustrated. Pedagogically sound progression.
+   * @param {number} id - Lesson ID (1-25).
+   * @returns {boolean} True if user can access this lesson.
+   */
   function isUnlocked(id) {
     if (id === 1) return true;
     var p = getProgress();
@@ -30,6 +91,11 @@
   }
 
   /* ---------- UI language toggle ---------- */
+  /**
+   * Apply UI language (English/اردو toggle) to static labels.
+   * WHY: The typing page has its own EN/UR toggle separate from site i18n,
+   * because lesson content is Urdu-specific and needs custom handling.
+   */
   function applyUiLang() {
     document.querySelectorAll("[data-en]").forEach(function (el) {
       var v = el.getAttribute(uiLang === "ur" ? "data-ur" : "data-en");
@@ -42,6 +108,12 @@
   }
 
   /* ---------- Setup: layout selector ---------- */
+  /**
+   * Render the keyboard layout selector cards (Phonetic / Standard Urdu).
+   * WHY cards (not dropdown): Visual preview of each layout helps users choose.
+   * Shows name, description, and sample key mapping. Clicking switches layout
+   * via UrduKeyboard.setLayout() and re-renders the visual keyboard.
+   */
   function renderLayoutCards() {
     var row = $("layoutRow");
     row.innerHTML = "";
@@ -72,6 +144,12 @@
   }
 
   /* ---------- Setup: lessons grid ---------- */
+  /**
+   * Render the 25-lesson grid grouped by level (Beginner/Intermediate/Advanced/Expert).
+   * Each lesson card shows: 🔒 locked, ✅ completed (with best WPM), or ▶ available.
+   * WHY grouping: 25 lessons is overwhelming as a flat list. Level groups provide
+   * structure and a sense of progression ("I'm in Intermediate now!").
+   */
   function renderLessons() {
     var pane = $("lessonsPane");
     pane.innerHTML = "";
@@ -109,6 +187,11 @@
 
   /* ---------- Setup: test pane ---------- */
   var testMin = 1, testPass = 0;
+  /**
+   * Render the timed-test configuration pane (duration picker + passage picker).
+   * WHY separate from lessons: Tests are assessment, lessons are learning.
+   * Different mental mode — user chooses "I want to practice" vs "test my speed".
+   */
   function renderTestPane() {
     var pr = $("passRow");
     pr.innerHTML = "";
@@ -125,6 +208,12 @@
   }
 
   /* ---------- Session ---------- */
+  /**
+   * Show one view pane, hide others (lessons / test / active practice).
+   * WHY single-view: Prevents confusion. User is either browsing, configuring,
+   * or practicing — never two at once.
+   * @param {string} id - Pane ID to show ("lessons", "test", "active").
+   */
   function show(id) {
     ["setup", "active", "done"].forEach(function (x) {
       $(x).classList.toggle("hidden", x !== id);
@@ -132,6 +221,14 @@
     window.scrollTo(0, 0);
   }
 
+  /**
+   * Start a typing session (shared by lessons and tests).
+   * WHY shared: Lessons and tests differ only in text source and timing;
+   * the typing mechanics (input handling, WPM calc, highlighting) are identical.
+   * Sets up: target text, timer, input listener, keyboard attachment.
+   * @param {string} text - The Urdu text to type.
+   * @param {object} meta - { type: "lesson"|"test", id, targetWpm, targetAccuracy }.
+   */
   function startSession(text, meta) {
     S = {
       target: text,
@@ -151,15 +248,33 @@
     setTimeout(function () { try { $("typeArea").focus(); } catch (e) {} }, 100);
   }
 
+  /**
+   * Start a specific lesson by ID.
+   * WHY guard isUnlocked: Prevents URL manipulation to skip ahead.
+   * (Client-side only — a determined user can bypass, but honest users follow the path.)
+   * @param {number} id - Lesson ID (1-25).
+   */
   function startLesson(id) {
     var L = URDU_LESSONS[id - 1];
     startSession(L.text, { kind: "lesson", lesson: L, title: "سبق " + L.id + ": " + L.titleUr });
   }
+  /**
+   * Start a timed test with the selected duration and passage.
+   * Reads duration/passage from the test pane UI controls.
+   */
   function startTest() {
     var t = URDU_TESTS[testPass];
     startSession(t.text, { kind: "test", minutes: testMin, title: t.title + " — " + testMin + " منٹ" });
   }
 
+  /**
+   * Render the target text as word-level spans for highlighting.
+   * WHY word-level (not char-level): Splitting Urdu into per-character spans
+   * BREAKS Nastaliq letter joining in some browsers. Words stay intact;
+   * we highlight whole words as correct/incorrect/current.
+   * CRITICAL: Do not change to char-level without testing in Chrome, Firefox,
+   * Safari with Noto Nastaliq.
+   */
   function renderTarget() {
     var t = $("targetText");
     t.innerHTML = "";
@@ -173,11 +288,21 @@
     markWords(0, []);
   }
 
+  /**
+   * Format seconds as M:SS (e.g., 65 → "1:05").
+   * @param {number} sec - Seconds.
+   * @returns {string} Formatted time.
+   */
   function fmt(sec) {
     sec = Math.max(0, Math.floor(sec));
     return Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2);
   }
 
+  /**
+   * Timer tick handler (called every second via setInterval).
+   * Updates the countdown display. For tests, ends the session at 0.
+   * For lessons (untimed), just shows elapsed time.
+   */
   function tick() {
     if (!S || S.done || !S.started) return;
     var el = (Date.now() - S.t0) / 1000;
@@ -191,6 +316,12 @@
     updateLive(el);
   }
 
+  /**
+   * Update live WPM and accuracy displays during typing.
+   * WHY live feedback: Users adjust their pace when they see real-time stats.
+   * WPM = (correct chars / 5) / minutes. Accuracy = correct / total typed.
+   * @param {number} elSecs - Elapsed seconds.
+   */
   function updateLive(elSecs) {
     var typed = S.typed, target = S.target;
     var n = Math.min(typed.length, target.length), ok = 0, i;
@@ -203,6 +334,14 @@
     return { wpm: wpm, acc: acc, ok: ok };
   }
 
+  /**
+   * Update word highlighting based on current input state.
+   * WHY three states: correct (green) = typed correctly, incorrect (red) =
+   * has errors, current (highlighted) = word being typed. Visual feedback
+   * helps users spot mistakes immediately.
+   * @param {number} curIdx - Index of the word currently being typed.
+   * @param {Array<string>} states - Per-word state: "correct"|"incorrect"|"current"|"".
+   */
   function markWords(curIdx, states) {
     var spans = $("targetText").querySelectorAll(".w");
     spans.forEach(function (s, i) {
@@ -212,6 +351,12 @@
     });
   }
 
+  /**
+   * Handle input events in the typing textarea.
+   * WHY input (not keydown): Catches all changes including paste, autocomplete,
+   * and IME input. Compares typed words against target words, updates states,
+   * and triggers live stats. This is the core typing loop.
+   */
   function onInput() {
     if (!S || S.done) return;
     if (!S.started) {
@@ -252,6 +397,13 @@
     }
   }
 
+  /**
+   * End the typing session and show results.
+   * For lessons: checks WPM/accuracy vs targets → pass/fail → unlocks next lesson
+   *   on pass, saves best WPM, logs to Journey.
+   * For tests: shows WPM, accuracy, characters typed.
+   * WHY clearInterval: Stops the timer. WHY detach keyboard: Returns input to normal.
+   */
   function finish() {
     if (!S || S.done) return;
     S.done = true;
