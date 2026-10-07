@@ -104,3 +104,39 @@ None. All 9 scaffold pages created and validated:
 - account/login.html, account/signup.html, account/dashboard.html, admin/index.html now use Firebase Auth + Firestore; inline page scripts extracted to js/pages/*; CSP extended for gstatic scripts + googleapis connect.
 - Admin panel gated: requires signed-in user + admins/{uid} doc in Firestore.
 - NOTE: Firestore Security Rules still default (production mode = deny all). Must publish rules for users/{uid} + admins/{uid} or Firestore reads/writes will fail. Pending.
+
+## 2026-10-07 ~14:00 PKT — FINAL AUDIT Team C (UX + MOBILE + SEO + I18N + FEATURES)
+Automated sweep of all 71 HTML pages + manual verification. Fixes applied:
+
+**SEO (was 96%):**
+- sitemap.xml: REMOVED 4 noindex pages that were wrongly listed (account/deposit.html, account/withdraw.html, account/subscription.html, account/api-keys.html — all have robots noindex,nofollow); ADDED 11 missing public content pages (blog/ x4, guides/ x6, wall-of-love.html). Now 49 URLs, valid XML.
+- OG tags: added og:title/description/url/image + twitter card to 33 pages that lacked them (all account/*, admin, api/docs, status, 404, typefight/*, typing/*, wall-of-love).
+- Canonicals: added to 5 typing pages missing them (lesson, profile, progress, results, test); redirect stubs (12 root pages) now carry canonical -> their typing/ target + description; offline.html got a description.
+- robots.txt verified correct. No pages with user-scalable=no.
+
+**I18N:**
+- ~148 hardcoded user-facing English strings in 12 JS files now routed through DKI18N via per-file en-dictionaries + dkT() helper with local fallback (login, signup, firebase friendlyError, api-keys, dashboard, deposit, withdraw, subscription, stripe-checkout, typefight-battle/profile/wallet-page). Other languages fall back to English; output byte-identical for English. Verified by node runtime test.
+- INCIDENT during fix: first script inserted dict THEN replaced, corrupting login.js/signup.js dicts (values became dkT() calls = infinite recursion/crash), and dropped a paren in 2 api-keys.js ternaries. Caught by node --check + dict audit. Repaired and re-verified (node --check all pass, runtime output identical).
+- Language switcher: confirmed JS-injected via DKUI.renderNav on every real page (10 languages); redirect stubs excluded (instant redirect). RTL: ur/ar set documentElement dir=rtl; typing/urdu.html has dir=rtl.
+- Skipped: admin-full.js strings (admin-only panel, English acceptable).
+
+**MOBILE (was 100%):**
+- All 71 pages have viewport meta. No fixed pixel widths >=360px (only small values/max-width). Tables: admin has overflow-x wrappers; wallet table is 3 narrow columns.
+- Touch targets: .chip (~36px), .pick (~41px), .lang-btn (~34px) raised to min-height 44px via CSS. .btn/.toggle-btn/mobile-nav already >=44px.
+
+**FEATURES (was 99%):**
+- 883 internal href/src refs checked: 0 broken (1 false positive = code sample).
+- 63 unique external URLs: all valid format.
+- All 14 forms wired to JS submit handlers (verified each form id referenced).
+- Dead-button hunt: only real dead link was typefight/certificate.html cVerifyLink href="#" (JS replaces it on load); fixed fallback to ./verify/ so it works if JS/cert-load fails. pricing.html "Coming soon" buttons are intentionally disabled. FAQ accordions, tool close buttons, notify forms all wired.
+- Flows traced: signup->dashboard (both Firebase + legacy), battle->certificate->verify, deposit->admin approve all wired with loading/empty/error states.
+- 49 buttons outside forms given type="button" (0 remain typeless outside forms).
+- Destructive actions: API key revoke has confirm; typing progress reset has confirm; logout is non-destructive.
+
+**False positives documented (no fix needed):**
+- H1=2 on 5 guide pages (EN/UR in hidden toggle divs — one visible at a time) and typing/test.html (setup/player phases, one visible).
+- H1=0 on 12 root redirect stubs (meta-refresh pages, not content).
+- blog photo.webp "broken" src is inside a <code> sample.
+- Firebase apiKey + reCAPTCHA Enterprise site key in js/firebase.js are public-by-design (documented in file); no secret leak.
+
+**Not fixed (needs non-code action):** Urdu/Arabic translations for the newly-keyed strings (keys registered, en-only for now); composite Firestore indexes (auto-prompted); Cloud Functions items from V3 (client-mintable coins etc. — architectural).
