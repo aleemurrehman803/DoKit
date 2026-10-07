@@ -81,14 +81,15 @@ window.Certificate = {
   },
 
   /* Returns the user's certificate record, creating it on first view.
-   * regNo + issuedAt are frozen at first issuance; name/stats refresh. */
+   * regNo + issuedAt are frozen at first issuance; name/stats refresh.
+   * `synced` tracks whether the record has been written to Firestore. */
   getOrCreateRecord: function (email, name, wpm, acc) {
     var rec = this.loadRecord(email);
     if (!rec || !rec.regNo) {
       var regNo = this.makeRegNo();
       var guard = 0;
       while (this.regNoTaken(regNo) && guard < 10) { regNo = this.makeRegNo(); guard++; }
-      rec = { regNo: regNo, name: name, wpm: wpm, acc: acc, issuedAt: Date.now() };
+      rec = { regNo: regNo, name: name, wpm: wpm, acc: acc, issuedAt: Date.now(), synced: false };
       this.saveRecord(email, rec);
     } else {
       rec.name = name;
@@ -100,6 +101,87 @@ window.Certificate = {
       this.saveRecord(email, rec);
     }
     return rec;
+  },
+
+  /* ---------- Firestore sync (cross-device verification) ----------
+   * The typing section uses localStorage accounts (no Firebase Auth), so we
+   * sign in ANONYMOUSLY to satisfy `request.auth != null` in the rules.
+   * The anonymous uid is browser-stable (Firebase persists it), and the rule
+   * requires `uid == request.auth.uid`, so each browser can only register
+   * its own certificates. Everything is fire-and-forget: the certificate
+   * renders from localStorage immediately; Firestore sync never blocks it
+   * and degrades silently offline. */
+  _fsdb: function () {
+    try {
+      if (typeof window.DKF !== "undefined" && DKF.db) {
+        var db = DKF.db();
+        return db || null;
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  },
+  _fsTs: function (ms) {
+    try {
+      if (window.firebase && firebase.firestore && firebase.firestore.Timestamp) {
+        return firebase.firestore.Timestamp.fromMillis(ms);
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  },
+  ensureAnonAuth: function () {
+    return new Promise(function (resolve) {
+      try {
+        if (typeof window.DKF === "undefined" || !DKF.auth) return resolve(null);
+        var auth = DKF.auth();
+        if (!auth) return resolve(null);
+        if (auth.currentUser) return resolve(auth.currentUser.uid);
+        auth.signInAnonymously().then(function (cred) {
+          resolve(cred && cred.user ? cred.user.uid : null);
+        }).catch(function () { resolve(null); });
+      } catch (e) { resolve(null); }
+    });
+  },
+  _markSynced: function (email, rec) {
+    try {
+      rec.synced = true;
+      this.saveRecord(email, rec);
+    } catch (e) { /* ignore */ }
+  },
+  /* Attempt a one-time write of this record to the public registry.
+   * Safe to call on every certificate view: skips when already synced. */
+  syncRecord: function (email, rec) {
+    var self = this;
+    if (!rec || rec.synced) return;
+    this.ensureAnonAuth().then(function (uid) {
+      if (!uid) return; /* offline / firebase unavailable: retry next visit */
+      var db = self._fsdb();
+      if (!db) return;
+      var ts = self._fsTs(rec.issuedAt);
+      if (!ts) return;
+      var wpm = (typeof rec.wpm === "number" && !isNaN(rec.wpm)) ? rec.wpm : 0;
+      var acc = (typeof rec.acc === "number" && !isNaN(rec.acc)) ? rec.acc : -1;
+      var docRef = db.collection("certificates").doc(rec.regNo);
+      docRef.get().then(function (snap) {
+        if (snap.exists) {
+          /* Doc already registered (e.g. localStorage was cleared, or a rare
+           * regNo collision). Never overwrite: if it's ours, mark synced. */
+          var d = snap.data() || {};
+          if (d.uid === uid) self._markSynced(email, rec);
+          return;
+        }
+        var payload = {
+          regNo: rec.regNo,
+          name: String(rec.name || "").trim(),
+          wpm: wpm,
+          acc: acc,
+          issuedAt: ts,
+          uid: uid
+        };
+        return docRef.set(payload).then(function () {
+          self._markSynced(email, rec);
+        });
+      }).catch(function () { /* offline / denied: retry next visit */ });
+    }).catch(function () { /* ignore */ });
   },
 
   /* ---------- rendering ---------- */
@@ -190,6 +272,9 @@ window.Certificate = {
     var rec = self.getOrCreateRecord(u.email, name, wpm, bestAcc);
     set("certReg", rec.regNo);
     set("certIssued", self.formatIssued(rec.issuedAt));
+
+    /* Cross-device registry: fire-and-forget, never blocks rendering. */
+    try { self.syncRecord(u.email, rec); } catch (e) { /* ignore */ }
 
     /* QR code encoding the verification URL. */
     var qr = get("certQr");
