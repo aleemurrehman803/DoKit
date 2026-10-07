@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Status — DoKit</title>
+<meta name="description" content="DoKit system status: all systems operational.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/status.html">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/hub.css">
+<style>
+  .status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#22a06b; margin-inline-end:.5rem; }
+  .status-row { display:flex; justify-content:space-between; align-items:center; padding:var(--sp-2) 0; border-bottom:1px solid var(--dk-border,#e3e1f0); }
+  .status-row:last-child { border-bottom:0; }
+</style>
+</head>
+<body data-nav="status">
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <span class="eyebrow">Transparency</span>
+        <h1>System status</h1>
+        <p><span class="status-dot" aria-hidden="true"></span><strong>All systems operational.</strong> Last checked: <span id="statusTime">—</span></p>
+      </div>
+      <div class="card" style="margin-bottom:var(--sp-5)">
+        <h3 style="margin-block-start:0">Services</h3>
+        <div class="status-row"><span>🌐 Website (GitHub Pages)</span><span>Operational</span></div>
+        <div class="status-row"><span>🔐 Authentication (Firebase)</span><span>Operational</span></div>
+        <div class="status-row"><span>🗄️ Database (Firestore)</span><span>Operational</span></div>
+        <div class="status-row"><span>🛠️ Tools (client-side)</span><span>Operational</span></div>
+        <div class="status-row"><span>💳 Payments</span><span>Not launched yet</span></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-block-start:0">Incident history</h3>
+        <p style="color:var(--text-muted);margin-bottom:0">No incidents recorded. If something breaks, it will be listed here with a full post-mortem.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<div id="dk-assistant-root"></div>
+<script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-ar.js" defer></script>
+<script src="js/i18n-hi.js" defer></script>
+<script src="js/i18n-es.js" defer></script>
+<script src="js/i18n-fr.js" defer></script>
+<script src="js/i18n-pt.js" defer></script>
+<script src="js/i18n-de.js" defer></script>
+<script src="js/i18n-tr.js" defer></script>
+<script src="js/i18n-ru.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/assistant-kb.js" defer></script>
+<script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
+<script>
+/* Status page: stamp the check time. (Static page — no backend ping yet.) */
+(function () {
+  function stamp() {
+    var el = document.getElementById("statusTime");
+    if (!el) return;
+    try {
+      el.textContent = new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    } catch (e) { el.textContent = new Date().toString(); }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", stamp);
+  else stamp();
+})();
+</script>
+</body>
+</html>
