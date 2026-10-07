@@ -28,18 +28,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Handle return from Google redirect sign-in.
   if (window.DKF && DKF.auth()) {
-    DKF.auth().getRedirectResult().then(function (result) {
-      if (result && result.user) {
-        return DKF.ensureUserDoc(result.user).then(function () {
-          window.location.href = "dashboard.html";
-        });
-      }
-    }).catch(function (err) {
-      // Never swallow redirect errors silently — show them for diagnosis.
-      var gErr2 = document.getElementById("err-general");
-      if (gErr2) gErr2.textContent = DKF.friendlyError(err) +
-        " (code: " + (err && err.code) + ")";
-    });
+    try {
+      var dbgEl = document.getElementById("err-general");
+      DKF.auth().getRedirectResult().then(function (result) {
+        if (result && result.user) {
+          if (dbgEl) dbgEl.textContent = "Redirect OK: " + result.user.email + " — finishing…";
+          return DKF.ensureUserDoc(result.user).then(function () {
+            window.location.href = "dashboard.html";
+          });
+        } else {
+          // Visible diagnostic: no pending redirect found.
+          if (dbgEl) dbgEl.textContent = "DIAG: getRedirectResult returned empty (no pending redirect). URL=" +
+            window.location.href.substring(0, 120);
+        }
+      }).catch(function (err) {
+        if (dbgEl) dbgEl.textContent = DKF.friendlyError(err) +
+          " (code: " + (err && err.code) + ")";
+      });
+    } catch (e) { /* ignore */ }
   }
 
   // Already signed in? Skip to dashboard.
