@@ -56,9 +56,8 @@
     } catch (e) { return null; }
   }
 
-  function esc(s) {
-    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
-    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
@@ -249,10 +248,20 @@
           throw new Error("Please wait " + waitH + " hours between withdrawals.");
         }
 
+        // Daily limit (calendar day, UTC). Tracked on the user doc so the
+        // check is atomic with the lock — no extra reads, no races.
+        var today = new Date(now).toISOString().slice(0, 10);
+        var wt = udata.withdrawn_today || {};
+        var dayTotal = (wt.date === today) ? (Number(wt.total) || 0) : 0;
+        if (dayTotal + av.value > DAILY_WITHDRAW_LIMIT) {
+          throw new Error("Daily withdrawal limit is Rs " + DAILY_WITHDRAW_LIMIT + ".");
+        }
+
         // Lock the coins: move from available to pending_withdrawal
         tx.update(userRef, {
           pending_withdrawal: pendingWd + av.value,
-          last_withdrawal_at: now
+          last_withdrawal_at: now,
+          withdrawn_today: { date: today, total: dayTotal + av.value }
         });
 
         // Create the withdrawal request
@@ -343,3 +352,77 @@
     esc: esc
   };
 })();
+
+/* ----------------------------------------------------------------------
+ * REQUIRED FIRESTORE RULES (verify these exist in the Firebase console;
+ * AUDIT_V3 confirmed deposits create-guard is published — the rest must
+ * match this shape):
+ *
+ * function isAdmin() {
+ *   return request.auth != null &&
+ *     exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+ * }
+ *
+ * match /deposits/{id} {
+ *   // Users create their own requests as "pending" only. Status changes
+ *   // (approve/reject) are admin-only — the requester can never mark
+ *   // their own deposit approved (H4).
+ *   allow create: if request.auth != null
+ *                 && request.resource.data.userId == request.auth.uid
+ *                 && request.resource.data.status == "pending"
+ *                 && request.resource.data.amount is number
+ *                 && request.resource.data.amount >= 10
+ *                 && request.resource.data.amount <= 1000000
+ *                 && request.resource.data.method in ["easypaisa", "jazzcash", "usdt"]
+ *                 && request.resource.data.txnId is string
+ *                 && request.resource.data.txnId.size() >= 4
+ *                 && request.resource.data.txnId.size() <= 64;
+ *   allow read: if isAdmin()
+ *               || (request.auth != null && resource.data.userId == request.auth.uid);
+ *   allow update: if isAdmin();
+ *   allow delete: if false;
+ * }
+ *
+ * match /withdrawals/{id} {
+ *   // Same pattern: owner creates "pending" requests; admin settles them.
+ *   allow create: if request.auth != null
+ *                 && request.resource.data.userId == request.auth.uid
+ *                 && request.resource.data.status == "pending"
+ *                 && request.resource.data.amount is number
+ *                 && request.resource.data.amount >= 100
+ *                 && request.resource.data.amount <= 1000000
+ *                 && request.resource.data.method in ["easypaisa", "jazzcash", "usdt"]
+ *                 && request.resource.data.account is string
+ *                 && request.resource.data.account.size() >= 5
+ *                 && request.resource.data.account.size() <= 30;
+ *   allow read: if isAdmin()
+ *               || (request.auth != null && resource.data.userId == request.auth.uid);
+ *   allow update: if isAdmin();
+ *   allow delete: if false;
+ * }
+ *
+ * match /users/{userId} {
+ *   // Money-field type guards. NOTE (H2, see js/typefight-wallet.js): the
+ *   // virtual-coin economy is client-driven at launch, so the owner keeps
+ *   // write access to their own doc. These rules stop type-confusion and
+ *   // negative-balance corruption; they do NOT stop self-minting — that
+ *   // requires the Cloud-Function minting path before real money moves.
+ *   // The client-side withdrawal transaction updates pending_withdrawal,
+ *   // last_withdrawal_at and withdrawn_today on the owner's doc; those
+ *   // three fields are the only money fields the owner flow touches.
+ *   allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+ *   allow create, update: if request.auth != null && request.auth.uid == userId
+ *     && (!("coins" in request.resource.data)
+ *         || (request.resource.data.coins is number && request.resource.data.coins >= 0))
+ *     && (!("pending_withdrawal" in request.resource.data)
+ *         || (request.resource.data.pending_withdrawal is number
+ *             && request.resource.data.pending_withdrawal >= 0))
+ *     && (!("last_withdrawal_at" in request.resource.data)
+ *         || request.resource.data.last_withdrawal_at is number)
+ *     && (!("withdrawn_today" in request.resource.data)
+ *         || (request.resource.data.withdrawn_today.total is number
+ *             && request.resource.data.withdrawn_today.total >= 0));
+ *   allow update: if isAdmin();
+ *   allow delete: if false;
+ * }
+ * ---------------------------------------------------------------------- */
