@@ -16,13 +16,19 @@
 <meta property="og:description" content="Resize many images at once, crop, remove backgrounds, hit an exact KB target, and download all as ZIP."/>
 <meta property="og:type" content="website"/>
 <meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
 <link rel="stylesheet" href="../../css/tokens.css"/>
 <link rel="stylesheet" href="../../css/hub.css"/>
 <link rel="stylesheet" href="tool.css"/>
 <script src="../../js/i18n-v2.js" defer></script>
 <script src="../../js/i18n-hotfix.js" defer></script>
+  <script src="../../js/i18n-tools-shared.js" defer></script>
 <script src="../../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../../js/firebase.js" defer></script>
+<script src="../../js/site-wide.js" defer></script>
+<script src="../../js/maintenance.js" defer></script>
 <script src="../../js/journey.js" defer></script>
 <!-- Instant upload preview (must load BEFORE tool.js: the tool clears
      fileInput.value in its change handler, so this listener has to be
@@ -52,11 +58,11 @@
 </script>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main" class="twrap">
   <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page">Image Resizer</span>
+    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.resizer">Image Resizer</span>
   </nav>
 
   <div class="thero">
@@ -77,32 +83,32 @@
       <path d="M48 20v6h6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
-    <h1>Image Resizer</h1>
-    <p>Resize many images at once — crop, remove backgrounds, hit an exact file size, and download everything as a ZIP. Free, private, in your browser.</p>
-    <p><span class="tprivacy">🔒 <span>Your files never leave your device — everything happens in your browser.</span></span></p>
+    <h1 data-i18n="toolnames.resizer">Image Resizer</h1>
+    <p data-i18n="resizer.hero_desc">Resize many images at once — crop, remove backgrounds, hit an exact file size, and download everything as a ZIP. Free, private, in your browser.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="img.privacy">Your files never leave your device — everything happens in your browser.</span></span></p>
   </div>
 
   <section class="tcard" aria-labelledby="tool-h">
-    <h2 id="tool-h" class="sr-only">Image Resizer</h2>
+    <h2 id="tool-h" class="sr-only" data-i18n="toolnames.resizer">Image Resizer</h2>
 
     <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
       <div class="tdrop-icon" aria-hidden="true">🖼️</div>
-      <p class="tdrop-title" id="dz-t">Drag &amp; drop your images here</p>
-      <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
-      <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB each · as many as you like</p>
+      <p class="tdrop-title" id="dz-t" data-i18n="resizer.drop_title">Drag &amp; drop your images here</p>
+      <p class="tdrop-sub"><span data-i18n="resizer.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="resizer.drop_browse">browse your files</button></p>
+      <p class="tdrop-hint" data-i18n="resizer.drop_hint">PNG, JPEG, WebP · up to 25 MB each · as many as you like</p>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple aria-label="Choose images to resize"/>
     </div>
-      <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
-      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
+      <p class="tdrop-privacy" data-i18n="saas.privacy_line">🔒 Files never leave your device — 100% private.</p>
+      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span data-i18n="saas.try_sample">Try with sample</span></button></p>
 
     <div class="tbpanel" id="batchPanel" aria-labelledby="batch-h">
-      <h3 id="batch-h"><span>Settings — applied to all images</span></h3>
-      <p class="thint hint">Set once, apply to every image in the queue.</p>
+      <h3 id="batch-h"><span data-i18n="resizer.batch_title">Settings — applied to all images</span></h3>
+      <p class="thint hint" data-i18n="resizer.batch_panel_desc">Set once, apply to every image in the queue.</p>
 
       <div class="tfield">
-        <span id="batchCropLabel" style="font-weight:600;font-size:.9rem">Crop all to</span>
+        <span id="batchCropLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.batch_crop">Crop all to</span>
         <div class="tseg" role="group" aria-labelledby="batchCropLabel" id="batchRatio" style="margin-inline-start:.75rem">
-          <button type="button" data-ratio="0" aria-pressed="true">Free</button>
+          <button type="button" data-ratio="0" aria-pressed="true" data-i18n="resizer.ratio_free">Free</button>
           <button type="button" data-ratio="1" aria-pressed="false">1:1</button>
           <button type="button" data-ratio="1.3333" aria-pressed="false">4:3</button>
           <button type="button" data-ratio="0.75" aria-pressed="false">3:4</button>
@@ -112,16 +118,16 @@
       </div>
 
       <div class="tfield">
-        <span id="fitModeLabel" style="font-weight:600;font-size:.9rem">Fit</span>
+        <span id="fitModeLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.fit_mode">Fit</span>
         <div class="tseg" role="group" aria-labelledby="fitModeLabel" id="fitModeSeg" style="margin-inline-start:.75rem">
-          <button type="button" id="fitCrop" aria-pressed="true">Crop to fill</button>
-          <button type="button" id="fitPad" aria-pressed="false">Pad to fit</button>
+          <button type="button" id="fitCrop" aria-pressed="true" data-i18n="resizer.fit_crop">Crop to fill</button>
+          <button type="button" id="fitPad" aria-pressed="false" data-i18n="resizer.fit_pad">Pad to fit</button>
         </div>
         <input type="color" id="padColorInput" class="tcolor" value="#ffffff" aria-label="Padding color" hidden/>
       </div>
 
       <div class="tfield">
-        <span id="batchTransformLabel" style="font-weight:600;font-size:.9rem">Rotate / flip all</span>
+        <span id="batchTransformLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.batch_transform">Rotate / flip all</span>
         <div class="tbtnrow" style="margin-block-start:.4rem">
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="batchRotCcw" aria-label="Rotate left">⟲</button>
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="batchRotCw" aria-label="Rotate right">⟳</button>
@@ -131,26 +137,26 @@
       </div>
 
       <div class="tfield">
-        <span id="batchBgLabel" style="font-weight:600;font-size:.9rem">Background</span>
+        <span id="batchBgLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.batch_bg">Background</span>
         <div class="tseg" role="group" aria-labelledby="batchBgLabel" id="bgBatchSeg" style="margin-inline-start:.75rem">
-          <button type="button" id="bgBatchKeep" aria-pressed="true">Keep original</button>
-          <button type="button" id="bgBatchTransparent" aria-pressed="false">Transparent</button>
-          <button type="button" id="bgBatchColor" aria-pressed="false">Solid color</button>
+          <button type="button" id="bgBatchKeep" aria-pressed="true" data-i18n="resizer.batch_bg_keep">Keep original</button>
+          <button type="button" id="bgBatchTransparent" aria-pressed="false" data-i18n="resizer.batch_bg_transparent">Transparent</button>
+          <button type="button" id="bgBatchColor" aria-pressed="false" data-i18n="resizer.batch_bg_color">Solid color</button>
         </div>
         <input type="color" id="bgBatchColorInput" class="tcolor" value="#3b82f6" aria-label="Background color" hidden/>
       </div>
       <div class="tfield">
-        <label class="tcheck"><input type="checkbox" id="bgBatchAuto"/> <span>Auto-remove plain background</span></label>
-        <p class="thint hint">Samples the image corners — best on plain backgrounds, not AI.</p>
+        <label class="tcheck"><input type="checkbox" id="bgBatchAuto"/> <span data-i18n="resizer.batch_bg_auto">Auto-remove plain background</span></label>
+        <p class="thint hint" data-i18n="resizer.batch_bg_auto_hint">Samples the image corners — best on plain backgrounds, not AI.</p>
         <p class="tautonote"></p>
       </div>
       <div class="tfield" id="bgBatchTolRow" hidden>
-        <label for="bgBatchTol"><span>Tolerance</span> — <output class="tslider-val" id="bgBatchTolVal" for="bgBatchTol">25</output></label>
+        <label for="bgBatchTol"><span data-i18n="resizer.bg_tolerance">Tolerance</span> — <output class="tslider-val" id="bgBatchTolVal" for="bgBatchTol">25</output></label>
         <input type="range" class="tslider" id="bgBatchTol" min="1" max="100" value="25"/>
       </div>
 
       <div class="tfield">
-        <span id="socialLabel" style="font-weight:600;font-size:.9rem">Quick size presets</span>
+        <span id="socialLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.social_title">Quick size presets</span>
         <div class="tbtnrow" style="margin-block-start:.4rem" id="socialPresets">
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" data-w="1280" data-h="720">YouTube 1280×720</button>
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" data-w="1080" data-h="1080">Instagram 1:1</button>
@@ -162,35 +168,35 @@
       </div>
 
       <div class="tfield" style="margin-block-start:1rem">
-        <span id="modeLabel" style="font-weight:600;font-size:.9rem">Resize mode</span>
+        <span id="modeLabel" style="font-weight:600;font-size:.9rem" data-i18n="resizer.mode">Resize mode</span>
         <div class="tseg" role="group" aria-labelledby="modeLabel" style="margin-inline-start:.75rem">
-          <button type="button" id="modePx" aria-pressed="true">Pixels</button>
-          <button type="button" id="modePct" aria-pressed="false">Percent</button>
+          <button type="button" id="modePx" aria-pressed="true" data-i18n="resizer.mode_pixels">Pixels</button>
+          <button type="button" id="modePct" aria-pressed="false" data-i18n="resizer.mode_percent">Percent</button>
         </div>
       </div>
       <div class="trow" id="pxRow">
         <div class="tfield field">
-          <label class="label" for="inW">Width (px)</label>
+          <label class="label" for="inW" data-i18n="resizer.width">Width (px)</label>
           <input class="tinput input" id="inW" type="number" min="1" max="16000" value="800"/>
         </div>
         <div class="tfield field">
-          <label class="label" for="inH">Height (px)</label>
+          <label class="label" for="inH" data-i18n="resizer.height">Height (px)</label>
           <input class="tinput input" id="inH" type="number" min="1" max="16000" value="600"/>
         </div>
       </div>
-      <p class="thint hint" style="margin-block-start:-.4rem">Tip: with the aspect lock on, width and height update together.</p>
+      <p class="thint hint" style="margin-block-start:-.4rem" data-i18n="tools2.resizer_dims_hint">Tip: with the aspect lock on, width and height update together.</p>
       <div class="trow" id="pctRow" hidden>
         <div class="tfield field">
-          <label class="label" for="inP">Scale (%)</label>
+          <label class="label" for="inP" data-i18n="resizer.percent">Scale (%)</label>
           <input class="tinput input" id="inP" type="number" min="1" max="400" value="50"/>
         </div>
       </div>
       <div class="tfield">
-        <label class="tcheck"><input type="checkbox" id="lockAspect" checked/> <span>Lock aspect ratio</span></label>
+        <label class="tcheck"><input type="checkbox" id="lockAspect" checked/> <span data-i18n="resizer.lock">Lock aspect ratio</span></label>
       </div>
       <div class="trow">
         <div class="tfield field">
-          <label class="label" for="fmt">Output format</label>
+          <label class="label" for="fmt" data-i18n="resizer.format">Output format</label>
           <select class="tselect input" id="fmt">
             <option value="png">PNG</option>
             <option value="jpg">JPEG</option>
@@ -198,77 +204,77 @@
           </select>
         </div>
         <div class="tfield field" id="qRow">
-          <label class="label" for="q"><span>Quality</span> — <output class="tslider-val" id="qVal" for="q">90</output></label>
+          <label class="label" for="q"><span data-i18n="resizer.quality">Quality</span> — <output class="tslider-val" id="qVal" for="q">90</output></label>
           <input type="range" class="tslider" id="q" min="1" max="100" value="90"/>
         </div>
         <div class="tfield field">
-          <label class="label" for="targetKB"><span>Target file size (KB)</span></label>
+          <label class="label" for="targetKB"><span data-i18n="resizer.target_label">Target file size (KB)</span></label>
           <input class="tinput input" id="targetKB" type="number" min="5" max="25000" placeholder="e.g. 100 — optional"/>
-          <p class="thint hint">For JPEG/WebP the quality is auto-tuned to fit at or under your target.</p>
+          <p class="thint hint" data-i18n="resizer.target_hint">For JPEG/WebP the quality is auto-tuned to fit at or under your target.</p>
           <p class="thint hint"></p>
         </div>
       </div>
-      <p class="thint"><span>Output size</span>: <strong id="dimsLive">800 × 600 px</strong></p>
+      <p class="thint"><span data-i18n="resizer.out_dims">Output size</span>: <strong id="dimsLive">800 × 600 px</strong></p>
       <div class="tnotice" id="smartTip" hidden style="margin-block-end:.8rem">
         <span id="smartTipText"></span>
         <div class="tbtnrow" style="margin-block-start:.5rem">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="smartApply">Use JPEG</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="smartApply" data-i18n="resizer.smart_apply">Use JPEG</button>
         </div>
       </div>
       <div class="trow">
         <div class="tfield field">
-          <label class="label" for="dpiSel">DPI (PNG only)</label>
+          <label class="label" for="dpiSel" data-i18n="resizer.dpi_label">DPI (PNG only)</label>
           <select class="tselect input" id="dpiSel">
             <option value="72">72</option>
             <option value="150">150</option>
             <option value="300">300</option>
           </select>
-          <p class="thint hint">Written into PNG metadata. JPEG can't store DPI here.</p>
+          <p class="thint hint" data-i18n="resizer.dpi_note">Written into PNG metadata. JPEG can't store DPI here.</p>
         </div>
         <div class="tfield field">
-          <label class="label" for="renamePattern">Rename pattern</label>
+          <label class="label" for="renamePattern" data-i18n="resizer.rename_label">Rename pattern</label>
           <input class="tinput input" id="renamePattern" type="text" maxlength="60" placeholder="e.g. photo-{n}"/>
-          <p class="thint hint">{n} becomes the image number (01, 02…).</p>
+          <p class="thint hint" data-i18n="resizer.rename_hint">{n} becomes the image number (01, 02…).</p>
         </div>
       </div>
       <details class="tdetails" id="wmDetails">
-        <summary>Watermark</summary>
+        <summary data-i18n="resizer.wm_title">Watermark</summary>
         <div class="tfield">
-          <label class="tcheck"><input type="checkbox" id="wmEnable"/> <span>Add text watermark</span></label>
+          <label class="tcheck"><input type="checkbox" id="wmEnable"/> <span data-i18n="resizer.wm_enable">Add text watermark</span></label>
         </div>
         <div class="tfield field">
-          <label class="label" for="wmText">Watermark text</label>
+          <label class="label" for="wmText" data-i18n="resizer.wm_text">Watermark text</label>
           <input class="tinput input" id="wmText" type="text" maxlength="60" value="DoKit"/>
         </div>
         <div class="tfield">
-          <label for="wmOp"><span>Opacity</span> — <output class="tslider-val" id="wmOpVal" for="wmOp">60</output>%</label>
+          <label for="wmOp"><span data-i18n="resizer.wm_opacity">Opacity</span> — <output class="tslider-val" id="wmOpVal" for="wmOp">60</output>%</label>
           <input type="range" class="tslider" id="wmOp" min="5" max="100" value="60"/>
         </div>
         <div class="tfield">
-          <span style="font-weight:600;font-size:.9rem">Position</span>
+          <span style="font-weight:600;font-size:.9rem" data-i18n="resizer.wm_pos">Position</span>
           <div class="tposgrid" id="wmPos" role="group" aria-label="Watermark position">
             <button type="button" data-pos="0" aria-pressed="false" aria-label="top left"></button><button type="button" data-pos="1" aria-pressed="false" aria-label="top center"></button><button type="button" data-pos="2" aria-pressed="false" aria-label="top right"></button><button type="button" data-pos="3" aria-pressed="false" aria-label="middle left"></button><button type="button" data-pos="4" aria-pressed="false" aria-label="center"></button><button type="button" data-pos="5" aria-pressed="false" aria-label="middle right"></button><button type="button" data-pos="6" aria-pressed="false" aria-label="bottom left"></button><button type="button" data-pos="7" aria-pressed="false" aria-label="bottom center"></button><button type="button" data-pos="8" aria-pressed="true" aria-label="bottom right"></button>
           </div>
         </div>
       </details>
       <details class="tdetails" id="presetDetails">
-        <summary>Setting presets</summary>
+        <summary data-i18n="resizer.preset_title">Setting presets</summary>
         <div class="trow">
           <div class="tfield field">
-            <label class="label sr-only" for="presetName">Setting presets</label>
+            <label class="label sr-only" for="presetName" data-i18n="resizer.preset_title">Setting presets</label>
             <input class="tinput input" id="presetName" type="text" maxlength="40" placeholder="Preset name…"/>
           </div>
           <div class="tfield" style="flex:0 0 auto;align-self:end">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="presetSave">Save</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="presetSave" data-i18n="resizer.preset_save">Save</button>
           </div>
         </div>
         <div class="trow">
           <div class="tfield field">
-            <label class="label" for="presetList">Load:</label>
+            <label class="label" for="presetList" data-i18n="resizer.preset_load">Load:</label>
             <select class="tselect input" id="presetList"></select>
           </div>
           <div class="tfield" style="flex:0 0 auto;align-self:end">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="presetDelete">Delete</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="presetDelete" data-i18n="resizer.preset_delete">Delete</button>
           </div>
         </div>
       </details>
@@ -283,59 +289,59 @@
         <p class="thint" id="boardNone" hidden data-i18n="resizer.board_none">No match — fill the fields manually below.</p>
         <div class="tnotice" id="boardInfo" hidden></div>
         <div class="tfield">
-          <span style="font-weight:600;font-size:.9rem">35×45 mm passport</span>
+          <span style="font-weight:600;font-size:.9rem" data-i18n="resizer.board_passport">35×45 mm passport</span>
           <div class="tbtnrow" style="margin-block-start:.4rem">
             <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="pp3545">35×45 mm</button>
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="pp2x2">2×2 inch</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="pp2x2" data-i18n="resizer.board_2x2">2×2 inch</button>
           </div>
           <p class="thint">35×45 mm → 413×531 px · 2×2 in → 600×600 px (300 DPI)</p>
         </div>
         <div class="tfield">
-          <span style="font-weight:600;font-size:.9rem">One-click automatic</span>
+          <span style="font-weight:600;font-size:.9rem" data-i18n="resizer.board_autos">One-click automatic</span>
           <div class="tbtnrow" style="margin-block-start:.4rem">
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoCrop">✂️ Auto-crop (passport-safe)</button><small class="tautonote"></small></span>
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoBg">🖼️ Auto background</button><small class="tautonote"></small></span>
-            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoEnhance">✨ Auto-enhance</button><small class="tautonote"></small></span>
+            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoCrop" data-i18n="resizer.board_auto_crop">✂️ Auto-crop (passport-safe)</button><small class="tautonote"></small></span>
+            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoBg" data-i18n="resizer.board_auto_bg">🖼️ Auto background</button><small class="tautonote"></small></span>
+            <span class="tautowrap"><button type="button" class="tbtn tbtn-primary tbtn-sm" id="boardAutoEnhance" data-i18n="resizer.board_auto_enhance">✨ Auto-enhance</button><small class="tautonote"></small></span>
           </div>
-          <p class="thint">Keeps the head fully in frame with headroom — never cuts the face.</p>
+          <p class="thint" data-i18n="resizer.board_crop_note">Keeps the head fully in frame with headroom — never cuts the face.</p>
         </div>
       </details>
       <div class="tbtnrow">
-        <button type="button" class="tbtn tbtn-primary" id="applyAllBtn">Apply to all</button>
+        <button type="button" class="tbtn tbtn-primary" id="applyAllBtn" data-i18n="resizer.apply_all">Apply to all</button>
       </div>
     </div>
 
 
     <div id="queueSection" hidden>
       <div class="tqueue-head">
-        <h3><span>Your images</span> <span class="tcount" id="queueCount"></span></h3>
+        <h3><span data-i18n="resizer.queue_title">Your images</span> <span class="tcount" id="queueCount"></span></h3>
         <div class="tbtnrow" style="margin-block-start:0">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="addMoreBtn">＋ Add more</button>
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="clearAllBtn">Clear all</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="addMoreBtn" data-i18n="resizer.add_more">＋ Add more</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="clearAllBtn" data-i18n="resizer.clear_all">Clear all</button>
         </div>
       </div>
       <ul class="tqueue" id="queueList"></ul>
       <p class="thint" id="queueTotal" style="margin-block-start:.5rem"></p>
       <div id="reviewBar" class="treview">
-        <p class="thint">Tick the checkbox on any image that needs fixing, then edit the selected ones.</p>
+        <p class="thint" data-i18n="resizer.review_hint">Tick the checkbox on any image that needs fixing, then edit the selected ones.</p>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="selectAllBtn">Select all</button>
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="selectNoneBtn">Clear selection</button>
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="editSelectedBtn">Edit selected</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="selectAllBtn" data-i18n="resizer.select_all">Select all</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="selectNoneBtn" data-i18n="resizer.select_none">Clear selection</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="editSelectedBtn" data-i18n="resizer.edit_selected">Edit selected</button>
         </div>
         <div class="tbtnrow" style="align-items:center">
           <div class="tseg" role="group" aria-label="Download mode" id="dlModeSeg">
-            <button type="button" id="dlModeSingle" aria-pressed="true">Separate files</button>
-            <button type="button" id="dlModeZip" aria-pressed="false">Single ZIP</button>
+            <button type="button" id="dlModeSingle" aria-pressed="true" data-i18n="resizer.dl_mode_single">Separate files</button>
+            <button type="button" id="dlModeZip" aria-pressed="false" data-i18n="resizer.dl_mode_zip">Single ZIP</button>
           </div>
-          <button type="button" class="tbtn tbtn-amber" id="downloadNowBtn">Download Now</button>
+          <button type="button" class="tbtn tbtn-amber" id="downloadNowBtn" data-i18n="resizer.download_now">Download Now</button>
         </div>
       </div>
     </div>
 
     <div id="processSection" hidden>
       <div class="tbtnrow">
-        <button type="button" class="tbtn tbtn-primary" id="processBtn">Process all images</button>
+        <button type="button" class="tbtn tbtn-primary" id="processBtn" data-i18n="resizer.process_btn">Process all images</button>
       </div>
       <div id="notice" class="tnotice" style="margin-block-start:1rem" hidden></div>
       <div id="progressWrap" hidden>
@@ -346,19 +352,19 @@
 
     <div id="result" aria-live="polite" style="margin-block-start:1rem">
       <details class="tdetails tshortcuts">
-        <summary>Keyboard shortcuts</summary>
-        <p class="thint">↑ / ↓ — move between images · Delete — remove image · Ctrl+Z / Ctrl+Y — undo / redo in editor · Esc — close editor</p>
+        <summary data-i18n="resizer.shortcuts_title">Keyboard shortcuts</summary>
+        <p class="thint" data-i18n="resizer.shortcuts_body">↑ / ↓ — move between images · Delete — remove image · Ctrl+Z / Ctrl+Y — undo / redo in editor · Esc — close editor</p>
       </details>
       <div class="tempty empty-state" id="emptyState" data-w4-empty>
         <div class="empty-icon empty-state__icon" aria-hidden="true">✨</div>
-        <p class="empty-state__title">Nothing here yet</p>
-        <p class="empty-state__text">Your processed images will appear here.</p>
-        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span>Add images</span></button></p>
+        <p class="empty-state__title" data-i18n="tools2.empty_title">Nothing here yet</p>
+        <p class="empty-state__text" data-i18n="resizer.empty">Your processed images will appear here.</p>
+        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span data-i18n="tools2.empty_add_images">Add images</span></button></p>
       </div>
       <div id="resultsHead" hidden>
         <div class="tqueue-head">
-          <h3>Results</h3>
-          <button type="button" class="tbtn tbtn-amber tbtn-sm" id="zipBtn">⤓ Download all as ZIP</button>
+          <h3 data-i18n="resizer.results_title">Results</h3>
+          <button type="button" class="tbtn tbtn-amber tbtn-sm" id="zipBtn" data-i18n="resizer.zip_btn">⤓ Download all as ZIP</button>
         </div>
         <p class="thint hint"></p>
       </div>
@@ -366,23 +372,23 @@
     </div>
   </section>
   <div class="saas-steps" data-saas-steps>
-    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span>Add your files</span></div>
-    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span>Choose settings</span></div>
-    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span>Download</span></div>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="saas.step1">Add your files</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="saas.step2">Choose settings</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="resizer.howto_4t">Download</span></div>
     <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
   </div>
   <section class="section saas-compare" aria-labelledby="cmp-h-resizer">
     <div class="container">
-      <h2 id="cmp-h-resizer" class="sr-only">Why DoKit?</h2>
+      <h2 id="cmp-h-resizer" class="sr-only" data-i18n="saas.compare_title">Why DoKit?</h2>
       <div class="compare-table">
         <div class="compare-col compare-old">
-          <h3>The old way</h3>
-          <p>Photo editor: install an app, resize one by one — about 5 minutes per image.</p>
+          <h3 data-i18n="saas.old_way">The old way</h3>
+          <p data-i18n="saas.cmp_old_resizer">Photo editor: install an app, resize one by one — about 5 minutes per image.</p>
         </div>
         <div class="compare-vs" aria-hidden="true">VS</div>
         <div class="compare-col compare-new">
           <h3>DoKit</h3>
-          <p>DoKit: 100 images in 30 seconds, right in your browser. No install, no upload.</p>
+          <p data-i18n="saas.cmp_new_resizer">DoKit: 100 images in 30 seconds, right in your browser. No install, no upload.</p>
         </div>
       </div>
     </div>
@@ -392,7 +398,7 @@
   <div class="tmodal" id="editorModal" hidden>
     <div class="tmodal-box" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
       <div class="tmodal-head">
-        <h3 id="editorTitle">Edit image</h3>
+        <h3 id="editorTitle" data-i18n="resizer.edit_title">Edit image</h3>
         <div class="tmodal-tools">
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="undoBtn" aria-label="Undo" disabled>↩</button>
           <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="redoBtn" aria-label="Redo" disabled>↪</button>
@@ -401,9 +407,9 @@
       </div>
       <p class="thint" id="editSeqLabel" hidden></p>
       <div class="tseg" role="tablist" aria-label="Editor tools">
-        <button type="button" id="tabCrop" role="tab" aria-selected="true">✂️ Crop</button>
-        <button type="button" id="tabBg" role="tab" aria-selected="false">🖼️ Background</button>
-        <button type="button" id="tabAdjust" role="tab" aria-selected="false">🎚️ Adjust</button>
+        <button type="button" id="tabCrop" role="tab" aria-selected="true" data-i18n="resizer.tab_crop">✂️ Crop</button>
+        <button type="button" id="tabBg" role="tab" aria-selected="false" data-i18n="resizer.batch_bg">🖼️ Background</button>
+        <button type="button" id="tabAdjust" role="tab" aria-selected="false" data-i18n="resizer.tab_adjust">🎚️ Adjust</button>
       </div>
 
       <div class="tcanvas-wrap">
@@ -411,9 +417,9 @@
       </div>
 
       <div id="paneCrop" role="tabpanel" aria-labelledby="tabCrop">
-        <p class="thint">Drag on the image to draw a crop box.</p>
+        <p class="thint" data-i18n="resizer.crop_hint">Drag on the image to draw a crop box.</p>
         <div class="tseg" role="group" aria-label="Aspect ratio" id="cropRatios">
-          <button type="button" data-ratio="0" aria-pressed="true">Free</button>
+          <button type="button" data-ratio="0" aria-pressed="true" data-i18n="resizer.ratio_free">Free</button>
           <button type="button" data-ratio="1" aria-pressed="false">1:1</button>
           <button type="button" data-ratio="1.3333" aria-pressed="false">4:3</button>
           <button type="button" data-ratio="0.75" aria-pressed="false">3:4</button>
@@ -421,60 +427,60 @@
           <button type="button" data-ratio="0.5625" aria-pressed="false">9:16</button>
         </div>
         <div class="tfield" style="margin-block-start:.5rem">
-          <label class="tcheck"><input type="checkbox" id="faceGuide"/> <span>Face-centering guide</span></label>
+          <label class="tcheck"><input type="checkbox" id="faceGuide"/> <span data-i18n="resizer.face_guide">Face-centering guide</span></label>
         </div>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="cropApply">Apply crop</button>
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="cropClear">Remove crop</button>
+          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="cropApply" data-i18n="resizer.crop_apply">Apply crop</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="cropClear" data-i18n="resizer.crop_clear">Remove crop</button>
         </div>
       </div>
 
       <div id="paneBg" role="tabpanel" aria-labelledby="tabBg" hidden>
         <div class="tfield">
-          <label>Auto removal (color-based)</label>
-          <p class="thint">1. Click the background in the image to sample its color. 2. Adjust tolerance. 3. Remove.</p>
+          <label data-i18n="resizer.bg_auto_title">Auto removal (color-based)</label>
+          <p class="thint" data-i18n="resizer.bg_pick_hint">1. Click the background in the image to sample its color. 2. Adjust tolerance. 3. Remove.</p>
           <div class="tbtnrow" style="margin-block-start:.5rem">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgPickBtn" aria-pressed="false">🎯 Pick background color</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgPickBtn" aria-pressed="false" data-i18n="resizer.bg_pick">🎯 Pick background color</button>
             <span class="tswatch" id="bgSwatch" aria-hidden="true"></span>
           </div>
         </div>
         <div class="tfield">
-          <label for="bgTol"><span>Tolerance</span> — <output class="tslider-val" id="bgTolVal" for="bgTol">30</output></label>
+          <label for="bgTol"><span data-i18n="resizer.bg_tolerance">Tolerance</span> — <output class="tslider-val" id="bgTolVal" for="bgTol">30</output></label>
           <input type="range" class="tslider" id="bgTol" min="1" max="100" value="30"/>
         </div>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="bgRemoveBtn">Remove background</button>
+          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="bgRemoveBtn" data-i18n="resizer.bg_remove">Remove background</button>
         </div>
         <p class="thint hint"></p>
         <p class="tautonote" style="margin-block-start:.25rem"></p>
-        <p class="tnotice" style="margin-block:.75rem">Heads up: auto removal is color-based, not AI — it works best on plain, single-color backgrounds. For tricky edges, use the eraser below.</p>
+        <p class="tnotice" style="margin-block:.75rem" data-i18n="resizer.bg_honest">Heads up: auto removal is color-based, not AI — it works best on plain, single-color backgrounds. For tricky edges, use the eraser below.</p>
         <div class="tfield">
-          <label>Manual eraser</label>
+          <label data-i18n="resizer.bg_manual_title">Manual eraser</label>
           <div class="tbtnrow" style="margin-block-start:.5rem">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgEraserBtn" aria-pressed="false">🧽 Eraser: off</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgEraserBtn" aria-pressed="false" data-i18n="resizer.bg_eraser">🧽 Eraser: off</button>
           </div>
         </div>
         <div class="tfield">
-          <label for="brushSize"><span>Brush size</span> — <output class="tslider-val" id="brushVal" for="brushSize">24</output>px</label>
+          <label for="brushSize"><span data-i18n="resizer.bg_brush">Brush size</span> — <output class="tslider-val" id="brushVal" for="brushSize">24</output>px</label>
           <input type="range" class="tslider" id="brushSize" min="4" max="120" value="24"/>
         </div>
         <div class="tfield">
-          <label>New background</label>
+          <label data-i18n="resizer.bg_replace_title">New background</label>
           <div class="tseg" role="group" id="bgReplaceSeg">
-            <button type="button" id="bgModeTransparent" aria-pressed="true">Transparent</button>
-            <button type="button" id="bgModeColor" aria-pressed="false">Solid color</button>
+            <button type="button" id="bgModeTransparent" aria-pressed="true" data-i18n="resizer.batch_bg_transparent">Transparent</button>
+            <button type="button" id="bgModeColor" aria-pressed="false" data-i18n="resizer.batch_bg_color">Solid color</button>
           </div>
           <input type="color" id="bgColorInput" class="tcolor" value="#ffffff" aria-label="Background color" hidden/>
         </div>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgResetBtn">↺ Reset edits</button>
-          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="editorDone">Done</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="bgResetBtn" data-i18n="resizer.bg_reset">↺ Reset edits</button>
+          <button type="button" class="tbtn tbtn-primary tbtn-sm" id="editorDone" data-i18n="resizer.editor_done">Done</button>
         </div>
       </div>
 
       <div id="paneAdjust" role="tabpanel" aria-labelledby="tabAdjust" hidden>
         <div class="tfield">
-          <label>Rotate / flip</label>
+          <label data-i18n="resizer.batch_transform">Rotate / flip</label>
           <div class="tbtnrow" style="margin-block-start:.4rem">
             <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotCcw" aria-label="Rotate left">⟲</button>
             <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotCw" aria-label="Rotate right">⟳</button>
@@ -483,55 +489,55 @@
           </div>
         </div>
         <div class="tfield">
-          <label>Filters</label>
+          <label data-i18n="resizer.filters_title">Filters</label>
           <div class="tsliders">
-            <label><span>Brightness</span><input type="range" class="tslider" id="fBri" min="50" max="150" value="100"/></label>
-            <label><span>Contrast</span><input type="range" class="tslider" id="fCon" min="0" max="200" value="100"/></label>
-            <label><span>Saturation</span><input type="range" class="tslider" id="fSat" min="0" max="200" value="100"/></label>
-            <label><span>Grayscale</span><input type="range" class="tslider" id="fGray" min="0" max="100" value="0"/></label>
-            <label><span>Sepia</span><input type="range" class="tslider" id="fSepia" min="0" max="100" value="0"/></label>
+            <label><span data-i18n="resizer.f_bri">Brightness</span><input type="range" class="tslider" id="fBri" min="50" max="150" value="100"/></label>
+            <label><span data-i18n="resizer.f_con">Contrast</span><input type="range" class="tslider" id="fCon" min="0" max="200" value="100"/></label>
+            <label><span data-i18n="resizer.f_sat">Saturation</span><input type="range" class="tslider" id="fSat" min="0" max="200" value="100"/></label>
+            <label><span data-i18n="resizer.f_gray">Grayscale</span><input type="range" class="tslider" id="fGray" min="0" max="100" value="0"/></label>
+            <label><span data-i18n="resizer.f_sepia">Sepia</span><input type="range" class="tslider" id="fSepia" min="0" max="100" value="0"/></label>
           </div>
           <div class="tbtnrow">
-            <button type="button" class="tbtn tbtn-primary tbtn-sm" id="fApply">Apply filters</button>
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="fReset">Reset filters</button>
+            <button type="button" class="tbtn tbtn-primary tbtn-sm" id="fApply" data-i18n="resizer.f_apply">Apply filters</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="fReset" data-i18n="resizer.f_reset">Reset filters</button>
           </div>
         </div>
         <div class="tbtnrow">
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn">✨ Auto-enhance</button>
-          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="compareBtn" aria-pressed="false">Compare before/after</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn" data-i18n="resizer.board_auto_enhance">✨ Auto-enhance</button>
+          <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="compareBtn" aria-pressed="false" data-i18n="resizer.compare_btn">Compare before/after</button>
         </div>
         <p class="tautonote" style="margin-block-start:.25rem"></p>
         <p class="thint" style="margin-block-start:.25rem"></p>
         <div class="tfield" style="margin-block-start:.8rem">
-          <label>Rounded corners</label>
-          <label for="roundR"><span>Corner radius</span> — <output class="tslider-val" id="roundVal" for="roundR">0</output>px</label>
+          <label data-i18n="resizer.round_title">Rounded corners</label>
+          <label for="roundR"><span data-i18n="resizer.round_radius">Corner radius</span> — <output class="tslider-val" id="roundVal" for="roundR">0</output>px</label>
           <input type="range" class="tslider" id="roundR" min="0" max="200" value="0"/>
-          <p class="thint">Corners become transparent — PNG is used automatically.</p>
+          <p class="thint" data-i18n="resizer.round_note">Corners become transparent — PNG is used automatically.</p>
           <div class="tbtnrow">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="roundApply">Apply</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="roundApply" data-i18n="resizer.round_apply">Apply</button>
           </div>
         </div>
         <div class="tfield">
-          <label>Border / frame</label>
+          <label data-i18n="resizer.border_title">Border / frame</label>
           <div class="trow">
             <div class="tfield">
-              <label for="borderW"><span>Thickness</span> — <output class="tslider-val" id="borderVal" for="borderW">0</output>px</label>
+              <label for="borderW"><span data-i18n="resizer.border_width">Thickness</span> — <output class="tslider-val" id="borderVal" for="borderW">0</output>px</label>
               <input type="range" class="tslider" id="borderW" min="0" max="100" value="0"/>
             </div>
             <div class="tfield">
-              <label for="borderColor">Border color</label>
+              <label for="borderColor" data-i18n="resizer.border_color">Border color</label>
               <input type="color" id="borderColor" class="tcolor" value="#17142e"/>
             </div>
           </div>
           <div class="tbtnrow">
-            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="borderApply">Apply</button>
+            <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="borderApply" data-i18n="resizer.round_apply">Apply</button>
           </div>
         </div>
         <div class="tcompare" id="compareView" hidden>
           <img id="cmpBefore" alt="" loading="lazy"/>
           <div class="tcompare-after"><img id="cmpAfter" alt="" loading="lazy"/></div>
-          <span class="tcompare-tag tag-b">Before</span>
-          <span class="tcompare-tag tag-a">After</span>
+          <span class="tcompare-tag tag-b" data-i18n="resizer.compare_before">Before</span>
+          <span class="tcompare-tag tag-a" data-i18n="resizer.compare_after">After</span>
           <div class="tcompare-handle" aria-hidden="true"></div>
           <div class="tcompare-knob" aria-hidden="true">⇔</div>
           <input type="range" id="cmpRange" min="0" max="100" value="50" aria-label="Comparison slider"/>
@@ -542,74 +548,56 @@
 
   
   <aside class="saas-next" data-saas-next>
-    <span>Next best action:</span>
-    <a href="../image-converter/">Try it →</a>
+    <span data-i18n="saas.next_label">Next best action:</span>
+    <a href="../image-converter/" data-i18n="tshared.try_it">Try it →</a>
   </aside>
 <section class="tsection collapsible" aria-labelledby="howto-h">
-    <h2 id="howto-h">How to resize images in bulk</h2>
+    <h2 id="howto-h" data-i18n="resizer.howto_title">How to resize images in bulk</h2>
     <ol class="thowto">
-      <li><div><h3>Upload your images</h3><p>Drag &amp; drop one or many PNG, JPEG, or WebP files (up to 25 MB each) into the box, or click to browse your files.</p></div></li>
-      <li><div><h3>Crop or clean up (optional)</h3><p>Open any image in the editor to crop it, remove its background, or erase parts by hand.</p></div></li>
-      <li><div><h3>Set the size</h3><p>Type exact pixel dimensions or a percentage. Keep the aspect-ratio lock on to avoid stretching. Optionally set a target file size in KB.</p></div></li>
-      <li><div><h3>Download</h3><p>Process all, then download each image separately — or everything together as a ZIP, watermark-free.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_1t">Upload your images</h3><p data-i18n="resizer.howto_1d">Drag &amp; drop one or many PNG, JPEG, or WebP files (up to 25 MB each) into the box, or click to browse your files.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_2t">Crop or clean up (optional)</h3><p data-i18n="resizer.howto_2d">Open any image in the editor to crop it, remove its background, or erase parts by hand.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_3t">Set the size</h3><p data-i18n="resizer.howto_3d">Type exact pixel dimensions or a percentage. Keep the aspect-ratio lock on to avoid stretching. Optionally set a target file size in KB.</p></div></li>
+      <li><div><h3 data-i18n="resizer.howto_4t">Download</h3><p data-i18n="resizer.howto_4d">Process all, then download each image separately — or everything together as a ZIP, watermark-free.</p></div></li>
     </ol>
-    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
   </section>
 
   <section class="tsection collapsible" aria-labelledby="tips-h">
-    <h2 id="tips-h">Pro tips</h2>
+    <h2 id="tips-h" data-i18n="resizer.tips_title">Pro tips</h2>
     <ul class="ttips">
-      <li><strong>Resize before you upload</strong> <span>Websites rarely display images wider than 1600 px, so downsizing first makes pages load faster and uploads finish sooner — with no visible difference.</span></li>
-      <li><strong>JPEG for photos, PNG for graphics</strong> <span>JPEG at quality 85–90 keeps photos small and crisp; PNG stays sharp for logos and screenshots with text. WebP usually beats both on file size.</span></li>
-      <li><strong>Hit an exact KB target</strong> <span>Need “under 100 KB” for a form? Type 100 in the target-size box — the tool auto-tunes JPEG/WebP quality to fit, so you don't have to guess.</span></li>
+      <li><strong data-i18n="resizer.tip_1t">Resize before you upload</strong> <span data-i18n="resizer.tip_1d">Websites rarely display images wider than 1600 px, so downsizing first makes pages load faster and uploads finish sooner — with no visible difference.</span></li>
+      <li><strong data-i18n="resizer.tip_2t">JPEG for photos, PNG for graphics</strong> <span data-i18n="resizer.tip_2d">JPEG at quality 85–90 keeps photos small and crisp; PNG stays sharp for logos and screenshots with text. WebP usually beats both on file size.</span></li>
+      <li><strong data-i18n="resizer.tip_3t">Hit an exact KB target</strong> <span data-i18n="resizer.tip_3d">Need “under 100 KB” for a form? Type 100 in the target-size box — the tool auto-tunes JPEG/WebP quality to fit, so you don't have to guess.</span></li>
     </ul>
-    <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-  <h2 id="faq-h">Frequently asked questions</h2>
-  <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
-    <button type="button" class="faq-lang-btn is-active" data-faq-lang="en" aria-pressed="true">English</button>
-    <button type="button" class="faq-lang-btn" data-faq-lang="ur" aria-pressed="false">اردو</button>
-  </div>
-  <div class="faq-en">
-    <details><summary>Will resizing reduce image quality?</summary><p class="tfaq-a">Downsizing keeps quality high. For JPEG and WebP you control the quality slider — 85–90 looks identical to the original for most photos. PNG is always lossless.</p></details>
-    <details><summary>Is there a file size limit?</summary><p class="tfaq-a">Yes — 25 MB per image. Images larger than 16 megapixels are automatically pre-scaled so your browser never runs out of memory. Everything runs on your device; nothing is uploaded.</p></details>
-    <details><summary>Do resized images keep EXIF data?</summary><p class="tfaq-a">No. The image is redrawn on a fresh canvas, which strips EXIF metadata including GPS location — your resized image is more privacy-safe than the original.</p></details>
-    <details><summary>Can I resize an animated GIF?</summary><p class="tfaq-a">Not with this tool — resizing would drop the animation. Convert your GIF to WebP instead, which keeps animation at much smaller file sizes.</p></details>
-    <details><summary>Can I resize many images at once?</summary><p class="tfaq-a">Yes. Drop any number of images into the upload box. One set of settings applies to all of them, you can crop or edit each one individually, then download each result or everything together as a single ZIP file.</p></details>
-    <details><summary>How does background removal work? Is it AI?</summary><p class="tfaq-a">It is not AI — it is color-based. Click the background to sample its color, adjust the tolerance, and matching pixels become transparent. It works best on plain, single-color backgrounds. For tricky edges, use the manual eraser brush. You can then keep transparency or replace the background with any solid color.</p></details>
-    <details><summary>How do I make an image exactly under 100 KB?</summary><p class="tfaq-a">Enter your target in the “Target file size (KB)” field. For JPEG and WebP the tool automatically finds the best quality that fits at or under your target. PNG is lossless, so an exact target isn’t possible there — you’ll get a note instead.</p></details>
-    <details><summary>Can I download the results as RAR instead of ZIP?</summary><p class="tfaq-a">No — RAR is a proprietary format that browsers can’t create. ZIP is the open standard: it opens on every phone and computer without extra software.</p></details>
-    <details><summary>Which boards and universities are included?</summary><p class="tfaq-a">BISE Peshawar (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Balochistan (white background) and BISE Bahawalpur (100–150×150–200 px, 8–22 KB, blue background) use verified specs. All other boards and universities use the common Pakistani exam standard and are marked ‘typical’ — please confirm with your board.</p></details>
-    <details><summary>What if my board is missing?</summary><p class="tfaq-a">Type your board’s width, height, background color and KB target directly into the batch settings — every field is editable. Or pick the generic ‘Pakistani admission’ preset as a starting point.</p></details>
-  </div>
-  <div class="faq-ur" hidden>
-    <details><summary lang="ur" dir="rtl">کیا سائز بدلنے سے تصویر کی کوالٹی کم ہوگی؟</summary><p class="tfaq-a" lang="ur" dir="rtl">سائز کم کرنے پر کوالٹی بہترین رہتی ہے۔ JPEG اور WebP کے لیے کوالٹی سلائیڈر آپ کے اختیار میں ہے — زیادہ تر تصاویر کے لیے 85–90 بالکل اصل جیسی لگتی ہے۔ PNG ہمیشہ لاس لیس ہوتا ہے۔</p></details>
-    <details><summary lang="ur" dir="rtl">کیا فائل سائز کی کوئی حد ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">جی ہاں — فی تصویر 25 MB۔ 16 میگا پکسل سے بڑی تصاویر خودکار طور پر پہلے چھوٹی کی جاتی ہیں تاکہ براؤزر کی میموری ختم نہ ہو۔ سب کچھ آپ کے آلے پر ہوتا ہے؛ کچھ بھی اپ لوڈ نہیں ہوتا۔</p></details>
-    <details><summary lang="ur" dir="rtl">کیا نئی تصویر میں EXIF ڈیٹا رہتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">نہیں۔ تصویر نئے کینوس پر دوبارہ بنائی جاتی ہے، جس سے EXIF میٹا ڈیٹا بشمول GPS لوکیشن ختم ہو جاتا ہے — آپ کی نئی تصویر اصل سے زیادہ پرائیویسی محفوظ ہوتی ہے۔</p></details>
-    <details><summary lang="ur" dir="rtl">کیا میں متحرک GIF کا سائز بدل سکتا ہوں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">اس ٹول سے نہیں — سائز بدلنے پر حرکت ختم ہو جائے گی۔ اس کے بجائے اپنی GIF کو WebP میں تبدیل کریں، جو بہت چھوٹے سائز میں حرکت برقرار رکھتا ہے۔</p></details>
-    <details><summary lang="ur" dir="rtl">کیا میں بیک وقت کئی تصویریں ری سائز کر سکتا ہوں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">جی ہاں۔ اپ لوڈ باکس میں جتنی چاہیں تصویریں ڈریگ کر کے چھوڑیں۔ ترتیبات کا ایک سیٹ سب پر لاگو ہوتا ہے، ہر تصویر کو الگ سے کراپ یا ایڈٹ کر سکتے ہیں، پھر ہر نتیجہ الگ ڈاؤن لوڈ کریں یا سب کچھ ایک ZIP فائل میں۔</p></details>
-    <details><summary lang="ur" dir="rtl">پس منظر ہٹانے کا طریقہ کیا ہے؟ کیا یہ AI ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">یہ AI نہیں — رنگ کی بنیاد پر ہے۔ پس منظر کا رنگ چننے کے لیے کلک کریں، ٹالرینس ایڈجسٹ کریں، اور ملتے جلتے پکسلز شفاف ہو جاتے ہیں۔ یہ سادہ، ایک رنگ کے پس منظر پر بہترین کام کرتا ہے۔ مشکل کناروں کے لیے دستی ربڑ استعمال کریں۔ پھر شفافیت برقرار رکھیں یا کوئی ٹھوس رنگ پس منظر کے طور پر لگائیں۔</p></details>
-    <details><summary lang="ur" dir="rtl">تصویر کو عین 100 KB سے کم کیسے بناؤں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">“Target file size (KB)” والے خانے میں اپنا ہدف لکھیں۔ JPEG اور WebP کے لیے ٹول خودکار طور پر وہ بہترین کوالٹی تلاش کرتا ہے جو آپ کے ہدف کے اندر فٹ ہو۔ PNG لاس لیس ہے، اس لیے وہاں عین ہدف ممکن نہیں — اس کے بجائے آپ کو ایک نوٹ ملے گا۔</p></details>
-    <details><summary lang="ur" dir="rtl">کیا نتائج RAR میں ڈاؤن لوڈ کر سکتا ہوں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">نہیں — RAR ایک ملکیتی فارمیٹ ہے جسے براؤزر بنا نہیں سکتے۔ ZIP کھلا معیار ہے: یہ ہر فون اور کمپیوٹر پر بغیر اضافی سافٹ ویئر کے کھلتا ہے۔</p></details>
-    <details><summary lang="ur" dir="rtl">کون سے بورڈ اور یونیورسٹیاں شامل ہیں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">BISE پشاور (300×300 پکسل، سفید پس منظر)، BIE کراچی (پاسپورٹ سائز، نیلا پس منظر)، BBISE بلوچستان (سفید پس منظر) اور BISE بہاولپور (100–150×150–200 پکسل، 8–22 KB، نیلا پس منظر) کی تصدیق شدہ تفصیلات استعمال ہوتی ہیں۔ باقی تمام بورڈز اور یونیورسٹیوں کے لیے پاکستان کا عام امتحانی معیار استعمال ہوتا ہے جن پر ‘معمول’ لکھا ہے — اپنے بورڈ سے تصدیق ضرور کریں۔</p></details>
-    <details><summary lang="ur" dir="rtl">اگر میرا بورڈ موجود نہ ہو تو؟</summary><p class="tfaq-a" lang="ur" dir="rtl">اپنے بورڈ کی چوڑائی، اونچائی، پس منظر کا رنگ اور KB ہدف براہ راست بیچ سیٹنگز میں لکھیں — ہر خانہ قابل تدوین ہے۔ یا شروعات کے لیے عام ‘پاکستان داخلہ’ پری سیٹ منتخب کریں۔</p></details>
-  </div>
-  <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+  <h2 id="faq-h" data-i18n="resizer.faq_title">Frequently asked questions</h2>
+<details><summary data-i18n="resizer.faq_q1">Will resizing reduce image quality?</summary><p class="tfaq-a" data-i18n="resizer.faq_a1">Downsizing keeps quality high. For JPEG and WebP you control the quality slider — 85–90 looks identical to the original for most photos. PNG is always lossless.</p></details>
+    <details><summary data-i18n="resizer.faq_q2">Is there a file size limit?</summary><p class="tfaq-a" data-i18n="resizer.faq_a2">Yes — 25 MB per image. Images larger than 16 megapixels are automatically pre-scaled so your browser never runs out of memory. Everything runs on your device; nothing is uploaded.</p></details>
+    <details><summary data-i18n="resizer.faq_q3">Do resized images keep EXIF data?</summary><p class="tfaq-a" data-i18n="resizer.faq_a3">No. The image is redrawn on a fresh canvas, which strips EXIF metadata including GPS location — your resized image is more privacy-safe than the original.</p></details>
+    <details><summary data-i18n="resizer.faq_q4">Can I resize an animated GIF?</summary><p class="tfaq-a" data-i18n="resizer.faq_a4">Not with this tool — resizing would drop the animation. Convert your GIF to WebP instead, which keeps animation at much smaller file sizes.</p></details>
+    <details><summary data-i18n="resizer.faq_q5">Can I resize many images at once?</summary><p class="tfaq-a" data-i18n="resizer.faq_a5">Yes. Drop any number of images into the upload box. One set of settings applies to all of them, you can crop or edit each one individually, then download each result or everything together as a single ZIP file.</p></details>
+    <details><summary data-i18n="resizer.faq_q6">How does background removal work? Is it AI?</summary><p class="tfaq-a" data-i18n="resizer.faq_a6">It is not AI — it is color-based. Click the background to sample its color, adjust the tolerance, and matching pixels become transparent. It works best on plain, single-color backgrounds. For tricky edges, use the manual eraser brush. You can then keep transparency or replace the background with any solid color.</p></details>
+    <details><summary data-i18n="resizer.faq_q7">How do I make an image exactly under 100 KB?</summary><p class="tfaq-a" data-i18n="resizer.faq_a7">Enter your target in the “Target file size (KB)” field. For JPEG and WebP the tool automatically finds the best quality that fits at or under your target. PNG is lossless, so an exact target isn’t possible there — you’ll get a note instead.</p></details>
+    <details><summary data-i18n="resizer.faq_q8">Can I download the results as RAR instead of ZIP?</summary><p class="tfaq-a" data-i18n="resizer.faq_a8">No — RAR is a proprietary format that browsers can’t create. ZIP is the open standard: it opens on every phone and computer without extra software.</p></details>
+    <details><summary data-i18n="resizer.faq_q9">Which boards and universities are included?</summary><p class="tfaq-a" data-i18n="resizer.faq_a9">BISE Peshawar (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Balochistan (white background) and BISE Bahawalpur (100–150×150–200 px, 8–22 KB, blue background) use verified specs. All other boards and universities use the common Pakistani exam standard and are marked ‘typical’ — please confirm with your board.</p></details>
+    <details><summary data-i18n="resizer.faq_q10">What if my board is missing?</summary><p class="tfaq-a" data-i18n="resizer.faq_a10">Type your board’s width, height, background color and KB target directly into the batch settings — every field is editable. Or pick the generic ‘Pakistani admission’ preset as a starting point.</p></details>
+
+  <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
-    <h2 id="rel-h">Related tools</h2>
+    <h2 id="rel-h" data-i18n="resizer.related">Related tools</h2>
     <div class="trelated">
-      <a class="trel-card" href="../image-compressor/"><h3>Image Compressor</h3><p>Shrink file size without visible quality loss.</p></a>
-      <a class="trel-card" href="../image-converter/"><h3>Image Converter</h3><p>Convert between PNG, JPEG, and WebP.</p></a>
-      <a class="trel-card" href="../word-counter/"><h3>Word Counter</h3><p>Live word, character, and reading-time stats.</p></a>
-      <a class="trel-card" href="../case-converter/"><h3>Case Converter</h3><p>Convert text between six letter cases.</p></a>
+      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
+      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
+      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
     </div>
   </section>
 </main>
 <footer id="dk-footer"></footer>
-  <script src="../../js/faq-toggle.js" defer></script>
 </body>
 </html>
