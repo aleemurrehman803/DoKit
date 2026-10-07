@@ -2,7 +2,7 @@
  * DoKit — Doki Personality & Animation Module
  * =============================================
  * WHAT: Gives the assistant its "Doki" identity with a cute panda mascot
- *       (assets/doki-panda.svg) working at a laptop inside the circular FAB,
+ *       (assets/doki-panda.png) working at a laptop inside the circular FAB,
  *       plus a status pill and activity indicators.
  *
  * WHY: A named, animated mascot feels more friendly and alive than a generic
@@ -91,7 +91,7 @@
    */
   function enhanceFab(fab) {
     // Replace 💬 with Doki the panda working at a laptop
-    var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.svg") : "/assets/doki-panda.svg";
+    var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.png") : "/assets/doki-panda.png";
     fab.innerHTML = '<span class="doki-fab-icon doki-panda"><img class="doki-panda-img" src="' + src + '" alt="Doki" draggable="false"></span>';
     fab.setAttribute("aria-label", "Chat with " + DOKI_NAME);
     fab.classList.add("doki-fab");
@@ -105,7 +105,7 @@
    * asset file (reusable anywhere) while enabling per-part animation.
    * Fallback: if fetch fails, the <img> stays and still shows the panda.
    * @param {HTMLElement} fab - The .dk-fab button element.
-   * @param {string} src - Resolved URL of assets/doki-panda.svg.
+   * @param {string} src - Resolved URL of assets/doki-panda.png.
    */
   function inlinePanda(fab, src) {
     if (!window.fetch) return;
