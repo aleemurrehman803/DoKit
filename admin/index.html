@@ -109,6 +109,7 @@
         <button type="button" class="adm-tab" data-tab="import" role="tab" aria-selected="false">📤 Import</button>
         <button type="button" class="adm-tab" data-tab="og" role="tab" aria-selected="false">🖼️ OG images</button>
         <button type="button" class="adm-tab" data-tab="views" role="tab" aria-selected="false">🗂️ Views</button>
+        <button type="button" class="adm-tab" data-tab="certs" role="tab" aria-selected="false">🎓 Certificates</button>
       </div>
 
       <!-- 1. Dashboard -->
@@ -667,6 +668,19 @@
             <button type="button" class="btn btn-sm" id="admViewSaveWithdrawals">💾 Save Withdrawals view</button>
           </div>
           <div id="admViewsList" style="margin-top:var(--sp-3)"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- Certificates registry -->
+      <section id="admTab-certs" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">🎓 Typing certificates</h3>
+          <p class="adm-muted">Public read-only registry (<code>certificates</code> collection). Look up any certificate by its registration number — e.g. <code>DK-2026-ABC123</code>.</p>
+          <div class="adm-row">
+            <input id="admCertReg" class="text-input" type="text" maxlength="20" placeholder="DK-2026-XXXXXX" style="max-width:220px;text-transform:uppercase" aria-label="Registration number">
+            <button type="button" class="btn btn-sm btn-primary" id="admCertSearch">🔍 Look up</button>
+          </div>
+          <div id="admCertResult" style="margin-top:var(--sp-3)"></div>
         </div>
       </section>
 
