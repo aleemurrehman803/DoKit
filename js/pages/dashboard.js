@@ -100,13 +100,53 @@ document.addEventListener("DOMContentLoaded", function () {
   renderPhoto("", "");
 
   function setRefLink(uid) {
-    var link = uid
-      ? ("https://aleemurrehman803.github.io/dokit/?ref=" + uid)
-      : dkT("db_login_link");
+    // Prefer the canonical link builder (js/referral.js); fall back to the
+    // manual construction for guests/offline when it is unavailable.
+    var link = null;
+    try {
+      if (window.DKReferral && typeof DKReferral.myLink === "function") {
+        link = DKReferral.myLink();
+      }
+    } catch (e) { link = null; }
+    if (!link) {
+      link = uid
+        ? ("https://aleemurrehman803.github.io/DoKit/?ref=" + uid)
+        : dkT("db_login_link");
+    }
     refEl.textContent = link;
     copyBtn.onclick = function () {
-      if (uid && navigator.clipboard) navigator.clipboard.writeText(link).catch(function () {});
+      if (link && link.indexOf("http") === 0 && navigator.clipboard) {
+        navigator.clipboard.writeText(link).catch(function () {});
+      }
     };
+  }
+
+  /* Referral count: number of `referrals` docs where referrerUid == this uid
+     (exact field name from js/referral.js recordSignup). DKReferral.myReferrals()
+     runs exactly that query. Shows "0" gracefully when signed out, when
+     Firebase is missing, or when the query is denied by security rules. */
+  function loadReferralCount() {
+    var el = document.getElementById("dashRefCount");
+    if (!el) return;
+    el.textContent = "0";
+    try {
+      if (window.DKReferral && typeof DKReferral.myReferrals === "function") {
+        DKReferral.myReferrals().then(function (list) {
+          el.textContent = String((list && list.length) || 0);
+        }).catch(function () { el.textContent = "0"; });
+        return;
+      }
+    } catch (e) { /* fall through to direct query */ }
+    try {
+      var d = (window.DKF && typeof DKF.db === "function") ? DKF.db() : null;
+      var a = (window.DKF && typeof DKF.auth === "function") ? DKF.auth() : null;
+      var u = a && a.currentUser;
+      if (d && u && u.uid) {
+        d.collection("referrals").where("referrerUid", "==", u.uid).limit(50).get()
+          .then(function (snap) { el.textContent = String(snap.size); })
+          .catch(function () { el.textContent = "0"; });
+      }
+    } catch (e2) { el.textContent = "0"; }
   }
 
   // Guest/local fallbacks (unchanged behavior).
@@ -150,6 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
     editBtn.style.display = "";
     setRefLink(user.uid);
+    loadReferralCount();
 
     // Live profile from Firestore (coins + any synced stats).
     DKF.userDoc(user.uid).get().then(function (snap) {
