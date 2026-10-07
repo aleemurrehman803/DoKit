@@ -100,6 +100,12 @@
   /* -- 3. Fixed apply: translate what exists, restore what doesn't -------- */
   function fixedApply(lang) {
     try { lang = lang || I18N.getLang(); } catch (e) { lang = 'en'; }
+    // Always sync lang/dir on every apply (fixes English showing RTL on load).
+    try {
+      var rtlLangs = { ur: 1, ar: 1 };
+      document.documentElement.lang = lang;
+      document.documentElement.dir = rtlLangs[lang] ? 'rtl' : 'ltr';
+    } catch (e2) { /* non-fatal */ }
     var dict = (I18N.dict && I18N.dict[lang]) || {};
     var enDict = (I18N.dict && I18N.dict.en) || {};
 
