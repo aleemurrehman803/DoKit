@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://api.qrserver.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com https://api.qrserver.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<title>Certificates — TypeFight — DoKit</title>
+<meta name="description" content="Your QR-verified TypeFight certificates. Anyone can verify them online.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/certificate.html">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="./tool.css">
+<style>
+  .cert-card { border:3px solid var(--brand,#6C4CF1); border-radius:1rem; padding:2rem; text-align:center; background:linear-gradient(135deg,var(--bg) 0%,var(--brand-soft,#eef) 100%); }
+  .cert-name { font-size:2rem; font-weight:800; margin:.5rem 0; }
+  .cert-qr { margin:1rem auto; max-width:200px; }
+  .cert-qr img { width:100%; border-radius:.5rem; border:1px solid var(--border); }
+  .cert-list { display:grid; gap:var(--sp-3); }
+  .cert-serial { display:inline-block; font-family:ui-monospace,monospace; font-size:1.05rem; font-weight:700; letter-spacing:.06em; background:var(--bg-muted,#f1f1f3); border:1px dashed var(--border); border-radius:.5rem; padding:.35rem .9rem; margin:.5rem 0; }
+  /* Print: only the certificate card prints, everything else hides. */
+  @media print {
+    #site-nav, #site-foot, .no-print, .breadcrumb, h1, main > section > div > p { display:none !important; }
+    .cert-card { border-width:4px; box-shadow:none; }
+    body { background:#fff; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:46rem">
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb">
+          <li><a href="../">Home</a></li>
+          <li><a href="./">TypeFight</a></li>
+          <li aria-current="page">Certificates</li>
+        </ol>
+      </nav>
+
+      <h1>🏆 Certificates</h1>
+      <p style="color:var(--text-muted)">Earn one by <strong>winning a battle</strong> or hitting <strong>60+ WPM</strong>. Each certificate has a QR code anyone can scan to verify.</p>
+
+      <div id="tfGate" style="display:none">
+        <div class="card" style="text-align:center">
+          <h3>🔒 Sign in required</h3>
+          <p><a class="btn btn-primary" href="../account/login.html">Log in</a></p>
+        </div>
+      </div>
+
+      <div id="tfApp" style="display:none">
+        <!-- Single certificate view (from ?id=) -->
+        <div id="certSingle" style="display:none">
+          <div class="cert-card" id="certCard">
+            <p style="color:var(--text-muted);margin:0">DoKit TypeFight</p>
+            <h2 style="margin:.25rem 0">Certificate of Achievement</h2>
+            <p class="cert-name"><span id="cAvatar"></span> <span id="cName"></span></p>
+            <p id="cDetail" style="font-size:1.1rem"></p>
+            <p><span class="cert-serial" id="cSerial"></span></p>
+            <p style="color:var(--text-muted)">Issue date: <strong id="cDate"></strong></p>
+            <div class="cert-qr">
+              <img id="cQr" alt="QR code linking to the verification page">
+            </div>
+            <p class="no-print" style="font-size:var(--fs-sm)"><a id="cVerifyLink" href="#">Verify online</a></p>
+            <p class="no-print" style="font-size:var(--fs-sm);color:var(--text-muted)">Document ID: <code id="cId"></code></p>
+          </div>
+          <p class="no-print" style="margin-top:var(--sp-3)">
+            <button class="btn btn-primary" id="pdfBtn" type="button">⬇ Download PDF (A4)</button>
+            <button class="btn btn-ghost" id="printBtn" type="button" style="margin-inline-start:.5rem">🖨 Print</button>
+          </p>
+          <p class="no-print" style="margin-top:var(--sp-3)"><a class="btn btn-ghost" href="./certificate.html">← All certificates</a></p>
+        </div>
+
+        <!-- List view -->
+        <div id="certList">
+          <div id="certLoading"><p style="color:var(--text-muted)">Loading…</p></div>
+          <div class="cert-list" id="certItems"></div>
+          <p id="certEmpty" style="display:none;color:var(--text-muted)">
+            No certificates yet. <a href="./battle.html">Win a battle</a> or hit 60+ WPM to earn one!
+          </p>
+        </div>
+      </div>
+      <p style="color:var(--text-muted);font-size:var(--fs-sm)">🪙 Virtual coins only — no cash value, cannot be withdrawn.</p>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/typefight.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="../js/typefight-pdf.js" defer></script>
+<script src="../js/typefight-cert.js" defer></script>
+</body>
+</html>
