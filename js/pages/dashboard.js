@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ---- Your Journey timeline ---- */
   function esc(s) {
+    /* Prefer shared DKUtils.esc (js/dk-utils.js); local fallback if not loaded. */
+    if (window.DKUtils && DKUtils.esc) return DKUtils.esc(s);
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
@@ -83,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function setRefLink(uid) {
     var link = uid
-      ? ("https://aleemurrehman803.github.io/DoKit/?ref=" + uid)
+      ? ("https://aleemurrehman803.github.io/dokit/?ref=" + uid)
       : "Log in to get your link";
     refEl.textContent = link;
     copyBtn.onclick = function () {
