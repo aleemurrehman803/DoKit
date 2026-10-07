@@ -143,12 +143,24 @@
   </section>
 
   <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h">Frequently asked questions</h2>
-    <details><summary>Which format should I choose?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Why do files download one by one instead of as a zip?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Does converting strip metadata?</summary><p class="tfaq-a">…</p></details>
-    <details><summary>Can I convert animated GIFs?</summary><p class="tfaq-a">…</p></details>
-      <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
+  <h2 id="faq-h">Frequently asked questions</h2>
+  <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
+    <button type="button" class="faq-lang-btn is-active" data-faq-lang="en" aria-pressed="true">English</button>
+    <button type="button" class="faq-lang-btn" data-faq-lang="ur" aria-pressed="false">اردو</button>
+  </div>
+  <div class="faq-en">
+    <details><summary>Which format should I choose?</summary><p class="tfaq-a">WebP for the smallest files at great quality, JPEG for maximum compatibility, PNG when you need lossless quality or transparency.</p></details>
+    <details><summary>Why do files download one by one instead of as a zip?</summary><p class="tfaq-a">DoKit runs without any third-party libraries, and a ZIP library would break that promise. Separate downloads keep the tool fast and self-contained.</p></details>
+    <details><summary>Does converting strip metadata?</summary><p class="tfaq-a">Yes — converted images are redrawn on a fresh canvas, which removes EXIF data including GPS location.</p></details>
+    <details><summary>Can I convert animated GIFs?</summary><p class="tfaq-a">No — this converter doesn’t preserve animation. It politely rejects GIF files instead of silently dropping your animation.</p></details>
+  </div>
+  <div class="faq-ur" hidden>
+    <details><summary lang="ur" dir="rtl">کون سا فارمیٹ منتخب کروں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">بہترین کوالٹی کے ساتھ چھوٹی فائل کے لیے WebP، زیادہ مطابقت کے لیے JPEG، اور لاس لیس کوالٹی یا شفافیت کے لیے PNG۔</p></details>
+    <details><summary lang="ur" dir="rtl">فائلیں زپ کی بجائے الگ الگ کیوں ڈاؤن لوڈ ہوتی ہیں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">DoKit بغیر کسی تھرڈ پارٹی لائبریری کے چلتا ہے، اور زپ لائبریری اس وعدے کو توڑ دے گی۔ الگ ڈاؤن لوڈ ٹول کو تیز اور خودمختار رکھتے ہیں۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا تبدیلی سے میٹا ڈیٹا ختم ہو جاتا ہے؟</summary><p class="tfaq-a" lang="ur" dir="rtl">جی ہاں — تبدیل شدہ تصاویر نئے کینوس پر دوبارہ بنائی جاتی ہیں، جس سے GPS لوکیشن سمیت EXIF ڈیٹا ختم ہو جاتا ہے۔</p></details>
+    <details><summary lang="ur" dir="rtl">کیا میں متحرک GIF تبدیل کر سکتا ہوں؟</summary><p class="tfaq-a" lang="ur" dir="rtl">نہیں — یہ کنورٹر حرکت محفوظ نہیں رکھتا۔ یہ آپ کی حرکت خاموشی سے ضائع کرنے کے بجائے GIF فائلوں کو شائستگی سے مسترد کر دیتا ہے۔</p></details>
+  </div>
+  <p class="thint tnote-soon" hidden>Full translation coming soon.</p>
 </section>
 
   <section class="tsection" aria-labelledby="rel-h">
@@ -162,5 +174,6 @@
   </section>
 </main>
 <footer id="dk-footer"></footer>
+  <script src="../../js/faq-toggle.js" defer></script>
 </body>
 </html>
