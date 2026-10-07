@@ -1,3 +1,19 @@
+/* i18n: user-facing strings via DKI18N (other languages fall back to English). */
+var DK_STR = {
+  "wd_avail": " coins available",
+  "wd_nomod": "Payments module not loaded. Please refresh.",
+  "wd_confirm": "Request withdrawal of Rs {amount} via {method}?\n\nYour coins will be LOCKED immediately and released only if the request is rejected.",
+  "wd_submitting": "Submitting…",
+  "wd_ok": "✅ Withdrawal requested! Status: Pending — admin will process within 48 hours. Coins are now locked.",
+  "wd_fail": "Submission failed. Please try again.",
+  "wd_submit": "Request withdrawal",
+  "wd_pending": "⏳ Pending",
+  "wd_processed": "✅ Processed",
+  "wd_rejected": "❌ Rejected",
+  "wd_none": "No withdrawals yet.",
+};
+try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
+function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
 /* DoKit — Withdraw page controller.
  *
  * Flow:
@@ -20,6 +36,14 @@ document.addEventListener("DOMContentLoaded", function () {
   var form = $("wdForm");
   var errEl = $("wdErr"), okEl = $("wdOk"), submitBtn = $("wdSubmit");
 
+  /* HTML-escape: prefer shared DKUtils. */
+  /* Shared esc (js/dk-utils.js) with local fallback — resolved once at load. */
+  var esc = (window.DKUtils && DKUtils.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  };
+
   function showErr(msg) {
     if (!errEl) return;
     errEl.textContent = msg; errEl.style.display = "";
@@ -40,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!window.DKPayReal) return;
     DKPayReal.getBalance().then(function (b) {
       var balEl = $("wdBalance");
-      if (balEl) balEl.textContent = b.available + " coins available";
+      if (balEl) balEl.textContent = b.available + dkT("wd_avail");
       var wrap = $("wdPendingWrap");
       if (wrap) {
         if (b.pending > 0) {
@@ -58,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
       hideMsgs();
-      if (!window.DKPayReal) return showErr("Payments module not loaded. Please refresh.");
+      if (!window.DKPayReal) return showErr(dkT("wd_nomod"));
 
       var amount = $("wdAmount").value;
       var method = $("wdMethod").value;
@@ -67,26 +91,25 @@ document.addEventListener("DOMContentLoaded", function () {
       // Re-confirmation gate (user must explicitly confirm locking coins)
       var methodLabel = { easypaisa: "Easypaisa", jazzcash: "JazzCash", usdt: "USDT (TRC20)" }[method] || method;
       if (!window.confirm(
-        "Request withdrawal of Rs " + amount + " via " + methodLabel + "?\n\n" +
-        "Your coins will be LOCKED immediately and released only if the request is rejected."
+        dkT("wd_confirm").replace("{amount}", amount).replace("{method}", methodLabel)
       )) return;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = "Submitting…";
+      submitBtn.textContent = dkT("wd_submitting");
 
       DKPayReal.submitWithdrawal({ amount: amount, method: method, account: account })
         .then(function () {
-          showOk("✅ Withdrawal requested! Status: Pending — admin will process within 48 hours. Coins are now locked.");
+          showOk(dkT("wd_ok"));
           form.reset();
           loadBalance();
           loadHistory();
         })
         .catch(function (err) {
-          showErr(err && err.message ? err.message : "Submission failed. Please try again.");
+          showErr(err && err.message ? err.message : dkT("wd_fail"));
         })
         .then(function () {
           submitBtn.disabled = false;
-          submitBtn.textContent = "Request withdrawal";
+          submitBtn.textContent = dkT("wd_submit");
         });
     });
   }
@@ -94,11 +117,11 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ---- history ---- */
   function statusBadge(s) {
     var map = {
-      pending:   '<span class="badge badge-amber">⏳ Pending</span>',
-      processed: '<span class="badge badge-green">✅ Processed</span>',
-      rejected:  '<span class="badge" style="background:#fde2e2;color:#a33">❌ Rejected</span>'
+      pending:   '<span class="badge badge-amber">' + dkT("wd_pending") + '</span>',
+      processed: '<span class="badge badge-green">' + dkT("wd_processed") + '</span>',
+      rejected:  '<span class="badge" style="background:#fde2e2;color:#a33">' + dkT("wd_rejected") + '</span>'
     };
-    return map[s] || '<span class="badge">' + String(s) + '</span>';
+    return map[s] || '<span class="badge">' + esc(String(s)) + '</span>';
   }
 
   function fmtDate(ms) {
@@ -110,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!box || !window.DKPayReal) return;
     DKPayReal.getMyHistory(20).then(function (h) {
       if (!h.withdrawals.length) {
-        box.innerHTML = '<p style="color:var(--text-muted)">No withdrawals yet.</p>';
+        box.innerHTML = '<p style="color:var(--text-muted)">' + dkT("wd_none") + '</p>';
         return;
       }
       var e = DKPayReal.esc;
