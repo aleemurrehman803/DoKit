@@ -92,8 +92,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       gBtn.disabled = true;
-      // Redirect flow (no popup): reliable on all browsers, incl. mobile.
-      DKF.auth().signInWithRedirect(DKF.googleProvider());
+      var provider = DKF.googleProvider();
+      // Popup first (standard Google account-chooser + consent like other sites).
+      // If the popup is blocked or fails, fall back to full-page redirect.
+      DKF.auth().signInWithPopup(provider)
+        .then(function (cred) { return DKF.ensureUserDoc(cred.user); })
+        .then(function () { window.location.href = "dashboard.html"; })
+        .catch(function (err) {
+          var c = err && err.code;
+          if (c === "auth/popup-blocked" || c === "auth/popup-closed-by-user" ||
+              c === "auth/cancelled-popup-request" || c === "auth/internal-error") {
+            DKF.auth().signInWithRedirect(provider);
+          } else {
+            gBtn.disabled = false;
+            if (gErr) gErr.textContent = DKF.friendlyError(err);
+          }
+        });
     });
   }
 });
