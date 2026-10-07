@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../assets/icon.svg">
@@ -26,6 +26,14 @@
         <p>Site overview and content management. Scaffold — real data via Firebase Admin SDK in production.</p>
       </div>
 
+      <div id="adminGate" style="margin-bottom:var(--sp-5)">
+        <div class="card" style="text-align:center;max-width:520px;margin:0 auto">
+          <h3>🔒 Checking access…</h3>
+          <p style="color:var(--text-muted)">Verifying your admin credentials.</p>
+        </div>
+      </div>
+
+      <div id="adminPanel" style="display:none">
       <div class="grid" style="margin-bottom:var(--sp-5)">
         <div class="card"><h3>👥 Users</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Total registered</p></div>
         <div class="card"><h3>🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 30 days</p></div>
@@ -53,9 +61,10 @@
           <li><a href="../blog/">Blog</a> — 3 drafts</li>
         </ul>
       </div>
+      </div><!-- /adminPanel -->
 
       <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
-        🔌 Scaffold only — requires Firebase Admin SDK + authenticated admin role. Never expose admin routes publicly without auth.
+        Access requires a signed-in admin account (Firestore → <code>admins</code> → your UID). Aggregate stats connect to Firestore in production.
       </p>
     </div>
   </section>
@@ -63,6 +72,10 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
-<script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("admin"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../js/firebase.js" defer></script>
+<script src="../js/pages/admin.js" defer></script>
 </body>
 </html>

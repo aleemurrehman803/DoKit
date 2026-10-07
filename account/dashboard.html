@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../assets/icon.svg">
@@ -55,7 +55,7 @@
       </div>
 
       <p class="form-note" style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:var(--sp-4)">
-        🔌 Scaffold only — real profiles, stats and coin ledger sync via Firebase + Firestore in production.
+        Profile and stats sync with your Firebase account. Local demo data is shown when offline or signed out.
       </p>
     </div>
   </section>
@@ -63,35 +63,10 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
-<script>
-document.addEventListener("DOMContentLoaded",function(){
-  try{window.DKUI&&(DKUI.renderNav("dashboard"),DKUI.renderFooter(),DKUI.init())}catch(e){}
-  function lsGet(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
-  var acct=lsGet("dk_account",null);
-  if(acct){
-    document.getElementById("dashName").textContent=acct.name||acct.email||"Member";
-    document.getElementById("dashEmail").textContent=acct.email||"";
-    document.getElementById("dashSince").textContent=acct.ts?new Date(acct.ts).toLocaleDateString():"—";
-    var btn=document.getElementById("dashAuthBtn");
-    btn.textContent="Log out";btn.href="#";
-    btn.addEventListener("click",function(ev){ev.preventDefault();try{localStorage.removeItem("dk_account");}catch(e){}location.reload();});
-  }
-  var coins=lsGet("dk_coins",0);
-  document.getElementById("dashCoins").textContent=Number(coins)||0;
-  var streak=lsGet("dk_streak",null);
-  document.getElementById("dashStreak").textContent=(streak&&streak.count?streak.count:0)+" days";
-  var toolsUsed=lsGet("dk_tools_used",null);
-  var toolCount=0;
-  if(toolsUsed&&typeof toolsUsed==="object"){for(var k in toolsUsed){if(Object.prototype.hasOwnProperty.call(toolsUsed,k))toolCount++;}}
-  else if(typeof toolsUsed==="number"){toolCount=toolsUsed;}
-  document.getElementById("dashToolsUsed").textContent=toolCount;
-  var uid="";try{uid=localStorage.getItem("dk_uid")||"";}catch(e){}
-  var link=uid?("https://aleemurrehman803.github.io/DoKit/?ref="+uid):"Log in to get your link";
-  document.getElementById("dashRefLink").textContent=link;
-  document.getElementById("copyRefBtn").addEventListener("click",function(){
-    if(navigator.clipboard&&uid){navigator.clipboard.writeText(link).catch(function(){});}
-  });
-});
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../js/firebase.js" defer></script>
+<script src="../js/pages/dashboard.js" defer></script>
 </body>
 </html>

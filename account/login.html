@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../assets/icon.svg">
@@ -35,13 +35,18 @@
             <input class="form-control text-input" id="password" name="password" type="password" autocomplete="current-password">
             <div class="form-error" id="err-password" role="alert"></div>
           </div>
+          <div class="form-error" id="err-general" role="alert" style="margin-bottom:var(--sp-2)"></div>
           <button class="btn btn-primary" type="submit" style="width:100%">Log In</button>
         </form>
+        <div style="display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-3) 0;color:var(--text-muted);font-size:var(--fs-sm)">
+          <span style="flex:1;border-top:1px solid var(--border)"></span>or<span style="flex:1;border-top:1px solid var(--border)"></span>
+        </div>
+        <button class="btn" id="googleBtn" type="button" style="width:100%">Continue with Google</button>
         <p class="form-note" style="text-align:center;margin-top:var(--sp-3)">
           New to DoKit? <a href="signup.html">Create an account</a>
         </p>
         <p class="form-note" style="text-align:center;color:var(--text-muted);font-size:var(--fs-sm)">
-          🔌 Scaffold only — connects to Firebase Auth in production.
+          Secured by Firebase Authentication.
         </p>
       </div>
     </div>
@@ -50,24 +55,10 @@
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
 <script src="../js/ui.js" defer></script>
-<script>
-document.addEventListener("DOMContentLoaded",function(){
-  try{window.DKUI&&(DKUI.renderNav("login"),DKUI.renderFooter(),DKUI.init())}catch(e){}
-  var form=document.getElementById("loginForm");
-  form.addEventListener("submit",function(ev){
-    ev.preventDefault();
-    var ok=true;
-    var email=document.getElementById("email"),pw=document.getElementById("password");
-    var eErr=document.getElementById("err-email"),pErr=document.getElementById("err-password");
-    eErr.textContent="";pErr.textContent="";
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){eErr.textContent="Please enter a valid email address.";ok=false;}
-    if(pw.value.length<6){pErr.textContent="Password must be at least 6 characters.";ok=false;}
-    if(!ok)return;
-    // Scaffold: store a local session flag; real auth via Firebase later.
-    try{localStorage.setItem("dk_account",JSON.stringify({email:email.value.trim(),ts:Date.now()}));}catch(e){}
-    window.location.href="dashboard.html";
-  });
-});
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../js/firebase.js" defer></script>
+<script src="../js/pages/login.js" defer></script>
 </body>
 </html>
