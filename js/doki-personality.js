@@ -29,7 +29,7 @@
   "use strict";
 
   var DOKI_NAME = "Doki";
-  var DOKI_EMOJI = "✨";
+  var DOKI_EMOJI = "🎧";
 
   // Activity states with animations
   var ACTIVITIES = {
@@ -81,7 +81,7 @@
    */
   function enhanceFab(fab) {
     // Replace 💬 with animated Doki icon
-    fab.innerHTML = '<span class="doki-fab-icon">✨</span>';
+    fab.innerHTML = '<span class="doki-fab-icon">🎧</span>';
     fab.setAttribute("aria-label", "Chat with " + DOKI_NAME);
     fab.classList.add("doki-fab");
   }
