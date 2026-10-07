@@ -19,6 +19,21 @@
  *   tamper with their own browser clock) — production would enforce
  *   cooldowns server-side. Firestore rules still prevent editing the
  *   ledger itself.
+ *
+ * KNOWN LIMITATIONS (require server-side enforcement for production):
+ *   - H2: Coins are client-mintable. A technically skilled user could call
+ *     TF.ledgerAppend() from the browser console to mint coins. Mitigation:
+ *     Firestore rules make the ledger append-only and public-readable, so
+ *     fraud is DETECTABLE via ledgerVerify(), but not PREVENTABLE client-side.
+ *     Production must move minting to a Cloud Function.
+ *   - M2: Referral farming. Nothing stops a user creating fake accounts to
+ *     earn referral bonuses. Mitigation: referrals are virtual coins only
+ *     (no cash value), and admin can audit via admin_audit. Production needs
+ *     phone/email verification + server-side referral validation.
+ *   - M13: Usernames are not unique. Two users could pick the same display
+ *     name, enabling certificate impersonation confusion. Certificates use
+ *     UID (not username) as the source of truth. Production should enforce
+ *     unique usernames via a usernames/{name} claim collection.
  */
 (function () {
   "use strict";
@@ -49,6 +64,12 @@
     return { ok: false, waitMs: waitMs };
   }
 
+  /* In-memory locks prevent double-click races: two rapid claim() calls
+   * for the same uid+key would both pass canEarn() before either stamps
+   * the cooldown. The lock is held until the claim settles. */
+
+  var claimLocks = {};
+
   /**
    * Claim coins for an earn key (writes ledger + updates cooldown stamp).
    * Resolves with { entry } on success, or { error, waitMs } if on cooldown.
@@ -58,20 +79,35 @@
    * @returns {Promise<object>}
    */
   function claim(uid, key, coinsOverride) {
+    var lockKey = uid + "|" + key;
+    if (claimLocks[lockKey]) {
+      return Promise.resolve({ error: "in_progress", waitMs: 0 });
+    }
+    claimLocks[lockKey] = true;
     var def = EARN[key];
     var coins = (coinsOverride != null) ? coinsOverride : (def ? def.coins : LESSON_COINS);
     var label = def ? def.label : ("Lesson complete (" + key.replace("lesson_", "") + ")");
     return TF.getProfile(uid).then(function (profile) {
       var check = canEarn(profile, key);
-      if (!check.ok) return { error: "cooldown", waitMs: check.waitMs };
+      if (!check.ok) {
+        delete claimLocks[lockKey];
+        return { error: "cooldown", waitMs: check.waitMs };
+      }
       return TF.ledgerAppend(uid, coins, "earn:" + key).then(function (entry) {
         // Stamp the cooldown (merge into profile; best-effort).
         var stamp = { lastEarn: {} };
         stamp.lastEarn[key] = Date.now();
         return TF.saveProfile(uid, stamp).catch(function () {}).then(function () {
+          delete claimLocks[lockKey];
           return { entry: entry, coins: coins };
         });
+      }, function (err) {
+        delete claimLocks[lockKey];
+        throw err;
       });
+    }, function (err) {
+      delete claimLocks[lockKey];
+      throw err;
     });
   }
 
@@ -83,7 +119,12 @@
    * @returns {Promise<object>} { entry, coins }
    */
   function awardBattle(uid, place, battleId) {
-    var coins = BATTLE_REWARDS[place] || 10;
+    /* Validate place: must be 1-4. Unknown/invalid place = no reward (not a default). */
+    place = Number(place) | 0;
+    if (!BATTLE_REWARDS[place]) {
+      return Promise.reject(new Error("Invalid battle place: " + place));
+    }
+    var coins = BATTLE_REWARDS[place];
     var reason = "battle_" + battleId + "_place" + place;
     return TF.ledgerAppend(uid, coins, reason).then(function (entry) {
       return { entry: entry, coins: coins };
