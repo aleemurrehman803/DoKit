@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<title>Under maintenance — DoKit</title>
+<meta name="description" content="DoKit is briefly down for maintenance. We'll be back soon!">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/hub.css">
+<style>
+.maint-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:var(--sp-6);text-align:center}
+.maint-card{max-width:560px;width:100%}
+.maint-emoji{font-size:4rem;margin-bottom:var(--sp-3);display:block}
+.maint-card h1{font-size:clamp(1.8rem,4.5vw,2.6rem);margin:0 0 var(--sp-3)}
+.maint-card p{color:var(--text-muted);font-size:var(--fs-lg);margin:0 0 var(--sp-5)}
+.maint-progress{height:8px;border-radius:999px;background:var(--bg-muted);overflow:hidden;margin:0 auto var(--sp-5);max-width:320px}
+.maint-progress>span{display:block;height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg,#6C4CF1,#9D7BFF);animation:maintslide 1.6s ease-in-out infinite}
+@keyframes maintslide{0%{margin-inline-start:-40%}100%{margin-inline-start:100%}}
+</style>
+</head>
+<body>
+<main class="maint-wrap">
+  <div class="card maint-card">
+    <span class="maint-emoji" aria-hidden="true">🚧</span>
+    <h1>We'll be right back!</h1>
+    <p id="maintMsg">DoKit is briefly down for maintenance. Thank you for your patience — we'll be back soon.</p>
+    <div class="maint-progress" aria-hidden="true"><span></span></div>
+    <a class="btn btn-primary" href="./">Try again</a>
+  </div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="js/firebase.js" defer></script>
+<script src="js/maintenance.js" defer></script>
+</body>
+</html>

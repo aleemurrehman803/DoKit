@@ -64,42 +64,46 @@
   <section class="section">
     <div class="container">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Internal</span>
-        <h1>Admin panel</h1>
-        <p>Site overview, user management, content toggles and audit log. Live data from Firestore.</p>
+        <span class="eyebrow" data-i18n="admin_eyebrow">Internal</span>
+        <h1 data-i18n="admin_h1">Admin panel</h1>
+        <p data-i18n="admin_sub">Site overview, user management, content toggles and audit log. Live data from Firestore.</p>
       </div>
 
       <div id="adminGate" style="margin-bottom:var(--sp-5)">
         <div class="card" style="text-align:center;max-width:520px;margin:0 auto">
-          <h3>🔒 Checking access…</h3>
-          <p style="color:var(--text-muted)">Verifying your admin credentials.</p>
+          <h3 data-i18n="admin_checking">🔒 Checking access…</h3>
+          <p style="color:var(--text-muted)" data-i18n="admin_verifying">Verifying your admin credentials.</p>
         </div>
       </div>
 
       <div id="adminPanel" style="display:none">
 
       <div class="adm-tabs" id="admTabs" role="tablist" aria-label="Admin sections">
-        <button type="button" class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true">📊 Dashboard</button>
-        <button type="button" class="adm-tab" data-tab="users" role="tab" aria-selected="false">👥 Users</button>
-        <button type="button" class="adm-tab" data-tab="content" role="tab" aria-selected="false">🧩 Content</button>
-        <button type="button" class="adm-tab" data-tab="audit" role="tab" aria-selected="false">📜 Audit log</button>
-        <button type="button" class="adm-tab" data-tab="security" role="tab" aria-selected="false">🔐 Security</button>
-        <button type="button" class="adm-tab" data-tab="deposits" role="tab" aria-selected="false">💰 Deposits</button>
-        <button type="button" class="adm-tab" data-tab="withdrawals" role="tab" aria-selected="false">💸 Withdrawals</button>
-        <button type="button" class="adm-tab" data-tab="paysettings" role="tab" aria-selected="false">⚙️ Pay settings</button>
+        <button type="button" class="adm-tab active" data-tab="dashboard" role="tab" aria-selected="true" data-i18n="admin_tab_dash">📊 Dashboard</button>
+        <button type="button" class="adm-tab" data-tab="users" role="tab" aria-selected="false" data-i18n="admin_tab_users">👥 Users</button>
+        <button type="button" class="adm-tab" data-tab="content" role="tab" aria-selected="false" data-i18n="admin_tab_content">🧩 Content</button>
+        <button type="button" class="adm-tab" data-tab="audit" role="tab" aria-selected="false" data-i18n="admin_tab_audit">📜 Audit log</button>
+        <button type="button" class="adm-tab" data-tab="security" role="tab" aria-selected="false" data-i18n="admin_tab_security">🔐 Security</button>
+        <button type="button" class="adm-tab" data-tab="deposits" role="tab" aria-selected="false" data-i18n="admin_tab_deposits">💰 Deposits</button>
+        <button type="button" class="adm-tab" data-tab="withdrawals" role="tab" aria-selected="false" data-i18n="admin_tab_wd">💸 Withdrawals</button>
+        <button type="button" class="adm-tab" data-tab="paysettings" role="tab" aria-selected="false" data-i18n="admin_tab_pay">⚙️ Pay settings</button>
+        <button type="button" class="adm-tab" data-tab="settings" role="tab" aria-selected="false">⚙️ Settings</button>
+        <button type="button" class="adm-tab" data-tab="flags" role="tab" aria-selected="false">🚩 Feature flags</button>
+        <button type="button" class="adm-tab" data-tab="announce" role="tab" aria-selected="false">📢 Announcement</button>
+        <button type="button" class="adm-tab" data-tab="inbox" role="tab" aria-selected="false">📥 Inbox</button>
       </div>
 
       <!-- 1. Dashboard -->
       <section id="admTab-dashboard" role="tabpanel">
         <div class="grid" style="margin-bottom:var(--sp-5)">
-          <div class="card"><h3>👥 Users</h3><p style="font-size:2rem;font-weight:700" id="statUsers">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Total registered</p></div>
-          <div class="card"><h3>🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700" id="statRuns">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 30 days</p></div>
-          <div class="card"><h3>🪙 Coins issued</h3><p style="font-size:2rem;font-weight:700" id="statCoins">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">All users, all time</p></div>
-          <div class="card"><h3>✨ New users</h3><p style="font-size:2rem;font-weight:700" id="statNew">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)">Last 7 days</p></div>
+          <div class="card"><h3 data-i18n="admin_tab_users">👥 Users</h3><p style="font-size:2rem;font-weight:700" id="statUsers">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_stat_total">Total registered</p></div>
+          <div class="card"><h3 data-i18n="admin_stat_runs_h">🛠️ Tool runs</h3><p style="font-size:2rem;font-weight:700" id="statRuns">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_stat_runs_sub">Last 30 days</p></div>
+          <div class="card"><h3 data-i18n="admin_stat_coins_h">🪙 Coins issued</h3><p style="font-size:2rem;font-weight:700" id="statCoins">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_stat_coins_sub">All users, all time</p></div>
+          <div class="card"><h3 data-i18n="admin_stat_new_h">✨ New users</h3><p style="font-size:2rem;font-weight:700" id="statNew">—</p><p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_stat_new_sub">Last 7 days</p></div>
         </div>
         <div id="admDashErr"></div>
         <div class="card">
-          <h3>⚡ Recent activity</h3>
+          <h3 data-i18n="admin_recent">⚡ Recent activity</h3>
           <div id="admActivity"><span class="adm-spin" aria-hidden="true"></span></div>
         </div>
       </section>
@@ -107,18 +111,26 @@
       <!-- 2. Users -->
       <section id="admTab-users" role="tabpanel" style="display:none">
         <div class="card">
-          <h3 style="margin-top:0">👥 Users</h3>
+          <h3 style="margin-top:0" data-i18n="admin_tab_users">👥 Users</h3>
           <input id="admUserSearch" class="text-input" type="search" placeholder="Search by name or email…" aria-label="Search users" style="max-width:320px;margin-bottom:var(--sp-3)">
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Coins</th><th>Tool runs</th><th></th></tr></thead>
-              <tbody id="admUsersBody"><tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+              <thead><tr><th><input type="checkbox" id="admBulkAll" aria-label="Select all users on this page" style="width:1.05rem;height:1.05rem"></th><th data-i18n="acct_field_name">Name</th><th data-i18n="acct_field_email">Email</th><th data-i18n="admin_th_joined">Joined</th><th data-i18n="admin_th_coins">Coins</th><th data-i18n="admin_th_runs">Tool runs</th><th></th></tr></thead>
+              <tbody id="admUsersBody"><tr><td colspan="7"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
+          <div id="admBulkBar" class="adm-row" style="display:none;margin-top:var(--sp-3);padding:.7rem .9rem;border:1px solid var(--border,#e5e7eb);border-radius:.5rem;background:var(--bg-muted)">
+            <strong id="admBulkCount">0 selected</strong>
+            <input id="admBulkCoinsAmt" class="text-input" type="number" min="1" value="10" style="max-width:110px" aria-label="Coins amount for bulk give">
+            <button type="button" class="btn btn-sm btn-primary" id="admBulkGive">🪙 Give coins</button>
+            <button type="button" class="btn btn-sm" id="admBulkSuspend" style="border-color:var(--danger,#C93A3A);color:var(--danger,#C93A3A)">🚫 Suspend</button>
+            <button type="button" class="btn btn-sm" id="admBulkExport">⬇️ Export CSV</button>
+            <button type="button" class="btn btn-sm" id="admBulkClear">Clear</button>
+          </div>
           <div class="adm-row" style="margin-top:var(--sp-3)">
-            <button type="button" class="btn btn-sm" id="admUsersPrev">← Prev</button>
+            <button type="button" class="btn btn-sm" id="admUsersPrev" data-i18n="admin_prev">← Prev</button>
             <span class="adm-muted" id="admUsersInfo"></span>
-            <button type="button" class="btn btn-sm" id="admUsersNext">Next →</button>
+            <button type="button" class="btn btn-sm" id="admUsersNext" data-i18n="admin_next">Next →</button>
           </div>
         </div>
         <div id="admUserDetail" style="display:none;margin-top:var(--sp-4)"></div>
@@ -127,16 +139,16 @@
       <!-- 3. Content -->
       <section id="admTab-content" role="tabpanel" style="display:none">
         <div class="card" style="margin-bottom:var(--sp-5)">
-          <h3 style="margin-top:0">🧩 Tools — enable / disable</h3>
+          <h3 style="margin-top:0" data-i18n="admin_tools_h">🧩 Tools — enable / disable</h3>
           <div id="admTools"><span class="adm-spin" aria-hidden="true"></span></div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <h3 style="margin-top:0">📖 Guides</h3>
+            <h3 style="margin-top:0" data-i18n="admin_guides_h">📖 Guides</h3>
             <div id="admGuides"></div>
           </div>
           <div class="card">
-            <h3 style="margin-top:0">✍️ Blog posts</h3>
+            <h3 style="margin-top:0" data-i18n="admin_blog_h">✍️ Blog posts</h3>
             <div id="admBlog"></div>
           </div>
         </div>
@@ -145,10 +157,10 @@
       <!-- 4. Audit log -->
       <section id="admTab-audit" role="tabpanel" style="display:none">
         <div class="card">
-          <h3 style="margin-top:0">📜 Audit log <span class="adm-muted" style="font-weight:400">(latest 50)</span></h3>
+          <h3 style="margin-top:0">📜 Audit log <span class="adm-muted" style="font-weight:400" data-i18n="admin_latest50">(latest 50)</span></h3>
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+              <thead><tr><th data-i18n="admin_th_when">When</th><th data-i18n="admin_th_admin">Admin</th><th data-i18n="admin_th_action">Action</th><th data-i18n="admin_th_target">Target</th><th data-i18n="admin_th_details">Details</th></tr></thead>
               <tbody id="admAuditBody"><tr><td colspan="5"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
@@ -158,54 +170,54 @@
       <!-- 5. Security (Phase 6 scaffolding — enforced server-side at launch) -->
       <section id="admTab-security" role="tabpanel" style="display:none">
         <div class="card" style="margin-bottom:var(--sp-4)">
-          <h3 style="margin-top:0">🚨 Security events <span class="adm-muted" style="font-weight:400">(latest 50)</span></h3>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Every financial action is audit-logged. Flagged patterns (velocity spikes, round-amount probes) appear here for review.</p>
+          <h3 style="margin-top:0">🚨 Security events <span class="adm-muted" style="font-weight:400" data-i18n="admin_latest50">(latest 50)</span></h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_audit_note">Every financial action is audit-logged. Flagged patterns (velocity spikes, round-amount probes) appear here for review.</p>
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>When</th><th>Action</th><th>User</th><th>Amount</th><th>Result</th><th>Device</th></tr></thead>
+              <thead><tr><th data-i18n="admin_th_when">When</th><th data-i18n="admin_th_action">Action</th><th data-i18n="admin_th_user">User</th><th data-i18n="admin_th_amount">Amount</th><th data-i18n="admin_th_result">Result</th><th data-i18n="admin_th_device">Device</th></tr></thead>
               <tbody id="admSecBody"><tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
         </div>
         <div class="card" style="margin-bottom:var(--sp-4)">
-          <h3 style="margin-top:0">🔐 Two-factor authentication (2FA)</h3>
-          <p style="color:var(--text-muted)">TOTP-based 2FA for admin accounts. <span class="badge">Coming soon</span></p>
-          <p style="margin-bottom:0"><button class="btn btn-sm" type="button" id="adm2faBtn" disabled>Set up 2FA — Coming soon</button></p>
+          <h3 style="margin-top:0" data-i18n="admin_2fa_h">🔐 Two-factor authentication (2FA)</h3>
+          <p style="color:var(--text-muted)">TOTP-based 2FA for admin accounts. <span class="badge" data-i18n="acct_sub_soon">Coming soon</span></p>
+          <p style="margin-bottom:0"><button class="btn btn-sm" type="button" id="adm2faBtn" disabled data-i18n="admin_2fa_btn">Set up 2FA — Coming soon</button></p>
         </div>
         <div class="card" style="margin-bottom:var(--sp-4)">
-          <h3 style="margin-top:0">🌐 IP whitelist</h3>
-          <p style="color:var(--text-muted)">Restrict admin panel access to approved IP addresses. <span class="badge">Coming soon</span></p>
+          <h3 style="margin-top:0" data-i18n="admin_ip_h">🌐 IP whitelist</h3>
+          <p style="color:var(--text-muted)">Restrict admin panel access to approved IP addresses. <span class="badge" data-i18n="acct_sub_soon">Coming soon</span></p>
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>IP / CIDR</th><th>Label</th><th>Added</th><th></th></tr></thead>
-              <tbody id="admIpBody"><tr><td colspan="4" style="color:var(--text-muted)">No IPs whitelisted yet. Enforcement begins at launch.</td></tr></tbody>
+              <thead><tr><th data-i18n="admin_th_ip">IP / CIDR</th><th data-i18n="admin_th_label">Label</th><th data-i18n="admin_th_added">Added</th><th></th></tr></thead>
+              <tbody id="admIpBody"><tr><td colspan="4" style="color:var(--text-muted)" data-i18n="admin_noip">No IPs whitelisted yet. Enforcement begins at launch.</td></tr></tbody>
             </table>
           </div>
           <p style="margin-bottom:0;margin-top:var(--sp-3)">
             <input class="text-input" id="admIpInput" placeholder="e.g. 203.0.113.10" style="max-width:220px" disabled>
-            <button class="btn btn-sm" type="button" id="admIpAddBtn" disabled style="margin-inline-start:var(--sp-2)">Add IP — Coming soon</button>
+            <button class="btn btn-sm" type="button" id="admIpAddBtn" disabled style="margin-inline-start:var(--sp-2)" data-i18n="admin_addip">Add IP — Coming soon</button>
           </p>
         </div>
         <div class="grid">
           <div class="card">
-            <h3 style="margin-top:0">⏱️ Rate limits</h3>
-            <p style="color:var(--text-muted);font-size:var(--fs-sm)">Planned limits (enforced server-side at launch):</p>
+            <h3 style="margin-top:0" data-i18n="admin_rl_h">⏱️ Rate limits</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_rl_d">Planned limits (enforced server-side at launch):</p>
             <ul style="font-size:var(--fs-sm);color:var(--text-muted)">
-              <li>Login attempts: 10 / 15 min per IP</li>
-              <li>API calls: 100 / min per key</li>
-              <li>Password reset: 3 / hour per account</li>
+              <li data-i18n="admin_rl1">Login attempts: 10 / 15 min per IP</li>
+              <li data-i18n="admin_rl2">API calls: 100 / min per key</li>
+              <li data-i18n="admin_rl3">Password reset: 3 / hour per account</li>
             </ul>
-            <p style="margin-bottom:0"><span class="badge">Coming soon</span></p>
+            <p style="margin-bottom:0"><span class="badge" data-i18n="acct_sub_soon">Coming soon</span></p>
           </div>
           <div class="card">
-            <h3 style="margin-top:0">📲 OTP settings</h3>
-            <p style="color:var(--text-muted);font-size:var(--fs-sm)">One-time codes for sensitive actions (payouts, plan changes).</p>
+            <h3 style="margin-top:0" data-i18n="admin_otp_h">📲 OTP settings</h3>
+            <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_otp_d">One-time codes for sensitive actions (payouts, plan changes).</p>
             <ul style="font-size:var(--fs-sm);color:var(--text-muted)">
-              <li>Code length: 6 digits</li>
-              <li>Expiry: 10 minutes</li>
-              <li>Delivery: email (SMS at launch)</li>
+              <li data-i18n="admin_otp_len">Code length: 6 digits</li>
+              <li data-i18n="admin_otp_exp">Expiry: 10 minutes</li>
+              <li data-i18n="admin_otp_del">Delivery: email (SMS at launch)</li>
             </ul>
-            <p style="margin-bottom:0"><span class="badge">Coming soon</span></p>
+            <p style="margin-bottom:0"><span class="badge" data-i18n="acct_sub_soon">Coming soon</span></p>
           </div>
         </div>
       </section>
@@ -214,10 +226,10 @@
       <section id="admTab-deposits" role="tabpanel" style="display:none">
         <div class="card" style="margin-bottom:var(--sp-4)">
           <h3 style="margin-top:0">💰 Pending deposits <span class="adm-muted" style="font-weight:400" id="admDepCount"></span></h3>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Verify the transaction, then approve to credit coins 1:1 (Rs 1 = 1 coin). All actions are audit-logged.</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_dep_note">Verify the transaction, then approve to credit coins 1:1 (Rs 1 = 1 coin). All actions are audit-logged.</p>
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>When</th><th>User</th><th>Amount</th><th>Method</th><th>Txn ID</th><th>Sender</th><th>Proof</th><th>Actions</th></tr></thead>
+              <thead><tr><th data-i18n="admin_th_when">When</th><th data-i18n="admin_th_user">User</th><th data-i18n="admin_th_amount">Amount</th><th data-i18n="admin_th_method">Method</th><th data-i18n="admin_th_txn">Txn ID</th><th data-i18n="admin_th_sender">Sender</th><th data-i18n="admin_th_proof">Proof</th><th data-i18n="admin_th_actions">Actions</th></tr></thead>
               <tbody id="admDepBody"><tr><td colspan="8"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
@@ -228,10 +240,10 @@
       <section id="admTab-withdrawals" role="tabpanel" style="display:none">
         <div class="card" style="margin-bottom:var(--sp-4)">
           <h3 style="margin-top:0">💸 Pending withdrawals <span class="adm-muted" style="font-weight:400" id="admWdCount"></span></h3>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">Send the money manually to the user's account, then mark as processed. Rejecting refunds the locked coins.</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_wd_note">Send the money manually to the user's account, then mark as processed. Rejecting refunds the locked coins.</p>
           <div class="adm-tablewrap">
             <table class="adm-table">
-              <thead><tr><th>When</th><th>User</th><th>Amount</th><th>Method</th><th>Account</th><th>Actions</th></tr></thead>
+              <thead><tr><th data-i18n="admin_th_when">When</th><th data-i18n="admin_th_user">User</th><th data-i18n="admin_th_amount">Amount</th><th data-i18n="admin_th_method">Method</th><th data-i18n="acct_dash_eyebrow">Account</th><th data-i18n="admin_th_actions">Actions</th></tr></thead>
               <tbody id="admWdBody"><tr><td colspan="6"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
             </table>
           </div>
@@ -241,18 +253,88 @@
       <!-- 8. Payment settings -->
       <section id="admTab-paysettings" role="tabpanel" style="display:none">
         <div class="card" style="margin-bottom:var(--sp-4)">
-          <h3 style="margin-top:0">⚙️ Payment accounts</h3>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">These accounts are shown to users on the deposit page. Update carefully.</p>
+          <h3 style="margin-top:0" data-i18n="admin_pay_h">⚙️ Payment accounts</h3>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="admin_pay_d">These accounts are shown to users on the deposit page. Update carefully.</p>
           <form id="admPayForm">
-            <p><label for="admPayEasypaisa">Easypaisa account number</label><br>
+            <p><label for="admPayEasypaisa" data-i18n="admin_pay_ep">Easypaisa account number</label><br>
               <input class="text-input" type="text" id="admPayEasypaisa" maxlength="20" style="width:100%"></p>
-            <p><label for="admPayJazzcash">JazzCash account number</label><br>
+            <p><label for="admPayJazzcash" data-i18n="admin_pay_jc">JazzCash account number</label><br>
               <input class="text-input" type="text" id="admPayJazzcash" maxlength="20" style="width:100%"></p>
-            <p><label for="admPayUsdt">USDT (TRC20) wallet address</label><br>
+            <p><label for="admPayUsdt" data-i18n="admin_pay_usdt">USDT (TRC20) wallet address</label><br>
               <input class="text-input" type="text" id="admPayUsdt" maxlength="60" style="width:100%"></p>
             <p id="admPayMsg" role="status" style="display:none"></p>
-            <p><button class="btn btn-primary btn-sm" type="submit">Save payment accounts</button></p>
+            <p><button class="btn btn-primary btn-sm" type="submit" data-i18n="admin_pay_save">Save payment accounts</button></p>
           </form>
+        </div>
+      </section>
+
+      <!-- 9. Site settings -->
+      <section id="admTab-settings" role="tabpanel" style="display:none">
+        <div class="card" style="margin-bottom:var(--sp-4)">
+          <h3 style="margin-top:0">⚙️ Site settings</h3>
+          <p class="adm-muted">Stored in Firestore (<code>site_settings/general</code>). Applies site-wide.</p>
+          <p><label for="admSetSiteName">Site name</label><br>
+            <input class="text-input" type="text" id="admSetSiteName" maxlength="60" style="width:100%;max-width:420px"></p>
+          <p><label for="admSetTagline">Tagline</label><br>
+            <input class="text-input" type="text" id="admSetTagline" maxlength="140" style="width:100%;max-width:420px"></p>
+          <p><label for="admSetContactEmail">Contact email</label><br>
+            <input class="text-input" type="email" id="admSetContactEmail" maxlength="120" style="width:100%;max-width:420px"></p>
+          <p><label for="admSetFooterNote">Footer note</label><br>
+            <input class="text-input" type="text" id="admSetFooterNote" maxlength="160" style="width:100%;max-width:420px"></p>
+          <hr>
+          <h4 style="margin-bottom:var(--sp-2)">🚧 Maintenance mode</h4>
+          <p><label class="adm-row" style="cursor:pointer"><input type="checkbox" id="admSetMaintenance" style="width:1.1rem;height:1.1rem"> <strong>Enable maintenance mode</strong></label></p>
+          <p class="adm-muted">When on, public visitors are redirected to <code>maintenance.html</code>. The admin panel stays accessible.</p>
+          <p><label for="admSetMaintMsg">Maintenance message</label><br>
+            <input class="text-input" type="text" id="admSetMaintMsg" maxlength="200" style="width:100%;max-width:420px" placeholder="We'll be back soon!"></p>
+          <p id="admSettingsMsg" role="status" style="display:none"></p>
+          <p><button class="btn btn-primary btn-sm" type="button" id="admSettingsSave">Save settings</button></p>
+        </div>
+      </section>
+
+      <!-- 10. Feature flags -->
+      <section id="admTab-flags" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">🚩 Feature flags</h3>
+          <p class="adm-muted">Stored in Firestore (<code>site_settings/flags</code>). Individual tool on/off toggles live in the <strong>Content</strong> tab.</p>
+          <div id="admFlags"><span class="adm-spin" aria-hidden="true"></span></div>
+        </div>
+      </section>
+
+      <!-- 11. Announcement bar -->
+      <section id="admTab-announce" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">📢 Announcement bar</h3>
+          <p class="adm-muted">Stored in Firestore (<code>site_settings/announcement</code>). Shows at the top of every public page while enabled and within the date range.</p>
+          <p><label class="adm-row" style="cursor:pointer"><input type="checkbox" id="admAnnEnabled" style="width:1.1rem;height:1.1rem"> <strong>Show announcement bar</strong></label></p>
+          <p><label for="admAnnText">Message text</label><br>
+            <input class="text-input" type="text" id="admAnnText" maxlength="160" style="width:100%" placeholder="New tool launched!"></p>
+          <div class="adm-row">
+            <p style="flex:1;min-width:180px"><label for="admAnnLinkText">Link text (optional)</label><br>
+              <input class="text-input" type="text" id="admAnnLinkText" maxlength="40" style="width:100%"></p>
+            <p style="flex:2;min-width:220px"><label for="admAnnLinkUrl">Link URL (optional)</label><br>
+              <input class="text-input" type="text" id="admAnnLinkUrl" maxlength="200" style="width:100%" placeholder="/tools/ or https://…"></p>
+          </div>
+          <div class="adm-row">
+            <p><label for="admAnnStart">Start date</label><br><input class="text-input" type="date" id="admAnnStart"></p>
+            <p><label for="admAnnEnd">End date</label><br><input class="text-input" type="date" id="admAnnEnd"></p>
+          </div>
+          <p id="admAnnMsg" role="status" style="display:none"></p>
+          <p><button class="btn btn-primary btn-sm" type="button" id="admAnnSave">Save announcement</button></p>
+        </div>
+      </section>
+
+      <!-- 12. Contact inbox -->
+      <section id="admTab-inbox" role="tabpanel" style="display:none">
+        <div class="card">
+          <h3 style="margin-top:0">📥 Contact inbox <span class="adm-muted" style="font-weight:400" id="admInboxCount"></span></h3>
+          <p class="adm-muted">Messages from the contact form (<code>contact_messages</code>).</p>
+          <div class="adm-tablewrap">
+            <table class="adm-table">
+              <thead><tr><th>When</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admInboxBody"><tr><td colspan="7"><span class="adm-spin" aria-hidden="true"></span></td></tr></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -266,6 +348,8 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
