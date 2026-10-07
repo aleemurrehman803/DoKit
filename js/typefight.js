@@ -154,7 +154,9 @@
     amount = Math.trunc(amount);
     reason = String(reason || "misc").slice(0, 120);
     if (!amount) return Promise.reject(new Error("amount must be non-zero"));
+    var db = DKF.db();
     var col = ledgerRef(uid);
+    var userRef = db.collection("users").doc(uid);
     // Read the latest entry to chain the hash. Order by clientTs desc, limit 1.
     return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
       var prevHash = "GENESIS";
@@ -170,7 +172,25 @@
           prevHash: prevHash,
           hash: hash
         };
-        return col.add(entry).then(function () { return entry; });
+        // Use a transaction: append ledger entry AND sync users/{uid}.coins
+        // This unifies the balance - ledger is audit trail, users.coins is spendable.
+        // Withdrawals check users/{uid}.coins, so earned coins become withdrawable.
+        return db.runTransaction(function (tx) {
+          return tx.get(userRef).then(function (userDoc) {
+            var currentCoins = 0;
+            if (userDoc.exists) {
+              currentCoins = userDoc.data().coins | 0;
+            }
+            var newCoins = currentCoins + amount;
+            // Prevent negative balance (defense in depth - rules should also enforce)
+            if (newCoins < 0) {
+              throw new Error("Insufficient balance: cannot go negative");
+            }
+            tx.set(col.doc(), entry);
+            tx.set(userRef, { coins: newCoins }, { merge: true });
+            return entry;
+          });
+        });
       });
     });
   }
