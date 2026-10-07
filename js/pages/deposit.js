@@ -65,6 +65,24 @@ document.addEventListener("DOMContentLoaded", function () {
     DKPayReal.getPaymentConfig().then(renderAccounts);
   }
 
+  /* ---- Card (Stripe) hint: card payments use the dedicated checkout page,
+        not the manual TID flow below. Toggle the hint + disable Step 2 when
+        "stripe" is selected so users can't submit a card "deposit" by mistake. ---- */
+  (function wireStripeHint() {
+    var methodSel = $("depMethod"), hint = $("stripeHint");
+    if (!methodSel || !hint) return;
+    var step2Fields = form ? form.querySelectorAll("input, select, button") : [];
+    function sync() {
+      var isStripe = methodSel.value === "stripe";
+      hint.style.display = isStripe ? "" : "none";
+      for (var i = 0; i < step2Fields.length; i++) {
+        if (step2Fields[i] !== methodSel) step2Fields[i].disabled = isStripe;
+      }
+    }
+    methodSel.addEventListener("change", sync);
+    sync();
+  })();
+
   /* ---- Step 2: form submission ---- */
   function readScreenshot(file) {
     return new Promise(function (resolve, reject) {
