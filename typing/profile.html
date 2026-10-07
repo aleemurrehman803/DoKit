@@ -10,7 +10,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Profile — TypeMaster</title>
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typing/profile.html">
 <meta name="description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Profile — TypeMaster">
+<meta property="og:description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/typing/profile.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Profile — TypeMaster">
+<meta name="twitter:description" content="Manage your TypeMaster profile: name, password, theme, language, and your data.">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -27,7 +38,7 @@
     <div class="field">
       <div class="picker-row" style="margin-bottom:0">
         <input type="text" id="nameInput" class="form-control" style="max-width:280px" data-i18n-ph="new_name" placeholder="New name">
-        <button class="btn btn-primary btn-sm" id="nameBtn" data-i18n="save">Save</button>
+        <button type="button" class="btn btn-primary btn-sm" id="nameBtn" data-i18n="save">Save</button>
       </div>
     </div>
   </div>
@@ -44,7 +55,7 @@
       <div class="field">
         <input type="password" id="pwConfirm" class="form-control" data-i18n-ph="new_password" placeholder="Confirm new password" aria-label="Confirm new password">
       </div>
-      <button class="btn btn-primary btn-sm" id="pwBtn" data-i18n="save">Save</button>
+      <button type="button" class="btn btn-primary btn-sm" id="pwBtn" data-i18n="save">Save</button>
     </div>
   </div>
 
@@ -59,24 +70,24 @@
     <div class="field">
       <label data-i18n="language">Language</label>
       <div class="picker-row" id="langRow" style="margin-bottom:0">
-        <button class="pick" data-lang="en">English</button>
-        <button class="pick" data-lang="ur">اردو</button>
+        <button type="button" class="pick" data-lang="en">English</button>
+        <button type="button" class="pick" data-lang="ur">اردو</button>
       </div>
     </div>
   </div>
 
   <div class="card mb-3">
     <h2 class="section-title" data-i18n="your_data">Your data</h2>
-    <button class="btn btn-outline btn-sm" id="dlBtn" data-i18n="download_data">Download my data</button>
+    <button type="button" class="btn btn-outline btn-sm" id="dlBtn" data-i18n="download_data">Download my data</button>
   </div>
 
   <div class="card mb-3" style="border-color:var(--danger)">
     <h2 class="section-title" data-i18n="danger_zone">Danger zone</h2>
-    <button class="btn btn-danger btn-sm" id="resetBtn" data-i18n="reset_progress">Reset progress</button>
+    <button type="button" class="btn btn-danger btn-sm" id="resetBtn" data-i18n="reset_progress">Reset progress</button>
   </div>
 
   <div class="text-center mt-3">
-    <button class="btn btn-ghost" id="logoutBtn2" data-i18n="nav_logout">Logout</button>
+    <button type="button" class="btn btn-ghost" id="logoutBtn2" data-i18n="nav_logout">Logout</button>
   </div>
 </main>
 <div id="site-foot"></div>
