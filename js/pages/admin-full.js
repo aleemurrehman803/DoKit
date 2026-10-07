@@ -129,6 +129,11 @@
     } catch (e) { /* never break the UI */ }
   }
 
+  /* Exposed for js/pages/admin-plus.js (the 20-improvements extension). */
+  window.DKAdmin = window.DKAdmin || {};
+  window.DKAdmin.logAudit = logAudit;
+  window.DKAdmin.getAdmin = function () { return state.admin; };
+
   /* ---------------- gate: wait for admin.js to reveal the panel ---------------- */
 
   function whenPanelVisible(cb) {
@@ -165,6 +170,7 @@
 
   var TABS = [
     { id: "dashboard", label: "📊 Dashboard" },
+    { id: "analytics", label: "📈 Analytics" },
     { id: "users",     label: "👥 Users" },
     { id: "content",   label: "🧩 Content" },
     { id: "audit",     label: "📜 Audit log" },
@@ -175,7 +181,21 @@
     { id: "settings",  label: "⚙️ Settings" },
     { id: "flags",     label: "🚩 Feature flags" },
     { id: "announce",  label: "📢 Announcement" },
-    { id: "inbox",     label: "📥 Inbox" }
+    { id: "inbox",     label: "📥 Inbox" },
+    { id: "competitors", label: "👀 Competitors" },
+    { id: "alerts",    label: "🔔 Alerts" },
+    { id: "ab",        label: "🎯 A/B tests" },
+    { id: "cohorts",   label: "📊 Cohorts" },
+    { id: "fraud",     label: "🛡️ Fraud" },
+    { id: "tickets",   label: "🎫 Tickets" },
+    { id: "changelog", label: "📝 Changelog" },
+    { id: "referrals", label: "🔗 Referrals" },
+    { id: "tiers",     label: "🎖️ Tiers" },
+    { id: "kb",        label: "🧠 Knowledge" },
+    { id: "i18n",      label: "🌍 Translations" },
+    { id: "import",    label: "📤 Import" },
+    { id: "og",        label: "🖼️ OG images" },
+    { id: "views",     label: "🗂️ Views" }
   ];
 
   function wireTabs() {
@@ -287,6 +307,131 @@
     }).catch(function () {
       setHtml("admActivity", '<p style="color:var(--text-muted)">Activity loaded, names unavailable.</p>');
     });
+  }
+
+  /* ================= 1b. ANALYTICS =================
+   * Reads the Firestore `analytics` collection (privacy-friendly page-view
+   * telemetry: {page, ts, ref, lang} — NO PII by contract). Shows total page
+   * views, views in the last 24h, and the top 5 pages. Read-budget guard:
+   * orderBy ts desc, limit 500. */
+
+  function loadAnalytics() {
+    var d = db();
+    if (!d) {
+      setHtml("statPageViews", "—");
+      setHtml("statViewsToday", "—");
+      setHtml("admAnalyticsBody", '<tr><td colspan="3">' + errHtml("Database unavailable.") + "</td></tr>");
+      return;
+    }
+    setHtml("statPageViews", SPINNER);
+    setHtml("statViewsToday", SPINNER);
+    setHtml("admAnalyticsBody", '<tr><td colspan="3">' + SPINNER + "</td></tr>");
+    d.collection("analytics").orderBy("ts", "desc").limit(500).get()
+      .then(function (snap) {
+        var total = snap.size;
+        var dayAgo = Date.now() - 864e5;
+        var today = 0;
+        var byPage = {};
+        snap.forEach(function (doc) {
+          var e = doc.data() || {};
+          var ts = toMillis(e.ts);
+          if (ts >= dayAgo) today++;
+          var p = String(e.page || "(unknown)").slice(0, 120);
+          if (!byPage[p]) byPage[p] = { count: 0, last: 0 };
+          byPage[p].count++;
+          if (ts > byPage[p].last) byPage[p].last = ts;
+        });
+        setHtml("statPageViews", "<strong>" + fmtNum(total) + "</strong>");
+        setHtml("statViewsToday", "<strong>" + fmtNum(today) + "</strong>");
+        var pages = Object.keys(byPage).map(function (p) {
+          return { page: p, count: byPage[p].count, last: byPage[p].last };
+        }).sort(function (a, b) { return b.count - a.count; }).slice(0, 5);
+        if (!pages.length) {
+          setHtml("admAnalyticsBody",
+            '<tr><td colspan="3" style="color:var(--text-muted)">No page views recorded yet.</td></tr>');
+        } else {
+          setHtml("admAnalyticsBody", pages.map(function (r) {
+            return "<tr><td><code>" + esc(r.page) + "</code></td>" +
+              "<td><strong>" + fmtNum(r.count) + "</strong></td>" +
+              "<td>" + esc(relTime(r.last)) + "</td></tr>";
+          }).join(""));
+        }
+        logAudit("analytics_view", "analytics", "views:" + total);
+      })
+      .catch(function (err) {
+        setHtml("statPageViews", errHtml("—"));
+        setHtml("statViewsToday", errHtml("—"));
+        setHtml("admAnalyticsBody",
+          '<tr><td colspan="3">' + errHtml("Could not load analytics. " + friendlyDbErr(err)) + "</td></tr>");
+      });
+  }
+
+  /* ================= 1c. BACKUP REMINDER =================
+   * "Last backup" is tracked in localStorage ('dokit_last_backup_ts').
+   * "Export now (JSON)" downloads: site_settings/announcement,
+   * site_settings/flags, and counts of newsletter/feedback docs.
+   * Deliberately NO user PII — only settings + aggregate counts. */
+
+  var BACKUP_TS_KEY = "dokit_last_backup_ts";
+
+  function renderBackupWhen() {
+    var el = $("admBackupWhen");
+    if (!el) return;
+    var ts = 0;
+    try { ts = Number(localStorage.getItem(BACKUP_TS_KEY)) || 0; } catch (e) {}
+    if (!ts) { el.textContent = "Never"; return; }
+    var days = Math.floor((Date.now() - ts) / 864e5);
+    el.textContent = days <= 0 ? "today"
+      : days === 1 ? "1 day ago"
+      : days + " days ago";
+  }
+
+  function downloadJson(filename, obj) {
+    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  }
+
+  function exportBackup() {
+    var d = db();
+    if (!d) { alert("Database unavailable — cannot export."); return; }
+    var pAnn = d.collection("site_settings").doc("announcement").get().catch(function () { return null; });
+    var pFlags = d.collection("site_settings").doc("flags").get().catch(function () { return null; });
+    var pNews = d.collection("newsletter").get().catch(function () { return null; });
+    var pFb = d.collection("feedback").get().catch(function () { return null; });
+    Promise.all([pAnn, pFlags, pNews, pFb]).then(function (res) {
+      var payload = {
+        exportedAt: new Date().toISOString(),
+        exportedBy: currentAdminUid(),
+        site_settings: {
+          announcement: (res[0] && res[0].exists) ? res[0].data() : null,
+          flags: (res[1] && res[1].exists) ? res[1].data() : null
+        },
+        counts: {
+          newsletter: res[2] ? res[2].size : 0,
+          feedback: res[3] ? res[3].size : 0
+        }
+      };
+      downloadJson("dokit-backup-" + new Date().toISOString().slice(0, 10) + ".json", payload);
+      try { localStorage.setItem(BACKUP_TS_KEY, String(Date.now())); } catch (e) {}
+      renderBackupWhen();
+      logAudit("backup_export", "site_settings+counts",
+        "newsletter:" + payload.counts.newsletter + " feedback:" + payload.counts.feedback);
+    }).catch(function (err) {
+      alert("Backup export failed: " + friendlyDbErr(err));
+    });
+  }
+
+  function wireBackup() {
+    var btn = $("admBackupBtn");
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", exportBackup);
+    renderBackupWhen();
   }
 
   /* ================= 2. USERS ================= */
@@ -458,8 +603,16 @@
         '<button class="btn btn-sm" id="admCoinReset" style="border-color:var(--danger);color:var(--danger)">Reset to 0</button>' +
         "</div>" +
         suspSection +
+        '<div id="admNotesWrap"></div>' +
         "<h4>Journey history</h4>" + runsHtml +
         "</div>");
+      // Internal admin notes (#3) — rendered by js/pages/admin-plus.js if loaded.
+      try {
+        var nw = $("admNotesWrap");
+        if (nw && window.DKNotes && typeof window.DKNotes.render === "function") {
+          window.DKNotes.render(uid, nw);
+        }
+      } catch (e) { /* notes optional */ }
 
       $("admDetailClose").addEventListener("click", function () {
         $("admUserDetail").style.display = "none";
@@ -915,7 +1068,8 @@
               "<td>" + shotBtn + "</td>" +
               "<td style='white-space:nowrap'>" +
               '<button class="btn btn-sm btn-primary" type="button" data-approve-dep="' + esc(dep.id) + '" data-amt="' + esc(dep.amount) + '" data-uid="' + esc(dep.userId) + '">✅ Approve</button> ' +
-              '<button class="btn btn-sm" type="button" data-reject-dep="' + esc(dep.id) + '">❌ Reject</button>' +
+              '<button class="btn btn-sm" type="button" data-reject-dep="' + esc(dep.id) + '">❌ Reject</button> ' +
+              '<button class="btn btn-sm" type="button" data-receipt-dep="' + esc(dep.id) + '">🧾 Receipt</button>' +
               "</td></tr>";
           }).join("");
 
@@ -1097,6 +1251,10 @@
           rows.sort(function (a, b) { return (b.wd.createdAtMs || 0) - (a.wd.createdAtMs || 0); });
           body.innerHTML = rows.map(function (r) {
             var wd = r.wd;
+            var appr = Array.isArray(wd.approvals) ? wd.approvals : [];
+            var apprBadge = appr.length
+              ? ' <span class="badge badge-amber" title="Approvals">' + appr.length + "/2</span>"
+              : "";
             return "<tr>" +
               "<td>" + fmtTime(wd.createdAtMs) + "</td>" +
               "<td>" + esc(r.uname) + "<br><small style='color:var(--text-muted)'>" + esc(r.uemail) + "</small></td>" +
@@ -1104,7 +1262,7 @@
               "<td>" + esc(wd.method) + "</td>" +
               "<td><code>" + esc(wd.account) + "</code></td>" +
               "<td style='white-space:nowrap'>" +
-              '<button class="btn btn-sm btn-primary" type="button" data-process-wd="' + esc(wd.id) + '" data-amt="' + esc(wd.amount) + '">✅ Processed</button> ' +
+              '<button class="btn btn-sm btn-primary" type="button" data-approve-wd="' + esc(wd.id) + '" data-amt="' + esc(wd.amount) + '">✅ Approve' + apprBadge + "</button> " +
               '<button class="btn btn-sm" type="button" data-reject-wd="' + esc(wd.id) + '" data-uid="' + esc(wd.userId) + '" data-amt="' + esc(wd.amount) + '">❌ Reject</button>' +
               "</td></tr>";
           }).join("");
@@ -1116,15 +1274,19 @@
   }
 
   /**
-   * Mark a withdrawal as processed (admin has sent the money manually).
-   * The locked coins stay deducted (they were already removed from available).
+   * Maker-checker approval for withdrawals (#12): TWO different admins must
+   * approve before money moves. First approval records approvals[] only;
+   * the second approval settles (money movement + status processed).
+   * The same admin can never approve twice (enforced in the transaction).
    */
-  function processWithdrawal(wdId, amount) {
+  function approveWithdrawal(wdId, amount) {
     var d = db();
     if (!d) return;
+    var me = currentAdminUid();
     if (!window.confirm(
-      "Mark withdrawal of Rs " + amount + " as PROCESSED?\n\n" +
-      "Only click this AFTER you have manually sent the money to the user's account."
+      "Approve withdrawal of Rs " + amount + "?\n\n" +
+      "Maker-checker: a SECOND admin must also approve before it is processed.\n" +
+      "Only approve AFTER you have manually sent the money to the user's account."
     )) return;
 
     var wdRef = d.collection("withdrawals").doc(wdId);
@@ -1134,9 +1296,21 @@
         if (!snap.exists) throw new Error("Withdrawal not found.");
         var wdData = snap.data();
         if (wdData.status !== "pending") throw new Error("Withdrawal is no longer pending.");
+        var approvals = Array.isArray(wdData.approvals) ? wdData.approvals.slice() : [];
+        if (approvals.some(function (a) { return a && a.by === me; })) {
+          throw new Error("You already approved this — a second admin must confirm.");
+        }
+        approvals.push({ by: me, at: Date.now() });
+
+        if (approvals.length < 2) {
+          // First approval: record only, stays pending.
+          tx.update(wdRef, { approvals: approvals });
+          return { settled: false, count: approvals.length };
+        }
+
+        // Second approval: settle the money movement.
         var wdAmount = Number(wdData.amount) || 0;
         var wdUserId = wdData.userId;
-
         return tx.get(d.collection("users").doc(wdUserId)).then(function (userSnap) {
           var udata = userSnap.exists ? userSnap.data() : {};
           var coins = Number(udata.coins) || 0;
@@ -1150,14 +1324,20 @@
           });
           tx.update(wdRef, {
             status: "processed",
-            processedBy: currentAdminUid(),
+            approvals: approvals,
+            processedBy: me,
             processedAt: firebase.firestore.FieldValue.serverTimestamp(),
             processedAtMs: Date.now()
           });
+          return { settled: true, count: approvals.length };
         });
       });
-    }).then(function () {
-      logAudit("withdrawal_processed", wdId, "amount:" + amount);
+    }).then(function (res) {
+      if (res && res.settled) {
+        logAudit("withdrawal_processed", wdId, "amount:" + amount + " (2/2 approvals)");
+      } else {
+        logAudit("withdrawal_approved_1of2", wdId, "amount:" + amount + " by " + me);
+      }
       loadWithdrawals();
     }).catch(function (err) {
       alert("Failed: " + (err.message || "Unknown error"));
@@ -1280,7 +1460,7 @@
    */
   function wirePaymentActions() {
     document.addEventListener("click", function (ev) {
-      var t = ev.target.closest("[data-approve-dep],[data-reject-dep],[data-process-wd],[data-reject-wd],[data-shot]");
+      var t = ev.target.closest("[data-approve-dep],[data-reject-dep],[data-approve-wd],[data-reject-wd],[data-shot]");
       if (!t) return;
 
       if (t.hasAttribute("data-approve-dep")) {
@@ -1289,8 +1469,8 @@
           t.getAttribute("data-uid"));
       } else if (t.hasAttribute("data-reject-dep")) {
         rejectDeposit(t.getAttribute("data-reject-dep"));
-      } else if (t.hasAttribute("data-process-wd")) {
-        processWithdrawal(t.getAttribute("data-process-wd"),
+      } else if (t.hasAttribute("data-approve-wd")) {
+        approveWithdrawal(t.getAttribute("data-approve-wd"),
           Number(t.getAttribute("data-amt")) || 0);
       } else if (t.hasAttribute("data-reject-wd")) {
         rejectWithdrawal(t.getAttribute("data-reject-wd"),
@@ -1407,14 +1587,22 @@
     function renderFlagsList(flags) {
       wrap.innerHTML = FEATURE_FLAGS.map(function (f) {
         var on = flags[f.id] !== false; // default enabled
-        return '<div class="adm-toolrow">' +
+        var rollout = Number(flags[f.id + "__rollout"]);
+        if (!(rollout >= 0)) rollout = 100;
+        return '<div class="adm-toolrow" style="display:block">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">' +
           "<div><strong>" + esc(f.name) + "</strong><br>" +
           '<span class="adm-muted">' + esc(f.desc) + "</span></div>" +
           '<label class="adm-switch"><input type="checkbox" data-flag-toggle="' + esc(f.id) + '"' +
           (on ? " checked" : "") + '><span class="adm-slider"></span>' +
           '<span class="sr-note">' + esc(f.name) + " enabled</span></label>" +
+          "</div>" +
+          '<div class="adm-rollout"><label for="rollout-' + esc(f.id) + '">Rollout:</label>' +
+          '<input type="range" id="rollout-' + esc(f.id) + '" min="0" max="100" step="5" value="' + rollout + '" data-rollout="' + esc(f.id) + '" aria-label="' + esc(f.name) + ' rollout percent">' +
+          '<strong data-rollout-val="' + esc(f.id) + '">' + rollout + '%</strong></div>' +
           "</div>";
-      }).join("");
+      }).join("") +
+      '<p class="adm-muted" style="margin-top:.6rem">Rollout uses deterministic bucketing (<code>js/feature-flags.js</code> — <code>DKFlags.inRollout(uid, flagId, pct)</code>). 100% = everyone, 0% = nobody.</p>';
     }
     if (!d) { renderFlagsList({}); return; }
     d.collection("site_settings").doc("flags").get().then(function (snap) {
@@ -1425,17 +1613,28 @@
     if (!wrap.dataset.wired) {
       wrap.dataset.wired = "1";
       wrap.addEventListener("change", function (ev) {
-        var input = ev.target.closest ? ev.target.closest("[data-flag-toggle]") : null;
-        if (!input || !d) return;
-        var id = input.getAttribute("data-flag-toggle");
-        var on = input.checked;
+        if (!d) return;
         var F = fv();
+        var t = ev.target.closest ? ev.target.closest("[data-flag-toggle],[data-rollout]") : null;
+        if (!t) return;
+        var id, val, auditAction;
+        if (t.hasAttribute("data-rollout")) {
+          id = t.getAttribute("data-rollout") + "__rollout";
+          val = Math.max(0, Math.min(100, parseInt(t.value, 10) || 0));
+          var lbl = wrap.querySelector('[data-rollout-val="' + t.getAttribute("data-rollout") + '"]');
+          if (lbl) lbl.textContent = val + "%";
+          auditAction = "flag_rollout";
+        } else {
+          id = t.getAttribute("data-flag-toggle");
+          val = t.checked;
+          auditAction = "flag_toggle";
+        }
         var patch = { updatedBy: currentAdminUid(), updatedAt: F ? F.serverTimestamp() : new Date() };
-        patch[id] = on;
+        patch[id] = val;
         d.collection("site_settings").doc("flags").set(patch, { merge: true })
-          .then(function () { logAudit("flag_toggle", id, "enabled=" + on); })
+          .then(function () { logAudit(auditAction, id, "value=" + val); })
           .catch(function (err) {
-            input.checked = !on;
+            if (t.hasAttribute("data-flag-toggle")) t.checked = !val;
             alert("Could not save flag: " + friendlyDbErr(err));
           });
       });
@@ -1459,6 +1658,24 @@
       setVal("admAnnLinkUrl", c.linkUrl || "");
       setVal("admAnnStart", c.startDate || "");
       setVal("admAnnEnd", c.endDate || "");
+      var pubAt = $("admAnnPublishAt");
+      if (pubAt && !pubAt.dataset.added) {
+        // Scheduled publishing (#5): publishAt field injected once.
+        pubAt.dataset.added = "1";
+      }
+      if (pubAt) {
+        try {
+          if (c.publishAt) {
+            var ms = (c.publishAt.toMillis ? c.publishAt.toMillis() : Number(c.publishAt)) || 0;
+            if (ms > 0) {
+              var dt = new Date(ms);
+              var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+              pubAt.value = dt.getFullYear() + "-" + pad(dt.getMonth() + 1) + "-" + pad(dt.getDate()) +
+                "T" + pad(dt.getHours()) + ":" + pad(dt.getMinutes());
+            }
+          }
+        } catch (e) {}
+      }
     }).catch(function (err) {
       showAnnMsg("Could not load announcement: " + friendlyDbErr(err), false);
     });
@@ -1495,6 +1712,11 @@
       var start = (($("admAnnStart") || {}).value || "").trim();
       var end = (($("admAnnEnd") || {}).value || "").trim();
       if (start && end && start > end) { showAnnMsg("Start date must be before end date.", false); return; }
+      // Scheduled publishing (#5): future publishAt => status "scheduled".
+      var pubAtRaw = (($("admAnnPublishAt") || {}).value || "").trim();
+      var pubAtMs = pubAtRaw ? Date.parse(pubAtRaw) : 0;
+      if (pubAtRaw && isNaN(pubAtMs)) { showAnnMsg("Publish date/time is invalid.", false); return; }
+      var status = (pubAtMs && pubAtMs > Date.now()) ? "scheduled" : "live";
       var data = {
         enabled: !!($("admAnnEnabled") || {}).checked,
         text: text,
@@ -1502,6 +1724,8 @@
         linkUrl: linkUrl,
         startDate: start,
         endDate: end,
+        publishAt: pubAtMs || null,
+        status: status,
         updatedBy: currentAdminUid(),
         updatedAt: F ? F.serverTimestamp() : new Date()
       };
@@ -1595,22 +1819,151 @@
     });
   }
 
+  /* ================= 14. COMPETITOR WATCH =================
+   * Reads/writes Firestore `competitors` docs:
+   * { name, url, notes, updatedAt }. Admin-only collection.
+   * Add form + per-row delete + prompt-based notes edit. All audit-logged. */
+
+  function loadCompetitors() {
+    var d = db();
+    var body = $("admCompBody");
+    if (!body) return;
+    if (!d) {
+      body.innerHTML = '<tr><td colspan="5">' + errHtml("Database unavailable.") + "</td></tr>";
+      return;
+    }
+    body.innerHTML = '<tr><td colspan="5">' + SPINNER + "</td></tr>";
+    d.collection("competitors").orderBy("updatedAt", "desc").limit(100).get()
+      .then(function (snap) {
+        var countEl = $("admCompCount");
+        if (countEl) countEl.textContent = snap.empty ? "" : "(" + snap.size + " tracked)";
+        if (snap.empty) {
+          body.innerHTML = '<tr><td colspan="5" style="color:var(--text-muted)">No competitors tracked yet. Add the first one above. 👀</td></tr>';
+          return;
+        }
+        var rows = [];
+        snap.forEach(function (doc) {
+          var c = doc.data() || {};
+          rows.push("<tr>" +
+            "<td><strong>" + esc(c.name || "—") + "</strong></td>" +
+            '<td><a href="' + esc(c.url || "#") + '" target="_blank" rel="noopener">' +
+            esc(String(c.url || "—").slice(0, 60)) + "</a></td>" +
+            '<td style="max-width:280px">' + esc(String(c.notes || "—").slice(0, 200)) +
+            (String(c.notes || "").length > 200 ? "…" : "") + "</td>" +
+            "<td style='white-space:nowrap'>" + esc(relTime(toMillis(c.updatedAt))) + "</td>" +
+            "<td style='white-space:nowrap'>" +
+            '<button class="btn btn-sm" type="button" data-comp-edit="' + esc(doc.id) + '">✏️ Edit notes</button> ' +
+            '<button class="btn btn-sm" type="button" data-comp-del="' + esc(doc.id) + '" ' +
+            'style="border-color:var(--danger,#C93A3A);color:var(--danger,#C93A3A)">Delete</button>' +
+            "</td></tr>");
+        });
+        body.innerHTML = rows.join("");
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="5">' + errHtml("Could not load competitors. " + friendlyDbErr(err)) + "</td></tr>";
+      });
+  }
+
+  function showCompMsg(msg, ok) {
+    var el = $("admCompMsg");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "";
+    el.style.color = ok ? "#1F7A4D" : "#C93A3A";
+  }
+
+  function wireCompetitors() {
+    var form = $("admCompForm");
+    if (form && !form.dataset.wired) {
+      form.dataset.wired = "1";
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var d = db(), F = fv();
+        if (!d) { showCompMsg("Database unavailable.", false); return; }
+        var name = (($("admCompName") || {}).value || "").trim().slice(0, 80);
+        var url = (($("admCompUrl") || {}).value || "").trim().slice(0, 200);
+        var notes = (($("admCompNotes") || {}).value || "").trim().slice(0, 500);
+        if (!name) { showCompMsg("Name is required.", false); return; }
+        if (!/^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(url)) {
+          showCompMsg("URL must start with http(s)://", false);
+          return;
+        }
+        d.collection("competitors").add({
+          name: name,
+          url: url,
+          notes: notes,
+          updatedAt: F ? F.serverTimestamp() : new Date(),
+          updatedBy: currentAdminUid()
+        }).then(function () {
+          form.reset();
+          logAudit("competitor_added", name, url);
+          showCompMsg("✅ Competitor added.", true);
+          loadCompetitors();
+        }).catch(function (err) {
+          showCompMsg("Could not add: " + friendlyDbErr(err), false);
+        });
+      });
+    }
+    // Per-row edit/delete (delegated — rows re-render on load).
+    var body = $("admCompBody");
+    if (body && !body.dataset.wired) {
+      body.dataset.wired = "1";
+      body.addEventListener("click", function (ev) {
+        var t = ev.target.closest ? ev.target.closest("[data-comp-edit],[data-comp-del]") : null;
+        if (!t) return;
+        var d = db(), F = fv();
+        if (!d) return;
+        if (t.hasAttribute("data-comp-edit")) {
+          var id = t.getAttribute("data-comp-edit");
+          d.collection("competitors").doc(id).get().then(function (snap) {
+            if (!snap.exists) return;
+            var cur = (snap.data() || {}).notes || "";
+            var next = window.prompt("Edit notes:", cur);
+            if (next === null) return; // cancelled
+            next = String(next).slice(0, 500);
+            return d.collection("competitors").doc(id).update({
+              notes: next,
+              updatedAt: F ? F.serverTimestamp() : new Date(),
+              updatedBy: currentAdminUid()
+            }).then(function () {
+              logAudit("competitor_notes_edited", id, next.slice(0, 60));
+              loadCompetitors();
+            });
+          }).catch(function (err) { alert("Could not edit notes: " + friendlyDbErr(err)); });
+        } else {
+          var delId = t.getAttribute("data-comp-del");
+          if (!confirm("Delete this competitor permanently?")) return;
+          d.collection("competitors").doc(delId).delete()
+            .then(function () {
+              logAudit("competitor_deleted", delId, "competitor deleted");
+              loadCompetitors();
+            })
+            .catch(function (err) { alert("Could not delete: " + friendlyDbErr(err)); });
+        }
+      });
+    }
+  }
+
   /* ---------------- boot ---------------- */
 
   function boot() {
     wireTabs();
     wireUsers();
     wireBulk();
+    wireBackup();
     wirePaymentActions();
     wirePaySettings();
     wireSettings();
     wireAnnounce();
     wireInbox();
+    wireCompetitors();
     loadDashboard();
+    loadAnalytics();
     loadUsers();
     loadContent();
     loadAudit();
     loadSecurityEvents();
+    loadCompetitors();
     loadPaySettings();
     // Refresh tabs when opened (new entries may exist).
     var bar = $("admTabs");
@@ -1620,6 +1973,7 @@
       var tab = btn.getAttribute("data-tab");
       if (tab === "audit") loadAudit();
       if (tab === "security") loadSecurityEvents();
+      if (tab === "analytics") loadAnalytics();
       if (tab === "deposits") loadDeposits();
       if (tab === "withdrawals") loadWithdrawals();
       if (tab === "paysettings") loadPaySettings();
@@ -1627,6 +1981,7 @@
       if (tab === "flags") loadFlags();
       if (tab === "announce") loadAnnounce();
       if (tab === "inbox") loadInbox();
+      if (tab === "competitors") loadCompetitors();
     });
   }
 
