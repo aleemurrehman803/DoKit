@@ -3,128 +3,170 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
-<title>Pricing — DoKit</title>
-<meta name="description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/pricing.html">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Pricing — DoKit">
-<meta property="og:description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/pricing.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Pricing — DoKit">
-<meta name="twitter:description" content="DoKit pricing: everything here is free. Pro is coming soon — no checkout, no catch.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<title>Pricing — DoKit</title>
+<meta name="description" content="DoKit pricing: Free forever, Pro Rs 300/month, Team Rs 1,500/month. Simple, honest pricing — pay with Easypaisa, JazzCash, bank transfer, USDT, or card.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/pricing.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pricing — DoKit">
+<meta property="og:description" content="DoKit pricing: Free forever, Pro Rs 300/month, Team Rs 1,500/month. Simple, honest pricing — pay with Easypaisa, JazzCash, bank transfer, USDT, or card.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/pricing.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pricing — DoKit">
+<meta name="twitter:description" content="DoKit pricing: Free forever, Pro Rs 300/month, Team Rs 1,500/month. Simple, honest pricing — pay with Easypaisa, JazzCash, bank transfer, USDT, or card.">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
+<style>
+@media (min-width: 1024px) { .price-grid { grid-template-columns: repeat(3, 1fr); } }
+.plan-badge { position: absolute; top: -0.85rem; inset-inline-start: 50%; transform: translateX(-50%); white-space: nowrap; }
+.compare-table { inline-size: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.compare-table th, .compare-table td { padding: var(--sp-3); border-block-end: 1px solid var(--border); text-align: center; }
+.compare-table th:first-child, .compare-table td:first-child { text-align: start; }
+.compare-table thead th { font-weight: 700; }
+.compare-table .yes { color: var(--success); font-weight: 700; }
+.compare-table .no { color: var(--text-muted); }
+.pay-methods { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; margin-top: var(--sp-4); }
+.pay-methods .pill { padding: var(--sp-2) var(--sp-3); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: var(--fs-sm); }
+.pricing-faq .faq-a { padding: 0 var(--sp-2) var(--sp-4); color: var(--text-muted); display: none; }
+.pricing-faq .faq-item.open .faq-a { display: block; }
+</style>
 </head>
 <body data-nav="pricing">
 <a class="skip-link" href="#main">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
-    <div class="container">
+    <div class="container" style="max-width:56rem">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
           <li><a href="./">Home</a></li>
-          <li aria-current="page">Simple pricing</li>
+          <li aria-current="page">Pricing</li>
         </ol>
       </nav>
+      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
+
       <div class="section-head">
-        <h1>Simple pricing</h1>
-        <p>Start free. Paid plans launch soon — nothing to pay today.</p>
+        <h1>Simple, honest pricing</h1>
+        <p>Start free and stay free for as long as you like. Pay only if you want the extras — and cancel anytime.</p>
       </div>
-      <div class="price-grid price-grid--3">
+
+      <div class="price-grid">
         <div class="card price-card">
           <h2>Free</h2>
-          <div class="price">$0 <small>forever</small></div>
+          <div class="price">Rs 0 <small>forever</small></div>
           <ul class="price-features">
             <li>All 6 tools, unlimited normal use</li>
             <li>No account needed</li>
             <li>Files never leave your device</li>
-            <li>English + اردو</li>
+            <li>10 languages</li>
           </ul>
-          <a class="btn btn-ghost btn-block" href="tools/">Start using tools</a>
+          <a class="btn btn-ghost btn-block" href="signup.html">Start free</a>
         </div>
         <div class="card price-card featured">
-          <p><span class="badge">Coming soon</span></p>
-          <h2>Pro</h2>
-          <div class="price">$6 <small>/month</small></div>
+          <span class="plan-badge badge badge-amber">Most popular</span>
+          <h2>Pro <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
+          <div class="price">Rs 300 <small>/month</small></div>
           <ul class="price-features">
             <li>Everything in Free</li>
-            <li>Batch processing &amp; presets</li>
-            <li>Priority access to new tools</li>
-            <li>Cloud sync across devices <span class="badge">Coming soon</span></li>
+            <li>Batch processing</li>
+            <li>One-click presets</li>
+            <li>Priority support</li>
+            <li>Early access to new tools</li>
           </ul>
-          <button class="btn btn-primary btn-block" type="button" disabled>Get Pro — Coming soon</button>
-          <p class="hint">Pro isn't on sale yet — and everything above is already free.</p>
+          <a class="btn btn-primary btn-block" href="signup.html">Join the waitlist</a>
+          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0">Pro is not on sale yet — everything listed here is already free today.</p>
         </div>
         <div class="card price-card">
-          <p><span class="badge">Coming soon</span></p>
-          <h2>Team</h2>
-          <div class="price">$29 <small>/month</small></div>
+          <h2>Team <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
+          <div class="price">Rs 1,500 <small>/month</small></div>
           <ul class="price-features">
             <li>Everything in Pro</li>
-            <li>Typing classrooms &amp; assignments</li>
-            <li>Teacher dashboard <span class="badge">Coming soon</span></li>
+            <li>5 team members</li>
+            <li>Typing classrooms</li>
+            <li>Teacher dashboard</li>
+            <li>Admin panel</li>
           </ul>
-          <button class="btn btn-ghost btn-block" type="button" disabled>Contact us — Coming soon</button>
+          <a class="btn btn-ghost btn-block" href="signup.html">Join the waitlist</a>
+          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0">Built for schools and small teams — launching soon.</p>
         </div>
       </div>
 
-      <div class="card" style="max-width:56rem;margin:var(--sp-6) auto 0">
-        <h2 style="margin-block-start:0;text-align:center">Compare plans</h2>
-        <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
+      <h2 style="text-align:center;margin-top:var(--sp-10)">Compare plans</h2>
+      <div class="card" style="overflow-x:auto;margin-top:var(--sp-4)">
+        <table class="compare-table">
           <thead>
-            <tr>
-              <th style="text-align:start;padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Feature</th>
-              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Free</th>
-              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Pro <span class="badge">Soon</span></th>
-              <th style="padding:var(--sp-2);border-bottom:2px solid var(--dk-border,#e3e1f0)">Team <span class="badge">Soon</span></th>
-            </tr>
+            <tr><th scope="col">Feature</th><th scope="col">Free</th><th scope="col">Pro</th><th scope="col">Team</th></tr>
           </thead>
           <tbody>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">All 6 tools</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Batch processing &amp; zip</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">One-click presets</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Cloud history &amp; sync</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Developer API</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2);border-bottom:1px solid var(--dk-border,#e3e1f0)">Typing classrooms</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">—</td><td style="text-align:center;border-bottom:1px solid var(--dk-border,#e3e1f0)">✅</td></tr>
-            <tr><td style="padding:var(--sp-2)">Teacher dashboard</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✅</td></tr>
+            <tr><td>All 6 basic tools</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Unlimited normal use</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>No account needed</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Files stay on your device</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Batch processing</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>One-click presets</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Priority support</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Early access to new tools</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Team members</td><td class="no">—</td><td class="no">—</td><td class="yes">5 included</td></tr>
+            <tr><td>Typing classrooms</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>Teacher dashboard</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>Admin panel</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <h2 style="text-align:center;margin-top:var(--sp-10)">How you can pay</h2>
+      <p style="text-align:center;color:var(--text-muted)">When Pro and Team launch, you can pay the way that's easiest for you:</p>
+      <div class="pay-methods">
+        <span class="pill">Easypaisa</span>
+        <span class="pill">JazzCash</span>
+        <span class="pill">Bank transfer</span>
+        <span class="pill">USDT</span>
+        <span class="pill">Credit / debit card (Stripe)</span>
+      </div>
+
+      <h2 style="text-align:center;margin-top:var(--sp-10)">Questions about pricing</h2>
+      <div class="pricing-faq" id="faqList" style="max-width:44rem;margin-inline:auto">
+        <div class="faq-item">
+          <button type="button" class="faq-q" aria-expanded="false"><span>Is Free really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a">Yes — really. All 6 tools are free with unlimited normal use, no account, no watermarks, and no time limit. Free will never be taken away or downgraded.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-q" aria-expanded="false"><span>Can I cancel anytime?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a">Absolutely. Pro and Team are month-to-month with no contracts and no cancellation fees. Cancel in one click and you keep everything until the end of your billing period.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-q" aria-expanded="false"><span>How do I pay?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a">When paid plans launch, you can pay with Easypaisa, JazzCash, bank transfer, USDT, or a credit/debit card via Stripe — whatever is easiest for you.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-q" aria-expanded="false"><span>What's your refund policy?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a">If a paid plan doesn't work as promised, email us at malikjalil014@gmail.com within 7 days of payment and we'll make it right — including a full refund where appropriate.</div>
         </div>
       </div>
-      <div class="card" style="max-width:46rem;margin:var(--sp-6) auto 0;text-align:center">
-        <h2 style="margin-block-start:0">💳 How you'll pay</h2>
-        <p style="margin-bottom:0">When Pro and School launch, payments will be accepted via <strong>USDT</strong> and <strong>PKR</strong> (bank transfer / mobile wallet). No checkout exists yet — this page is honest about what's coming. <strong>Launching when ready.</strong></p>
+
+      <div class="card" style="text-align:center;margin-top:var(--sp-10)">
+        <h3 style="margin-top:0">Start free today</h3>
+        <p style="color:var(--text-muted)">Everything you need is already free. Create an account for coins, saved progress, and premium extras.</p>
+        <a class="btn btn-primary btn-lg" href="signup.html">Create a free account</a>
       </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
-<div id="dk-assistant-root"></div>
 <script src="js/i18n-v2.js" defer></script>
-<script src="js/i18n-ar.js" defer></script>
-<script src="js/i18n-hi.js" defer></script>
-<script src="js/i18n-es.js" defer></script>
-<script src="js/i18n-fr.js" defer></script>
-<script src="js/i18n-pt.js" defer></script>
-<script src="js/i18n-de.js" defer></script>
-<script src="js/i18n-tr.js" defer></script>
-<script src="js/i18n-ru.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
+<div id="dk-assistant-root"></div>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
 <script src="js/assistant-ai.js" defer></script>
