@@ -195,7 +195,8 @@
     { id: "i18n",      label: "🌍 Translations" },
     { id: "import",    label: "📤 Import" },
     { id: "og",        label: "🖼️ OG images" },
-    { id: "views",     label: "🗂️ Views" }
+    { id: "views",     label: "🗂️ Views" },
+    { id: "certs",     label: "🎓 Certificates" }
   ];
 
   function wireTabs() {
@@ -1944,6 +1945,49 @@
     }
   }
 
+  /* ---------------- typing certificates registry (read-only) ---------------- */
+
+  function wireCerts() {
+    var btn = $("admCertSearch");
+    var input = $("admCertReg");
+    if (!btn || btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    var doSearch = function () {
+      var reg = ((input && input.value) || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+      if (!/^DK-\d{4}-[A-Z0-9]{6}$/.test(reg)) {
+        setHtml("admCertResult", '<p class="adm-muted">Enter a valid registration number (format <code>DK-2026-XXXXXX</code>).</p>');
+        return;
+      }
+      var d = db();
+      if (!d) { setHtml("admCertResult", errHtml("Database unavailable.")); return; }
+      setHtml("admCertResult", SPINNER);
+      d.collection("certificates").doc(reg).get().then(function (snap) {
+        if (!snap.exists) {
+          setHtml("admCertResult", '<p class="adm-muted">❌ No certificate found for <code>' + esc(reg) + "</code>.</p>");
+          return;
+        }
+        var c = snap.data() || {};
+        var acc = (typeof c.acc === "number" && !isNaN(c.acc) && c.acc >= 0)
+          ? (Math.round(10 * c.acc) / 10) + "%" : "—";
+        setHtml("admCertResult",
+          '<table class="adm-table"><tbody>' +
+          "<tr><th>Registration No.</th><td><code>" + esc(c.regNo || reg) + "</code></td></tr>" +
+          "<tr><th>Name</th><td>" + esc(c.name || "—") + "</td></tr>" +
+          "<tr><th>Best WPM</th><td>" + esc((c.wpm > 0) ? String(c.wpm) : "—") + "</td></tr>" +
+          "<tr><th>Best accuracy</th><td>" + esc(acc) + "</td></tr>" +
+          "<tr><th>Issued</th><td>" + esc(fmtDate(toMillis(c.issuedAt))) + " (" + esc(relTime(toMillis(c.issuedAt))) + ")</td></tr>" +
+          "</tbody></table>");
+        logAudit("certificate_lookup", reg, String(c.name || ""));
+      }).catch(function (err) {
+        setHtml("admCertResult", errHtml("Lookup failed: " + friendlyDbErr(err)));
+      });
+    };
+    btn.addEventListener("click", doSearch);
+    if (input) input.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); doSearch(); }
+    });
+  }
+
   /* ---------------- boot ---------------- */
 
   function boot() {
@@ -1957,6 +2001,7 @@
     wireAnnounce();
     wireInbox();
     wireCompetitors();
+    wireCerts();
     loadDashboard();
     loadAnalytics();
     loadUsers();
