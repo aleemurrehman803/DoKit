@@ -50,7 +50,7 @@
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
           <li><a href="./">Home</a></li>
-          <li aria-current="page">Pricing</li>
+          <li aria-current="page" data-i18n="price2_breadcrumb">Pricing</li>
         </ol>
       </nav>
       <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
@@ -62,102 +62,102 @@
 
       <div class="price-grid">
         <div class="card price-card featured">
-          <span class="plan-badge badge badge-amber">Most popular</span>
+          <span class="plan-badge badge badge-amber" data-i18n="price2_popular">Most popular</span>
           <h2 data-i18n="free_t">Free</h2>
           <div class="price">Rs 0 <small data-i18n="free_forever">forever</small></div>
           <ul class="price-features">
-            <li data-i18n="free_f1">All 6 tools, unlimited normal use</li>
-            <li>No account needed</li>
-            <li>Files never leave your device</li>
-            <li>10 languages</li>
+            <li data-i18n="free_f1">All free tools, unlimited normal use</li>
+            <li data-i18n="price2_no_account">No account needed</li>
+            <li data-i18n="price2_files_private">Files never leave your device</li>
+            <li data-i18n="price2_languages">10 languages</li>
           </ul>
-          <a class="btn btn-ghost btn-block" href="signup.html">Start free</a>
+          <a class="btn btn-ghost btn-block" href="signup.html" data-i18n="price2_start_free">Start free</a>
         </div>
         <div class="card price-card">
-          <h2>Pro <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
+          <h2>Pro <span class="badge badge-amber" style="vertical-align:middle" data-i18n="badge_soon">Coming soon</span></h2>
           <div class="price">Rs 300 <small>/month</small></div>
           <ul class="price-features">
-            <li>Everything in Free</li>
-            <li>Batch processing</li>
-            <li>One-click presets</li>
-            <li>Priority support</li>
-            <li>Early access to new tools</li>
+            <li data-i18n="price2_pro_f1">Everything in Free</li>
+            <li data-i18n="price2_pro_f2">Batch processing</li>
+            <li data-i18n="price2_pro_f3">One-click presets</li>
+            <li data-i18n="price2_pro_f4">Priority support</li>
+            <li data-i18n="price2_pro_f5">Early access to new tools</li>
           </ul>
-          <a class="btn btn-primary btn-block" href="signup.html">Join the waitlist</a>
+          <a class="btn btn-primary btn-block" href="signup.html" data-i18n="price2_waitlist">Join the waitlist</a>
           <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0" data-i18n="pro_note">Pro is not on sale yet — everything listed here is already free today.</p>
         </div>
         <div class="card price-card">
-          <h2>Team <span class="badge badge-amber" style="vertical-align:middle">Coming soon</span></h2>
+          <h2>Team <span class="badge badge-amber" style="vertical-align:middle" data-i18n="badge_soon">Coming soon</span></h2>
           <div class="price">Rs 1,500 <small>/month</small></div>
           <ul class="price-features">
-            <li>Everything in Pro</li>
-            <li>5 team members</li>
-            <li>Typing classrooms</li>
-            <li>Teacher dashboard</li>
-            <li>Admin panel</li>
+            <li data-i18n="price2_team_f1">Everything in Pro</li>
+            <li data-i18n="price2_team_f2">5 team members</li>
+            <li data-i18n="price2_team_f3">Typing classrooms</li>
+            <li data-i18n="price2_team_f4">Teacher dashboard</li>
+            <li data-i18n="price2_team_f5">Admin panel</li>
           </ul>
-          <a class="btn btn-ghost btn-block" href="signup.html">Join the waitlist</a>
-          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0">Built for schools and small teams — launching soon.</p>
+          <a class="btn btn-ghost btn-block" href="signup.html" data-i18n="price2_waitlist">Join the waitlist</a>
+          <p style="font-size:var(--fs-sm);color:var(--text-muted);margin:var(--sp-3) 0 0" data-i18n="price2_team_note">Built for schools and small teams — launching soon.</p>
         </div>
       </div>
 
-      <h2 style="text-align:center;margin-top:var(--sp-10)">Compare plans</h2>
+      <h2 style="text-align:center;margin-top:var(--sp-10)" data-i18n="price2_compare_t">Compare plans</h2>
       <div class="card" style="overflow-x:auto;margin-top:var(--sp-4)">
         <table class="compare-table">
           <thead>
             <tr><th scope="col">Feature</th><th scope="col">Free</th><th scope="col">Pro</th><th scope="col">Team</th></tr>
           </thead>
           <tbody>
-            <tr><td>All 6 basic tools</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Unlimited normal use</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>No account needed</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Files stay on your device</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Batch processing</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>One-click presets</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Priority support</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Early access to new tools</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-            <tr><td>Team members</td><td class="no">—</td><td class="no">—</td><td class="yes">5 included</td></tr>
-            <tr><td>Typing classrooms</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
-            <tr><td>Teacher dashboard</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
-            <tr><td>Admin panel</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_cmp_tools">All 6 basic tools</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_cmp_unlimited">Unlimited normal use</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_no_account">No account needed</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_cmp_files">Files stay on your device</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_pro_f2">Batch processing</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_pro_f3">One-click presets</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_pro_f4">Priority support</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_pro_f5">Early access to new tools</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_cmp_team">Team members</td><td class="no">—</td><td class="no">—</td><td class="yes" data-i18n="price2_cmp_5inc">5 included</td></tr>
+            <tr><td data-i18n="price2_team_f3">Typing classrooms</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_team_f4">Teacher dashboard</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td data-i18n="price2_team_f5">Admin panel</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 style="text-align:center;margin-top:var(--sp-10)">How you can pay</h2>
-      <p style="text-align:center;color:var(--text-muted)">When Pro and Team launch, you can pay the way that's easiest for you:</p>
+      <h2 style="text-align:center;margin-top:var(--sp-10)" data-i18n="price2_pay_t">How you can pay</h2>
+      <p style="text-align:center;color:var(--text-muted)" data-i18n="price2_pay_sub">When Pro and Team launch, you can pay the way that's easiest for you:</p>
       <div class="pay-methods">
-        <span class="pill">Easypaisa</span>
-        <span class="pill">JazzCash</span>
-        <span class="pill">Bank transfer</span>
-        <span class="pill">USDT</span>
-        <span class="pill">Credit / debit card (Stripe)</span>
+        <span class="pill" data-i18n="price2_pay_easy">Easypaisa</span>
+        <span class="pill" data-i18n="price2_pay_jazz">JazzCash</span>
+        <span class="pill" data-i18n="price2_pay_bank">Bank transfer</span>
+        <span class="pill" data-i18n="price2_pay_usdt">USDT</span>
+        <span class="pill" data-i18n="price2_pay_card">Credit / debit card (Stripe)</span>
       </div>
 
-      <h2 style="text-align:center;margin-top:var(--sp-10)">Questions about pricing</h2>
+      <h2 style="text-align:center;margin-top:var(--sp-10)" data-i18n="price2_faq_t">Questions about pricing</h2>
       <div class="pricing-faq" id="faqList" style="max-width:44rem;margin-inline:auto">
         <div class="faq-item">
-          <button type="button" class="faq-q" aria-expanded="false"><span>Is Free really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
-          <div class="faq-a">Yes — really. All 6 tools are free with unlimited normal use, no account, no watermarks, and no time limit. Free will never be taken away or downgraded.</div>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="price2_faq1_q">Is Free really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <div class="faq-a">Yes — really. Every tool is free with unlimited normal use, no account, no watermarks, and no time limit. Free will never be taken away or downgraded.</div>
         </div>
         <div class="faq-item">
-          <button type="button" class="faq-q" aria-expanded="false"><span>Can I cancel anytime?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="price2_faq2_q">Can I cancel anytime?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a">Absolutely. Pro and Team are month-to-month with no contracts and no cancellation fees. Cancel in one click and you keep everything until the end of your billing period.</div>
         </div>
         <div class="faq-item">
-          <button type="button" class="faq-q" aria-expanded="false"><span>How do I pay?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="price2_faq3_q">How do I pay?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a">When paid plans launch, you can pay with Easypaisa, JazzCash, bank transfer, USDT, or a credit/debit card via Stripe — whatever is easiest for you.</div>
         </div>
         <div class="faq-item">
-          <button type="button" class="faq-q" aria-expanded="false"><span>What's your refund policy?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
+          <button type="button" class="faq-q" aria-expanded="false"><span data-i18n="price2_faq4_q">What's your refund policy?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
           <div class="faq-a">If a paid plan doesn't work as promised, email us at malikjalil014@gmail.com within 7 days of payment and we'll make it right — including a full refund where appropriate.</div>
         </div>
       </div>
 
       <div class="card" style="text-align:center;margin-top:var(--sp-10)">
-        <h3 style="margin-top:0">Start free today</h3>
-        <p style="color:var(--text-muted)">Everything you need is already free. Create an account for coins, saved progress, and premium extras.</p>
-        <a class="btn btn-primary btn-lg" href="signup.html">Create a free account</a>
+        <h3 style="margin-top:0" data-i18n="price2_cta_t">Start free today</h3>
+        <p style="color:var(--text-muted)" data-i18n="price2_cta_sub">Everything you need is already free. Create an account for coins, saved progress, and premium extras.</p>
+        <a class="btn btn-primary btn-lg" href="signup.html" data-i18n="price2_cta_btn">Create a free account</a>
       </div>
     </div>
   </section>
@@ -165,6 +165,7 @@
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
 <script src="js/i18n-hotfix.js" defer></script>
+<script src="js/i18n-content.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <div id="dk-assistant-root"></div>
