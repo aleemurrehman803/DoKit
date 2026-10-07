@@ -15,14 +15,21 @@
     if (!box) return;
     var title = box.querySelector("[data-cf-title]");
     var body = box.querySelector("[data-cf-body]");
+    var t = function (k, fb) {
+      try {
+        if (window.DKI18N && typeof window.DKI18N.t === "function") {
+          var v = window.DKI18N.t(k);
+          if (v && v !== k) return v;
+        }
+      } catch (e) {}
+      return fb;
+    };
     if (sent) {
-      if (title) title.textContent = "Message received \u2014 thank you!";
-      if (body) body.textContent = "Thanks" + (name ? " " + name : "") +
-        "! Your message has been saved securely and we'll get back to you within 24\u201348 hours.";
+      if (title) title.textContent = t("contact2_success_t", "Message received \u2014 thank you!");
+      if (body) body.textContent = t("contact2_success_b", "Thanks{name}! Your message has been saved securely and we\u2019ll get back to you within 24\u201348 hours.").replace("{name}", name ? " " + name : "");
     } else {
-      if (title) title.textContent = "Opening your email app\u2026";
-      if (body) body.textContent = "Your email app should open with everything pre-filled \u2014 just press send. " +
-        "If it didn't open, write to malikjalil014@gmail.com instead. Nothing was lost.";
+      if (title) title.textContent = t("contact2_mailto_t", "Opening your email app\u2026");
+      if (body) body.textContent = t("contact2_mailto_b", "Your email app should open with everything pre-filled \u2014 just press send. If it didn\u2019t open, write to malikjalil014@gmail.com instead. Nothing was lost.");
     }
     box.hidden = false;
     try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
