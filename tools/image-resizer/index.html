@@ -63,6 +63,16 @@
   <section class="tcard" aria-labelledby="tool-h">
     <h2 id="tool-h" class="sr-only">Image Resizer</h2>
 
+    <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
+      <div class="tdrop-icon" aria-hidden="true">🖼️</div>
+      <p class="tdrop-title" id="dz-t">Drag &amp; drop your images here</p>
+      <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
+      <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB each · as many as you like</p>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple aria-label="Choose images to resize"/>
+    </div>
+      <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
+      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
+
     <div class="tbpanel" id="batchPanel" aria-labelledby="batch-h">
       <h3 id="batch-h"><span>Settings — applied to all images</span></h3>
       <p class="thint hint">Set once, apply to every image in the queue.</p>
@@ -273,15 +283,6 @@
       </div>
     </div>
 
-    <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
-      <div class="tdrop-icon" aria-hidden="true">🖼️</div>
-      <p class="tdrop-title" id="dz-t">Drag &amp; drop your images here</p>
-      <p class="tdrop-sub"><span>or</span> <button type="button" id="browseBtn">browse your files</button></p>
-      <p class="tdrop-hint">PNG, JPEG, WebP · up to 25 MB each · as many as you like</p>
-      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple aria-label="Choose images to resize"/>
-    </div>
-      <p class="tdrop-privacy">🔒 Files never leave your device — 100% private.</p>
-      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span>Try with sample</span></button></p>
 
     <div id="queueSection" hidden>
       <div class="tqueue-head">
