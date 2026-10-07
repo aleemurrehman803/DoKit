@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/icon.svg">
+<title>API Keys — DoKit</title>
+<meta name="description" content="Generate and manage your DoKit Developer API keys.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/hub.css">
+<style>
+  #keyModal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:200; padding:1rem; }
+  #keyModal .modal-card { background:var(--bg,#fff); border-radius:12px; padding:1.5rem; max-width:520px; width:100%; }
+  #modalKeyValue { font-family:ui-monospace,monospace; word-break:break-all; background:var(--bg-muted,#f1f1f1); padding:.75rem; border-radius:8px; user-select:all; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:720px">
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <span class="eyebrow">Developers</span>
+        <h1>🔑 API Keys</h1>
+        <p>Keys let your apps call the DoKit API. <strong>Never share a key</strong> — it acts as you. <a href="../api/docs.html">Read the API docs</a>.</p>
+      </div>
+
+      <div id="keysGate">
+        <div class="card" style="text-align:center">
+          <h3>🔒 Sign in required</h3>
+          <p style="color:var(--text-muted)"><a href="login.html">Log in</a> to manage your API keys.</p>
+        </div>
+      </div>
+
+      <div id="keysPanel" style="display:none">
+        <p id="keysErr" role="alert" style="display:none;color:#b3261e"></p>
+        <p id="keysOk" role="status" style="display:none;color:#1F7A4D"></p>
+
+        <div class="card" style="margin-bottom:var(--sp-5)">
+          <h3>➕ Generate a new key</h3>
+          <p style="display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;margin-bottom:0">
+            <input class="text-input" id="keyName" maxlength="60" placeholder="Key name (e.g. My website)" style="flex:1;min-width:200px" aria-label="Key name">
+            <button class="btn btn-primary" type="button" id="genKeyBtn">Generate key</button>
+          </p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:0">Free plan: 100 requests/day per key. The secret is shown <strong>once</strong> — copy it immediately.</p>
+        </div>
+
+        <h3>Your keys</h3>
+        <div id="keysEmpty">
+          <p style="color:var(--text-muted)">No API keys yet. Generate one above to start building with the DoKit API.</p>
+        </div>
+        <ul id="keysList" style="list-style:none;padding:0;margin:0"></ul>
+
+        <div class="card" style="margin-top:var(--sp-5)">
+          <h3>🛡️ Key safety</h3>
+          <ul style="margin-bottom:0;color:var(--text-muted);font-size:var(--fs-sm)">
+            <li>DoKit stores only a <strong>hash</strong> of your key — even we cannot read it back.</li>
+            <li>Revoke a key the moment you suspect it leaked.</li>
+            <li>Use one key per app, so you can revoke them independently.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- One-time secret modal -->
+<div id="keyModal" role="dialog" aria-modal="true" aria-labelledby="keyModalTitle">
+  <div class="modal-card">
+    <h3 id="keyModalTitle">🎉 Your API key</h3>
+    <p style="color:var(--text-muted)">Copy it now — <strong>you will never see it again</strong>.</p>
+    <p id="modalKeyValue"></p>
+    <p style="display:flex;gap:var(--sp-2);margin-bottom:0">
+      <button class="btn btn-primary btn-sm" type="button" id="modalCopyBtn">Copy</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="modalClose">Done</button>
+    </p>
+  </div>
+</div>
+
+<footer id="site-foot"></footer>
+<script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-ar.js" defer></script>
+<script src="../js/i18n-hi.js" defer></script>
+<script src="../js/i18n-es.js" defer></script>
+<script src="../js/i18n-fr.js" defer></script>
+<script src="../js/i18n-pt.js" defer></script>
+<script src="../js/i18n-de.js" defer></script>
+<script src="../js/i18n-tr.js" defer></script>
+<script src="../js/i18n-ru.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
+<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/pages/api-keys.js" defer></script>
+</body>
+</html>
