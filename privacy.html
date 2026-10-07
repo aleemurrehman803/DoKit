@@ -3,27 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
-<title>Privacy Policy — DoKit</title>
-<meta name="description" content="DoKit Privacy Policy: we collect no personal data. Your files never leave your device.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/privacy.html">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Privacy Policy — DoKit">
-<meta property="og:description" content="DoKit Privacy Policy: we collect no personal data. Your files never leave your device.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/privacy.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Privacy Policy — DoKit">
-<meta name="twitter:description" content="DoKit Privacy Policy: we collect no personal data. Your files never leave your device.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<title>Privacy Policy — DoKit</title>
+<meta name="description" content="DoKit Privacy Policy: what we collect (almost nothing), what we never collect, and your rights. Your files are processed in your browser and never leave your device.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/privacy.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Privacy Policy — DoKit">
+<meta property="og:description" content="DoKit Privacy Policy: what we collect (almost nothing), what we never collect, and your rights. Your files are processed in your browser and never leave your device.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/privacy.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy — DoKit">
+<meta name="twitter:description" content="DoKit Privacy Policy: what we collect (almost nothing), what we never collect, and your rights. Your files are processed in your browser and never leave your device.">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
 </head>
@@ -40,33 +40,74 @@
         </ol>
       </nav>
       <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0" data-i18n-note></p></div>
-      <h1 data-i18n="privacy_title">Privacy Policy</h1>
-      <p style="color:var(--text-muted)" data-i18n="privacy_updated">Last updated: October 2026</p>
-      <h2 data-i18n="priv1_t">The short version</h2>
-      <p data-i18n="priv1_d">DoKit collects no personal data. There are no accounts, no tracking scripts, and no advertising cookies.</p>
-      <h2 data-i18n="priv2_t">Your files stay yours</h2>
-      <p data-i18n="priv2_d">Image tools process files entirely on your device, inside your browser. Files are never uploaded, stored, or transmitted anywhere.</p>
-      <h2 data-i18n="priv3_t">What is stored locally</h2>
-      <p data-i18n="priv3_d">Theme, language, and notification sign-ups in your browser's local storage. Clearing site data removes them completely.</p>
-      <h2 data-i18n="priv4_t">Questions</h2>
-      <p data-i18n="priv4_d">Privacy questions: hello@getdokit.com</p>
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <h1 data-i18n="privacy_title">Privacy Policy</h1>
+        <p style="color:var(--text-muted)">Last updated: October 7, 2026</p>
+      </div>
+
+      <h2>The short version</h2>
+      <div class="card">
+        <p style="margin:0">DoKit collects as little as possible. Your files are processed entirely in your browser and never leave your device. We don't run cross-site trackers, we don't sell data, and we don't show ads. If you create an account or email us, we keep just what's needed to run the service — and you can ask us to delete it at any time.</p>
+      </div>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li><strong>Account info</strong> — only if you sign up: your name, email address, and (stored securely, never in plain text) your password.</li>
+        <li><strong>Contact messages</strong> — what you send us through the contact form or by email, so we can reply.</li>
+        <li><strong>Notify-list emails</strong> — if you ask to be notified about new tools, we keep your name and email solely for that purpose.</li>
+        <li><strong>Usage analytics</strong> — privacy-friendly, aggregated statistics (for example, which tools are popular). No cross-site tracking, no advertising profiles.</li>
+      </ul>
+
+      <h2>What we NEVER collect</h2>
+      <ul>
+        <li><strong>Your files.</strong> Image tools process everything locally in your browser. Files are never uploaded, stored, or transmitted anywhere.</li>
+        <li><strong>Passwords in plain text.</strong> Passwords are stored using one-way hashing only.</li>
+        <li><strong>Data for advertisers.</strong> We don't sell, rent, or share your personal data with advertisers or data brokers.</li>
+      </ul>
+
+      <h2>How we use it</h2>
+      <ul>
+        <li>To provide and maintain the service (accounts, typing progress, preferences).</li>
+        <li>To respond to your messages and support requests.</li>
+        <li>To send launch notifications — <strong>only if you opted in</strong>, and you can unsubscribe from any email with one click.</li>
+      </ul>
+
+      <h2>Third-party services</h2>
+      <p>We use a small number of trusted services to run DoKit. They process data under their own privacy policies:</p>
+      <ul>
+        <li><strong>Firebase (Google)</strong> — authentication and database. <a href="https://policies.google.com/privacy" rel="noopener" target="_blank">Google Privacy Policy</a></li>
+        <li><strong>Payment providers</strong> — for Pro/Team subscriptions, payments are processed securely by our payment partners. <a href="https://stripe.com/privacy" rel="noopener" target="_blank">Stripe Privacy Policy</a> (card payments)</li>
+      </ul>
+
+      <h2>Cookies &amp; local storage</h2>
+      <p>DoKit stores small pieces of data in your browser to remember things like your theme, language, and preferences. Clearing your browser's site data removes all of it. We do not use advertising or cross-site tracking cookies.</p>
+
+      <h2>Your rights</h2>
+      <p>You have the right to <strong>access</strong>, <strong>correct</strong>, or <strong>delete</strong> your personal data at any time. To exercise any of these rights, just email <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a> — we'll respond within a few days.</p>
+
+      <h2>Children's privacy</h2>
+      <p>DoKit is not directed at children under 13, and we do not knowingly collect personal data from them. If you believe a child has provided us with personal data, contact us and we will delete it promptly.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If we make material changes to this policy, we'll update the date at the top of this page and, where appropriate, notify you by email. Continued use of DoKit after changes means you accept the updated policy.</p>
+
+      <h2>Contact</h2>
+      <p style="margin-bottom:0">Privacy questions or requests: <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a></p>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
-<div id="dk-assistant-root"></div>
 <script src="js/i18n-v2.js" defer></script>
-<script src="js/i18n-ar.js" defer></script>
-<script src="js/i18n-hi.js" defer></script>
-<script src="js/i18n-es.js" defer></script>
-<script src="js/i18n-fr.js" defer></script>
-<script src="js/i18n-pt.js" defer></script>
-<script src="js/i18n-de.js" defer></script>
-<script src="js/i18n-tr.js" defer></script>
-<script src="js/i18n-ru.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
+<div id="dk-assistant-root"></div>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
+<script src="js/assistant-ai.js" defer></script>
+<script src="js/assistant-memory.js" defer></script>
+<script src="js/assistant-enhance.js" defer></script>
+<script src="js/doki-personality.js" defer></script>
+<script type="module" src="js/assistant-ai-init.js"></script>
 </body>
 </html>
