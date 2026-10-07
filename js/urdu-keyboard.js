@@ -1,13 +1,34 @@
-/* DoKit — Urdu keyboard engine.
-   Two layouts:
-   - "phonetic": InPage-style phonetic (Roman -> Urdu). Beginner friendly.
-   - "standard": Pakistan XKB "pk" Urdu layout (letter core verified against the
-     public OLPC XKB symbol table; diacritics/honorifics on Shift+number row).
-   Features: keydown transliteration on inputs, visual on-screen keyboard
-   (click-to-type + Shift toggle + physical-key highlight), RTL-safe.
-   Urdu shaping is preserved: the engine inserts plain characters; the browser
-   shapes them. Typing UI should use word-level (not char-level) highlighting.
-*/
+/**
+ * DoKit — Urdu Keyboard Engine
+ * ==============================
+ * WHAT: Phonetic Urdu keyboard for typing Urdu using Roman (English) keys.
+ *       Maps QWERTY keystrokes to Urdu characters in real-time.
+ *
+ * WHY: Most Pakistanis don't have Urdu keyboards. Phonetic typing lets them
+ *      type Urdu naturally: press "a" → get "ا", "b" → "ب", etc.
+ *
+ * LAYOUTS (2 supported, user-selectable):
+ *   1. "phonetic" (default): InPage-style Roman→Urdu mapping
+ *      - a→ا, b→ب, p→پ, t→ت, Shift+t→ٹ (retroflex)
+ *      - Shift+h→ھ (do-chashmi for بھ پھ تھ etc.)
+ *      - Shift+Space→ZWNJ (zero-width non-joiner for نہیں, etc.)
+ *   2. "standard": Pakistan XKB "pk" layout (physical Urdu keyboard)
+ *      - Letter core verified against OLPC XKB symbol table
+ *
+ * FEATURES:
+ *   - keydown transliteration: intercepts keystrokes in inputs, inserts Urdu
+ *   - Visual on-screen keyboard: click keys to type, Shift toggle
+ *   - Physical key highlight: flashes the on-screen key when pressed
+ *   - Next-key highlight: during lessons, highlights the expected key
+ *   - Urdu digits ۰-۹ on number row, punctuation ، ۔ ؛ ؟
+ *
+ * RTL & SHAPING:
+ *   - Inserts plain Unicode characters; browser handles Nastaliq shaping
+ *   - Typing UI must use word-level (not char-level) highlighting to preserve
+ *     letter joining across browsers
+ *
+ * @module UrduKeyboard
+ */
 (function () {
   "use strict";
 
@@ -48,6 +69,15 @@
   // US symbols for Shift+number (index = digit 0..9)
   var PHON_SHIFT_SYM = [")", "!", "@", "#", "$", "%", "^", "&", "*", "("];
 
+  /**
+   * Build the key mapping table for a layout mode.
+   * WHY tutor adaptations: Two deviations from strict XKB for learnability:
+   *   1. Shift+o → ؤ (not XKB's rare ۃ) — ؤ appears in common words (گاؤں).
+   *   2. Shift+digit → symbols (!@#) not Quranic marks — lessons need ! ؟.
+   * Each key maps to { n: normal char, s: shift char }.
+   * @param {string} mode - "phonetic" or "standard" (affects -/= keys).
+   * @returns {Object<string, {n: string, s: string}>} Key ID → char mapping.
+   */
   function buildKeys(mode) {
     var k = {}, l;
     for (l in LETTERS) k[l] = { n: LETTERS[l].n, s: LETTERS[l].s };
@@ -120,19 +150,43 @@
   var attachedHandler = null;
   var osShift = false; // on-screen keyboard shift toggle
 
+  /**
+   * Switch the active keyboard layout and persist the choice.
+   * WHY persist: Users shouldn't re-select their layout on every visit.
+   * Invalid IDs are rejected (returns false, keeps current).
+   * @param {string} id - "phonetic" or "standard".
+   * @returns {boolean} True if switched, false if invalid ID.
+   */
   function setLayout(id) {
     if (!LAYOUTS[id]) return false;
     current = id;
     try { localStorage.setItem(LS_LAYOUT, id); } catch (e) {}
     return true;
   }
+  /**
+   * Get the currently active keyboard layout.
+   * @returns {string} "phonetic" or "standard" - read from localStorage, defaults to "phonetic"
+   */
   function getLayout() { return current; }
+  /**
+   * Map a physical key to its Urdu character for the current layout.
+   * @param {string} base - Key ID (e.g., "a", "1", ",").
+   * @param {boolean} shift - Whether Shift is held.
+   * @returns {string|null} Urdu character, or null if key not mapped.
+   */
   function mapKey(base, shift) {
     var def = LAYOUTS[current].keys[base];
     if (!def) return null;
     return (shift && def.s) ? def.s : def.n;
   }
-  /* Reverse lookup: which physical key (+shift?) produces this Urdu char */
+  /**
+   * Reverse lookup: find which physical key produces a given Urdu character.
+   * WHY needed: Lesson "next-key highlight" — we show the user which physical
+   * key to press for the next expected character. Searches normal chars first,
+   * then shift chars.
+   * @param {string} ch - Urdu character to find.
+   * @returns {{key: string, shift: boolean}|null} Key info, or null if not typeable.
+   */
   function findKeyFor(ch) {
     var keys = LAYOUTS[current].keys, b;
     for (b in keys) {
@@ -144,6 +198,15 @@
     return null;
   }
 
+  /**
+   * Insert text at the cursor position in an input/textarea.
+   * WHY setRangeText: Preserves cursor position and undo history (vs. naive
+   * value concatenation which jumps cursor to end). Falls back gracefully.
+   * WHY dispatch input event: Other listeners (WPM counter, validation) need
+   * to know the value changed programmatically.
+   * @param {HTMLElement} el - Input or textarea element.
+   * @param {string} text - Text to insert (usually one Urdu character).
+   */
   function insertAtCursor(el, text) {
     if (!el) return;
     try {
@@ -160,6 +223,13 @@
     }
   }
 
+  /**
+   * Convert a KeyboardEvent.code to our key ID format.
+   * WHY use .code (not .key): .code is layout-independent ("KeyA" is the same
+   * physical key on QWERTY and AZERTY). This ensures consistent mapping.
+   * @param {string} code - e.g., "KeyA", "Digit1", "Comma", "Space".
+   * @returns {string|null} Key ID ("a", "1", ",") or null if unmapped.
+   */
   function codeToBase(code) {
     // "KeyA" -> "a", "Digit1" -> "1", "Comma" -> ",", ...
     if (code.indexOf("Key") === 0) return code.slice(3).toLowerCase();
@@ -170,6 +240,16 @@
     return m[code] || null;
   }
 
+  /**
+   * Keydown handler: transliterate Roman keystrokes to Urdu in real-time.
+   * WHY intercept keydown (not keypress): keypress is deprecated. keydown lets
+   * us preventDefault() before the character is inserted.
+   * WHY skip with modifiers: Ctrl+C, Alt+Tab etc. must work normally.
+   * WHY special-case Backspace/Enter/Tab: These are editing/navigation keys,
+   * not character keys — let the browser handle them natively.
+   * Flow: code→base→mapKey→preventDefault→insertAtCursor→flashKey.
+   * @param {KeyboardEvent} e - The keydown event.
+   */
   function onKeyDown(e) {
     if (!attachedEl || e.target !== attachedEl) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return; // allow shortcuts
@@ -201,6 +281,12 @@
     }
   }
 
+  /**
+   * Visually flash the on-screen keyboard key for a pressed physical key.
+   * WHY feedback: Confirms to the user which key registered, especially helpful
+   * for beginners learning key positions. 150ms flash is noticeable but not distracting.
+   * @param {string} base - Key ID to flash.
+   */
   function flashKey(base) {
     try {
       var btn = document.querySelector('.ukb-key[data-k="' + base + '"]');
@@ -211,6 +297,12 @@
     } catch (e) {}
   }
 
+  /**
+   * Attach transliteration to an input/textarea element.
+   * WHY single attachment: Only one element is "active" at a time. Attaching to
+   * a new element automatically detaches from the previous one.
+   * @param {HTMLElement} el - Input or textarea to enable Urdu typing on.
+   */
   function attach(el) {
     detach();
     if (!el) return;
@@ -218,6 +310,11 @@
     attachedHandler = onKeyDown;
     el.addEventListener("keydown", attachedHandler);
   }
+  /**
+   * Detach transliteration (remove keydown listener).
+   * WHY cleanup: Prevents memory leaks and ensures typing returns to normal
+   * when leaving the Urdu typing page.
+   */
   function detach() {
     if (attachedEl && attachedHandler) {
       try { attachedEl.removeEventListener("keydown", attachedHandler); } catch (e) {}
@@ -227,6 +324,16 @@
   }
 
   /* ---------- Visual on-screen keyboard ---------- */
+  /**
+   * Render the visual on-screen keyboard into a container element.
+   * WHY on-screen keyboard: (1) Discoverability — users see the layout without
+   * memorizing. (2) Mouse/touch input for those who prefer clicking. (3) Visual
+   * reference during lessons.
+   * Each key shows: Urdu char (large) + Shift char (small) + English label (tiny).
+   * Special keys (Backspace, Shift, etc.) get icon labels.
+   * @param {HTMLElement} container - Element to render into (cleared first).
+   * @param {object} [opts] - Options: { showLabels: bool, compact: bool }.
+   */
   function renderKeyboard(container, opts) {
     opts = opts || {};
     if (!container) return;
@@ -282,6 +389,15 @@
     if (opts.highlight) highlightKey(opts.highlight.key, opts.highlight.shift);
   }
 
+  /**
+   * Handle a click on an on-screen keyboard key.
+   * WHY separate from physical: Clicks don't go through keydown transliteration.
+   * Handles: character keys (insert mapped char), Shift (toggle osShift state),
+   * Backspace (delete char before cursor), Space (insert space or ZWNJ with shift).
+   * @param {string} kid - Key ID that was clicked.
+   * @param {HTMLElement} btn - The button element (for visual feedback).
+   * @param {object} opts - Render options (passed through).
+   */
   function handleOsClick(kid, btn, opts) {
     if (kid === "ShiftLeft" || kid === "ShiftRight") {
       osShift = !osShift;
@@ -316,6 +432,13 @@
     flashKey(kid);
   }
 
+  /**
+   * Highlight the next expected key on the on-screen keyboard (lesson mode).
+   * WHY: Guides beginners — they see exactly which physical key to press next.
+   * Removes previous highlight first (only one key highlighted at a time).
+   * @param {string} key - Key ID to highlight.
+   * @param {boolean} shift - Whether Shift is also needed (adds shift indicator).
+   */
   function highlightKey(key, shift) {
     try {
       document.querySelectorAll(".ukb-key.next").forEach(function (x) {
