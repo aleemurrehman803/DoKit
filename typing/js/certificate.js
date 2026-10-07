@@ -292,5 +292,7 @@ window.Certificate = {
 
     var printBtn = get("printBtn");
     if (printBtn) printBtn.onclick = function () { window.print(); };
+    var pdfBtn = get("pdfBtn");
+    if (pdfBtn) pdfBtn.onclick = function () { window.print(); };
   }
 };
