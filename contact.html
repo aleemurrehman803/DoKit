@@ -72,11 +72,11 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
           <textarea class="textarea" id="cfMessage" name="message" required maxlength="5000" rows="5" placeholder="Tell us what's on your mind…"></textarea>
         </div>
         <button class="btn btn-primary btn-block" type="submit" data-i18n="form_send">Send message</button>
-        <p style="margin:var(--sp-3) 0 0;color:var(--text-muted);font-size:var(--fs-sm)">Your message is saved securely; if anything goes wrong, your email app opens with everything pre-filled instead — so you never lose your words.</p>
+        <p style="margin:var(--sp-3) 0 0;color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="contact2_form_note">Your message is saved securely; if anything goes wrong, your email app opens with everything pre-filled instead — so you never lose your words.</p>
       </form>
 
       <div id="contactResult" class="card" hidden aria-live="polite">
-        <h3 data-cf-title>Message received — thank you!</h3>
+        <h3 data-cf-title data-i18n="contact2_success_t">Message received — thank you!</h3>
         <p style="margin:0" data-cf-body></p>
       </div>
 
@@ -84,13 +84,14 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
         <h3 style="margin-top:0" data-i18n="contact_note_t">Prefer email directly?</h3>
         <p style="margin:0">Write to <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a> — we usually reply within 24–48 hours.</p>
       </div>
-      <p style="margin-top:var(--sp-4);color:var(--text-muted);font-size:var(--fs-sm)">⏱️ Response time: most messages get a personal reply within 24–48 hours, usually much sooner.</p>
+      <p style="margin-top:var(--sp-4);color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="contact2_response_time">⏱️ Response time: most messages get a personal reply within 24–48 hours, usually much sooner.</p>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <script src="js/i18n-v2.js" defer></script>
 <script src="js/i18n-hotfix.js" defer></script>
+<script src="js/i18n-content.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
