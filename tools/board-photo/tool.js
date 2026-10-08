@@ -47,7 +47,7 @@
       "bp.step1": "Find your board or university",
       "bp.search_label": "Search boards & universities",
       "bp.search_ph": "Type to search… e.g. BISE Lahore",
-      "bp.select_placeholder": "Select your board / university",
+      "bp.title": "بورڈ فوٹو", "bp.crumb_cur": "بورڈ فوٹو", "bp.select_placeholder": "Select your board / university",
       "bp.no_match": "No match — pick “Pakistani admission (typical)” or set a custom size below.",
       "bp.custom_title": "Custom size (board not listed?)",
       "bp.width": "Width (px)",
