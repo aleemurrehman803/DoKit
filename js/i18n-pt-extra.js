@@ -953,4 +953,4 @@
     "your_data": "Seus dados",
     "your_name": "Seu nome"
   });
-})();
+__dkAdd("pt",{"cat_typing":"TypeMaster","cat_typing_d":"Lições, testes e jogos para digitar mais rápido — com TypeMaster.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Obtenha seu certificado de digitação","tool_tcert_name":"Certificado","tool_tgames_desc":"Aprenda digitação se divertindo","tool_tgames_name":"Jogos de digitação","tool_tlessons_desc":"Lições passo a passo do básico à velocidade","tool_tlessons_name":"Lições de digitação","tool_tpractice_desc":"Pratique suas teclas fracas","tool_tpractice_name":"Prática inteligente","tool_ttest_desc":"Verifique sua velocidade e precisão","tool_ttest_name":"Teste de digitação","tool_typing_desc":"Domine a digitação com TypeMaster","tool_typing_name":"TypeMaster"});})();
