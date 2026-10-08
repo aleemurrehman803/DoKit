@@ -278,6 +278,7 @@ function renderRecent(){
   if(!chips){ box.hidden=true; return; }
   box.hidden=false;
   box.innerHTML='<div class="recent-row"><span class="recent-row__label" data-i18n="home2.recent_t">'+esc(t("home2.recent_t"))+"</span>"+chips+"</div>";
+  try { if (window.DKI18N && window.DKI18N.apply) window.DKI18N.apply(); } catch (e) {}
 }
 /* ---------- Animated typing demo (hero, point 1a) ----------
    Type/delete loop over tool names in a terminal-style card. Static fallback
