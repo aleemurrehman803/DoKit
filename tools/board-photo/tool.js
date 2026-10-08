@@ -293,30 +293,22 @@
     });
   }
 
-  /* Phase 3: re-apply translations now that bp.* keys are registered.
-     i18n-v2.js processed the HTML before these keys existed. */
+  /* Phase 3: direct Urdu map for critical bp.* keys.
+     Bypasses DKI18N timing/hotfix issues - guaranteed to work. */
   try {
-    if (window.DKI18N && typeof window.DKI18N.t === "function") {
-      var _lang = window.DKI18N.getLang ? window.DKI18N.getLang() : "en";
+    var _lang = "en";
+    try { _lang = window.DKI18N && window.DKI18N.getLang ? window.DKI18N.getLang() : "en"; } catch (e) {}
+    if (_lang === "ur") {
+      var _ur = {
+        "bp.step1": "اپنا بورڈ یا یونیورسٹی تلاش کریں",
+        "bp.step2": "اپنی تصویر اپ لوڈ کریں",
+        "bp.step3": "اپنی بورڈ فوٹو ڈاؤن لوڈ کریں",
+        "bp.hero_desc": "پاکستانی بورڈز اور یونیورسٹیوں کے لیے امتحانی و داخلہ تصاویر — آپ کے بورڈ کی مطلوبہ عین جسامت، پس منظر اور KB۔ مفت، نجی، آپ کے براؤزر میں۔",
+        "bp.privacy": "آپ کی تصویر آپ کے آلے سے باہر نہیں جاتی — 100% نجی۔"
+      };
       document.querySelectorAll("[data-i18n]").forEach(function (el) {
         var k = el.getAttribute("data-i18n");
-        if (!k || k.indexOf("bp.") !== 0) return;
-        try {
-          var v = window.DKI18N.t(k);
-          if (typeof v === "string" && v && v !== k) {
-            var tag = el.tagName;
-            if (tag === "INPUT" || tag === "TEXTAREA") el.setAttribute("placeholder", v);
-            else el.textContent = v;
-          }
-        } catch (e) {}
-      });
-      document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
-        var k = el.getAttribute("data-i18n-ph");
-        if (!k || k.indexOf("bp.") !== 0) return;
-        try {
-          var v = window.DKI18N.t(k);
-          if (typeof v === "string" && v && v !== k) el.setAttribute("placeholder", v);
-        } catch (e) {}
+        if (_ur[k]) el.textContent = _ur[k];
       });
     }
   } catch (e) {}
