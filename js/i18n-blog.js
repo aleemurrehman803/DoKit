@@ -4,8 +4,8 @@
  * Loaded by each blog page after js/i18n-v2.js + js/i18n-hotfix.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "blog_idx_crumb": "Blog",
     "blog_idx_h1": "Notes & how-tos",
     "blog_idx_sub": "Practical posts about images, writing and typing. Short reads, zero fluff.",
@@ -133,7 +133,7 @@
     "blog_words_related_case": "Case Converter",
     "blog_words_related_case_d": "Convert text between six letter cases."
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "blog_idx_crumb": "\u0628\u0644\u0627\u06af",
     "blog_idx_h1": "\u0646\u0648\u0679\u0633 \u0627\u0648\u0631 \u0639\u0645\u0644\u06cc \u0631\u06c1\u0646\u0645\u0627\u0626\u06cc\u0627\u06ba",
     "blog_idx_sub": "\u062a\u0635\u0627\u0648\u06cc\u0631\u060c \u062a\u062d\u0631\u06cc\u0631 \u0627\u0648\u0631 \u0679\u0627\u0626\u067e\u0646\u06af \u067e\u0631 \u0639\u0645\u0644\u06cc \u0645\u0636\u0627\u0645\u06cc\u0646\u06d4 \u0645\u062e\u062a\u0635\u0631 \u0645\u0637\u0627\u0644\u0639\u06c1\u060c \u063a\u06cc\u0631 \u0636\u0631\u0648\u0631\u06cc \u0628\u0627\u062a\u06cc\u06ba \u0628\u0627\u0644\u06a9\u0644 \u0646\u06c1\u06cc\u06ba\u06d4",
