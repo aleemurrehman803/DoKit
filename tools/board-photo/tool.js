@@ -294,24 +294,40 @@
   }
 
   /* Phase 3: direct Urdu map for critical bp.* keys.
-     Bypasses DKI18N timing/hotfix issues - guaranteed to work. */
-  try {
-    var _lang = "en";
-    try { _lang = window.DKI18N && window.DKI18N.getLang ? window.DKI18N.getLang() : "en"; } catch (e) {}
-    if (_lang === "ur") {
-      var _ur = {
-        "bp.step1": "اپنا بورڈ یا یونیورسٹی تلاش کریں",
-        "bp.step2": "اپنی تصویر اپ لوڈ کریں",
-        "bp.step3": "اپنی بورڈ فوٹو ڈاؤن لوڈ کریں",
-        "bp.hero_desc": "پاکستانی بورڈز اور یونیورسٹیوں کے لیے امتحانی و داخلہ تصاویر — آپ کے بورڈ کی مطلوبہ عین جسامت، پس منظر اور KB۔ مفت، نجی، آپ کے براؤزر میں۔",
-        "bp.privacy": "آپ کی تصویر آپ کے آلے سے باہر نہیں جاتی — 100% نجی۔"
-      };
-      document.querySelectorAll("[data-i18n]").forEach(function (el) {
-        var k = el.getAttribute("data-i18n");
-        if (_ur[k]) el.textContent = _ur[k];
-      });
-    }
-  } catch (e) {}
+     Runs on DOM ready + delayed retry to beat timing issues. */
+  function _applyUrduFix() {
+    try {
+      var _lang = "en";
+      try { _lang = window.DKI18N && window.DKI18N.getLang ? window.DKI18N.getLang() : "en"; } catch (e) {}
+      // Also check URL param and localStorage directly
+      try {
+        var _q = new URLSearchParams(window.location.search).get("lang");
+        if (_q === "ur") _lang = "ur";
+        else if (!_q && window.localStorage.getItem("dokit_lang") === "ur") _lang = "ur";
+      } catch (e2) {}
+      if (_lang === "ur") {
+        var _ur = {
+          "bp.step1": "اپنا بورڈ یا یونیورسٹی تلاش کریں",
+          "bp.step2": "اپنی تصویر اپ لوڈ کریں",
+          "bp.step3": "اپنی بورڈ فوٹو ڈاؤن لوڈ کریں",
+          "bp.hero_desc": "پاکستانی بورڈز اور یونیورسٹیوں کے لیے امتحانی و داخلہ تصاویر — آپ کے بورڈ کی مطلوبہ عین جسامت، پس منظر اور KB۔ مفت، نجی، آپ کے براؤزر میں۔",
+          "bp.privacy": "آپ کی تصویر آپ کے آلے سے باہر نہیں جاتی — 100% نجی۔"
+        };
+        var _els = document.querySelectorAll("[data-i18n]");
+        for (var _i = 0; _i < _els.length; _i++) {
+          var _k = _els[_i].getAttribute("data-i18n");
+          if (_ur[_k]) _els[_i].textContent = _ur[_k];
+        }
+      }
+    } catch (e) {}
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", _applyUrduFix);
+  } else {
+    _applyUrduFix();
+  }
+  setTimeout(_applyUrduFix, 1000);
+  setTimeout(_applyUrduFix, 2500);
 
   /* ---------------- helpers ---------------- */
   function $(id) { return document.getElementById(id); }
