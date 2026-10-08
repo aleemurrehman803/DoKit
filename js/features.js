@@ -221,7 +221,7 @@
   function openFeedbackModal() {
     var rating = 0;
     openModal({
-      label: "Send feedback",
+      label: T("fb_send", "Send feedback"),
       build: function (dlg, close) {
         modalTitle(dlg, "💬 Feedback");
 
@@ -303,8 +303,8 @@
     b.type = "button";
     b.className = "dkf-fab dkf-fab--fb";
     b.textContent = "💬";
-    b.setAttribute("aria-label", "Send feedback");
-    b.title = "Send feedback";
+    b.setAttribute("aria-label", T("fb_send", "Send feedback"));
+    b.title = T("fb_send", "Send feedback");
     b.addEventListener("click", openFeedbackModal);
     document.body.appendChild(b);
   }
@@ -411,8 +411,8 @@
     b.type = "button";
     b.className = "dkf-kbd-hint";
     b.textContent = "⌨️";
-    b.setAttribute("aria-label", "Keyboard shortcuts");
-    b.title = "Keyboard shortcuts (?)";
+    b.setAttribute("aria-label", T("kb_title", "Keyboard shortcuts"));
+    b.title = T("kb_title", "Keyboard shortcuts") + " (?)";
     b.addEventListener("click", openShortcutsModal);
     try { host.appendChild(b); } catch (e) { return false; }
     return true;
@@ -455,7 +455,7 @@
 
   function openShortcutsModal() {
     openModal({
-      label: "Keyboard shortcuts",
+      label: T("kb_title", "Keyboard shortcuts"),
       build: function (dlg, close) {
         modalTitle(dlg, "⌨️ Keyboard shortcuts");
         var ul = document.createElement("ul");
