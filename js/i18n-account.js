@@ -4,8 +4,8 @@
  * Loaded by those pages after i18n-hotfix.js. Same pattern as i18n-about.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "acct_login_eyebrow": "Member access",
     "acct_login_h1": "Welcome back",
     "acct_field_email": "Email",
@@ -194,7 +194,7 @@
     "admin_pay_usdt": "USDT (TRC20) wallet address",
     "admin_pay_save": "Save payment accounts"
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "acct_login_eyebrow": "\u0645\u0645\u0628\u0631 \u0631\u0633\u0627\u0626\u06cc",
     "acct_login_h1": "\u062e\u0648\u0634 \u0622\u0645\u062f\u06cc\u062f",
     "acct_field_email": "\u0627\u06cc \u0645\u06cc\u0644",

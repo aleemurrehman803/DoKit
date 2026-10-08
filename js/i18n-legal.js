@@ -3,8 +3,8 @@
  * Loaded by privacy.html and terms.html after i18n-hotfix.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "priv2_updated": "Last updated: October 7, 2026",
     "priv2_short_t": "The short version",
     "priv2_short_p": "DoKit collects as little as possible. Your files are processed entirely in your browser and never leave your device. We don't run cross-site trackers, we don't sell data, and we don't show ads. If you create an account or email us, we keep just what's needed to run the service \u2014 and you can ask us to delete it at any time.",
@@ -70,7 +70,7 @@
     "term2_disc_p": "The service is provided \"as-is,\" without warranty of any kind. We work hard to keep every tool correct and reliable, but we can't guarantee any particular result. Always keep backups of important files \u2014 we're not responsible for data lost during tool use.",
     "term2_contact_p": "Questions about these terms? Email us at",
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "priv2_updated": "\u0622\u062e\u0631\u06cc \u0627\u067e \u0688\u06cc\u0679: 7 \u0627\u06a9\u062a\u0648\u0628\u0631 2026",
     "priv2_short_t": "\u0645\u062e\u062a\u0635\u0631 \u062e\u0644\u0627\u0635\u06c1",
     "priv2_short_p": "\u0688\u0648\u06a9\u0679 \u06a9\u0645 \u0633\u06d2 \u06a9\u0645 \u0688\u06cc\u0679\u0627 \u062c\u0645\u0639 \u06a9\u0631\u062a\u0627 \u06c1\u06d2\u06d4 \u0622\u067e \u06a9\u06cc \u0641\u0627\u0626\u0644\u06cc\u06ba \u0645\u06a9\u0645\u0644 \u0637\u0648\u0631 \u067e\u0631 \u0622\u067e \u06a9\u06d2 \u0628\u0631\u0627\u0624\u0632\u0631 \u0645\u06cc\u06ba \u067e\u0631\u0648\u0633\u06cc\u0633 \u06c1\u0648\u062a\u06cc \u06c1\u06cc\u06ba \u0627\u0648\u0631 \u0622\u067e \u06a9\u06d2 \u0688\u06cc\u0648\u0627\u0626\u0633 \u0633\u06d2 \u0628\u0627\u06c1\u0631 \u0646\u06c1\u06cc\u06ba \u062c\u0627\u062a\u06cc\u06ba\u06d4 \u06c1\u0645 \u06a9\u0631\u0627\u0633 \u0633\u0627\u0626\u0679 \u0679\u0631\u06cc\u06a9\u0631 \u0646\u06c1\u06cc\u06ba \u0686\u0644\u0627\u062a\u06d2\u060c \u0688\u06cc\u0679\u0627 \u0646\u06c1\u06cc\u06ba \u0628\u06cc\u0686\u062a\u06d2\u060c \u0627\u0648\u0631 \u0627\u0634\u062a\u06c1\u0627\u0631\u0627\u062a \u0646\u06c1\u06cc\u06ba \u062f\u06a9\u06be\u0627\u062a\u06d2\u06d4 \u0627\u06af\u0631 \u0622\u067e \u0627\u06a9\u0627\u0624\u0646\u0679 \u0628\u0646\u0627\u062a\u06d2 \u06c1\u06cc\u06ba \u06cc\u0627 \u06c1\u0645\u06cc\u06ba \u0627\u06cc \u0645\u06cc\u0644 \u06a9\u0631\u062a\u06d2 \u06c1\u06cc\u06ba\u060c \u062a\u0648 \u06c1\u0645 \u0635\u0631\u0641 \u0648\u06c1\u06cc \u0631\u06a9\u06be\u062a\u06d2 \u06c1\u06cc\u06ba \u062c\u0648 \u0633\u0631\u0648\u0633 \u0686\u0644\u0627\u0646\u06d2 \u06a9\u06d2 \u0644\u06cc\u06d2 \u0636\u0631\u0648\u0631\u06cc \u06c1\u06d2 \u2014 \u0627\u0648\u0631 \u0622\u067e \u06a9\u0633\u06cc \u0628\u06be\u06cc \u0648\u0642\u062a \u0627\u0633\u06d2 \u062d\u0630\u0641 \u06a9\u0631\u0646\u06d2 \u06a9\u0648 \u06a9\u06c1\u06c1 \u0633\u06a9\u062a\u06d2 \u06c1\u06cc\u06ba\u06d4",
