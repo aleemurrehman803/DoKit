@@ -1,4 +1,4 @@
-/* DoKit i18n hotfix v2 - force re-translation of dynamic elements */
+/* DoKit i18n hotfix v3 - aggressive re-translation */
 (function() {
   function T(k, fb) {
     try {
@@ -10,39 +10,61 @@
     return fb;
   }
   
-  function forceRetranslate() {
+  function fixAll() {
     try {
-      // Force DKI18N to re-apply all translations
+      // 1. Force DKI18N re-apply
       if (window.DKI18N && window.DKI18N.apply) {
         window.DKI18N.apply();
       }
       
-      // Specifically fix newsletter
-      var nlTitle = document.querySelector('[data-i18n="news_title"]');
-      if (nlTitle) nlTitle.textContent = T('news_title', '📧 Get new tools first');
-      
-      // Fix recently used
-      var recent = document.getElementById('home-recent');
-      if (recent) {
-        recent.setAttribute('aria-label', T('recent_tools_label', 'Recently used tools'));
-        var h = recent.querySelector('.dkf-recent__title');
-        if (h) h.textContent = T('recent_title', '🕘 Recently used');
+      // 2. Newsletter - direct targeting
+      var nlLabel = document.querySelector('.dkf-news__label');
+      if (nlLabel) {
+        var urduText = T('news_title', null);
+        if (urduText && urduText !== 'news_title') {
+          nlLabel.textContent = urduText;
+        }
       }
       
-      // Dispatch langchange to trigger other handlers
-      try {
-        document.dispatchEvent(new CustomEvent('dokit:langchange'));
-      } catch(e) {}
+      // 3. Newsletter button
+      var nlBtn = document.querySelector('.dkf-news__btn');
+      if (nlBtn) {
+        var btnText = T('news_subscribe', null);
+        if (btnText && btnText !== 'news_subscribe') {
+          nlBtn.textContent = btnText;
+        }
+      }
+      
+      // 4. Newsletter input placeholder
+      var nlInput = document.querySelector('.dkf-news__input');
+      if (nlInput) {
+        var ph = T('news_email_ph', null);
+        if (ph && ph !== 'news_email_ph') {
+          nlInput.placeholder = ph;
+          nlInput.setAttribute('aria-label', ph);
+        }
+      }
+      
+      // 5. Recently used
+      var recent = document.getElementById('home-recent');
+      if (recent) {
+        var rt = T('recent_tools_label', null);
+        if (rt && rt !== 'recent_tools_label') recent.setAttribute('aria-label', rt);
+        var h = recent.querySelector('.dkf-recent__title');
+        if (h) {
+          var ht = T('recent_title', null);
+          if (ht && ht !== 'recent_title') h.textContent = ht;
+        }
+      }
     } catch(e) {}
   }
   
-  // Run multiple times to catch late-loading elements
-  [500, 1500, 3000, 5000].forEach(function(delay) {
-    setTimeout(forceRetranslate, delay);
+  // Run aggressively
+  [800, 2000, 4000, 7000, 10000].forEach(function(d) {
+    setTimeout(fixAll, d);
   });
   
-  // Also on language change
   document.addEventListener('dokit:langchange', function() {
-    setTimeout(forceRetranslate, 200);
+    setTimeout(fixAll, 300);
   });
 })();
