@@ -87,30 +87,5 @@
 <script src="../js/assistant-enhance.js" defer></script>
 <script src="../js/doki-personality.js?v=20261008-06" defer></script>
 <script type="module" src="../js/assistant-ai-init.js"></script>
-<script>
-(function(){
-  var UR={"tools.h1":"ہر ٹول جو آپ کو کبھی چاہیے","tools.lede":"مفت، نجی، اور مکمل طور پر آپ کے براؤزر میں چلتا ہے۔ نیچے تلاش کریں یا زمرے کے حساب سے فلٹر کریں۔"};
-  function fixUr(){
-    var lang="en";
-    try{
-      var q=new URLSearchParams(window.location.search).get("lang");
-      if(q==="ur")lang="ur";
-      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
-      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
-    }catch(e){}
-    if(lang!=="ur")return;
-    var els=document.querySelectorAll("[data-i18n]");
-    for(var i=0;i<els.length;i++){
-      var k=els[i].getAttribute("data-i18n");
-      if(UR[k])els[i].textContent=UR[k];
-    }
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
-  else fixUr();
-  setTimeout(fixUr,500);
-  setTimeout(fixUr,2000);
-  document.addEventListener("dokit:langchange",fixUr);
-})();
-</script>
 </body>
 </html>

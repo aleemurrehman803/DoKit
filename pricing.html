@@ -179,30 +179,5 @@
 <script src="js/assistant-enhance.js" defer></script>
 <script src="js/doki-personality.js?v=20261008-06" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
-<script>
-(function(){
-  var UR={"pricing.faq_a1":"جی — واقعی۔ ہر ٹول مفت ہے، لامحدود عام استعمال کے ساتھ، بغیر اکاؤنٹ، بغیر واٹر مارک، اور بغیر وقت کی حد۔ مفت کبھی واپس نہیں لیا جائے گا۔","pricing.faq_a2":"بالکل۔ پرو اور ٹیم ماہانہ ہیں، بغیر معاہدے اور بغیر منسوخی فیس۔ ایک کلک میں منسوخ کریں اور بلنگ مدت کے اختتام تک سب کچھ رکھیں۔","pricing.faq_a3":"جب ادا شدہ پلانز لانچ ہوں گے، آپ ایزی پیسہ، جاز کیش، بینک ٹرانسفر، USDT، یا کریڈٹ/ڈیبٹ کارڈ سے ادائیگی کر سکتے ہیں۔","pricing.faq_a4":"اگر کوئی ادا شدہ پلان وعدے کے مطابق کام نہ کرے تو ادائیگی کے 7 دن کے اندر ہمیں ای میل کریں اور ہم اسے درست کریں گے۔"};
-  function fixUr(){
-    var lang="en";
-    try{
-      var q=new URLSearchParams(window.location.search).get("lang");
-      if(q==="ur")lang="ur";
-      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
-      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
-    }catch(e){}
-    if(lang!=="ur")return;
-    var els=document.querySelectorAll("[data-i18n]");
-    for(var i=0;i<els.length;i++){
-      var k=els[i].getAttribute("data-i18n");
-      if(UR[k])els[i].textContent=UR[k];
-    }
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
-  else fixUr();
-  setTimeout(fixUr,500);
-  setTimeout(fixUr,2000);
-  document.addEventListener("dokit:langchange",fixUr);
-})();
-</script>
 </body>
 </html>

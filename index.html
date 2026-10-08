@@ -247,29 +247,5 @@ img{max-width:100%;height:auto}
 <script src="js/assistant-enhance.js?v=20261008-03" defer></script>
 <script src="js/doki-personality.js?v=20261008-06" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
-<script>
-(function(){
-  var UR={
-    "hero_title":"روزمرہ کے کام سیکنڈوں میں کریں",
-    "hero_free":"مفت۔",
-    "search_ph":"ٹولز تلاش کریں… مثلاً ری سائز، الفاظ"
-  };
-  function register(){
-    try{
-      if(window.DKI18N&&typeof window.DKI18N.add==="function"){
-        window.DKI18N.add("ur",UR);
-        return true;
-      }
-    }catch(e){}
-    return false;
-  }
-  function tryRegister(){
-    if(!register())setTimeout(tryRegister,300);
-  }
-  if(document.readyState==="complete")tryRegister();
-  else window.addEventListener("load",tryRegister);
-  setTimeout(tryRegister,1000);
-})();
-</script>
 </body>
 </html>

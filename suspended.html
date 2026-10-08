@@ -38,49 +38,5 @@ p.desc{color:#555;line-height:1.7;margin-bottom:18px}
 <a class="btn btn-outline" href="contact.html" data-i18n="susp.contact">Contact support</a>
 </div>
 </main>
-<script>
-(function(){
-  var UR={"susp.title":"اکاؤنٹ معطل","susp.desc":"آپ کا DoKit اکاؤنٹ معطل کر دیا گیا ہے اور آپ کو سائن آؤٹ کر دیا گیا ہے۔","susp.reason_label":"وجہ","susp.until_label":"معطلی ختم","susp.home":"ہوم پر واپس","susp.contact":"سپورٹ سے رابطہ کریں","susp.permanent":"مستقل","susp.noreason":"—"};
-  function lang(){
-    try{
-      var q=new URLSearchParams(window.location.search).get("lang");
-      if(q==="ur")return "ur";
-      if(window.DKI18N&&window.DKI18N.getLang)return window.DKI18N.getLang();
-      if(window.localStorage.getItem("dokit_lang")==="ur")return "ur";
-    }catch(e){}
-    return "en";
-  }
-  function apply(){
-    if(lang()!=="ur")return;
-    document.documentElement.lang="ur";
-    document.documentElement.dir="rtl";
-    var els=document.querySelectorAll("[data-i18n]");
-    for(var i=0;i<els.length;i++){
-      var k=els[i].getAttribute("data-i18n");
-      if(UR[k])els[i].textContent=UR[k];
-    }
-  }
-  function fill(){
-    var reason="",until=0;
-    try{
-      var raw=window.sessionStorage.getItem("dokit_suspended");
-      if(raw){var o=JSON.parse(raw);reason=o.reason||"";until=o.until||0;}
-    }catch(e){}
-    var rEl=document.getElementById("suspReason");
-    var uEl=document.getElementById("suspUntil");
-    if(rEl)rEl.textContent=reason||"—";
-    if(uEl){
-      if(!until){uEl.textContent=(lang()==="ur")?UR["susp.permanent"]:"Permanent";}
-      else{
-        try{uEl.textContent=new Date(until).toLocaleString();}catch(e){uEl.textContent=String(until);}
-      }
-    }
-  }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){apply();fill();});
-  else{apply();fill();}
-  setTimeout(function(){apply();fill();},500);
-  document.addEventListener("dokit:langchange",function(){apply();fill();});
-})();
-</script>
 </body>
 </html>
