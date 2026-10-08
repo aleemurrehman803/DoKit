@@ -15,6 +15,15 @@
  * Exposes window.DKFeatures.setTutorial(slug, id) and window.DK_TUTORIALS.
  */
 (function () {
+  function T(k, fb) {
+    try {
+      if (window.DKI18N && window.DKI18N.t) {
+        var v = window.DKI18N.t(k);
+        if (v && v !== k) return v;
+      }
+    } catch (e) {}
+    return fb;
+  }
   "use strict";
 
   if (window.__dkFeaturesLoaded) return;
@@ -319,13 +328,13 @@
 
     var label = document.createElement("span");
     label.className = "dkf-news__label";
-    label.textContent = "📧 Get new tools first";
+    label.textContent = T("news_title", "📧 Get new tools first");
     wrap.appendChild(label);
 
     if (lsGet(NEWS_KEY, null)) {
       var done0 = document.createElement("span");
       done0.className = "dkf-news__done";
-      done0.textContent = "✅ Subscribed!";
+      done0.textContent = T("news_subscribed", "✅ Subscribed!");
       wrap.appendChild(done0);
     } else {
       var form = document.createElement("form");
@@ -336,11 +345,11 @@
       input.type = "email";
       input.className = "dkf-input dkf-news__input";
       input.placeholder = "you@example.com";
-      input.setAttribute("aria-label", "Email address");
+      input.setAttribute("aria-label", T("news_email_ph", "Email address"));
       input.maxLength = 254;
       input.autocomplete = "email";
 
-      var btn = mkButton("Subscribe", "dkf-btn dkf-btn--primary dkf-btn--sm", null);
+      var btn = mkButton(T("news_subscribe", "Subscribe"), "dkf-btn dkf-btn--primary dkf-btn--sm", null);
       btn.type = "submit";
 
       var msg = document.createElement("span");
@@ -357,7 +366,7 @@
         msg.textContent = "";
         var ok = document.createElement("span");
         ok.className = "dkf-news__done";
-        ok.textContent = "✅ Subscribed!";
+        ok.textContent = T("news_subscribed", "✅ Subscribed!");
         wrap.appendChild(ok);
       }
 
