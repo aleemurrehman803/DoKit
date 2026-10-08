@@ -226,12 +226,12 @@
     openModal({
       label: T("fb_send", "Send feedback"),
       build: function (dlg, close) {
-        modalTitle(dlg, "💬 Feedback");
+        modalTitle(dlg, "💬 " + T("fb_title", "Feedback"));
 
         var starsWrap = document.createElement("div");
         starsWrap.className = "dkf-stars";
         starsWrap.setAttribute("role", "radiogroup");
-        starsWrap.setAttribute("aria-label", "Rating");
+        starsWrap.setAttribute("aria-label", T("fb_rating", "Rating"));
         var stars = [];
         for (var i = 1; i <= 5; i++) {
           (function (v) {
@@ -241,7 +241,7 @@
             s.textContent = "★";
             s.setAttribute("role", "radio");
             s.setAttribute("aria-checked", "false");
-            s.setAttribute("aria-label", v + (v === 1 ? " star" : " stars"));
+            s.setAttribute("aria-label", v + " " + T("fb_star", "star"));
             s.addEventListener("click", function () {
               rating = v;
               stars.forEach(function (x, idx) {
@@ -260,8 +260,8 @@
         ta.className = "dkf-textarea";
         ta.rows = 4;
         ta.maxLength = 500;
-        ta.placeholder = "Tell us what you think (optional)…";
-        ta.setAttribute("aria-label", "Your comment");
+        ta.placeholder = T("fb_placeholder", "Tell us what you think (optional)…");
+        ta.setAttribute("aria-label", T("fb_comment", "Your comment"));
         dlg.appendChild(ta);
 
         var submitted = false;
@@ -276,8 +276,8 @@
           setTimeout(close, 1800);
         }
 
-        var cancel = mkButton("Cancel", "dkf-btn dkf-btn--ghost", close);
-        var submit = mkButton("Submit", "dkf-btn dkf-btn--primary", function () {
+        var cancel = mkButton(T("fb_cancel", "Cancel"), "dkf-btn dkf-btn--ghost", close);
+        var submit = mkButton(T("fb_submit", "Submit"), "dkf-btn dkf-btn--primary", function () {
           var comment = String(ta.value || "").slice(0, 500);
           submit.disabled = true;
           submit.textContent = "Sending…";
@@ -457,17 +457,17 @@
   /* ---------------- D) Keyboard shortcuts ---------------- */
 
   var SHORTCUTS = [
-    { key: "/", desc: "Focus the site search" },
-    { key: "t", desc: "Go to All Tools" },
-    { key: "?", desc: "Show this shortcuts help" },
-    { key: "Esc", desc: "Close dialogs" }
+    { key: "/", descKey: "kb_search", fb: "Focus the site search" },
+    { key: "t", descKey: "kb_alltools", fb: "Go to All Tools" },
+    { key: "?", descKey: "kb_help", fb: "Show this shortcuts help" },
+    { key: "Esc", descKey: "kb_close", fb: "Close dialogs" }
   ];
 
   function openShortcutsModal() {
     openModal({
       label: T("kb_title", "Keyboard shortcuts"),
       build: function (dlg, close) {
-        modalTitle(dlg, "⌨️ Keyboard shortcuts");
+        modalTitle(dlg, "⌨️ " + T("kb_title", "Keyboard shortcuts"));
         var ul = document.createElement("ul");
         ul.className = "dkf-shortcut-list";
         SHORTCUTS.forEach(function (s) {
@@ -476,13 +476,13 @@
           var k = document.createElement("kbd");
           k.textContent = s.key;
           var d = document.createElement("span");
-          d.textContent = s.desc;
+          d.textContent = T(s.descKey, s.fb);
           li.appendChild(k);
           li.appendChild(d);
           ul.appendChild(li);
         });
         dlg.appendChild(ul);
-        modalActions(dlg, [mkButton("Close", "dkf-btn dkf-btn--primary", close)]);
+        modalActions(dlg, [mkButton(T("kb_close_btn", "Close"), "dkf-btn dkf-btn--primary", close)]);
       }
     });
   }
@@ -561,7 +561,8 @@
       host = document.createElement("section");
       host.id = "home-recent";
       host.className = "dkf-recent";
-      host.setAttribute("aria-label", "Recently used tools");
+      host.setAttribute("aria-label", T("recent_tools_label", "Recently used tools"));
+host.setAttribute("data-i18n-aria", "recent_tools_label");
       var inner = document.createElement("div");
       inner.className = "container";
       host.appendChild(inner);
@@ -572,7 +573,8 @@
 
     var h = document.createElement("h2");
     h.className = "dkf-recent__title";
-    h.textContent = "🕘 Recently used";
+    h.textContent = T("recent_title", "🕘 Recently used");
+h.setAttribute("data-i18n", "recent_title");
     var chips = document.createElement("div");
     chips.className = "dkf-recent__chips";
     list.slice(0, 5).forEach(function (r) {
@@ -819,6 +821,48 @@
     });
   }
 
+  /* ---------------- E) Sticky result action (UI/UX #17, Oct 8 2026) ----------------
+     Mobile thumb-zone: when a tool's primary action button (marked with
+     data-sticky-action) has results ready but is scrolled out of view above,
+     show a fixed bottom bar mirroring it. Tapping the bar clicks the real button. */
+  function initStickyAction(){
+    if(!window.matchMedia||!("IntersectionObserver" in window)) return;
+    var btn=document.querySelector("[data-sticky-action]");
+    if(!btn) return;
+    var bar=document.createElement("div");
+    bar.className="dkf-sticky-action"; bar.hidden=true;
+    var b=document.createElement("button");
+    b.type="button"; b.className="btn btn-primary";
+    bar.appendChild(b); document.body.appendChild(bar);
+    function syncLabel(){ b.textContent=((btn.textContent||"").trim()||"Continue"); }
+    syncLabel();
+    b.addEventListener("click",function(){ btn.click(); });
+    var mq=window.matchMedia("(max-width: 768px)");
+    function targetReady(){
+      return btn.offsetParent!==null&&!btn.disabled&&btn.getAttribute("aria-disabled")!=="true";
+    }
+    function upd(){
+      var r=btn.getBoundingClientRect();
+      var scrolledPast=r.bottom<0; /* button is above the viewport */
+      var show=mq.matches&&targetReady()&&scrolledPast;
+      bar.hidden=!show;
+      document.body.classList.toggle("dkf-has-sticky",show);
+    }
+    new IntersectionObserver(function(){ upd(); },{threshold:0}).observe(btn);
+    var tick=false;
+    window.addEventListener("scroll",function(){
+      if(tick) return; tick=true;
+      requestAnimationFrame(function(){ tick=false; upd(); });
+    },{passive:true});
+    window.addEventListener("resize",upd);
+    if(mq.addEventListener) mq.addEventListener("change",upd);
+    try{
+      new MutationObserver(function(){ syncLabel(); upd(); })
+        .observe(btn,{attributes:true,childList:true,subtree:true,characterData:true});
+    }catch(e){}
+    upd();
+  }
+
   /* ---------------- boot ---------------- */
 
   function init() {
@@ -826,6 +870,7 @@
     try { initFeedback(); } catch (e) {}
     try { watchFooterExtras(); } catch (e) {}
     try { initShortcuts(); } catch (e) {}
+    try { initStickyAction(); } catch (e) {}
     try { recordRecent(); } catch (e) {}
     try { renderRecent(); } catch (e) {}
     try { initFavDelegate(); } catch (e) {}
