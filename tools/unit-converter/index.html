@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title data-i18n="uc.meta_title">Free Unit Converter Online — Length, Weight, Temperature | DoKit</title>
+<meta name="description" data-i18n-content="uc.meta_desc" content="Convert length, weight, temperature, and data units instantly in your browser. Free, private — nothing leaves your device."/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/unit-converter/"/>
+<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
+<meta name="theme-color" content="#6C4CF1"/>
+<link rel="manifest" href="../../manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="../../assets/icon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta property="og:title" content="Free Unit Converter | DoKit"/>
+<meta property="og:description" content="Length, weight, temperature, and data conversions — live in your browser."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="../../assets/og-cover.jpg"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="../../css/hub.css"/>
+<link rel="stylesheet" href="tool.css"/>
+<script src="../../js/i18n-v2.js" defer></script>
+<script src="../../js/i18n-hotfix.js?v=20261008-08" defer></script>
+<script src="../../js/i18n-meta.js" defer></script>
+<script src="../../js/i18n-tools-shared.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../../js/firebase.js?v=20261008-05" defer></script>
+<script src="../../js/site-wide.js" defer></script>
+<script src="../../js/maintenance.js" defer></script>
+<script src="../../js/journey.js" defer></script>
+<script src="tool.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Does the converter need the internet?","acceptedAnswer":{"@type":"Answer","text":"No. All conversions are pure JavaScript math in your browser — it even works offline once the page is cached."}},
+{"@type":"Question","name":"Which units are supported?","acceptedAnswer":{"@type":"Answer","text":"Length (mm, cm, m, km, inch, foot, mile), weight (g, kg, oz, lb), temperature (°C, °F, K), and data (KB, MB, GB, TB)."}}]}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main" class="twrap">
+  <nav class="tcrumb" aria-label="Breadcrumb">
+    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.unit">Unit Converter</span>
+  </nav>
+
+  <div class="thero">
+    <div class="thero-icon" aria-hidden="true">
+      <!-- Unit Converter: arrows exchanging on gradient rounded square -->
+      <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
+        <defs>
+          <linearGradient id="tig-uc" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-uc)"/>
+        <path d="M22 28h22m-6-6 6 6-6 6" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M50 44H28m6 6-6-6 6-6" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 data-i18n="toolnames.unit">Unit Converter</h1>
+    <p data-i18n="uc.hero_desc">Convert length, weight, temperature, and data — live, right in your browser.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="uc.privacy">Everything happens on your device</span></span></p>
+  </div>
+
+  <section class="tcard" aria-labelledby="tool-h">
+    <h2 id="tool-h" class="sr-only" data-i18n="toolnames.unit">Unit Converter</h2>
+    <div class="tfield field">
+      <label class="label" for="ucCat" data-i18n="uc.category">Category</label>
+      <select class="text-input" id="ucCat" style="max-width:16rem">
+        <option value="length" data-i18n="uc.cat_length">Length</option>
+        <option value="weight" data-i18n="uc.cat_weight">Weight</option>
+        <option value="temp" data-i18n="uc.cat_temp">Temperature</option>
+        <option value="data" data-i18n="uc.cat_data">Data</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:end">
+      <div class="tfield field" style="margin:0">
+        <label class="label" for="ucFromVal" data-i18n="uc.from">From</label>
+        <input type="number" class="text-input" id="ucFromVal" value="1" step="any" inputmode="decimal"/>
+        <select class="text-input" id="ucFromUnit" style="margin-top:.5rem" aria-label="From unit"></select>
+      </div>
+      <button type="button" class="tbtn tbtn-ghost" id="ucSwap" data-i18n-aria="uc.swap" aria-label="Swap units" style="font-size:1.25rem" title="⇄">⇄</button>
+      <div class="tfield field" style="margin:0">
+        <label class="label" for="ucToVal" data-i18n="uc.to">To</label>
+        <input type="text" class="text-input" id="ucToVal" readonly aria-live="polite"/>
+        <select class="text-input" id="ucToUnit" style="margin-top:.5rem" aria-label="To unit"></select>
+      </div>
+    </div>
+    <p class="tdrop-privacy" style="margin-top:var(--sp-3)">🔒 <span data-i18n="uc.privacy_line">Pure math in your browser — 100% private.</span></p>
+  </section>
+
+  <div class="saas-steps" data-saas-steps>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="uc.step1">Pick a category</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="uc.step2">Enter a value</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="uc.step3">See it converted live</span></div>
+    <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
+  </div>
+
+  <section class="tsection collapsible" aria-labelledby="howto-h">
+    <h2 id="howto-h" data-i18n="uc.howto_title">How to convert units</h2>
+    <ol class="thowto">
+      <li><div><h3 data-i18n="uc.howto_1t">Choose a category</h3><p data-i18n="uc.howto_1d">Length, weight, temperature, or data — the unit lists update automatically.</p></div></li>
+      <li><div><h3 data-i18n="uc.howto_2t">Enter your value</h3><p data-i18n="uc.howto_2d">Type a number and pick the "from" and "to" units. Use ⇄ to swap them.</p></div></li>
+      <li><div><h3 data-i18n="uc.howto_3t">Read the result</h3><p data-i18n="uc.howto_3d">The answer updates live as you type — no buttons needed.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+    <h2 id="faq-h" data-i18n="resizer.faq_title">Frequently asked questions</h2>
+    <details><summary data-i18n="uc.faq_q1">Does the converter need the internet?</summary><p class="tfaq-a" data-i18n="uc.faq_a1">No. All conversions are pure JavaScript math in your browser — it even works offline once the page is cached.</p></details>
+    <details><summary data-i18n="uc.faq_q2">Which units are supported?</summary><p class="tfaq-a" data-i18n="uc.faq_a2">Length (mm, cm, m, km, inch, foot, mile), weight (g, kg, oz, lb), temperature (°C, °F, K), and data (KB, MB, GB, TB).</p></details>
+  </section>
+
+  <section class="tsection" aria-labelledby="rel-h">
+    <h2 id="rel-h" data-i18n="resizer.related">Related tools</h2>
+    <div class="trelated">
+      <a class="trel-card" href="../qr-generator/"><h3 data-i18n="toolnames.qr">QR Generator</h3><p data-i18n="toolnames.desc_qr">Turn any text or link into a QR code.</p></a>
+      <a class="trel-card" href="../password-generator/"><h3 data-i18n="toolnames.pw">Password Generator</h3><p data-i18n="toolnames.desc_pw">Strong random passwords, generated privately.</p></a>
+      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
+    </div>
+  </section>
+</main>
+<footer id="dk-footer"></footer>
+</body>
+</html>

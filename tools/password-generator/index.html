@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title data-i18n="pw.meta_title">Free Password Generator Online — Strong Random Passwords | DoKit</title>
+<meta name="description" data-i18n-content="pw.meta_desc" content="Generate strong, random passwords in your browser with crypto-grade randomness. Choose length and character types. Free, private — nothing leaves your device."/>
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/password-generator/"/>
+<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
+<meta name="theme-color" content="#6C4CF1"/>
+<link rel="manifest" href="../../manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="../../assets/icon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta property="og:title" content="Free Password Generator | DoKit"/>
+<meta property="og:description" content="Strong random passwords with crypto-grade randomness, made in your browser."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="../../assets/og-cover.jpg"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
+<link rel="stylesheet" href="../../css/tokens.css"/>
+<link rel="stylesheet" href="../../css/hub.css"/>
+<link rel="stylesheet" href="tool.css"/>
+<script src="../../js/i18n-v2.js" defer></script>
+<script src="../../js/i18n-hotfix.js?v=20261008-08" defer></script>
+<script src="../../js/i18n-meta.js" defer></script>
+<script src="../../js/i18n-tools-shared.js" defer></script>
+<script src="../../js/ui.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="../../js/firebase.js?v=20261008-05" defer></script>
+<script src="../../js/site-wide.js" defer></script>
+<script src="../../js/maintenance.js" defer></script>
+<script src="../../js/journey.js" defer></script>
+<script src="tool.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Are the passwords sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"Never. Passwords are generated with your browser's crypto-grade random generator — nothing leaves your device."}},
+{"@type":"Question","name":"How long should my password be?","acceptedAnswer":{"@type":"Answer","text":"At least 16 characters for important accounts. Longer passwords with mixed character types are exponentially harder to crack."}}]}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+<header id="site-nav"></header>
+<main id="main" class="twrap">
+  <nav class="tcrumb" aria-label="Breadcrumb">
+    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.pw">Password Generator</span>
+  </nav>
+
+  <div class="thero">
+    <div class="thero-icon" aria-hidden="true">
+      <!-- Password Generator: key on gradient rounded square -->
+      <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
+        <defs>
+          <linearGradient id="tig-pw" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-pw)"/>
+        <circle cx="28" cy="36" r="10" fill="none" stroke="#fff" stroke-width="5"/>
+        <path d="M36 36h16m-5-6 6 6-6 6" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 data-i18n="toolnames.pw">Password Generator</h1>
+    <p data-i18n="pw.hero_desc">Strong, random passwords with crypto-grade randomness — made privately in your browser.</p>
+    <p><span class="tprivacy">🔒 <span data-i18n="pw.privacy">Passwords never leave your device</span></span></p>
+  </div>
+
+  <section class="tcard" aria-labelledby="tool-h">
+    <h2 id="tool-h" class="sr-only" data-i18n="toolnames.pw">Password Generator</h2>
+    <div class="tfield field">
+      <label class="label" for="pwLen"><span data-i18n="pw.length">Length</span>: <output id="pwLenOut" for="pwLen">20</output></label>
+      <input type="range" id="pwLen" min="8" max="64" step="1" value="20" style="width:100%;max-width:22rem" aria-describedby="pwLenOut"/>
+    </div>
+    <fieldset class="tfield field" style="border:0;padding:0;margin:0 0 var(--sp-3)">
+      <legend class="label" data-i18n="pw.include">Include</legend>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem 1.25rem">
+        <label><input type="checkbox" id="pwUpper" checked/> <span data-i18n="pw.upper">Uppercase (A–Z)</span></label>
+        <label><input type="checkbox" id="pwLower" checked/> <span data-i18n="pw.lower">Lowercase (a–z)</span></label>
+        <label><input type="checkbox" id="pwDigits" checked/> <span data-i18n="pw.digits">Digits (0–9)</span></label>
+        <label><input type="checkbox" id="pwSymbols" checked/> <span data-i18n="pw.symbols">Symbols (!@#$…)</span></label>
+      </div>
+    </fieldset>
+    <div class="tfield field">
+      <label class="label" for="pwOut" data-i18n="pw.result">Your password</label>
+      <input type="text" class="text-input" id="pwOut" readonly autocomplete="off" spellcheck="false"
+             style="font-family:ui-monospace,monospace;letter-spacing:.05em;font-size:1.05rem" aria-live="polite"/>
+      <p class="thint"><span data-i18n="pw.strength">Strength</span>: <strong id="pwStrength">—</strong></p>
+    </div>
+    <div class="tbtnrow">
+      <button type="button" class="tbtn tbtn-primary" id="pwGen" data-sticky-action data-i18n="pw.generate">Generate</button>
+      <button type="button" class="tbtn tbtn-ghost" id="pwCopy" data-i18n="pw.copy">Copy</button>
+    </div>
+    <p class="tdrop-privacy">🔒 <span data-i18n="pw.privacy_line">Generated with crypto-grade randomness — 100% private.</span></p>
+    <p class="thint" id="pwHint" role="status" aria-live="polite"></p>
+  </section>
+
+  <div class="saas-steps" data-saas-steps>
+    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="pw.step1">Pick length &amp; characters</span></div>
+    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="pw.step2">Generate a password</span></div>
+    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="pw.step3">Copy &amp; use it</span></div>
+    <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
+  </div>
+
+  <section class="tsection collapsible" aria-labelledby="howto-h">
+    <h2 id="howto-h" data-i18n="pw.howto_title">How to make a strong password</h2>
+    <ol class="thowto">
+      <li><div><h3 data-i18n="pw.howto_1t">Choose length and characters</h3><p data-i18n="pw.howto_1d">Drag the slider (8–64) and tick the character types you want.</p></div></li>
+      <li><div><h3 data-i18n="pw.howto_2t">Generate</h3><p data-i18n="pw.howto_2d">Tap Generate — a fresh password appears instantly, using your browser's secure random generator.</p></div></li>
+      <li><div><h3 data-i18n="pw.howto_3t">Copy and save</h3><p data-i18n="pw.howto_3d">Copy it with one tap and store it in a password manager. Never reuse passwords across sites.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
+    <h2 id="faq-h" data-i18n="resizer.faq_title">Frequently asked questions</h2>
+    <details><summary data-i18n="pw.faq_q1">Are the passwords sent anywhere?</summary><p class="tfaq-a" data-i18n="pw.faq_a1">Never. Passwords are generated with your browser's crypto-grade random generator — nothing leaves your device.</p></details>
+    <details><summary data-i18n="pw.faq_q2">How long should my password be?</summary><p class="tfaq-a" data-i18n="pw.faq_a2">At least 16 characters for important accounts. Longer passwords with mixed character types are exponentially harder to crack.</p></details>
+  </section>
+
+  <section class="tsection" aria-labelledby="rel-h">
+    <h2 id="rel-h" data-i18n="resizer.related">Related tools</h2>
+    <div class="trelated">
+      <a class="trel-card" href="../qr-generator/"><h3 data-i18n="toolnames.qr">QR Generator</h3><p data-i18n="toolnames.desc_qr">Turn any text or link into a QR code.</p></a>
+      <a class="trel-card" href="../unit-converter/"><h3 data-i18n="toolnames.unit">Unit Converter</h3><p data-i18n="toolnames.desc_unit">Convert length, weight, temperature, and data.</p></a>
+      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
+    </div>
+  </section>
+</main>
+<footer id="dk-footer"></footer>
+</body>
+</html>
