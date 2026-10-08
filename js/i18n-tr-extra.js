@@ -953,4 +953,4 @@
     "your_data": "Verileriniz",
     "your_name": "Adınız"
   });
-})();
+__dkAdd("tr",{"cat_typing":"TypeMaster","cat_typing_d":"TypeMaster ile daha hızlı yazmak için dersler, testler ve oyunlar.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Yazma sertifikanı al","tool_tcert_name":"Sertifika","tool_tgames_desc":"Eğlenerek yazmayı öğren","tool_tgames_name":"Yazma Oyunları","tool_tlessons_desc":"Temelden hıza adım adım dersler","tool_tlessons_name":"Yazma Dersleri","tool_tpractice_desc":"Zayıf tuşlarını çalış","tool_tpractice_name":"Akıllı Pratik","tool_ttest_desc":"Hızını ve doğruluğunu kontrol et","tool_ttest_name":"Yazma Testi","tool_typing_desc":"TypeMaster ile yazmada ustalaş","tool_typing_name":"TypeMaster"});})();
