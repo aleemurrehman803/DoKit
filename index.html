@@ -252,10 +252,19 @@ img{max-width:100%;height:auto}
     "hero_free":"مفت۔",
     "search_ph":"ٹولز تلاش کریں… مثلاً ری سائز، الفاظ"
   };
+  var _done=false;
   function register(){
+    if(_done)return;
     try{
       if(window.DKI18N&&typeof window.DKI18N.add==="function"){
         window.DKI18N.add("ur",UR);
+        _done=true;
+        setTimeout(function(){
+          try{
+            if(typeof window.DKI18N.apply==="function")window.DKI18N.apply();
+            else document.dispatchEvent(new CustomEvent("dokit:langchange"));
+          }catch(e){}
+        },200);
       }
     }catch(e){}
   }

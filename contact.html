@@ -112,11 +112,18 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
   var UR={"contact.opt_question":"سوال","contact.opt_bug":"بگ رپورٹ","contact.opt_suggest":"ٹول کی تجویز","contact.opt_feedback":"رائے","contact.opt_other":"دیگر"};
   var _reg=false;
   function fixUr(){
-    if(_reg)return;
+    if(window._urReg)return;
     try{
       if(window.DKI18N&&typeof window.DKI18N.add==="function"){
         window.DKI18N.add("ur",UR);
-        _reg=true;
+        window._urReg=true;
+        // Trigger re-apply so new keys take effect
+        setTimeout(function(){
+          try{
+            if(window.DKI18N&&typeof window.DKI18N.apply==="function")window.DKI18N.apply();
+            else document.dispatchEvent(new CustomEvent("dokit:langchange"));
+          }catch(e){}
+        },100);
       }
     }catch(e){}
   }

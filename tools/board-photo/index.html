@@ -310,6 +310,12 @@
       if(window.DKI18N&&typeof window.DKI18N.add==="function"){
         window.DKI18N.add("ur",UR);
         _registered=true;
+        setTimeout(function(){
+          try{
+            if(typeof window.DKI18N.apply==="function")window.DKI18N.apply();
+            else document.dispatchEvent(new CustomEvent("dokit:langchange"));
+          }catch(e){}
+        },200);
       }
     }catch(e){}
   }
