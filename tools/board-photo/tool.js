@@ -329,6 +329,17 @@
   setTimeout(_applyUrduFix, 1000);
   setTimeout(_applyUrduFix, 2500);
 
+  /* Fix: bind language dropdown and theme toggle (DKUI.init was never called on tool pages) */
+  try {
+    if (window.DKUI && typeof window.DKUI.init === "function") {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () { try { window.DKUI.init(); } catch (e) {} });
+      } else {
+        window.DKUI.init();
+      }
+    }
+  } catch (e) {}
+
   /* ---------------- helpers ---------------- */
   function $(id) { return document.getElementById(id); }
   function t(key, fallback) {
