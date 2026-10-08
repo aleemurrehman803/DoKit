@@ -11,18 +11,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>About — DoKit</title>
 <meta name="description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/about.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/about.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About — DoKit">
 <meta property="og:description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/about.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/about.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="About — DoKit">
 <meta name="twitter:description" content="About DoKit: honest free tools that run in your browser. No ads, no tracking, files stay on your device. Built by Malik Jalil Ur Rehman Khokhar.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
@@ -48,14 +48,14 @@
 </style>
 </head>
 <body data-nav="about">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:52rem">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="./">Home</a></li>
+          <li><a href="./" data-i18n="common.crumb_home">Home</a></li>
           <li aria-current="page">About</li>
         </ol>
       </nav>
@@ -82,10 +82,10 @@
 
       <h2 style="margin-top:var(--sp-8)" data-i18n="about2.numbers_t">DoKit in numbers</h2>
       <div class="stat-grid">
-        <div class="card stat-card"><div class="stat-num">6+</div><div class="stat-label">Free tools</div></div>
-        <div class="card stat-card"><div class="stat-num">100%</div><div class="stat-label">Private — files never uploaded</div></div>
-        <div class="card stat-card"><div class="stat-num">0</div><div class="stat-label">Sign-ups needed</div></div>
-        <div class="card stat-card"><div class="stat-num">10</div><div class="stat-label">Languages</div></div>
+        <div class="card stat-card"><div class="stat-num">6+</div><div class="stat-label" data-i18n="about.stat_tools">Free tools</div></div>
+        <div class="card stat-card"><div class="stat-num">100%</div><div class="stat-label" data-i18n="about.stat_private">Private — files never uploaded</div></div>
+        <div class="card stat-card"><div class="stat-num">0</div><div class="stat-label" data-i18n="about.stat_signups">Sign-ups needed</div></div>
+        <div class="card stat-card"><div class="stat-num">10</div><div class="stat-label" data-i18n="about.stat_langs">Languages</div></div>
       </div>
 
       <h2 style="margin-top:var(--sp-8)" data-i18n="about2.believe_t">What we believe</h2>
@@ -129,5 +129,30 @@
 <script src="js/assistant-enhance.js" defer></script>
 <script src="js/doki-personality.js" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
+<script>
+(function(){
+  var UR="about.stat_tools":"مفت ٹولز","about.stat_private":"نجی — فائلیں کبھی اپ لوڈ نہیں ہوتیں","about.stat_signups":"سائن اپ درکار","about.stat_langs":"زبانیں";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>

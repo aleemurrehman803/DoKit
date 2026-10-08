@@ -11,18 +11,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>FAQ — DoKit</title>
 <meta name="description" content="DoKit FAQ: is it really free, where your files go, accounts, browsers, coins, payments, data safety, and how to contact support.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/faq.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/faq.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="FAQ — DoKit">
 <meta property="og:description" content="DoKit FAQ: is it really free, where your files go, accounts, browsers, coins, payments, data safety, and how to contact support.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/faq.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/faq.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="FAQ — DoKit">
 <meta name="twitter:description" content="DoKit FAQ: is it really free, where your files go, accounts, browsers, coins, payments, data safety, and how to contact support.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
@@ -97,14 +97,14 @@
 </style>
 </head>
 <body data-nav="faq">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:46rem">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="./">Home</a></li>
+          <li><a href="./" data-i18n="common.crumb_home">Home</a></li>
           <li aria-current="page">Frequently asked questions</li>
         </ol>
       </nav>
@@ -160,7 +160,7 @@
           <div class="faq-a"><p><span data-i18n="faq_a10a">Email us anytime at</span> <a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a> <span data-i18n="faq_a10b">— we read every message personally and usually reply within 24–48 hours.</span></p></div>
         </div>
       </div>
-      <p style="margin-top:var(--sp-5);color:var(--text-muted)"><span data-i18n="faq_still">Still have a question?</span> <a href="contact.html">Contact us</a> — we'd love to hear from you.</p>
+      <p style="margin-top:var(--sp-5);color:var(--text-muted)"><span data-i18n="faq_still">Still have a question?</span> <a href="contact.html" data-i18n="faq.contact_us">Contact us</a> <span data-i18n="faq.contact_note">— we'd love to hear from you.</span></p>
     </div>
   </section>
 </main>
@@ -180,5 +180,30 @@
 <script src="js/assistant-enhance.js" defer></script>
 <script src="js/doki-personality.js" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
+<script>
+(function(){
+  var UR="faq.contact_us":"ہم سے رابطہ کریں","faq.contact_note":"— ہمیں آپ سے سن کر خوشی ہوگی۔";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>

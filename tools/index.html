@@ -11,18 +11,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>All Tools — DoKit | Every Tool You'll Ever Need</title>
 <meta name="description" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="All Tools — DoKit | Every Tool You'll Ever Need">
 <meta property="og:description" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/tools/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/tools/">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="All Tools — DoKit | Every Tool You'll Ever Need">
 <meta name="twitter:description" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
@@ -40,8 +40,8 @@
         </ol>
       </nav>
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <h1>Every tool you'll ever need</h1>
-        <p style="color:var(--text-muted)">Free, private, and running entirely in your browser. Search or filter by category below.</p>
+        <h1 data-i18n="tools.h1">Every tool you'll ever need</h1>
+        <p style="color:var(--text-muted)" data-i18n="tools.lede">Free, private, and running entirely in your browser. Search or filter by category below.</p>
       </div>
       <div class="search-wrap" style="margin-inline:0;margin-bottom:var(--sp-4)">
         <span class="search-icon" aria-hidden="true">🔍</span>
@@ -86,5 +86,30 @@
 <script src="../js/assistant-enhance.js" defer></script>
 <script src="../js/doki-personality.js" defer></script>
 <script type="module" src="../js/assistant-ai-init.js"></script>
+<script>
+(function(){
+  var UR="tools.h1":"ہر ٹول جو آپ کو کبھی چاہیے","tools.lede":"مفت، نجی، اور مکمل طور پر آپ کے براؤزر میں چلتا ہے۔ نیچے تلاش کریں یا زمرے کے حساب سے فلٹر کریں۔";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>
