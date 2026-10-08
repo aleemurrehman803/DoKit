@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/stripe-checkout.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/account/stripe-checkout.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <!-- CSP note: js.stripe.com is required for Stripe.js + its Elements iframes.
      frame-src includes js.stripe.com because card fields render in
@@ -17,8 +17,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Card checkout — DoKit">
 <meta property="og:description" content="Pay for DoKit Pro with a debit/credit card via Stripe.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/account/stripe-checkout.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/account/stripe-checkout.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -110,9 +110,9 @@
   <section class="section">
     <div class="container" style="max-width:960px">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Payments</span>
-        <h1>💳 Card checkout</h1>
-        <p>Pay securely with a debit/credit card. Card details go directly to Stripe — DoKit never sees or stores them.</p>
+        <span class="eyebrow" data-i18n="acct_card_eyebrow">Payments</span>
+        <h1 data-i18n="acct_card_h1">💳 Card checkout</h1>
+        <p data-i18n="acct_card_sub">Pay securely with a debit/credit card. Card details go directly to Stripe — DoKit never sees or stores them.</p>
       </div>
 
       <div class="test-banner" role="note">
@@ -122,46 +122,46 @@
 
       <!-- Availability notice -->
       <div class="card" id="stripeNotice" style="display:none;margin-bottom:var(--sp-4)">
-        <h3>⚠️ Card payments unavailable</h3>
+        <h3 data-i18n="acct_card_unavail">⚠️ Card payments unavailable</h3>
         <p id="stripeNoticeText" style="color:var(--text-muted)"></p>
         <p style="margin-bottom:0">
-          <a class="btn btn-primary" href="deposit.html">Use Easypaisa / JazzCash / USDT instead</a>
+          <a class="btn btn-primary" href="deposit.html" data-i18n="acct_card_alt">Use Easypaisa / JazzCash / USDT instead</a>
         </p>
       </div>
 
       <div class="pay-grid" id="payGrid" style="display:none">
         <!-- LEFT: bank-style form -->
         <div class="card">
-          <h3>Payment details</h3>
+          <h3 data-i18n="acct_card_details">Payment details</h3>
           <form id="cardForm" novalidate>
             <div class="field" id="f-name">
-              <label for="ccName">Cardholder name</label>
+              <label for="ccName" data-i18n="acct_card_name">Cardholder name</label>
               <input class="text-input" id="ccName" type="text" autocomplete="cc-name"
                      placeholder="As printed on card" maxlength="64" style="width:100%">
               <div class="field-error" id="e-name"></div>
             </div>
 
             <div class="field" id="f-number">
-              <label for="card-number">Card number <span class="hint">— Visa, Mastercard, Amex accepted</span></label>
+              <label for="card-number">Card number <span class="hint" data-i18n="acct_card_brands">— Visa, Mastercard, Amex accepted</span></label>
               <div style="position:relative">
                 <div class="stripe-field" id="card-number" style="padding-right:84px" aria-label="Card number"></div>
                 <span id="brandBadge" class="cc-brand" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:0.95rem" aria-hidden="true"></span>
               </div>
               <div class="field-error" id="e-number"></div>
-              <p class="field-note">💡 Card brand (Visa / Mastercard / Amex) is auto-detected from your card number.
+              <p class="field-note" data-i18n="acct_card_tip">💡 Card brand (Visa / Mastercard / Amex) is auto-detected from your card number.
               Cardholder name and expiry date must be entered manually — they are not encoded in the card number
               (this is how all payment systems, including banks, work).</p>
             </div>
 
             <div class="field-row">
               <div class="field" id="f-expiry">
-                <label for="card-expiry">Expiry date</label>
+                <label for="card-expiry" data-i18n="acct_card_expiry">Expiry date</label>
                 <div class="stripe-field" id="card-expiry" aria-label="Expiry date MM/YY"></div>
                 <div class="field-error" id="e-expiry"></div>
               </div>
               <div class="field" id="f-cvc">
                 <label for="card-cvc">Security code (CVC)
-                  <span class="tip" tabindex="0" aria-label="What is CVC?">? <span class="tip-text">The 3 digits on the back of your card (4 digits on the front for Amex).</span></span>
+                  <span class="tip" tabindex="0" aria-label="What is CVC?">? <span class="tip-text" data-i18n="acct_card_cvc">The 3 digits on the back of your card (4 digits on the front for Amex).</span></span>
                 </label>
                 <div class="stripe-field" id="card-cvc" aria-label="Security code"></div>
                 <div class="field-error" id="e-cvc"></div>
@@ -170,14 +170,14 @@
 
             <div class="field-row">
               <div class="field" id="f-country">
-                <label for="ccCountry">Country</label>
+                <label for="ccCountry" data-i18n="acct_card_country">Country</label>
                 <select class="text-input" id="ccCountry" autocomplete="country" style="width:100%">
-                  <option value="">Select country…</option>
+                  <option value="" data-i18n="acct_card_country_ph">Select country…</option>
                 </select>
                 <div class="field-error" id="e-country"></div>
               </div>
               <div class="field" id="f-zip">
-                <label for="ccZip">Postal / ZIP code</label>
+                <label for="ccZip" data-i18n="acct_card_postal">Postal / ZIP code</label>
                 <input class="text-input" id="ccZip" type="text" autocomplete="postal-code"
                        placeholder="e.g. 54000" maxlength="16" style="width:100%">
                 <div class="field-error" id="e-zip"></div>
@@ -187,7 +187,7 @@
             <p id="payErr" role="alert" style="color:var(--danger,#C93A3A);display:none"></p>
             <p id="payOk" role="status" style="color:var(--success-text,#1F7A4D);display:none"></p>
             <p style="margin-bottom:0">
-              <button class="btn btn-primary" type="submit" id="payBtn" style="width:100%;font-size:1.05rem">🔒 Pay $6.00</button>
+              <button class="btn btn-primary" type="submit" id="payBtn" style="width:100%;font-size:1.05rem" data-i18n="acct_card_pay">🔒 Pay $6.00</button>
             </p>
             <div class="secure-row">
               <span>🔒</span><span><strong>Secured by Stripe</strong> · 256-bit SSL encrypted · DoKit never sees your card number</span>
@@ -204,24 +204,24 @@
             </div>
             <div class="cc-number" id="pvNumber">•••• •••• •••• ••••</div>
             <div class="cc-bottom">
-              <div><small>Card holder</small><span id="pvName">YOUR NAME</span></div>
-              <div><small>Expires</small><span id="pvExpiry">MM/YY</span></div>
+              <div><small>Card holder</small><span id="pvName" data-i18n="acct_card_name_ph">YOUR NAME</span></div>
+              <div><small>Expires</small><span id="pvExpiry" data-i18n="acct_card_mmyy">MM/YY</span></div>
             </div>
           </div>
 
           <div class="card order-summary" style="margin-top:var(--sp-4)">
-            <h3>Order summary</h3>
+            <h3 data-i18n="acct_card_summary">Order summary</h3>
             <p style="margin-bottom:var(--sp-2)">
-              <label><input type="radio" name="plan" value="pro" checked> <strong>Pro</strong> <span style="color:var(--text-muted)">— $6/month</span></label><br>
-              <label><input type="radio" name="plan" value="team" style="margin-top:0.5rem"> <strong>Team</strong> <span style="color:var(--text-muted)">— $29/month</span></label>
+              <label><input type="radio" name="plan" value="pro" checked> <strong>Pro</strong> <span style="color:var(--text-muted)" data-i18n="acct_card_pro_m">— $6/month</span></label><br>
+              <label><input type="radio" name="plan" value="team" style="margin-top:0.5rem"> <strong>Team</strong> <span style="color:var(--text-muted)" data-i18n="acct_card_team_m">— $29/month</span></label>
             </p>
-            <div class="row"><span id="sumPlan">Pro plan (monthly)</span><span id="sumPrice">$6.00</span></div>
-            <div class="row"><span>Coins credited</span><span id="sumCoins">600 coins</span></div>
-            <div class="row total"><span>Total due today</span><span id="sumTotal">$6.00</span></div>
+            <div class="row"><span id="sumPlan" data-i18n="acct_card_pro_plan">Pro plan (monthly)</span><span id="sumPrice" data-i18n="acct_card_price">$6.00</span></div>
+            <div class="row"><span data-i18n="acct_card_coins">Coins credited</span><span id="sumCoins" data-i18n="acct_card_coins_val">600 coins</span></div>
+            <div class="row total"><span data-i18n="acct_card_total">Total due today</span><span id="sumTotal" data-i18n="acct_card_price">$6.00</span></div>
             <p style="color:var(--text-muted);margin-bottom:0;margin-top:var(--sp-2)">
               Note: Stripe requires a Stripe account from a supported country. Businesses registered in
               Pakistan cannot use Stripe directly — Easypaisa/JazzCash/USDT remain available on the
-              <a href="deposit.html">deposit page</a>. Coins are credited only after Stripe's signed webhook.
+              <a href="deposit.html" data-i18n="acct_card_deposit">deposit page</a>. Coins are credited only after Stripe's signed webhook.
             </p>
           </div>
         </div>
@@ -231,12 +231,14 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
-<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/firebase.js?v=20261008-05" defer></script>
 <script src="../js/dk-utils.js" defer></script>
 <script src="../js/finsec.js" defer></script>
 <!-- Stripe.js must load BEFORE stripe-pay.js. Not deferred: checkout needs it synchronously. -->

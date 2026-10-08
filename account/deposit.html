@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/deposit.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/account/deposit.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Deposit — DoKit">
 <meta property="og:description" content="Add funds to your DoKit wallet via Easypaisa, JazzCash, or USDT.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/account/deposit.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/account/deposit.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -32,78 +32,80 @@
   <section class="section">
     <div class="container" style="max-width:640px">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Wallet</span>
-        <h1>💰 Deposit</h1>
+        <span class="eyebrow" data-i18n="acct_dep_eyebrow">Wallet</span>
+        <h1 data-i18n="acct_dep_h1">💰 Deposit</h1>
         <p>Add funds to your DoKit wallet. <strong>Rs 1 = 1 coin.</strong> Minimum deposit: <strong>Rs 10</strong>.</p>
       </div>
 
       <!-- STEP 1: send money -->
       <div class="card" style="margin-bottom:var(--sp-4)">
-        <h3>Step 1 — Send money to our account</h3>
-        <p style="color:var(--text-muted);font-size:var(--fs-sm)">Choose a method, send the amount from your account, then fill Step 2 below.</p>
+        <h3 data-i18n="acct_dep_step1">Step 1 — Send money to our account</h3>
+        <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="acct_dep_step1_d">Choose a method, send the amount from your account, then fill Step 2 below.</p>
         <div id="depAccounts">
-          <p style="color:var(--text-muted)">Loading payment accounts…</p>
+          <p style="color:var(--text-muted)" data-i18n="acct_dep_loading_accts">Loading payment accounts…</p>
         </div>
       </div>
 
       <!-- STEP 2: submit proof -->
       <div class="card" style="margin-bottom:var(--sp-4)">
-        <h3>Step 2 — Submit your payment proof</h3>
+        <h3 data-i18n="acct_dep_step2">Step 2 — Submit your payment proof</h3>
         <form id="depForm" novalidate>
           <p>
-            <label for="depAmount">Amount (Rs)</label><br>
+            <label for="depAmount" data-i18n="acct_dep_amount">Amount (Rs)</label><br>
             <input class="text-input" type="number" id="depAmount" min="10" max="1000000" step="1" placeholder="e.g. 100" required style="width:100%">
           </p>
           <p>
-            <label for="depMethod">Payment method</label><br>
+            <label for="depMethod" data-i18n="acct_dep_method">Payment method</label><br>
             <select class="text-input" id="depMethod" required style="width:100%">
-              <option value="easypaisa">💚 Easypaisa</option>
-              <option value="jazzcash">❤️ JazzCash</option>
-              <option value="usdt">₮ USDT (TRC20)</option>
-              <option value="stripe">💳 Card (Stripe)</option>
+              <option value="easypaisa" data-i18n="acct_pay_ep">💚 Easypaisa</option>
+              <option value="jazzcash" data-i18n="acct_pay_jc">❤️ JazzCash</option>
+              <option value="usdt" data-i18n="acct_pay_usdt">₮ USDT (TRC20)</option>
+              <option value="stripe" data-i18n="acct_pay_card">💳 Card (Stripe)</option>
             </select>
           </p>
           <div id="stripeHint" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:0.75rem 1rem;margin-bottom:var(--sp-3)">
             <p style="margin:0 0 0.5rem;font-size:var(--fs-sm)">
               💳 Card payments use our secure Stripe checkout (bank-style form, 3-D Secure).
-              <span style="color:var(--text-muted)">Note: Stripe needs a supported-country account; Pakistan businesses should use Paddle or the manual methods above.</span>
+              <span style="color:var(--text-muted)" data-i18n="acct_dep_stripe_note">Note: Stripe needs a supported-country account; Pakistan businesses should use Paddle or the manual methods above.</span>
             </p>
-            <p style="margin:0"><a class="btn btn-primary btn-sm" href="stripe-checkout.html">Continue to secure card checkout →</a></p>
+            <p style="margin:0"><a class="btn btn-primary btn-sm" href="stripe-checkout.html" data-i18n="acct_dep_stripe_btn">Continue to secure card checkout →</a></p>
           </div>
           <p>
-            <label for="depTxn">Transaction ID / TID</label><br>
+            <label for="depTxn" data-i18n="acct_dep_txn">Transaction ID / TID</label><br>
             <input class="text-input" type="text" id="depTxn" maxlength="64" placeholder="From your payment receipt" required style="width:100%">
           </p>
           <p>
-            <label for="depSender">Your account number (sender)</label><br>
+            <label for="depSender" data-i18n="acct_dep_sender">Your account number (sender)</label><br>
             <input class="text-input" type="text" id="depSender" maxlength="20" placeholder="The account you sent from" required style="width:100%">
           </p>
           <p>
-            <label for="depShot">Screenshot (optional, max 500KB)</label><br>
+            <label for="depShot" data-i18n="acct_dep_shot">Screenshot (optional, max 500KB)</label><br>
             <input type="file" id="depShot" accept="image/png,image/jpeg,image/webp">
           </p>
           <p id="depErr" role="alert" style="color:var(--danger,#C93A3A);display:none"></p>
           <p id="depOk" role="status" style="color:var(--success-text,#1F7A4D);display:none"></p>
-          <p><button class="btn btn-primary" type="submit" id="depSubmit">Submit deposit</button></p>
+          <p><button class="btn btn-primary" type="submit" id="depSubmit" data-i18n="acct_dep_submit">Submit deposit</button></p>
         </form>
       </div>
 
       <!-- History -->
       <div class="card">
-        <h3>📋 My deposits</h3>
-        <div id="depHistory"><p style="color:var(--text-muted)">Loading…</p></div>
+        <h3 data-i18n="acct_dep_my">📋 My deposits</h3>
+        <div id="depHistory"><p style="color:var(--text-muted)" data-i18n="acct_loading">Loading…</p></div>
       </div>
     </div>
   </section>
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
-<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/firebase.js?v=20261008-05" defer></script>
 <script src="../js/dk-utils.js" defer></script>
 <script src="../js/finsec.js" defer></script>
 <script src="../js/payments-real.js" defer></script>

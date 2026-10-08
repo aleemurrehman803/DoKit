@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/subscription.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/account/subscription.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Subscription — DoKit">
 <meta property="og:description" content="Your DoKit subscription. Paid plans are coming soon — everything is free for now.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/account/subscription.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/account/subscription.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -32,52 +32,52 @@
   <section class="section">
     <div class="container">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Account</span>
-        <h1>Subscription</h1>
+        <span class="eyebrow" data-i18n="acct_dash_eyebrow">Account</span>
+        <h1 data-i18n="acct_sub_h1">Subscription</h1>
         <p>Your current plan and billing. Paid plans are <strong>coming soon</strong> — everything is free for now.</p>
       </div>
 
       <div class="grid" style="margin-bottom:var(--sp-5)">
         <div class="card">
-          <h3>📦 Current plan</h3>
-          <p style="font-size:1.5rem;font-weight:700;margin:0 0 var(--sp-2)" id="subPlan">Free</p>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)" id="subPlanDesc">All tools, unlimited normal use. No payment method on file.</p>
-          <p style="margin-bottom:0"><span class="badge">Coming soon</span></p>
+          <h3 data-i18n="acct_sub_current">📦 Current plan</h3>
+          <p style="font-size:1.5rem;font-weight:700;margin:0 0 var(--sp-2)" id="subPlan" data-i18n="acct_sub_free">Free</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" id="subPlanDesc" data-i18n="acct_sub_free_d">All tools, unlimited normal use. No payment method on file.</p>
+          <p style="margin-bottom:0"><span class="badge" data-i18n="acct_sub_soon">Coming soon</span></p>
         </div>
         <div class="card">
-          <h3>🪙 Coin wallet</h3>
+          <h3 data-i18n="acct_sub_wallet">🪙 Coin wallet</h3>
           <p style="font-size:2rem;font-weight:700" id="subCredits">0</p>
-          <p style="color:var(--text-muted);font-size:var(--fs-sm)">1 coin = Rs 1. Deposit and withdraw real money.</p>
+          <p style="color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="acct_sub_wallet_d">1 coin = Rs 1. Deposit and withdraw real money.</p>
           <p style="margin-bottom:0">
-            <a class="btn btn-primary btn-sm" href="deposit.html">💰 Deposit</a>
-            <a class="btn btn-ghost btn-sm" href="withdraw.html" style="margin-inline-start:var(--sp-2)">💸 Withdraw</a>
+            <a class="btn btn-primary btn-sm" href="deposit.html" data-i18n="acct_dep_h1">💰 Deposit</a>
+            <a class="btn btn-ghost btn-sm" href="withdraw.html" style="margin-inline-start:var(--sp-2)" data-i18n="acct_wd_h1">💸 Withdraw</a>
           </p>
         </div>
       </div>
 
       <div class="card" style="margin-bottom:var(--sp-5)">
-        <h3>⬆️ Upgrade</h3>
-        <p style="color:var(--text-muted)">Pro ($6/mo) and Team ($29/mo) are not on sale yet. When they launch you will be able to pay with USDT or PKR (Easypaisa / JazzCash).</p>
+        <h3 data-i18n="acct_sub_upgrade">⬆️ Upgrade</h3>
+        <p style="color:var(--text-muted)" data-i18n="acct_sub_upgrade_note">Pro ($6/mo) and Team ($29/mo) are not on sale yet. When they launch you will be able to pay with USDT or PKR (Easypaisa / JazzCash).</p>
         <p style="margin-bottom:0">
-          <button class="btn btn-primary" type="button" id="upgradeProBtn" disabled>Upgrade to Pro — Coming soon</button>
-          <button class="btn btn-ghost" type="button" id="upgradeTeamBtn" disabled style="margin-inline-start:var(--sp-2)">Team — Coming soon</button>
+          <button class="btn btn-primary" type="button" id="upgradeProBtn" disabled data-i18n="acct_sub_pro_btn">Upgrade to Pro — Coming soon</button>
+          <button class="btn btn-ghost" type="button" id="upgradeTeamBtn" disabled style="margin-inline-start:var(--sp-2)" data-i18n="acct_sub_team_btn">Team — Coming soon</button>
         </p>
       </div>
 
       <div class="card" style="margin-bottom:var(--sp-5)">
-        <h3>🧾 Billing history</h3>
+        <h3 data-i18n="acct_sub_billing">🧾 Billing history</h3>
         <div id="billingEmpty">
-          <p style="color:var(--text-muted)">No invoices yet. You have never been charged — DoKit is free.</p>
+          <p style="color:var(--text-muted)" data-i18n="acct_sub_noinv">No invoices yet. You have never been charged — DoKit is free.</p>
         </div>
         <ul id="billingList" style="list-style:none;padding:0;margin:0;display:none"></ul>
       </div>
 
       <div class="card">
-        <h3>🔗 Your referral link</h3>
+        <h3 data-i18n="acct_dash_referral">🔗 Your referral link</h3>
         <p style="color:var(--text-muted);font-size:var(--fs-sm)">Invite friends. You both earn <strong>virtual</strong> coins (no cash value).</p>
         <p style="display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center">
           <input class="text-input" id="refLink" readonly value="Sign in to get your link" style="flex:1;min-width:220px">
-          <button class="btn btn-sm" type="button" id="refCopyBtn">Copy</button>
+          <button class="btn btn-sm" type="button" id="refCopyBtn" data-i18n="acct_copy">Copy</button>
         </p>
         <p style="color:var(--text-muted);font-size:var(--fs-sm);margin-bottom:0">Referred friends: <strong id="refCount">0</strong></p>
       </div>
@@ -86,12 +86,14 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
-<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/firebase.js?v=20261008-05" defer></script>
 <script src="../js/dk-utils.js" defer></script>
 <script src="../js/finsec.js" defer></script>
 <script src="../js/payments.js" defer></script>
