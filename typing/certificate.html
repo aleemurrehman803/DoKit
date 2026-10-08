@@ -23,6 +23,9 @@
 <meta name="twitter:title" content="Typing Certificate — TypeMaster">
 <meta name="twitter:description" content="Earn your TypeMaster typing certificate: your name, best WPM, accuracy, and date on a printable award.">
 <link rel="stylesheet" href="css/main.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:ital@0;1&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="site-nav"></div>
@@ -34,30 +37,35 @@
     <p class="page-sub" data-i18n="cert_sub">Proof of your typing skill — print it or share it.</p>
   </div>
 
-  <div class="cert-paper card" id="certPaper">
-    <div class="cert-brand">TypeMaster</div>
-    <div class="cert-seal">★</div>
-    <h2 data-i18n="cert_award_title">Certificate of Typing Achievement</h2>
-    <p class="cert-presented" data-i18n="cert_presented_to">Proudly presented to</p>
-    <div id="certName" class="cert-name">—</div>
-    <div class="cert-stats">
-      <div><span class="stat-value" id="certWpm">0</span><span class="stat-label" data-i18n="cert_l_wpm">WPM</span></div>
-      <div><span class="stat-value" id="certAcc">0%</span><span class="stat-label" data-i18n="cert_l_acc">Accuracy</span></div>
-      <div><span class="stat-value" id="certDate">—</span><span class="stat-label" data-i18n="cert_l_date">Date</span></div>
+  <div class="cert-paper cert-premium card" id="certPaper">
+    <div class="cp-seal" aria-hidden="true"><span>★</span><span data-i18n="cert_seal">Official Seal</span><span>★</span></div>
+    <div class="cp-brand">
+      <img src="../assets/logo.svg" alt="DoKit" width="48" height="48" loading="lazy">
+      <div><div class="cp-brand-name">DoKit</div><div class="cp-brand-tag" data-i18n="cert_brand_tag">Every tool you&apos;ll ever need.</div></div>
     </div>
-    <div class="cert-meta">
-      <img id="certQr" class="cert-qr" alt="Certificate verification QR code" width="150" height="150" loading="lazy">
-      <div class="cert-meta-info">
-        <div class="cert-reg"><span data-i18n="cert_reg_no">Registration No.</span>: <strong id="certReg">—</strong></div>
-        <div class="cert-issued" id="certIssued">—</div>
-      </div>
+    <div class="cp-photo" id="certPhoto" aria-hidden="true">?</div>
+    <h2 class="cp-title" data-i18n="cert_word">Certificate</h2>
+    <p class="cp-board" data-i18n="cert_award_line">of Typing Achievement</p>
+    <div class="cp-divider" aria-hidden="true"></div>
+    <p class="cp-presented" data-i18n="cert_presented_to">This certificate is proudly presented to</p>
+    <div id="certName" class="cp-name">—</div>
+    <p class="cp-prose" data-i18n="cert_prose">This is to certify that the above-named candidate has successfully completed the TypeMaster Professional Typing Assessment and has demonstrated outstanding proficiency in both speed and accuracy, meeting all requirements prescribed by the Certification Board.</p>
+    <div class="cp-stats">
+      <div class="cp-stat"><div class="cp-val" id="certWpm">0</div><div class="cp-lbl" data-i18n="cert_l_wpm">Best typing speed</div></div>
+      <div class="cp-stat"><div class="cp-val" id="certAcc">0%</div><div class="cp-lbl" data-i18n="cert_l_acc">Best accuracy</div></div>
     </div>
-    <div class="cert-sign">
-      <span class="cert-sign-line"></span>
-      <p data-i18n="cert_signature">TypeMaster Certification Board</p>
+    <div class="cp-grade"><span id="certGrade">—</span></div>
+    <div class="cp-meta">
+      <div class="cp-reg"><span data-i18n="cert_reg_no">Registration No.</span>: <strong id="certReg">—</strong></div>
+      <div class="cp-issued" id="certIssued">—</div>
     </div>
-    <div class="cert-verify">
-      <span data-i18n="cert_verify_line">Verify this certificate at:</span>
+    <div class="cp-qrwrap"><img id="certQr" class="cp-qr" alt="Certificate verification QR code" width="130" height="130" loading="lazy"></div>
+    <div class="cp-signatures">
+      <div class="cp-sig"><div class="cp-sig-name">Malik Jalil</div><div class="cp-sig-title" data-i18n="cert_sig_founder">Founder</div><div class="cp-sig-desig">DoKit</div></div>
+      <div class="cp-sig"><div class="cp-sig-name">TypeMaster</div><div class="cp-sig-title" data-i18n="cert_sig_board">Certification Board</div><div class="cp-sig-desig">DoKit</div></div>
+    </div>
+    <div class="cp-verify">
+      <span data-i18n="cert_verify_line">Verify this certificate at:</span><br>
       <a id="certVerifyLink" href="#" rel="noopener">—</a>
     </div>
   </div>

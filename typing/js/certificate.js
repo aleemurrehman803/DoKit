@@ -250,6 +250,8 @@ window.Certificate = {
     show(paper);
     show(printWrap);
     set("certName", name);
+    var photo = get("certPhoto");
+    if (photo) photo.textContent = name.charAt(0).toUpperCase();
 
     var wpm = 0;
     try { wpm = (DB.bestWPM ? DB.bestWPM() : 0) || 0; } catch (e) { wpm = 0; }
@@ -267,6 +269,13 @@ window.Certificate = {
       bestAcc = null;
     }
     set("certAcc", bestAcc === null ? "—" : String(Math.round(10 * bestAcc) / 10));
+
+    /* Grade badge: Distinction >=60 WPM & >=97% acc; Merit >=40 & >=95; Pass >=25 & >=90. */
+    var gradeKey = "cert_grade_participant";
+    if (wpm >= 60 && bestAcc !== null && bestAcc >= 97) gradeKey = "cert_grade_distinction";
+    else if (wpm >= 40 && bestAcc !== null && bestAcc >= 95) gradeKey = "cert_grade_merit";
+    else if (wpm >= 25 && bestAcc !== null && bestAcc >= 90) gradeKey = "cert_grade_pass";
+    set("certGrade", self.t(gradeKey, gradeKey));
 
     /* Registration record: stable regNo + issue date, refreshing bests. */
     var rec = self.getOrCreateRecord(u.email, name, wpm, bestAcc);
