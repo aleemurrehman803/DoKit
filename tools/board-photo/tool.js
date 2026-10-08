@@ -296,9 +296,28 @@
   /* Phase 3: re-apply translations now that bp.* keys are registered.
      i18n-v2.js processed the HTML before these keys existed. */
   try {
-    if (window.DKI18N) {
-      if (typeof window.DKI18N.apply === "function") window.DKI18N.apply();
-      else document.dispatchEvent(new CustomEvent("dokit:langchange", { detail: { lang: window.DKI18N.getLang ? window.DKI18N.getLang() : "en" } }));
+    if (window.DKI18N && typeof window.DKI18N.t === "function") {
+      var _lang = window.DKI18N.getLang ? window.DKI18N.getLang() : "en";
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        var k = el.getAttribute("data-i18n");
+        if (!k || k.indexOf("bp.") !== 0) return;
+        try {
+          var v = window.DKI18N.t(k);
+          if (typeof v === "string" && v && v !== k) {
+            var tag = el.tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA") el.setAttribute("placeholder", v);
+            else el.textContent = v;
+          }
+        } catch (e) {}
+      });
+      document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+        var k = el.getAttribute("data-i18n-ph");
+        if (!k || k.indexOf("bp.") !== 0) return;
+        try {
+          var v = window.DKI18N.t(k);
+          if (typeof v === "string" && v && v !== k) el.setAttribute("placeholder", v);
+        } catch (e) {}
+      });
     }
   } catch (e) {}
 
