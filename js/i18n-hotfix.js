@@ -58,7 +58,7 @@
    * Deferred scripts run before DOMContentLoaded, and i18n-v2 only applies
    * on DOMContentLoaded, so at this point the DOM still holds the author's
    * original copy. We snapshot per attribute kind. */
-  var ATTRS = ['data-i18n', 'data-i18n-ph', 'data-i18n-title', 'data-i18n-aria'];
+  var ATTRS = ['data-i18n', 'data-i18n-ph', 'data-i18n-title', 'data-i18n-aria', 'data-i18n-content'];
   var snapshot = new Map(); // element -> { attrName: originalValue }
 
   function takeSnapshot() {
@@ -79,6 +79,8 @@
           entry.title = el.getAttribute('title');
         } else if (attr === 'data-i18n-aria') {
           entry.aria = el.getAttribute('aria-label');
+        } else if (attr === 'data-i18n-content') {
+          entry.contentAttr = el.getAttribute('content');
         }
         snapshot.set(el, entry);
       });
@@ -169,6 +171,15 @@
       var orig = snapshot.get(el) || {};
       if (v !== null && v !== key) { el.setAttribute('aria-label', v); }
       else if (orig.aria != null) { el.setAttribute('aria-label', orig.aria); }
+    });
+
+    // data-i18n-content : content attribute (for meta[name=description])
+    document.querySelectorAll('[data-i18n-content]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-content');
+      var v = lookup(key);
+      var orig = snapshot.get(el) || {};
+      if (v !== null && v !== key) { el.setAttribute('content', v); }
+      else if (orig.contentAttr != null) { el.setAttribute('content', orig.contentAttr); }
     });
   }
 
