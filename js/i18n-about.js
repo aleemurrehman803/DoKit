@@ -3,8 +3,8 @@
  * Numbers / Beliefs sections). Loaded by about.html after i18n-v2.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "about2.hero_t": "Every tool you'll ever need.",
     "about2.hero_sub": "DoKit is a toolbox that lives in your browser \u2014 honest, free, and private. No ads, no tracking, no accounts standing between you and your work.",
     "about2.story_t": "Our story",
@@ -30,7 +30,7 @@
     "about2.cta_d": "Browse the full toolbox \u2014 no account, no waiting, no catch.",
     "about2.cta_btn": "Browse all tools"
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "about2.hero_t": "\u06c1\u0631 \u0648\u06c1 \u0679\u0648\u0644 \u062c\u0648 \u0622\u067e \u06a9\u0648 \u06a9\u0628\u06be\u06cc \u0686\u0627\u06c1\u06cc\u06d2\u06d4",
     "about2.hero_sub": "\u0688\u0648\u06a9\u0679 \u0627\u06cc\u06a9 \u0627\u06cc\u0633\u0627 \u0679\u0648\u0644 \u0628\u0627\u06a9\u0633 \u06c1\u06d2 \u062c\u0648 \u0622\u067e \u06a9\u06d2 \u0628\u0631\u0627\u0624\u0632\u0631 \u0645\u06cc\u06ba \u0631\u06c1\u062a\u0627 \u06c1\u06d2 \u2014 \u0627\u06cc\u0645\u0627\u0646\u062f\u0627\u0631\u060c \u0645\u0641\u062a \u0627\u0648\u0631 \u0646\u062c\u06cc\u06d4 \u0646\u06c1 \u0627\u0634\u062a\u06c1\u0627\u0631\u0627\u062a\u060c \u0646\u06c1 \u0679\u0631\u06cc\u06a9\u0646\u06af\u060c \u0646\u06c1 \u0622\u067e \u06a9\u06d2 \u06a9\u0627\u0645 \u0627\u0648\u0631 \u0622\u067e \u06a9\u06d2 \u062f\u0631\u0645\u06cc\u0627\u0646 \u0627\u06a9\u0627\u0624\u0646\u0679\u0633 \u06a9\u06cc \u0631\u06a9\u0627\u0648\u0679\u06d4",
     "about2.story_t": "\u06c1\u0645\u0627\u0631\u06cc \u06a9\u06c1\u0627\u0646\u06cc",

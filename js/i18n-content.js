@@ -5,8 +5,8 @@
  * "badge_soon" key for the "Coming soon" badges (same translation).
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "price2_breadcrumb": "Pricing",
     "price2_popular": "Most popular",
     "price2_no_account": "No account needed",
@@ -69,7 +69,7 @@
     "contact2_mailto_t": "Opening your email app\u2026",
     "contact2_mailto_b": "Your email app should open with everything pre-filled \u2014 just press send. If it didn\u2019t open, write to malikjalil014@gmail.com instead. Nothing was lost.",
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "price2_breadcrumb": "\u0642\u06cc\u0645\u062a\u06cc\u06ba",
     "price2_popular": "\u0633\u0628 \u0633\u06d2 \u0645\u0642\u0628\u0648\u0644",
     "price2_no_account": "\u0627\u06a9\u0627\u0624\u0646\u0679 \u06a9\u06cc \u0636\u0631\u0648\u0631\u062a \u0646\u06c1\u06cc\u06ba",
