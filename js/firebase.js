@@ -68,11 +68,58 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
       return (ready() && firebase.storage) ? firebase.storage() : null;
     },
 
-    /* Subscribe to auth state. cb(user|null). Returns unsubscribe fn. */
+    /* Subscribe to auth state. cb(user|null). Returns unsubscribe fn.
+       Suspension enforcement: when a user signs in, their users/{uid} doc is
+       read (owner-read is allowed by Firestore rules). If suspended=true and
+       the suspension has not expired, the user is signed out and sent to
+       suspended.html with the reason. Expired suspensions are cleared
+       opportunistically. Offline/read failure => fail open (cb(user)). */
     onUser: function (cb) {
       var a = DKF.auth();
       if (!a) { try { cb(null); } catch (e) {} return function () {}; }
-      return a.onAuthStateChanged(cb);
+      return a.onAuthStateChanged(function (user) {
+        if (!user || !user.uid) { try { cb(null); } catch (e) {} return; }
+        var db = DKF.db();
+        if (!db) { try { cb(user); } catch (e) {} return; }
+        try {
+          db.collection("users").doc(user.uid).get().then(function (snap) {
+            var d = (snap && snap.exists) ? (snap.data() || {}) : {};
+            var until = Number(d.suspendUntil) || 0;
+            var suspended = !!d.suspended && (!until || until > Date.now());
+            if (suspended) {
+              try {
+                sessionStorage.setItem("dokit_suspended", JSON.stringify({
+                  reason: String(d.suspendReason || ""),
+                  until: until
+                }));
+              } catch (e) {}
+              var done = function () {
+                try { cb(null); } catch (e) {}
+                if (!/suspended\.html$/.test(location.pathname)) {
+                  var root = /^\/DoKit(\/|$)/.test(location.pathname) ? "/DoKit/" : "/";
+                  location.href = root + "suspended.html";
+                }
+              };
+              try {
+                DKF.signOut().then(done, done);
+              } catch (e) { done(); }
+              return;
+            }
+            if (d.suspended && until && until <= Date.now()) {
+              try {
+                db.collection("users").doc(user.uid).set(
+                  { suspended: false, suspendReason: "", suspendUntil: 0 },
+                  { merge: true }).catch(function () {});
+              } catch (e) {}
+            }
+            try { cb(user); } catch (e) {}
+          }).catch(function () {
+            try { cb(user); } catch (e) {}
+          });
+        } catch (e) {
+          try { cb(user); } catch (e) {}
+        }
+      });
     },
 
     signOut: function () {

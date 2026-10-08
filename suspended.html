@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6C4CF1">
+<title>Account suspended — DoKit</title>
+<meta name="description" content="Your DoKit account has been suspended.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f2ff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(108,76,241,.18);max-width:520px;width:100%;padding:40px 36px;text-align:center}
+.icon{font-size:52px;margin-bottom:12px}
+h1{font-size:1.6rem;color:#1a1a2e;margin-bottom:10px}
+p.desc{color:#555;line-height:1.7;margin-bottom:18px}
+.info{background:#faf9ff;border:1px solid #e6e1fb;border-radius:10px;padding:14px 18px;margin:0 0 22px;text-align:start;display:grid;gap:8px}
+.info .row{color:#444;font-size:.95rem}
+.info .row strong{color:#1a1a2e}
+.links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 26px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.95rem}
+.btn-primary{background:#6C4CF1;color:#fff}
+.btn-outline{border:2px solid #6C4CF1;color:#6C4CF1}
+[dir="rtl"] .info{text-align:right}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="icon" aria-hidden="true">🚫</div>
+<h1 data-i18n="susp.title">Account suspended</h1>
+<p class="desc" data-i18n="susp.desc">Your DoKit account has been suspended and you have been signed out.</p>
+<div class="info">
+<div class="row"><strong data-i18n="susp.reason_label">Reason</strong>: <span id="suspReason">—</span></div>
+<div class="row"><strong data-i18n="susp.until_label">Suspension ends</strong>: <span id="suspUntil">—</span></div>
+</div>
+<div class="links">
+<a class="btn btn-primary" href="./" data-i18n="susp.home">Back to home</a>
+<a class="btn btn-outline" href="contact.html" data-i18n="susp.contact">Contact support</a>
+</div>
+</main>
+<script>
+(function(){
+  var UR={"susp.title":"اکاؤنٹ معطل","susp.desc":"آپ کا DoKit اکاؤنٹ معطل کر دیا گیا ہے اور آپ کو سائن آؤٹ کر دیا گیا ہے۔","susp.reason_label":"وجہ","susp.until_label":"معطلی ختم","susp.home":"ہوم پر واپس","susp.contact":"سپورٹ سے رابطہ کریں","susp.permanent":"مستقل","susp.noreason":"—"};
+  function lang(){
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")return "ur";
+      if(window.DKI18N&&window.DKI18N.getLang)return window.DKI18N.getLang();
+      if(window.localStorage.getItem("dokit_lang")==="ur")return "ur";
+    }catch(e){}
+    return "en";
+  }
+  function apply(){
+    if(lang()!=="ur")return;
+    document.documentElement.lang="ur";
+    document.documentElement.dir="rtl";
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  function fill(){
+    var reason="",until=0;
+    try{
+      var raw=window.sessionStorage.getItem("dokit_suspended");
+      if(raw){var o=JSON.parse(raw);reason=o.reason||"";until=o.until||0;}
+    }catch(e){}
+    var rEl=document.getElementById("suspReason");
+    var uEl=document.getElementById("suspUntil");
+    if(rEl)rEl.textContent=reason||"—";
+    if(uEl){
+      if(!until){uEl.textContent=(lang()==="ur")?UR["susp.permanent"]:"Permanent";}
+      else{
+        try{uEl.textContent=new Date(until).toLocaleString();}catch(e){uEl.textContent=String(until);}
+      }
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){apply();fill();});
+  else{apply();fill();}
+  setTimeout(function(){apply();fill();},500);
+  document.addEventListener("dokit:langchange",function(){apply();fill();});
+})();
+</script>
+</body>
+</html>
