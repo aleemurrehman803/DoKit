@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://firestore.googleapis.com https://www.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#6C4CF1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<title>Design System — DoKit</title>
+<meta name="description" content="DoKit's design tokens: colors, typography, spacing, components and usage rules.">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/design-system.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Design System — DoKit">
+<meta property="og:description" content="DoKit's design tokens: colors, typography, spacing, components and usage rules.">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/design-system.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/hub.css">
+<style>
+/* UI/UX #49 (Oct 8, 2026): living design-system doc */
+.ds-sec { margin-block-end: var(--sp-8); }
+.ds-sec > h2 { margin-block-end: var(--sp-2); }
+.ds-sec > p { color: var(--text-muted); max-inline-size: 60ch; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: var(--sp-3); margin-block-start: var(--sp-3); }
+.swatch { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--card-bg); }
+.swatch__c { block-size: 4rem; }
+.swatch__n { padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
+.swatch__n code { display: block; color: var(--text-muted); font-size: var(--fs-xs); }
+.type-row { border-block-end: 1px solid var(--border); padding-block: var(--sp-2); }
+.type-row code { color: var(--text-muted); font-size: var(--fs-xs); margin-inline-start: var(--sp-2); }
+.comp-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; margin-block: var(--sp-3); }
+.ds-rule { background: var(--bg-soft); border-inline-start: 4px solid var(--primary); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-block: var(--sp-3); }
+</style>
+</head>
+<body data-nav="design">
+<header id="site-nav"></header>
+<main id="main">
+  <section class="section">
+    <div class="container" style="max-width:860px">
+      <nav aria-label="Breadcrumb"><ol class="breadcrumb"><li><a href="./">Home</a></li><li aria-current="page">Design System</li></ol></nav>
+      <div class="section-head" style="text-align:start;margin-inline:0">
+        <p class="eyebrow">DoKit internals</p>
+        <h1>🎨 Design System</h1>
+        <p style="color:var(--text-muted)">The tokens and rules behind every DoKit page. Single source of truth: <code>css/tokens.css</code>. Change a token once — it updates everywhere.</p>
+      </div>
+
+      <div class="ds-sec">
+        <h2>Colors</h2>
+        <p>Brand violet carries actions and focus. Text tokens guarantee contrast (danger <code>#C93A3A</code> and success-text <code>#1F7A4D</code> were tuned for WCAG AA).</p>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch__c" style="background:#6C4CF1"></div><div class="swatch__n">Primary<code>--primary</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#8B5CF6"></div><div class="swatch__n">Violet<code>--dk-violet</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#FFC531"></div><div class="swatch__n">Accent<code>--accent</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#17142E"></div><div class="swatch__n">Ink<code>--text</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#5C5778"></div><div class="swatch__n">Muted<code>--text-muted</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#C93A3A"></div><div class="swatch__n">Danger<code>--danger</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#1F7A4D"></div><div class="swatch__n">Success text<code>--success-text</code></div></div>
+          <div class="swatch"><div class="swatch__c" style="background:#F4F1FF"></div><div class="swatch__n">Violet soft<code>--dk-violet-soft</code></div></div>
+        </div>
+      </div>
+
+      <div class="ds-sec">
+        <h2>Typography</h2>
+        <p>System font stack (zero webfont cost). One scale, semantic sizes:</p>
+        <div class="type-row" style="font-size:var(--fs-3xl);font-weight:800">Display heading<code>--fs-3xl</code></div>
+        <div class="type-row" style="font-size:var(--fs-xl);font-weight:700">Section heading<code>--fs-xl</code></div>
+        <div class="type-row" style="font-size:var(--fs-md)">Body text — the quick brown fox<code>--fs-md</code></div>
+        <div class="type-row" style="font-size:var(--fs-sm);color:var(--text-muted)">Small / muted — hints, labels<code>--fs-sm</code></div>
+      </div>
+
+      <div class="ds-sec">
+        <h2>Components</h2>
+        <p>Live instances — these are the real classes, not pictures:</p>
+        <div class="comp-row">
+          <button type="button" class="btn btn-primary">Primary</button>
+          <button type="button" class="btn btn-accent">Accent</button>
+          <button type="button" class="btn btn-ghost">Ghost</button>
+          <button type="button" class="tbtn tbtn-amber">Tool amber</button>
+        </div>
+        <div class="comp-row">
+          <span class="chip">Chip</span><span class="badge">Badge</span><span class="badge badge-amber">Soon</span>
+        </div>
+      </div>
+
+      <div class="ds-sec">
+        <h2>Rules</h2>
+        <div class="ds-rule"><strong>50KB decoration budget (UI/UX #50).</strong> All decorative assets on a page — illustrations, patterns, mascot — must stay under 50KB total. Prefer inline SVG + CSS gradients over images.</div>
+        <div class="ds-rule"><strong>Touch targets ≥ 44px.</strong> Every button, chip and tab meets the 44px minimum (<code>.tbtn-sm{min-height:44px}</code>).</div>
+        <div class="ds-rule"><strong>Dark mode is a first-class theme.</strong> Every new component must define <code>[data-theme="dark"]</code> styles; theme choice persists in <code>localStorage</code>.</div>
+        <div class="ds-rule"><strong>No hard-coded user-facing text.</strong> All copy goes through <code>data-i18n</code> keys → centralized dictionaries → 10 languages.</div>
+        <div class="ds-rule"><strong>Motion respects users.</strong> Decorative animation pauses under <code>prefers-reduced-motion</code>; transitions stay under 300ms.</div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-foot"></footer>
+<script src="js/i18n-v2.js?v=20261008-03" defer></script>
+<script src="js/i18n-hotfix.js?v=20261008-08" defer></script>
+<script src="js/i18n-meta.js?v=20261008-10" defer></script>
+<script src="js/ui.js?v=20261008-03" defer></script>
+<script src="js/site-wide.js" defer></script>
+</body>
+</html>
