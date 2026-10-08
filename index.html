@@ -252,31 +252,36 @@ img{max-width:100%;height:auto}
     "hero_free":"مفت۔",
     "search_ph":"ٹولز تلاش کریں… مثلاً ری سائز، الفاظ"
   };
-  function fixHero(){
+  var ORIG={};
+  function fixLang(){
     var lang="en";
     try{
       var q=new URLSearchParams(window.location.search).get("lang");
-      if(q==="ur")lang="ur";
+      if(q)lang=q;
       else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
-      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+      else if(window.localStorage.getItem("dokit_lang"))lang=window.localStorage.getItem("dokit_lang");
     }catch(e){}
-    if(lang!=="ur")return;
     var els=document.querySelectorAll("[data-i18n]");
     for(var i=0;i<els.length;i++){
       var k=els[i].getAttribute("data-i18n");
-      if(UR[k])els[i].textContent=UR[k];
+      if(!UR[k])continue;
+      if(!ORIG[k])ORIG[k]=els[i].textContent;
+      els[i].textContent=(lang==="ur")?UR[k]:ORIG[k];
     }
     var phs=document.querySelectorAll("[data-i18n-ph]");
     for(var j=0;j<phs.length;j++){
       var k2=phs[j].getAttribute("data-i18n-ph");
-      if(UR[k2])phs[j].setAttribute("placeholder",UR[k2]);
+      if(!UR[k2])continue;
+      var pk="ph_"+k2;
+      if(!ORIG[pk])ORIG[pk]=phs[j].getAttribute("placeholder");
+      phs[j].setAttribute("placeholder",(lang==="ur")?UR[k2]:ORIG[pk]);
     }
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixHero);
-  else fixHero();
-  setTimeout(fixHero,500);
-  setTimeout(fixHero,2000);
-  document.addEventListener("dokit:langchange",fixHero);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixLang);
+  else fixLang();
+  setTimeout(fixLang,500);
+  setTimeout(fixLang,2000);
+  document.addEventListener("dokit:langchange",fixLang);
 })();
 </script>
 </body>
