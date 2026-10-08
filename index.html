@@ -84,11 +84,35 @@ img{max-width:100%;height:auto}
       <div class="search-wrap">
         <span class="search-icon" aria-hidden="true">🔍</span>
         <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
-        <input class="text-input" type="search" id="toolSearch" placeholder="Search tools… e.g. resize, words" data-i18n-ph="search_ph" autocomplete="off">
+        <input class="text-input" type="search" id="toolSearch" placeholder="Search tools… e.g. resize, words" data-i18n-ph="search_ph" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchSuggest" aria-autocomplete="list">
+        <!-- UI/UX #5 (Oct 8, 2026): autocomplete suggestions -->
+        <div class="search-suggest" id="searchSuggest" role="listbox" aria-label="Tool suggestions" hidden></div>
       </div>
       <p class="dk-hint" id="searchHint" hidden><span data-i18n="home2.hint_a">Tip: press</span> <kbd>/</kbd> <span data-i18n="home2.hint_b">to search</span><button type="button" class="dk-hint__close" data-hint-close data-i18n-aria="home2.hint_dismiss" aria-label="Dismiss tip">✕</button></p>
     </div>
     <div class="wave-div" aria-hidden="true"><svg viewBox="0 0 1440 72" preserveAspectRatio="none" focusable="false"><path d="M0,38 C240,70 480,6 720,36 C960,66 1200,10 1440,38 L1440,72 L0,72 Z"/></svg></div>
+  </section>
+
+  <!-- UI/UX #1 (Oct 8, 2026): interactive live demo below the hero -->
+  <section class="section demo-section" aria-labelledby="demo-h">
+    <div class="container">
+      <div class="demo-card">
+        <div class="demo-copy">
+          <p class="section-kicker heading-accent" data-i18n="home2.demo_kicker">Try it right now</p>
+          <h2 id="demo-h" data-i18n="home2.demo_title">Live in your browser</h2>
+          <p data-i18n="home2.demo_sub">Type below — the counts update instantly. Your text never leaves this page.</p>
+          <a class="btn btn-ghost" href="tools/word-counter/" data-i18n="home2.demo_open">Open Word Counter →</a>
+        </div>
+        <div class="demo-widget">
+          <label class="sr-only" for="demoText" data-i18n="home2.demo_label">Try the word counter</label>
+          <textarea id="demoText" class="text-input demo-text" rows="4">DoKit makes everyday tasks fast, free, and private.</textarea>
+          <div class="demo-stats" aria-live="polite">
+            <div class="demo-stat"><strong id="demoWords">8</strong><span data-i18n="home2.demo_words">words</span></div>
+            <div class="demo-stat"><strong id="demoChars">50</strong><span data-i18n="home2.demo_chars">characters</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- BROWSE BY CATEGORY -->
