@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/account/signup.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/account/signup.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Sign Up — DoKit">
 <meta property="og:description" content="Create a free DoKit account to save your work, sync across devices, earn coins, and unlock personalized features.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/account/signup.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/account/signup.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
@@ -32,28 +32,28 @@
     <div class="container" style="max-width:480px">
       <div class="card form-card">
         <div class="section-head" style="text-align:center">
-          <span class="eyebrow">Free forever</span>
-          <h1>Create your account</h1>
+          <span class="eyebrow" data-i18n="acct_signup_eyebrow">Free forever</span>
+          <h1 data-i18n="acct_signup_h1">Create your account</h1>
         </div>
         <form id="signupForm" novalidate>
           <div class="field">
-            <label for="name">Name</label>
+            <label for="name" data-i18n="acct_field_name">Name</label>
             <input class="form-control text-input" id="name" name="name" type="text" autocomplete="name">
             <div class="form-error" id="err-name" role="alert"></div>
           </div>
           <div class="field">
-            <label for="email">Email</label>
+            <label for="email" data-i18n="acct_field_email">Email</label>
             <input class="form-control text-input" id="email" name="email" type="email" autocomplete="email">
             <div class="form-error" id="err-email" role="alert"></div>
           </div>
           <div class="field">
-            <label for="password">Password</label>
+            <label for="password" data-i18n="acct_field_password">Password</label>
             <input class="form-control text-input" id="password" name="password" type="password" autocomplete="new-password" aria-describedby="pwd-hint">
             <div class="form-hint" id="pwd-hint">Minimum 6 characters</div>
             <div class="form-error" id="err-password" role="alert"></div>
           </div>
           <div class="field">
-            <label for="capInput">Security check <span style="color:var(--text-muted)">(required every time)</span></label>
+            <label for="capInput">Security check <span style="color:var(--text-muted)" data-i18n="acct_required">(required every time)</span></label>
             <div style="display:flex;gap:var(--sp-2);align-items:stretch">
               <canvas id="capCanvas" width="160" height="56" style="border:1px solid var(--border);border-radius:var(--radius);background:#f4f2ff;max-width:100%" aria-hidden="true"></canvas>
               <button class="btn" id="capRefresh" type="button" title="Get a new code" aria-label="Get a new code" style="padding:0 var(--sp-3);font-size:1.25rem">↻</button>
@@ -63,16 +63,16 @@
             <div class="form-error" id="err-captcha" role="alert"></div>
           </div>
           <div class="form-error" id="err-general" role="alert" style="margin-bottom:var(--sp-2)"></div>
-          <button class="btn btn-primary" type="submit" style="width:100%">Create Account</button>
+          <button class="btn btn-primary" type="submit" style="width:100%" data-i18n="acct_signup_submit">Create Account</button>
         </form>
         <div style="display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-3) 0;color:var(--text-muted);font-size:var(--fs-sm)">
           <span style="flex:1;border-top:1px solid var(--border)"></span>or<span style="flex:1;border-top:1px solid var(--border)"></span>
         </div>
-        <button class="btn" id="googleBtn" type="button" style="width:100%">Continue with Google</button>
+        <button class="btn" id="googleBtn" type="button" style="width:100%" data-i18n="acct_google">Continue with Google</button>
         <p class="form-note" style="text-align:center;margin-top:var(--sp-3)">
-          Already have an account? <a href="login.html">Log in</a>
+          Already have an account? <a href="login.html" data-i18n="acct_login_link">Log in</a>
         </p>
-        <p class="form-note" style="text-align:center;color:var(--text-muted);font-size:var(--fs-sm)">
+        <p class="form-note" style="text-align:center;color:var(--text-muted);font-size:var(--fs-sm)" data-i18n="acct_secured">
           Secured by Firebase Authentication.
         </p>
       </div>
@@ -81,13 +81,15 @@
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js" defer></script>
+<script src="../js/i18n-account.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="../js/captcha.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
-<script src="../js/firebase.js?v=20261007i" defer></script>
+<script src="../js/firebase.js?v=20261008-05" defer></script>
 <script src="../js/pages/signup.js?v=20261007i" defer></script>
 </body>
 </html>
