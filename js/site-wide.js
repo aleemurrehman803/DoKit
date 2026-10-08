@@ -228,3 +228,115 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { start(); initPrefetch(); });
   else { start(); initPrefetch(); }
 })();
+
+/* DoKit PWA install prompt (Phase 2, Oct 2026).
+ * Listens for beforeinstallprompt, shows a dismissible custom banner with an
+ * Install button only when the browser actually offers installation.
+ * i18n: keys registered via DKI18N.add (EN + UR, others fall back to EN).
+ * CSP-safe: no inline handlers, all strings via textContent. */
+(function () {
+  "use strict";
+  var DISMISS_KEY = "dokit_pwa_dismissed_v1";
+  var DISMISS_DAYS = 14;
+
+  function t(key) {
+    return (window.DKI18N && typeof window.DKI18N.t === "function") ? window.DKI18N.t(key) : key;
+  }
+  function regI18n() {
+    var en = {
+      "pwa.install_title": "Install DoKit",
+      "pwa.install_desc": "Add DoKit to your home screen — open tools instantly, even offline.",
+      "pwa.install_btn": "Install",
+      "pwa.dismiss": "Not now"
+    };
+    var ur = {
+      "pwa.install_title": "ڈوکٹ انسٹال کریں",
+      "pwa.install_desc": "ڈوکٹ کو ہوم اسکرین پر رکھیں — ٹولز فوراً کھولیں، آف لائن بھی۔",
+      "pwa.install_btn": "انسٹال کریں",
+      "pwa.dismiss": "ابھی نہیں"
+    };
+    if (window.DKI18N && typeof window.DKI18N.add === "function") {
+      window.DKI18N.add("en", en);
+      window.DKI18N.add("ur", ur);
+    } else {
+      (window.__DKI18N_QUEUE__ = window.__DKI18N_QUEUE__ || []).push(["en", en], ["ur", ur]);
+    }
+  }
+  function dismissed() {
+    try {
+      var v = window.localStorage.getItem(DISMISS_KEY);
+      return v && (Date.now() - parseInt(v, 10)) < DISMISS_DAYS * 864e5;
+    } catch (e) { return false; }
+  }
+  function markDismissed() {
+    try { window.localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
+  }
+  function isInstalled() {
+    try {
+      return window.matchMedia && (window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches) ||
+        (window.navigator && window.navigator.standalone === true);
+    } catch (e) { return false; }
+  }
+  function showBanner(deferredPrompt) {
+    if (document.getElementById("dk-pwa-banner") || isInstalled() || dismissed()) return;
+    var bar = document.createElement("div");
+    bar.id = "dk-pwa-banner";
+    bar.setAttribute("role", "dialog");
+    bar.setAttribute("aria-live", "polite");
+    bar.style.cssText = "position:fixed;inset-inline:1rem;bottom:1rem;z-index:9990;" +
+      "display:flex;gap:.75rem;align-items:center;" +
+      "background:var(--surface,#1d1836);color:var(--text,#fff);" +
+      "border:1px solid var(--border,#3a3265);border-radius:1rem;" +
+      "padding:.8rem 1rem;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:26rem;margin-inline:auto;";
+    var icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.fontSize = "1.6rem";
+    icon.textContent = "📲";
+    var txt = document.createElement("div");
+    txt.style.cssText = "flex:1;min-width:0";
+    var h = document.createElement("strong");
+    h.style.display = "block";
+    h.textContent = t("pwa.install_title");
+    h.setAttribute("data-i18n", "pwa.install_title");
+    var p = document.createElement("p");
+    p.style.cssText = "margin:.15rem 0 0;font-size:.85rem;opacity:.85";
+    p.textContent = t("pwa.install_desc");
+    p.setAttribute("data-i18n", "pwa.install_desc");
+    txt.appendChild(h); txt.appendChild(p);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tbtn tbtn-primary tbtn-sm";
+    btn.textContent = t("pwa.install_btn");
+    btn.setAttribute("data-i18n", "pwa.install_btn");
+    btn.addEventListener("click", function () {
+      markDismissed();
+      bar.remove();
+      try {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function () { deferredPrompt = null; }).catch(function () {});
+      } catch (e) {}
+    });
+    var x = document.createElement("button");
+    x.type = "button";
+    x.className = "tbtn tbtn-ghost tbtn-sm";
+    x.setAttribute("aria-label", t("pwa.dismiss"));
+    x.textContent = "✕";
+    x.addEventListener("click", function () { markDismissed(); bar.remove(); });
+    bar.appendChild(icon); bar.appendChild(txt); bar.appendChild(btn); bar.appendChild(x);
+    document.body.appendChild(bar);
+  }
+  function init() {
+    regI18n();
+    if (isInstalled()) return;
+    var deferred = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      deferred = e;
+      // Small delay so it doesn't fight the first-visit tour for attention.
+      setTimeout(function () { if (deferred) showBanner(deferred); }, 4000);
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
