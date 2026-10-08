@@ -422,3 +422,23 @@ a.dkf-chip:hover { border-color: var(--primary, #6C4CF1); color: var(--primary, 
   .dkf-modal-backdrop,
   .dkf-modal { animation: none; }
 }
+
+/* ---------- Sticky result action (UI/UX #17, Oct 8 2026) ---------- */
+.dkf-sticky-action { position: fixed; inset-inline: 0; bottom: 0; z-index: 210;
+  display: flex; justify-content: center;
+  padding: var(--sp-2, .5rem) var(--sp-4, 1rem) calc(var(--sp-2, .5rem) + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--card-bg, #fff) 94%, transparent);
+  backdrop-filter: blur(8px); border-top: 1px solid var(--border, #e5e0f5); }
+.dkf-sticky-action[hidden] { display: none; }
+.dkf-sticky-action .btn { inline-size: 100%; max-inline-size: 28rem; min-height: 48px; }
+@media (min-width: 769px) { .dkf-sticky-action { display: none; } }
+/* lift floating buttons above the sticky bar */
+body.dkf-has-sticky .dkf-fab { inset-block-end: calc(4.5rem + env(safe-area-inset-bottom)); }
+@media (prefers-reduced-motion: reduce) { .dkf-sticky-action { transition: none; } }
+
+/* ---------- Command palette (UI/UX #41, Oct 8 2026) ---------- */
+.dkf-palette { min-inline-size: min(32rem, 86vw); }
+.dkf-palette-input { inline-size: 100%; margin-block-end: var(--sp-2, .5rem); }
+.dkf-palette-list { max-block-size: 22rem; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.dkf-palette .ss-item { border-radius: var(--r-md, .5rem); }
+.dkf-palette .ss-item.active { outline: 2px solid var(--primary, #6C4CF1); outline-offset: -2px; }

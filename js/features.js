@@ -457,6 +457,7 @@
   /* ---------------- D) Keyboard shortcuts ---------------- */
 
   var SHORTCUTS = [
+    { key: "Ctrl+K", descKey: "kb_palette", fb: "Command palette: jump to any tool" },
     { key: "/", descKey: "kb_search", fb: "Focus the site search" },
     { key: "t", descKey: "kb_alltools", fb: "Go to All Tools" },
     { key: "?", descKey: "kb_help", fb: "Show this shortcuts help" },
@@ -526,6 +527,105 @@
           openShortcutsModal();
         }
       } catch (err) { /* never break the page over a shortcut */ }
+    });
+  }
+
+  /* ---------------- H) Command palette (UI/UX #41, Oct 8 2026) ----------------
+     Ctrl+K / Cmd+K anywhere: search tools + key pages, Enter to jump. */
+  function humanizeSlug(slug){
+    return String(slug||"").replace(/[-_]+/g," ").replace(/\b\w/g,function(c){return c.toUpperCase();})||"Tool";
+  }
+  function paletteEntries(){
+    var items=[];
+    var tools=window.DKTOOLS||[];
+    tools.forEach(function(x){
+      if(!x||!x.href) return;
+      var slug="";
+      try{ slug=String(x.href).replace(/^.*\/tools\//,"").replace(/\//g,""); }catch(e){}
+      items.push({icon:x.icon||"🔧",label:T(x.nameKey,humanizeSlug(slug)),
+        hint:T(x.descKey,""),href:x.href});
+    });
+    [["🏠","nav_all_tools","/tools/","Browse every free tool"],
+     ["⌨️","nav_typing","/typing/","Typing lessons and practice"],
+     ["💳","nav_pricing","/pricing.html","Simple, honest pricing"],
+     ["❓","nav_faq","/faq.html","Quick answers"],
+     ["📝","changelog.title","/changelog.html","What changed recently"]
+    ].forEach(function(p){
+      items.push({icon:p[0],label:T(p[1],p[3]),hint:"",href:p[2]});
+    });
+    return items;
+  }
+  function openPalette(){
+    var entries=paletteEntries();
+    openModal({
+      label:T("kb_palette","Command palette"),
+      build:function(dlg,close){
+        modalTitle(dlg,"⌘ "+T("kb_palette","Command palette"));
+        var wrap=document.createElement("div"); wrap.className="dkf-palette";
+        var input=document.createElement("input");
+        input.type="text"; input.className="text-input dkf-palette-input";
+        input.setAttribute("placeholder",T("kb_palette_ph","Type a tool or page name\u2026"));
+        input.setAttribute("aria-label",T("kb_palette","Command palette"));
+        input.setAttribute("role","combobox"); input.setAttribute("aria-expanded","true");
+        input.setAttribute("aria-autocomplete","list");
+        var list=document.createElement("div");
+        list.className="dkf-palette-list"; list.setAttribute("role","listbox");
+        wrap.appendChild(input); wrap.appendChild(list); dlg.appendChild(wrap);
+        var active=0, shown=[];
+        function go(href){ close(); try{ location.href=U(href); }catch(e){} }
+        function paint(){
+          var btns=list.querySelectorAll(".ss-item");
+          btns.forEach(function(b,i){ b.classList.toggle("active",i===active); });
+        }
+        function render(){
+          var q=input.value.trim().toLowerCase();
+          shown=entries.filter(function(e){
+            return !q||((e.label+" "+e.hint).toLowerCase().indexOf(q)>=0);
+          }).slice(0,8);
+          active=0; list.innerHTML="";
+          if(!shown.length){
+            var em=document.createElement("div"); em.className="ss-empty";
+            em.textContent=T("tools_empty","No tools match your search. Try another word.");
+            list.appendChild(em); return;
+          }
+          shown.forEach(function(e,i){
+            var b=document.createElement("button");
+            b.type="button"; b.className="ss-item"+(i===0?" active":"");
+            b.setAttribute("role","option"); b.id="dkf-pal-"+i;
+            var ic=document.createElement("span"); ic.className="ss-icon";
+            ic.setAttribute("aria-hidden","true"); ic.textContent=e.icon;
+            var nm=document.createElement("span"); nm.className="ss-name"; nm.textContent=e.label;
+            b.appendChild(ic); b.appendChild(nm);
+            if(e.hint){ var ds=document.createElement("span"); ds.className="ss-desc"; ds.textContent=e.hint; b.appendChild(ds); }
+            b.addEventListener("click",function(){ go(e.href); });
+            list.appendChild(b);
+          });
+          input.setAttribute("aria-activedescendant","dkf-pal-0");
+        }
+        input.addEventListener("input",render);
+        input.addEventListener("keydown",function(ev){
+          var btns=list.querySelectorAll(".ss-item");
+          if(ev.key==="ArrowDown"&&btns.length){ ev.preventDefault(); active=(active+1)%btns.length; paint();
+            input.setAttribute("aria-activedescendant","dkf-pal-"+active); }
+          else if(ev.key==="ArrowUp"&&btns.length){ ev.preventDefault(); active=(active-1+btns.length)%btns.length; paint();
+            input.setAttribute("aria-activedescendant","dkf-pal-"+active); }
+          else if(ev.key==="Enter"){ ev.preventDefault(); if(shown[active]) go(shown[active].href); }
+        });
+        render();
+        setTimeout(function(){ try{ input.focus(); }catch(e){} },60);
+      }
+    });
+  }
+  function initPalette(){
+    document.addEventListener("keydown",function(e){
+      try{
+        if(!e||e.defaultPrevented) return;
+        if(!((e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey)) return;
+        if(String(e.key||"").toLowerCase()!=="k") return;
+        e.preventDefault();
+        if(activeModal){ closeModal(); return; }
+        openPalette();
+      }catch(err){/* never break the page */}
     });
   }
 
@@ -870,6 +970,7 @@ h.setAttribute("data-i18n", "recent_title");
     try { initFeedback(); } catch (e) {}
     try { watchFooterExtras(); } catch (e) {}
     try { initShortcuts(); } catch (e) {}
+    try { initPalette(); } catch (e) {}
     try { initStickyAction(); } catch (e) {}
     try { recordRecent(); } catch (e) {}
     try { renderRecent(); } catch (e) {}
