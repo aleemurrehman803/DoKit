@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/offline.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/offline.html">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <meta name="theme-color" content="#6C4CF1">
@@ -13,18 +13,19 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Offline — DoKit">
 <meta property="og:description" content="DoKit — Every tool you&#x27;ll ever need. Free, fast, and private, right in your browser.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/offline.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/offline.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Offline — DoKit">
 <meta name="twitter:description" content="DoKit — Every tool you&#x27;ll ever need. Free, fast, and private, right in your browser.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js?v=20261008-08" defer></script>
 <style>
 .offline-wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:var(--sp-4)}
 .offline-card{text-align:center;max-width:28rem}
@@ -34,7 +35,7 @@
 <body>
 <main class="offline-wrap">
   <div class="card offline-card">
-    <img src="assets/logo.svg" alt="DoKit logo" width="72" height="72">
+    <img loading="lazy" decoding="async" src="assets/logo.svg" alt="DoKit logo" width="72" height="72">
     <h1 data-i18n="offline.title">You're offline</h1>
     <p style="color:var(--text-muted)" data-i18n="offline.desc">DoKit needs a connection for this page. Reconnect and try again — your tools will be right here.</p>
     <p><a class="btn btn-primary" href="./" data-i18n="offline.retry">Try again</a></p>
