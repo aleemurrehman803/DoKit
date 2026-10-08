@@ -500,3 +500,7 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
   color: var(--dk-text); font-size: 1.1rem; line-height: 1; cursor: pointer; }
 .bcam-x:hover { background: var(--dk-violet); color: #fff; border-color: var(--dk-violet); }
 .bcam-box { position: relative; }
+
+/* RTL: step numbers on the right for Urdu/Arabic */
+[dir="rtl"] .bstep-h { flex-direction: row-reverse; }
+[dir="rtl"] .bstep { text-align: right; }
