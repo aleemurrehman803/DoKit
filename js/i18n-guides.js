@@ -3,8 +3,8 @@
  * plus the five how-to guide pages. Loaded after i18n-v2.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "guide_resize_eyebrow": "Guide",
     "guide_resize_h1": "How to resize images",
     "guide_resize_tagline": "Change any photo to the exact width and height you need \u2014 for web, print, passports or social media \u2014 right in your browser.",
@@ -198,7 +198,7 @@
     "guide_idx_card5_d": "Fix ALL-CAPS headings and format titles \u2014 six case styles, one click each.",
     "guide_idx_card5_b": "Case Converter"
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "guide_resize_eyebrow": "\u0631\u06c1\u0646\u0645\u0627\u0626\u06cc",
     "guide_resize_h1": "\u062a\u0635\u0648\u06cc\u0631\u0648\u06ba \u06a9\u0627 \u0633\u0627\u0626\u0632 \u06a9\u06cc\u0633\u06d2 \u0628\u062f\u0644\u06cc\u06ba",
     "guide_resize_tagline": "\u06a9\u0633\u06cc \u0628\u06be\u06cc \u062a\u0635\u0648\u06cc\u0631 \u06a9\u0648 \u0627\u067e\u0646\u06cc \u0636\u0631\u0648\u0631\u062a \u06a9\u06d2 \u0639\u06cc\u0646 \u0645\u0637\u0627\u0628\u0642 \u0686\u0648\u0691\u0627\u0626\u06cc \u0627\u0648\u0631 \u0627\u0648\u0646\u0686\u0627\u0626\u06cc \u0645\u06cc\u06ba \u0628\u062f\u0644\u06cc\u06ba \u2014 \u0648\u06cc\u0628\u060c \u067e\u0631\u0646\u0679\u060c \u067e\u0627\u0633\u067e\u0648\u0631\u0679 \u06cc\u0627 \u0633\u0648\u0634\u0644 \u0645\u06cc\u0688\u06cc\u0627 \u06a9\u06d2 \u0644\u06cc\u06d2 \u2014 \u0628\u0631\u0627\u06c1 \u0631\u0627\u0633\u062a \u0627\u067e\u0646\u06d2 \u0628\u0631\u0627\u0624\u0632\u0631 \u0645\u06cc\u06ba\u06d4",
