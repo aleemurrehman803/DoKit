@@ -39,4 +39,14 @@ __dkAdd("pt",{"cat_typing":"TypeMaster","cat_typing_d":"Lições, testes e jogos
 __dkAdd("de",{"cat_typing":"TypeMaster","cat_typing_d":"Lektionen, Tests und Spiele zum schneller Tippen — mit TypeMaster.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Hol dir dein Tipp-Zertifikat","tool_tcert_name":"Zertifikat","tool_tgames_desc":"Tippen lernen mit Spaß","tool_tgames_name":"Tipp-Spiele","tool_tlessons_desc":"Schritt-für-Schritt-Lektionen von den Grundlagen bis zum Speed","tool_tlessons_name":"Tipp-Lektionen","tool_tpractice_desc":"Übe deine schwachen Tasten","tool_tpractice_name":"Smartes Üben","tool_ttest_desc":"Prüfe deine Geschwindigkeit und Genauigkeit","tool_ttest_name":"Tipp-Test","tool_typing_desc":"Tippen lernen mit TypeMaster","tool_typing_name":"TypeMaster"});
 __dkAdd("tr",{"cat_typing":"TypeMaster","cat_typing_d":"TypeMaster ile daha hızlı yazmak için dersler, testler ve oyunlar.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Yazma sertifikanı al","tool_tcert_name":"Sertifika","tool_tgames_desc":"Eğlenerek yazmayı öğren","tool_tgames_name":"Yazma Oyunları","tool_tlessons_desc":"Temelden hıza adım adım dersler","tool_tlessons_name":"Yazma Dersleri","tool_tpractice_desc":"Zayıf tuşlarını çalış","tool_tpractice_name":"Akıllı Pratik","tool_ttest_desc":"Hızını ve doğruluğunu kontrol et","tool_ttest_name":"Yazma Testi","tool_typing_desc":"TypeMaster ile yazmada ustalaş","tool_typing_name":"TypeMaster"});
 __dkAdd("ru",{"cat_typing":"TypeMaster","cat_typing_d":"Уроки, тесты и игры для быстрой печати — с TypeMaster.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Получите сертификат печати","tool_tcert_name":"Сертификат","tool_tgames_desc":"Учитесь печатать играя","tool_tgames_name":"Игры печати","tool_tlessons_desc":"Пошаговые уроки от основ до скорости","tool_tlessons_name":"Уроки печати","tool_tpractice_desc":"Тренируйте слабые клавиши","tool_tpractice_name":"Умная практика","tool_ttest_desc":"Проверьте скорость и точность","tool_ttest_name":"Тест печати","tool_typing_desc":"Освойте печать с TypeMaster","tool_typing_name":"TypeMaster"});
+__dkAdd("en",{"hero_img_alt":"DoKit tools illustration"});
+__dkAdd("ur",{"hero_img_alt":"ڈوکٹ ٹولز کی تصویر"});
+__dkAdd("ar",{"hero_img_alt":"رسم توضيحي لأدوات DoKit"});
+__dkAdd("hi",{"hero_img_alt":"DoKit टूल्स चित्रण"});
+__dkAdd("es",{"hero_img_alt":"Ilustración de herramientas DoKit"});
+__dkAdd("fr",{"hero_img_alt":"Illustration des outils DoKit"});
+__dkAdd("pt",{"hero_img_alt":"Ilustração das ferramentas DoKit"});
+__dkAdd("de",{"hero_img_alt":"DoKit-Tools-Illustration"});
+__dkAdd("tr",{"hero_img_alt":"DoKit araçları çizimi"});
+__dkAdd("ru",{"hero_img_alt":"Иллюстрация инструментов DoKit"});
 })();

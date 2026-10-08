@@ -177,7 +177,7 @@
         if (!document.querySelector('script[data-dkf="features-js"]')) {
           var fs = document.createElement("script");
           fs.setAttribute("data-dkf", "features-js");
-          fs.src = U("/js/features.js");
+          fs.src = U("/js/features.js?v=20261008-22");
           fs.defer = true;
           head.appendChild(fs);
         }
