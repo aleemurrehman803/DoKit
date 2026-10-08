@@ -447,6 +447,11 @@ input[type="range"].slider {
 .mobile-nav.open { display: block; }
 .mobile-nav a { display: block; padding: var(--sp-3) var(--sp-2); font-weight: 600; color: var(--text); border-radius: var(--r-md); }
 .mobile-nav a:hover { background: var(--dk-violet-soft); text-decoration: none; }
+/* UI/UX #8 (Oct 8, 2026): category grouping in mobile nav */
+.mnav-cat { margin-block: var(--sp-2); }
+.mnav-cat-t { display: block; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted); padding: var(--sp-2) var(--sp-2) var(--sp-1); }
+.mnav-cat a { padding-inline-start: var(--sp-4); }
 
 /* ---------- Footer ---------- */
 .site-footer {
@@ -531,6 +536,17 @@ input[type="range"].slider {
 .ss-item .ss-desc { color: var(--text-muted); font-size: var(--fs-sm); margin-inline-start: auto;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 14rem; }
 .ss-empty { padding: var(--sp-3) var(--sp-4); color: var(--text-muted); font-size: var(--fs-sm); }
+/* UI/UX #3 (Oct 8, 2026): mobile sticky CTA bar */
+.sticky-cta { position: fixed; inset-inline: 0; bottom: 0; z-index: 200; display: none;
+  justify-content: center; padding: var(--sp-2) var(--sp-4) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--card-bg, #fff) 92%, transparent);
+  backdrop-filter: blur(8px); border-top: 1px solid var(--border);
+  transform: translateY(110%); transition: transform .3s ease; }
+.sticky-cta.show { transform: translateY(0); }
+.sticky-cta .btn { inline-size: 100%; max-inline-size: 28rem; min-height: 48px; }
+@media (max-width: 768px) { .sticky-cta.on { display: flex; } }
+/* lift the assistant FAB above the sticky bar when visible */
+body.has-sticky-cta .dk-fab { inset-block-end: calc(4.5rem + env(safe-area-inset-bottom)); }
 .search-icon {
   position: absolute;
   inset-inline-start: var(--sp-4);
