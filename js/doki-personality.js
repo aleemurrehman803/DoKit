@@ -116,7 +116,9 @@
     var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.png") : "/assets/doki-panda.png";
     var svgSrc = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.svg") : "/assets/doki-panda.svg";
     fab.innerHTML = '<span class="doki-fab-icon doki-panda"><img class="doki-panda-img" src="' + src + '" alt="Doki" draggable="false"></span>';
-    fab.setAttribute("aria-label", "Chat with " + DOKI_NAME);
+    var dokiChatLabel = "Chat with " + DOKI_NAME;
+    try { if (window.DKI18N && window.DKI18N.t) { var dv = window.DKI18N.t("doki_chat"); if (dv && dv !== "doki_chat") dokiChatLabel = dv; } } catch (e2) {}
+    fab.setAttribute("aria-label", dokiChatLabel);
     fab.classList.add("doki-fab");
     inlinePanda(fab, svgSrc);
   }

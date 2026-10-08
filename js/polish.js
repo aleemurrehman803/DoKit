@@ -312,7 +312,7 @@
     if (!btn) {
       btn = document.createElement("button");
       btn.id = "back-to-top";
-      btn.setAttribute("aria-label", "Back to top");
+      btn.setAttribute("aria-label", T("a11y_top", "Back to top"));
       btn.textContent = "↑";
       document.body.appendChild(btn);
     }
