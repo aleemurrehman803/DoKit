@@ -114,10 +114,11 @@
   function enhanceFab(fab) {
     // Replace 💬 with Doki the panda working at a laptop
     var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.png") : "/assets/doki-panda.png";
+    var svgSrc = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.svg") : "/assets/doki-panda.svg";
     fab.innerHTML = '<span class="doki-fab-icon doki-panda"><img class="doki-panda-img" src="' + src + '" alt="Doki" draggable="false"></span>';
     fab.setAttribute("aria-label", "Chat with " + DOKI_NAME);
     fab.classList.add("doki-fab");
-    inlinePanda(fab, src);
+    inlinePanda(fab, svgSrc);
   }
 
   /**
@@ -127,7 +128,7 @@
    * asset file (reusable anywhere) while enabling per-part animation.
    * Fallback: if fetch fails, the <img> stays and still shows the panda.
    * @param {HTMLElement} fab - The .dk-fab button element.
-   * @param {string} src - Resolved URL of assets/doki-panda.png.
+   * @param {string} src - Resolved URL of assets/doki-panda.svg.
    */
   function inlinePanda(fab, src) {
     if (!window.fetch) return;
