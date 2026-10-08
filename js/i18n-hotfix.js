@@ -23,8 +23,9 @@
  *      we record the original text/placeholder/title/aria-label of every
  *      element carrying a data-i18n* attribute. That snapshot is the
  *      trustworthy English fallback.
- *   2. FIXED LOOKUP — DKI18N.t is replaced with a version that returns the
- *      key itself when no dictionary has it (never a humanized guess).
+ *   2. FIXED LOOKUP — DKI18N.t is replaced with a version that returns a
+ *      humanized fallback when no dictionary has the key (never a raw key
+ *      like "tool_boardphoto_name"; Phase 3 alignment with i18n-v2.js).
  *   3. FIXED APPLY — DKI18N.apply / DKI18N.refresh are replaced. For every
  *      data-i18n* element:
  *        - key found  -> write the translation (same as before);
@@ -84,8 +85,15 @@
     });
   }
 
-  /* -- 2. Fixed lookup: key itself when missing, never a humanized guess -- */
+  /* -- 2. Fixed lookup: humanized fallback when missing, never a raw key --
+   * Phase 3: missing keys return "Tool boardphoto name" instead of
+   * "tool_boardphoto_name" (aligned with i18n-v2.js core n()). Static DOM is
+   * still protected by fixedApply()'s snapshot restore below. */
   function dictFor(lang) { return (I18N.dict && I18N.dict[lang]) || {}; }
+  function humanizeKey(key) {
+    var s = String(key).split('.').pop().replace(/_/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
   function fixedT(key) {
     var lang, val;
     try { lang = I18N.getLang(); } catch (e) { lang = 'en'; }
@@ -94,7 +102,8 @@
     // Fall back to English before giving up.
     val = dictFor('en')[key];
     if (typeof val === 'string') { return val; }
-    return key; // Missing everywhere: return the key so apply() skips it.
+    if (typeof console !== 'undefined' && console.warn) { console.warn('[i18n] missing key: ' + key); }
+    return humanizeKey(key); // Missing everywhere: humanized, never raw key.
   }
 
   /* -- 3. Fixed apply: translate what exists, restore what doesn't -------- */
@@ -198,6 +207,8 @@
     if (window.DKUI && typeof window.DKUI.refreshLangToggle === 'function') {
       try { window.DKUI.refreshLangToggle(); } catch (e3) { /* non-fatal */ }
     }
+    // Phase 3: notify dynamic components (tool dropdowns, spec cards, etc.)
+    try { document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: lang } })); } catch (e4) { /* non-fatal */ }
   };
 
   /* -- 5. Run once now (page scripts may add dicts before DOMContentLoaded) - */
