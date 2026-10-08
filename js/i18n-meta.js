@@ -32,7 +32,9 @@
     "meta.case_title": "Free Case Converter Online \u2014 UPPER, lower, Title Case | DoKit",
     "meta.case_desc": "Convert text between UPPER CASE, lower case, Title Case, Sentence case \u2014 free, instant, private.",
     "meta.boardphoto_title": "Board Photo \u2014 BISE & University Exam Photo Maker | DoKit",
-    "meta.boardphoto_desc": "Make the perfect exam photo for Pakistani boards & universities: pick your board, get exact size and background."
+    "meta.boardphoto_desc": "Make the perfect exam photo for Pakistani boards & universities: pick your board, get exact size and background.",
+    "hero_title": "Get everyday tasks done in seconds",
+    "hero_free": "free."
   });
   __dkAdd("ur", {
     "meta.home_title": "DoKit \u2014 ہر وہ ٹول جو آپ کو کبھی چاہیے | مفت آن لائن ٹولز",
