@@ -970,6 +970,9 @@ html:not([data-theme="dark"]) .type-text .ch.bad { color: var(--danger-text); }
 .e404-code { font-size: clamp(4rem, 16vw, 7rem); font-weight: 800; line-height: 1;
   letter-spacing: -.02em; color: var(--primary, #6C4CF1); margin: 0 0 var(--sp-2, .5rem); }
 .e404-emoji { font-size: 2.5rem; margin-block-end: var(--sp-3, .75rem); }
+/* UI/UX #46 (Oct 8, 2026): Doki mascot on 404 */
+.e404-doki { width: 120px; height: 120px; margin-block-end: var(--sp-3, .75rem);
+  filter: drop-shadow(0 8px 20px rgba(108, 76, 241, .18)); }
 .e404 h1 { margin: 0 0 var(--sp-3, .75rem); }
 .e404-sub { color: var(--text-muted, #5B5670); margin: 0 auto var(--sp-5, 1.5rem);
   max-inline-size: 44ch; }

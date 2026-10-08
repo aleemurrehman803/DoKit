@@ -1359,3 +1359,40 @@ main { animation: dk-fade-in 0.4s ease-out; }
     --border: #E4DFF5;
   }
 }
+
+/* UI/UX #36 (Oct 8, 2026): dark-mode premium polish — glow + depth */
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 4px 20px rgba(139, 116, 255, .35), inset 0 1px 0 rgba(255,255,255,.12);
+}
+[data-theme="dark"] .btn-primary:hover {
+  box-shadow: 0 6px 28px rgba(139, 116, 255, .5), inset 0 1px 0 rgba(255,255,255,.12);
+}
+[data-theme="dark"] .card, [data-theme="dark"] .tool-card, [data-theme="dark"] .demo-card {
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+[data-theme="dark"] .hero-illustration {
+  filter: drop-shadow(0 12px 32px rgba(139, 116, 255, .25));
+}
+
+/* UI/UX #42 (Oct 8, 2026): first-visit tour */
+.tour-ov { position: fixed; inset: 0; background: rgba(23, 20, 46, .45); z-index: 400; }
+.tour-bub { position: absolute; z-index: 401; max-inline-size: 20rem; background: var(--card-bg, #fff);
+  border: 1px solid var(--border); border-radius: var(--r-lg, .75rem); padding: var(--sp-4, 1rem);
+  box-shadow: var(--shadow-xl, 0 24px 64px rgba(0,0,0,.3)); }
+.tour-t { display: block; font-size: var(--fs-md); margin-block-end: var(--sp-1); }
+.tour-d { color: var(--text-muted); font-size: var(--fs-sm); margin: 0 0 var(--sp-3); }
+.tour-row { display: flex; justify-content: flex-end; gap: var(--sp-2); }
+.tour-dots { display: flex; gap: 6px; margin-block-end: var(--sp-3); }
+.tour-dots span { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--border); }
+.tour-dots span.on { background: var(--primary); }
+.tour-hl { position: relative; z-index: 402; outline: 3px solid var(--primary); outline-offset: 4px; border-radius: var(--r-md); }
+body.touring { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .tour-bub { transition: none; } }
+
+/* UI/UX #43 (Oct 8, 2026): "which tool?" helper */
+.tool-helper { margin-block-end: var(--sp-4); border: 1px dashed var(--border);
+  border-radius: var(--r-lg, .75rem); padding: var(--sp-3) var(--sp-4); background: var(--bg-soft); }
+.tool-helper summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; gap: var(--sp-2); align-items: center; }
+.tool-helper summary::-webkit-details-marker { display: none; }
+.tool-helper__grid { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-block-start: var(--sp-3); }
+.tool-helper__grid .chip { text-decoration: none; }

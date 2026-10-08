@@ -55,6 +55,19 @@
         <button type="button" class="chip" data-cat="typing" aria-pressed="false" data-i18n="cat_typing">Typing</button>
       </div>
       <p style="color:var(--text-muted);font-size:var(--fs-sm)" id="toolsCount" aria-live="polite"></p>
+      <!-- UI/UX #43 (Oct 8, 2026): "Which tool?" helper -->
+      <details class="tool-helper">
+        <summary><span aria-hidden="true">🤔</span> <span data-i18n="tools.helper_q">Not sure which tool you need?</span></summary>
+        <p data-i18n="tools.helper_d">Tell us what you want to do — we'll point you to the right tool:</p>
+        <div class="tool-helper__grid">
+          <a class="chip" href="image-compressor/"><span aria-hidden="true">🗜️</span> <span data-i18n="tools.helper_c1">Make an image file smaller</span></a>
+          <a class="chip" href="image-resizer/"><span aria-hidden="true">📐</span> <span data-i18n="tools.helper_c2">Change an image's dimensions</span></a>
+          <a class="chip" href="image-converter/"><span aria-hidden="true">🔄</span> <span data-i18n="tools.helper_c3">Change image format (PNG ↔ JPG)</span></a>
+          <a class="chip" href="word-counter/"><span aria-hidden="true">📝</span> <span data-i18n="tools.helper_c4">Count words in my text</span></a>
+          <a class="chip" href="case-converter/"><span aria-hidden="true">🔤</span> <span data-i18n="tools.helper_c5">UPPERCASE ↔ lowercase text</span></a>
+          <a class="chip" href="../typing/"><span aria-hidden="true">⌨️</span> <span data-i18n="tools.helper_c6">Practice typing faster</span></a>
+        </div>
+      </details>
       <div class="grid" id="toolsGrid" aria-live="polite"></div>
       <div class="empty-state" id="toolsEmpty" style="display:none">
         <span class="empty-state__icon" aria-hidden="true">🔍</span>
