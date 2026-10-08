@@ -2,6 +2,11 @@
    Light theme is default; [data-theme="dark"] overrides.
    All spacing/type use these variables. RTL-safe (logical properties only).
 
+   UI/UX #50 (Oct 8, 2026) — 50KB DECORATION RULE: all decorative assets on a
+   page (illustrations, patterns, mascot, dividers) must total < 50KB.
+   Prefer inline SVG + CSS gradients (0 extra requests, ~bytes). Raster art
+   must be WebP/AVIF and lazy-loaded. See design-system.html "Rules".
+
    WORKER 1 (Oct 6, 2026) upgrade notes:
    - Extended spacing/type/color/radius/shadow scales; every pre-existing token
      name still works. See the "scale crosswalk" comments where old and new
