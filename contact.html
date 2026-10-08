@@ -110,20 +110,15 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
 <script>
 (function(){
   var UR={"contact.opt_question":"سوال","contact.opt_bug":"بگ رپورٹ","contact.opt_suggest":"ٹول کی تجویز","contact.opt_feedback":"رائے","contact.opt_other":"دیگر"};
+  var _reg=false;
   function fixUr(){
-    var lang="en";
+    if(_reg)return;
     try{
-      var q=new URLSearchParams(window.location.search).get("lang");
-      if(q==="ur")lang="ur";
-      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
-      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+      if(window.DKI18N&&typeof window.DKI18N.add==="function"){
+        window.DKI18N.add("ur",UR);
+        _reg=true;
+      }
     }catch(e){}
-    if(lang!=="ur")return;
-    var els=document.querySelectorAll("[data-i18n]");
-    for(var i=0;i<els.length;i++){
-      var k=els[i].getAttribute("data-i18n");
-      if(UR[k])els[i].textContent=UR[k];
-    }
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
   else fixUr();
