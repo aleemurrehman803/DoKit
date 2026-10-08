@@ -20,17 +20,17 @@
 <link rel="stylesheet" href="../../css/tokens.css"/>
 <link rel="stylesheet" href="../../css/hub.css"/>
 <link rel="stylesheet" href="tool.css"/>
-<script src="../../js/i18n-v2.js" defer></script>
-<script src="../../js/i18n-hotfix.js" defer></script>
-  <script src="../../js/i18n-tools-shared.js" defer></script>
-<script src="../../js/ui.js" defer></script>
+<script src="../../js/i18n-v2.js?v=20261007-02" defer></script>
+<script src="../../js/i18n-hotfix.js?v=20261007-02" defer></script>
+  <script src="../../js/i18n-tools-shared.js?v=20261007-02" defer></script>
+<script src="../../js/ui.js?v=20261007-02" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
-<script src="../../js/firebase.js" defer></script>
-<script src="../../js/site-wide.js" defer></script>
-<script src="../../js/maintenance.js" defer></script>
-<script src="../../js/journey.js" defer></script>
-<script src="tool.js" defer></script>
+<script src="../../js/firebase.js?v=20261007-02" defer></script>
+<script src="../../js/site-wide.js?v=20261007-02" defer></script>
+<script src="../../js/maintenance.js?v=20261007-02" defer></script>
+<script src="../../js/journey.js?v=20261007-02" defer></script>
+<script src="tool.js?v=20261007-02" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"Which boards and universities are included?","acceptedAnswer":{"@type":"Answer","text":"BISE Peshawar, BISE Swat, BISE Mardan, BISE Kohat and BISE D.I. Khan (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Quetta (white background), BISE Bahawalpur (150×200 px, 8–22 KB, blue background), FBISE, LUMS, NUST, UET Lahore, Punjab University, University of Karachi, IBA Karachi, COMSATS, AIOU, AJK Board and more. Boards marked “typical” use the common Pakistani exam standard — please confirm with your board."}},
@@ -83,7 +83,7 @@
 
     <!-- Step 1: board -->
     <div class="bstep">
-      <h3 class="bstep-h"><span class="bstep-n">1</span> <span data-i18n="bp.step1">Find your board or university</span></h3>
+      <h3 class="bstep-h"><span class="bstep-n">1</span> <span data-i18n="bp.step1" id="bpStep1">Find your board or university</span></h3>
       <div class="tfield field">
         <label class="label" id="boardDropLabel" data-i18n="bp.search_label">Search boards &amp; universities</label>
         <div class="bdrop" id="boardDrop">
@@ -114,7 +114,7 @@
 
     <!-- Step 2: upload -->
     <div class="bstep">
-      <h3 class="bstep-h"><span class="bstep-n">2</span> <span data-i18n="bp.step2">Upload your photo</span></h3>
+      <h3 class="bstep-h"><span class="bstep-n">2</span> <span data-i18n="bp.step2" id="bpStep2">Upload your photo</span></h3>
       <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
         <div class="tdrop-icon" aria-hidden="true">📷</div>
         <p class="tdrop-title" id="dz-t" data-i18n="bp.drop_title">Drag &amp; drop your photo here</p>
@@ -300,5 +300,28 @@
   </div>
 </div>
 <footer id="dk-footer"></footer>
+<script>
+(function(){
+  function fixUrdu(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang==="ur"){
+      var s1=document.getElementById("bpStep1");
+      var s2=document.getElementById("bpStep2");
+      if(s1)s1.textContent="اپنا بورڈ یا یونیورسٹی تلاش کریں";
+      if(s2)s2.textContent="اپنی تصویر اپ لوڈ کریں";
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUrdu);
+  else fixUrdu();
+  setTimeout(fixUrdu,500);
+  setTimeout(fixUrdu,2000);
+})();
+</script>
 </body>
 </html>
