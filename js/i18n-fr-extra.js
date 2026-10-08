@@ -953,4 +953,4 @@
     "your_data": "Vos données",
     "your_name": "Votre nom"
   });
-})();
+__dkAdd("fr",{"cat_typing":"TypeMaster","cat_typing_d":"Leçons, tests et jeux pour taper plus vite — avec TypeMaster.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Obtenez votre certificat de dactylographie","tool_tcert_name":"Certificat","tool_tgames_desc":"Apprenez à taper en vous amusant","tool_tgames_name":"Jeux de dactylographie","tool_tlessons_desc":"Leçons étape par étape, des bases à la vitesse","tool_tlessons_name":"Leçons de dactylographie","tool_tpractice_desc":"Travaillez vos touches faibles","tool_tpractice_name":"Pratique intelligente","tool_ttest_desc":"Vérifiez votre vitesse et précision","tool_ttest_name":"Test de dactylographie","tool_typing_desc":"Maîtrisez la dactylographie avec TypeMaster","tool_typing_name":"TypeMaster"});})();
