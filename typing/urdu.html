@@ -7,7 +7,13 @@
 <meta name="theme-color" content="#6C4CF1">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../assets/icon.svg">
-<title>اردو ٹائپنگ — TypeMaster</title>
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typing/urdu.html"/>
+<meta property="og:title" content="اردو ٹائپنگ — DoKit"/>
+<meta property="og:description" content="Learn Urdu typing with 25 lessons, phonetic and standard layouts, and timed tests."/>
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typing/urdu.html"/>
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<title>اردو ٹائپنگ — DoKit</title>
 <meta name="description" content="Urdu typing lessons and tests with InPage-style phonetic keyboard.">
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/player.css">
@@ -68,7 +74,7 @@
 </style>
 </head>
 <body>
-<div id="site-nav"></div>
+<header id="site-nav"></header>
 <main class="container urdu">
 
   <!-- ============ SETUP ============ -->
@@ -78,7 +84,7 @@
       <h1 data-en="Urdu Typing" data-ur="اردو ٹائپنگ">اردو ٹائپنگ</h1>
       <p data-en="Learn Urdu typing from zero to expert — 25 lessons, timed tests, InPage-style keyboard."
          data-ur="صفر سے ماہر تک اردو ٹائپنگ سیکھیں — 25 اسباق، ٹیسٹ، ان پیج طرز کی بورڈ۔">صفر سے ماہر تک اردو ٹائپنگ سیکھیں — 25 اسباق، ٹیسٹ، ان پیج طرز کی بورڈ۔</p>
-      <button class="btn btn-ghost btn-sm" id="langToggle" type="button">English / اردو</button>
+      <button class="btn btn-ghost btn-sm" id="urduLangToggle" type="button">English / اردو</button>
     </div>
 
     <div class="card mb-3">
@@ -116,7 +122,7 @@
   <!-- ============ ACTIVE ============ -->
   <div id="active" class="hidden">
     <div class="page-header">
-      <h1 id="activeTitle" style="font-size:1.4rem">Urdu Typing Practice</h1>
+      <h2 id="activeTitle" style="font-size:1.4rem">Urdu Typing Practice</h2>
     </div>
     <div class="player-stats" dir="ltr">
       <div class="pstat"><span class="v" id="statWpm">0</span><span class="l">WPM</span></div>
@@ -124,7 +130,7 @@
       <div class="pstat"><span class="v" id="statTime">0:00</span><span class="l" data-en="Time" data-ur="وقت">وقت</span></div>
     </div>
     <div id="targetText" class="urdu-text" dir="rtl" aria-label="Text to type"></div>
-    <textarea id="typeArea" class="urdu-text" dir="rtl" rows="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="یہاں لکھیں…"></textarea>
+    <textarea id="typeArea" class="urdu-text" dir="rtl" rows="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="یہاں لکھیں…" aria-label="Urdu typing area"></textarea>
     <p style="font-size:.8rem;color:var(--muted,#6b7280)" data-en="Type the text above. The timer starts on your first keystroke."
        data-ur="اوپر والا متن لکھیں۔ پہلی کی سے ٹائمر شروع ہوگا۔">اوپر والا متن لکھیں۔ پہلی کی سے ٹائمر شروع ہوگا۔</p>
     <div id="kbActive"></div>
@@ -152,11 +158,11 @@
   </div>
 
 </main>
-<div id="site-foot"></div>
+<footer id="site-foot"></footer>
 <script src="js/urdu.js"></script>
 <script src="js/urdu2.js"></script>
 <script src="js/storage.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/ui.js?v=20261008-07"></script>
 <script src="../js/urdu-keyboard.js"></script>
 <script src="../js/urdu-lessons.js"></script>
 <script src="../js/pages/urdu-typing.js"></script>
