@@ -340,3 +340,6 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
+/* Phase3 A1: privacy-first analytics loader (first-party, DNT-respecting). */
+(function(){try{var sc=document.createElement("script");sc.src=(window.DKU?window.DKU("/js/analytics.js"):"/DoKit/js/analytics.js");sc.defer=true;document.head.appendChild(sc);}catch(e){}})();

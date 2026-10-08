@@ -205,7 +205,7 @@
      js/pages/admin-plus.js — re-add an id to CORE_TABS to restore its tab. */
   var CORE_TABS = ["dashboard", "users", "content", "audit", "security",
     "deposits", "withdrawals", "paysettings", "settings", "flags",
-    "announce", "inbox"];
+    "announce", "inbox", "analytics"];
 
   TABS = TABS.filter(function (t) { return CORE_TABS.indexOf(t.id) !== -1; });
 
