@@ -49,7 +49,7 @@ img{max-width:100%;height:auto}
     <div class="container hero__grid">
       <div class="hero__copy">
         <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
-        <h1>Get everyday tasks done in seconds — <span class="hero-sep">|</span> <span class="hero-free">free.</span></h1>
+        <h1><span data-i18n="hero_title">Get everyday tasks done in seconds</span> — <span class="hero-sep">|</span> <span class="hero-free" data-i18n="hero_free">free.</span></h1>
 <style>
 .hero-free {
   color: #dc2626;
@@ -82,7 +82,7 @@ img{max-width:100%;height:auto}
       <div class="search-wrap">
         <span class="search-icon" aria-hidden="true">🔍</span>
         <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
-        <input class="text-input" type="search" id="toolSearch" placeholder="Search tools… e.g. resize, words" autocomplete="off">
+        <input class="text-input" type="search" id="toolSearch" placeholder="Search tools… e.g. resize, words" data-i18n-ph="search_ph" autocomplete="off">
       </div>
       <p class="dk-hint" id="searchHint" hidden><span data-i18n="home2.hint_a">Tip: press</span> <kbd>/</kbd> <span data-i18n="home2.hint_b">to search</span><button type="button" class="dk-hint__close" data-hint-close data-i18n-aria="home2.hint_dismiss" aria-label="Dismiss tip">✕</button></p>
     </div>
@@ -245,5 +245,39 @@ img{max-width:100%;height:auto}
 <script src="js/assistant-enhance.js?v=20261007-02" defer></script>
 <script src="js/doki-personality.js?v=20261007-02" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
+<script>
+(function(){
+  var UR={
+    "hero_title":"روزمرہ کے کام سیکنڈوں میں کریں",
+    "hero_free":"مفت۔",
+    "search_ph":"ٹولز تلاش کریں… مثلاً ری سائز، الفاظ"
+  };
+  function fixHero(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+    var phs=document.querySelectorAll("[data-i18n-ph]");
+    for(var j=0;j<phs.length;j++){
+      var k2=phs[j].getAttribute("data-i18n-ph");
+      if(UR[k2])phs[j].setAttribute("placeholder",UR[k2]);
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixHero);
+  else fixHero();
+  setTimeout(fixHero,500);
+  setTimeout(fixHero,2000);
+  document.addEventListener("dokit:langchange",fixHero);
+})();
+</script>
 </body>
 </html>
