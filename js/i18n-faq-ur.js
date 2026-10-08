@@ -1,8 +1,8 @@
 // DoKit FAQ Urdu translations (supplemental - loaded after i18n-v2.js)
 // Auto-generated to avoid large file push limits
 ;(function(){
-  if (!window.DKI18N || !window.DKI18N.add) return;
-  window.DKI18N.add("ur", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("ur", {
     faq_title:"اکثر پوچھے جانے والے سوالات",
     faq_subtitle:"DoKit کے بارے میں سب کچھ جو آپ کو جاننا چاہیے۔",
     faq_q1:"کیا DoKit مفت ہے؟",

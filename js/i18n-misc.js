@@ -2,8 +2,8 @@
  * Supplemental dictionary for wall-of-love.html and status.html.
  * Loaded after i18n-v2.js. CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "wol.crumb": "Wall of Love",
     "wol.title": "What people say about DoKit",
     "wol.sub": "Real feedback from people who use DoKit every day.",
@@ -26,7 +26,7 @@
     "status.incidents": "Incident history",
     "status.noinc": "No incidents recorded. If something breaks, it will be listed here with a full post-mortem."
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "wol.crumb": "\u0645\u062d\u0628\u062a \u06a9\u06cc \u062f\u06cc\u0648\u0627\u0631",
     "wol.title": "\u0688\u0648\u06a9\u0679 \u06a9\u06d2 \u0628\u0627\u0631\u06d2 \u0645\u06cc\u06ba \u0644\u0648\u06af \u06a9\u06cc\u0627 \u06a9\u06c1\u062a\u06d2 \u06c1\u06cc\u06ba",
     "wol.sub": "\u0627\u0646 \u0644\u0648\u06af\u0648\u06ba \u06a9\u06cc \u062d\u0642\u06cc\u0642\u06cc \u0631\u0627\u0626\u06d2 \u062c\u0648 \u0631\u0648\u0632\u0627\u0646\u06c1 \u0688\u0648\u06a9\u0679 \u0627\u0633\u062a\u0639\u0645\u0627\u0644 \u06a9\u0631\u062a\u06d2 \u06c1\u06cc\u06ba\u06d4",

@@ -11,5 +11,5 @@ pt:{tool_boardphoto_name:"Foto da Banca",tool_boardphoto_desc:"Criador de fotos 
 de:{tool_boardphoto_name:"Board-Foto",tool_boardphoto_desc:"Prüfungsfoto-Ersteller"},
 tr:{tool_boardphoto_name:"Kurul Fotoğrafı",tool_boardphoto_desc:"Sınav fotoğrafı oluşturucu"},
 ru:{tool_boardphoto_name:"Фото для комиссии",tool_boardphoto_desc:"Создание экзаменационных фото"}};
-Object.keys(D).forEach(function(l){if(window.DKI18N)DKI18N.add(l,D[l]);});
+Object.keys(D).forEach(function(l){if(window.DKI18N&&typeof window.DKI18N.add==="function"){DKI18N.add(l,D[l]);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,D[l]]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}});
 }();

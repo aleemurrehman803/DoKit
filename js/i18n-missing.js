@@ -8,10 +8,10 @@
  * ========================================================================== */
 (function () {
   'use strict';
-  if (!window.DKI18N || typeof window.DKI18N.add !== 'function') { return; }
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
 
   /* -- English (canonical, matches HTML character-for-character) ------------ */
-  window.DKI18N.add('en', {
+  __dkAdd('en', {
     "contact_title": "Contact us",
     "contact_sub": "Questions, ideas, bug reports, tool suggestions — every message is read personally. Nothing goes to a bot; your note reaches the person who built DoKit.",
     "contact_note_t": "Prefer email directly?",
@@ -45,7 +45,7 @@
   });
 
   /* -- Urdu ---------------------------------------------------------------- */
-  window.DKI18N.add('ur', {
+  __dkAdd('ur', {
     "contact_title": "رابطہ کریں",
     "contact_sub": "سوالات، آئیڈیاز، بگ رپورٹس، ٹول کی تجاویز — ہر پیغام ذاتی طور پر پڑھا جاتا ہے۔ کچھ بوٹ کے پاس نہیں جاتا؛ آپ کا نوٹ DoKit بنانے والے تک پہنچتا ہے۔",
     "contact_note_t": "براہ راست ای میل پسند کریں گے؟",

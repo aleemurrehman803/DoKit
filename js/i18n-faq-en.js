@@ -1,8 +1,8 @@
 // DoKit FAQ English translations (supplemental - loaded after i18n-v2.js)
 // Ensures FAQ keys exist even if main i18n file is outdated
 ;(function(){
-  if (!window.DKI18N || !window.DKI18N.add) return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     faq_title:"Frequently asked questions",
     faq_subtitle:"Everything you need to know about DoKit.",
     faq_q1:"Is DoKit free?",

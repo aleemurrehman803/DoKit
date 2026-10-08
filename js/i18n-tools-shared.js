@@ -3,8 +3,8 @@
  * dict. Loaded by tool pages after i18n-v2.js. Same pattern as i18n-patch.js.
  * CSP: plain script, no inline handlers, no eval. */
 (function () {
-  if (!window.DKI18N || typeof window.DKI18N.add !== "function") return;
-  window.DKI18N.add("en", {
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
+  __dkAdd("en", {
     "tshared.try_it": "Try it \u2192",
     "tshared.step_add_text": "Add your text",
     "tshared.step_live_stats": "See live stats",
@@ -12,7 +12,7 @@
     "tshared.step_copy": "Copy results",
     "tshared.privacy_text": "\uD83D\uDD12 Text never leaves your device \u2014 100% private."
   });
-  window.DKI18N.add("ur", {
+  __dkAdd("ur", {
     "tshared.try_it": "\u2190 \u0622\u0632\u0645\u0627\u0626\u06cc\u06ba",
     "tshared.step_add_text": "\u0627\u067e\u0646\u0627 \u0645\u062a\u0646 \u0634\u0627\u0645\u0644 \u06a9\u0631\u06cc\u06ba",
     "tshared.step_live_stats": "\u0628\u0631\u0627\u06c1\u0650 \u0631\u0627\u0633\u062a \u0627\u0639\u062f\u0627\u062f \u062f\u06cc\u06a9\u06be\u06cc\u06ba",

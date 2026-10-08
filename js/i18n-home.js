@@ -8,10 +8,10 @@
  * ========================================================================== */
 (function () {
   'use strict';
-  if (!window.DKI18N || typeof window.DKI18N.add !== 'function') { return; }
+  function __dkAdd(l,d){if(window.DKI18N&&typeof window.DKI18N.add==="function"){window.DKI18N.add(l,d);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,d]);if(window.console&&console.warn)console.warn("[i18n] DKI18N not ready - queued dict for "+l);}}
 
   /* -- English (canonical, matches index.html character-for-character) ------ */
-  window.DKI18N.add('en', {
+  __dkAdd('en', {
     "skip_link": "Skip to content",
     "hero_eyebrow": "Free online tools",
     "hero_tag": "Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.",
@@ -52,7 +52,7 @@
   });
 
   /* -- Urdu ---------------------------------------------------------------- */
-  window.DKI18N.add('ur', {
+  __dkAdd('ur', {
     "skip_link": "مواد پر جائیں",
     "hero_eyebrow": "مفت آن لائن ٹولز",
     "hero_tag": "تصویریں ری سائز کریں، الفاظ گنیں، ٹائپنگ سیکھیں — تیز، مفت، اور نجی۔ آپ کے براؤزر سے کچھ باہر نہیں جاتا۔",
@@ -93,7 +93,7 @@
   });
 
   // -- home2.* keys (fix 2026-10-07) --
-  window.DKI18N.add('en', {
+  __dkAdd('en', {
     "home2.bar_free": "free",
     "home2.bar_private": "Private by design",
     "home2.hero_h1": "Get everyday tasks done in seconds — free.",
@@ -113,7 +113,7 @@
     "home2.strip_nosignup": "No sign-up",
     "home2.strip_tools": "tools"
   });
-  window.DKI18N.add('ur', {
+  __dkAdd('ur', {
     "home2.bar_free": "مفت",
     "home2.bar_private": "پرائیویسی پہلے",
     "home2.hero_h1": "روزمرہ کے کام سیکنڈوں میں نمٹائیں — مفت۔",
