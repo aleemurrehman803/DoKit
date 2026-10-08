@@ -10,14 +10,14 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Status — DoKit">
 <meta property="og:description" content="DoKit system status — check if all tools and services are operational. Live uptime monitoring and incident history.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/status.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/status.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Status — DoKit">
 <meta name="twitter:description" content="DoKit system status — check if all tools and services are operational. Live uptime monitoring and incident history.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/status.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/status.html">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
@@ -28,27 +28,27 @@
 </style>
 </head>
 <body data-nav="status">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:46rem">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Transparency</span>
-        <h1>System status</h1>
-        <p><span class="status-dot" aria-hidden="true"></span><strong>All systems operational.</strong> Last checked: <span id="statusTime">—</span></p>
+        <span class="eyebrow" data-i18n="status.crumb">Transparency</span>
+        <h1 data-i18n="status.title">System status</h1>
+        <p><span class="status-dot" aria-hidden="true"></span><strong data-i18n="status.ok">All systems operational.</strong> <span data-i18n="status.checked">Last checked:</span> <span id="statusTime">—</span></p>
       </div>
       <div class="card" style="margin-bottom:var(--sp-5)">
-        <h3 style="margin-block-start:0">Services</h3>
-        <div class="status-row"><span>🌐 Website (GitHub Pages)</span><span>Operational</span></div>
-        <div class="status-row"><span>🔐 Authentication (Firebase)</span><span>Operational</span></div>
-        <div class="status-row"><span>🗄️ Database (Firestore)</span><span>Operational</span></div>
-        <div class="status-row"><span>🛠️ Tools (client-side)</span><span>Operational</span></div>
-        <div class="status-row"><span>💳 Payments</span><span>Not launched yet</span></div>
+        <h3 style="margin-block-start:0" data-i18n="status.services">Services</h3>
+        <div class="status-row"><span data-i18n="status.svc_site">🌐 Website (GitHub Pages)</span><span data-i18n="status.op">Operational</span></div>
+        <div class="status-row"><span data-i18n="status.svc_auth">🔐 Authentication (Firebase)</span><span data-i18n="status.op">Operational</span></div>
+        <div class="status-row"><span data-i18n="status.svc_db">🗄️ Database (Firestore)</span><span data-i18n="status.op">Operational</span></div>
+        <div class="status-row"><span data-i18n="status.svc_tools">🛠️ Tools (client-side)</span><span data-i18n="status.op">Operational</span></div>
+        <div class="status-row"><span data-i18n="status.svc_pay">💳 Payments</span><span data-i18n="status.soon">Not launched yet</span></div>
       </div>
       <div class="card">
-        <h3 style="margin-block-start:0">Incident history</h3>
-        <p style="color:var(--text-muted);margin-bottom:0">No incidents recorded. If something breaks, it will be listed here with a full post-mortem.</p>
+        <h3 style="margin-block-start:0" data-i18n="status.incidents">Incident history</h3>
+        <p style="color:var(--text-muted);margin-bottom:0" data-i18n="status.noinc">No incidents recorded. If something breaks, it will be listed here with a full post-mortem.</p>
       </div>
     </div>
   </section>
@@ -56,6 +56,8 @@
 <footer id="site-foot"></footer>
 <div id="dk-assistant-root"></div>
 <script src="js/i18n-v2.js" defer></script>
+<script src="js/i18n-hotfix.js" defer></script>
+  <script src="js/i18n-misc.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/assistant-kb.js" defer></script>
 <script src="js/assistant.js" defer></script>
@@ -76,6 +78,31 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", stamp);
   else stamp();
+})();
+</script>
+<script>
+(function(){
+  var UR="status.ok":"تمام سسٹمز فعال ہیں۔","status.checked":"آخری جانچ:","status.svc_site":"🌐 ویب سائٹ (GitHub Pages)","status.svc_auth":"🔐 تصدیق (Firebase)","status.svc_db":"🗄️ ڈیٹا بیس (Firestore)","status.svc_tools":"🛠️ ٹولز (کلائنٹ سائڈ)","status.svc_pay":"💳 ادائیگیاں";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
 })();
 </script>
 </body>

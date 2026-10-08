@@ -37,9 +37,9 @@
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:760px">
-      <h1>📝 Changelog</h1>
-      <p style="color:var(--text-muted)">Every release, new tool and fix — newest first.</p>
-      <div id="clList"><p aria-hidden="true">⏳ Loading…</p></div>
+      <h1 data-i18n="changelog.title">📝 Changelog</h1>
+      <p style="color:var(--text-muted)" data-i18n="changelog.desc">Every release, new tool and fix — newest first.</p>
+      <div id="clList"><p aria-hidden="true" data-i18n="common.loading">⏳ Loading…</p></div>
     </div>
   </section>
 </main>
@@ -49,5 +49,30 @@
 <script src="js/firebase.js" defer></script>
 <script src="js/pages/info.js" defer></script>
 <script src="js/pages/changelog.js" defer></script>
+<script>
+(function(){
+  var UR="changelog.title":"📝 تبدیلیوں کی فہرست","changelog.desc":"ہر ریلیز، نیا ٹول اور فکس — نیا پہلے۔","common.loading":"⏳ لوڈ ہو رہا ہے…";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>

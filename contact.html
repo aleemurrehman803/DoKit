@@ -11,18 +11,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>Contact — DoKit</title>
 <meta name="description" content="Contact DoKit: questions, ideas, bug reports, or tool suggestions. Every message is read personally — we usually reply within 24–48 hours.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/contact.html">
+<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/contact.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Contact — DoKit">
 <meta property="og:description" content="Contact DoKit: questions, ideas, bug reports, or tool suggestions. Every message is read personally — we usually reply within 24–48 hours.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/dokit/contact.html">
-<meta property="og:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/contact.html">
+<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Contact — DoKit">
 <meta name="twitter:description" content="Contact DoKit: questions, ideas, bug reports, or tool suggestions. Every message is read personally — we usually reply within 24–48 hours.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/dokit/assets/og-cover.jpg">
+<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/hub.css">
@@ -33,14 +33,14 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
 </style>
 </head>
 <body data-nav="contact">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:40rem">
       <nav aria-label="Breadcrumb">
         <ol class="breadcrumb">
-          <li><a href="./">Home</a></li>
+          <li><a href="./" data-i18n="common.crumb_home">Home</a></li>
           <li aria-current="page" data-i18n="contact_title">Contact us</li>
         </ol>
       </nav>
@@ -60,11 +60,11 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
         <div class="field">
           <label for="cfSubject" data-i18n="form_subject">Subject</label>
           <select class="text-input" id="cfSubject" name="subject" required>
-            <option value="Question">Question</option>
-            <option value="Bug report">Bug report</option>
-            <option value="Tool suggestion">Tool suggestion</option>
-            <option value="Feedback">Feedback</option>
-            <option value="Other">Other</option>
+            <option value="Question" data-i18n="contact.opt_question">Question</option>
+            <option value="Bug report" data-i18n="contact.opt_bug">Bug report</option>
+            <option value="Tool suggestion" data-i18n="contact.opt_suggest">Tool suggestion</option>
+            <option value="Feedback" data-i18n="contact.opt_feedback">Feedback</option>
+            <option value="Other" data-i18n="contact.opt_other">Other</option>
           </select>
         </div>
         <div class="field">
@@ -107,5 +107,30 @@ select.text-input { appearance: auto; background: var(--surface); color: var(--t
 <script src="js/assistant-enhance.js" defer></script>
 <script src="js/doki-personality.js" defer></script>
 <script type="module" src="js/assistant-ai-init.js"></script>
+<script>
+(function(){
+  var UR={"contact.opt_question":"سوال","contact.opt_bug":"بگ رپورٹ","contact.opt_suggest":"ٹول کی تجویز","contact.opt_feedback":"رائے","contact.opt_other":"دیگر"};
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>

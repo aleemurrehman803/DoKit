@@ -28,15 +28,40 @@
 <main class="maint-wrap">
   <div class="card maint-card">
     <span class="maint-emoji" aria-hidden="true">🚧</span>
-    <h1>We'll be right back!</h1>
-    <p id="maintMsg">DoKit is briefly down for maintenance. Thank you for your patience — we'll be back soon.</p>
+    <h1 data-i18n="maint.title">We'll be right back!</h1>
+    <p id="maintMsg" data-i18n="maint.desc">DoKit is briefly down for maintenance. Thank you for your patience — we'll be back soon.</p>
     <div class="maint-progress" aria-hidden="true"><span></span></div>
-    <a class="btn btn-primary" href="./">Try again</a>
+    <a class="btn btn-primary" href="./" data-i18n="maint.retry">Try again</a>
   </div>
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="js/firebase.js" defer></script>
 <script src="js/maintenance.js" defer></script>
+<script>
+(function(){
+  var UR="maint.title":"ہم ابھی واپس آئیں گے!","maint.desc":"DoKit دیکھ بھال کے لیے عارضی طور پر بند ہے۔ آپ کے صبر کا شکریہ — ہم جلد واپس آئیں گے۔","maint.retry":"دوبارہ کوشش کریں";
+  function fixUr(){
+    var lang="en";
+    try{
+      var q=new URLSearchParams(window.location.search).get("lang");
+      if(q==="ur")lang="ur";
+      else if(window.DKI18N&&window.DKI18N.getLang)lang=window.DKI18N.getLang();
+      else if(window.localStorage.getItem("dokit_lang")==="ur")lang="ur";
+    }catch(e){}
+    if(lang!=="ur")return;
+    var els=document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute("data-i18n");
+      if(UR[k])els[i].textContent=UR[k];
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fixUr);
+  else fixUr();
+  setTimeout(fixUr,500);
+  setTimeout(fixUr,2000);
+  document.addEventListener("dokit:langchange",fixUr);
+})();
+</script>
 </body>
 </html>
