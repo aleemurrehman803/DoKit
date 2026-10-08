@@ -953,4 +953,4 @@
     "your_data": "Tus datos",
     "your_name": "Tu nombre"
   });
-})();
+__dkAdd("es",{"cat_typing":"TypeMaster","cat_typing_d":"Lecciones, pruebas y juegos para escribir más rápido — con TypeMaster.","cat_typing_t":"TypeMaster","nav_typing":"TypeMaster","tool_tcert_desc":"Obtén tu certificado de mecanografía","tool_tcert_name":"Certificado","tool_tgames_desc":"Aprende mecanografía divirtiéndote","tool_tgames_name":"Juegos de mecanografía","tool_tlessons_desc":"Lecciones paso a paso desde lo básico hasta la velocidad","tool_tlessons_name":"Lecciones de mecanografía","tool_tpractice_desc":"Practica tus teclas débiles","tool_tpractice_name":"Práctica inteligente","tool_ttest_desc":"Comprueba tu velocidad y precisión","tool_ttest_name":"Prueba de mecanografía","tool_typing_desc":"Domina la mecanografía con TypeMaster","tool_typing_name":"TypeMaster"});})();
