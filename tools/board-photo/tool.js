@@ -293,6 +293,15 @@
     });
   }
 
+  /* Phase 3: re-apply translations now that bp.* keys are registered.
+     i18n-v2.js processed the HTML before these keys existed. */
+  try {
+    if (window.DKI18N) {
+      if (typeof window.DKI18N.apply === "function") window.DKI18N.apply();
+      else document.dispatchEvent(new CustomEvent("dokit:langchange", { detail: { lang: window.DKI18N.getLang ? window.DKI18N.getLang() : "en" } }));
+    }
+  } catch (e) {}
+
   /* ---------------- helpers ---------------- */
   function $(id) { return document.getElementById(id); }
   function t(key, fallback) {
