@@ -193,6 +193,12 @@ a.tool-card:hover { text-decoration: none; transform: translateY(-4px) scale(1.0
 .badge-amber { background: var(--accent); color: var(--dk-ink); }
 .badge-green { background: rgba(47, 163, 107, 0.15); color: var(--success-text); }
 /* (.badge-red removed Oct 7, 2026: unused) */
+/* Language menu: marks partially-translated languages (UI/UX #7, Oct 8 2026) */
+.lang-beta { display: inline-block; font-size: .68rem; font-weight: 700; line-height: 1;
+  color: #8a5a00; background: #fdf0d3; border: 1px solid #f0d48a;
+  border-radius: 999px; padding: .18rem .5rem; margin-inline-start: .4rem;
+  vertical-align: middle; white-space: nowrap; }
+[data-theme="dark"] .lang-beta { color: #ffd97a; background: rgba(245,166,35,.16); border-color: rgba(245,166,35,.4); }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: var(--sp-2); margin-block-end: var(--sp-4); }
@@ -503,6 +509,11 @@ input[type="range"].slider {
 .hero h1 { font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -0.02em; }
 .hero .tagline { font-size: var(--fs-lg); color: var(--text-muted); max-inline-size: 40rem; margin-inline: auto; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: var(--sp-3); justify-content: center; margin-block: var(--sp-5); }
+/* UI/UX #24 (Oct 8, 2026): subtle changelog link under hero CTAs */
+.hero-changelog { text-align: center; margin: calc(var(--sp-3) * -1) 0 var(--sp-4); font-size: var(--fs-sm); }
+.hero-changelog a { color: var(--text-muted); text-decoration: none; border: 1px solid var(--border);
+  border-radius: var(--r-pill); padding: var(--sp-1) var(--sp-3); display: inline-block; }
+.hero-changelog a:hover { color: var(--primary); border-color: var(--primary); }
 
 /* Search bar */
 .search-wrap { max-inline-size: 36rem; margin-inline: auto; position: relative; }

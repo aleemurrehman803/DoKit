@@ -979,6 +979,11 @@ html:not([data-theme="dark"]) .type-text .ch.bad { color: var(--danger-text); }
 .e404-pop { font-size: 1.1rem; margin: 0 0 var(--sp-4, 1rem); }
 .e404-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--sp-3, .75rem); text-align: start; }
+/* UI/UX #30 (Oct 8, 2026): 404 search form */
+.e404-search { display: flex; gap: var(--sp-2, .5rem); justify-content: center;
+  margin: 0 auto var(--sp-8, 3rem); max-inline-size: 28rem; }
+.e404-search .text-input { flex: 1; min-height: 44px; }
+.e404-search .btn { min-height: 44px; white-space: nowrap; }
 
 /* ---------- (24) Touch targets: 44px minimum on tool pages ---------- */
 .tbtn-sm { min-height: 44px; }
