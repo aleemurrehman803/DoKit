@@ -45,6 +45,33 @@ service cloud.firestore {
               'pending_withdrawal', 'last_withdrawal_at', 'withdrawn_today'];
     }
 
+    // True when the user is NOT suspended (or suspension expired).
+    // Enforces suspension at rules level. Missing doc = not suspended.
+    function notSuspended(uid) {
+      return !exists(/databases/$(database)/documents/users/$(uid)) ||
+        !(get(/databases/$(database)/documents/users/$(uid)).data.get('suspended', false)) ||
+        (get(/databases/$(database)/documents/users/$(uid)).data.get('suspendUntil', 0) != 0 &&
+         get(/databases/$(database)/documents/users/$(uid)).data.get('suspendUntil', 0) <= request.time.toMillis());
+    }
+
+    // C3: money-field type/range guards for owner writes. The withdrawal
+    // flow's transaction updates pending_withdrawal / last_withdrawal_at /
+    // withdrawn_today on the owner's own doc, so these stay owner-writable
+    // but are now validated: no negative holds, no type confusion.
+    // (Full self-minting prevention needs the Cloud-Function path —
+    // see the PRODUCTION NOTE at the top of this file.)
+    function ownerMoneyGuards() {
+      return (!('pending_withdrawal' in request.resource.data)
+          || (request.resource.data.pending_withdrawal is number
+              && request.resource.data.pending_withdrawal >= 0))
+        && (!('last_withdrawal_at' in request.resource.data)
+          || request.resource.data.last_withdrawal_at is number)
+        && (!('withdrawn_today' in request.resource.data)
+          || (request.resource.data.withdrawn_today is map
+              && request.resource.data.withdrawn_today.total is number
+              && request.resource.data.withdrawn_today.total >= 0));
+    }
+
     /* ---------- admin registry ---------- */
 
     match /admins/{uid} {
@@ -63,18 +90,22 @@ service cloud.firestore {
       allow list: if isAdmin();
 
       // Owner creates own profile doc (sign-up). No privileged fields, and no
-      // starting balance other than 0.
+      // starting balance other than 0. Money-lock fields (C3) validated too.
       allow create: if isOwner(uid)
         && !request.resource.data.keys().hasAny(['suspended', 'suspendReason', 'suspendUntil'])
-        && (!('coins' in request.resource.data) || request.resource.data.coins == 0);
+        && (!('coins' in request.resource.data) || request.resource.data.coins == 0)
+        && ownerMoneyGuards();
 
       // Owner may update own profile (name/photo/lastLogin, withdrawal locks)
-      // but NEVER balance or suspension fields. Admins may write anything
-      // (coin grants, suspend/unsuspend, resets).
+      // but NEVER balance or suspension fields. Withdrawal lock fields stay
+      // owner-writable (the withdrawal transaction needs them) but are now
+      // type/range-validated by ownerMoneyGuards (C3). Admins may write
+      // anything (coin grants, suspend/unsuspend, resets).
       allow update: if isAdmin()
         || (isOwner(uid)
           && !request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny(privilegedUserKeys()));
+               .hasAny(privilegedUserKeys())
+          && ownerMoneyGuards());
 
       allow delete: if false;
 

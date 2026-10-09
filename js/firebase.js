@@ -86,15 +86,15 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
             var d = (snap && snap.exists) ? (snap.data() || {}) : {};
             // Permanent fix: create user doc on first sign-in if missing.
             // Without this, suspend enforcement and other per-user features break.
+            // Note: suspended/suspendReason/suspendUntil are NOT included here
+            // because the create rule blocks them (admin-only fields).
+            // Read path defaults handle missing fields correctly.
             if (!snap || !snap.exists) {
               try {
                 db.collection("users").doc(user.uid).set({
                   email: user.email || "",
                   displayName: user.displayName || "",
-                  createdAt: Date.now(),
-                  suspended: false,
-                  suspendReason: "",
-                  suspendUntil: 0
+                  createdAt: Date.now()
                 }, { merge: true }).catch(function () {});
               } catch (e) {}
             }
