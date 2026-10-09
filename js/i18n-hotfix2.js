@@ -199,3 +199,51 @@
       .observe(document.body, {childList: true, subtree: true, characterData: true});
   } catch(e) {}
 })();
+
+/* Remove "—DoKit" suffix from recent tool pills */
+(function() {
+  function cleanRecentPills() {
+    try {
+      var pills = document.querySelectorAll('.dkf-recent__chips .dkf-chip');
+      pills.forEach(function(pill) {
+        var t = pill.textContent;
+        // Remove " — DoKit" or "—DoKit" suffix
+        var cleaned = t.replace(/\s*[—–-]\s*DoKit\s*$/i, '').trim();
+        if (cleaned !== t) {
+          pill.textContent = cleaned;
+        }
+      });
+      
+      // Also clean localStorage for future visits
+      try {
+        var key = 'dokit_recent_tools';
+        var data = localStorage.getItem(key);
+        if (data) {
+          var list = JSON.parse(data);
+          var changed = false;
+          list.forEach(function(item) {
+            if (item && item.name) {
+              var c = String(item.name).replace(/\s*[—–-]\s*DoKit\s*$/i, '').trim();
+              if (c !== item.name) {
+                item.name = c;
+                changed = true;
+              }
+            }
+          });
+          if (changed) {
+            localStorage.setItem(key, JSON.stringify(list));
+          }
+        }
+      } catch(e) {}
+    } catch(e) {}
+  }
+  
+  [1000, 2500, 5000].forEach(function(d) {
+    setTimeout(cleanRecentPills, d);
+  });
+  
+  try {
+    new MutationObserver(function() { cleanRecentPills(); })
+      .observe(document.body, {childList: true, subtree: true});
+  } catch(e) {}
+})();
