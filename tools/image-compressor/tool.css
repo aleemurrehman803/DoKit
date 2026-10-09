@@ -173,6 +173,7 @@ input[type="range"].tslider::-moz-range-thumb { width: 18px; height: 18px; borde
 .thowto li { counter-increment: step; display: grid; grid-template-columns: auto 1fr; gap: .8rem;
   background: var(--dk-card); border: 1px solid var(--dk-border); border-radius: var(--dk-radius); padding: 1rem; }
 .thowto li::before { content: counter(step); width: 2rem; height: 2rem; border-radius: 50%;
+  line-height: 1;
   background: var(--dk-violet); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .thowto h3 { margin: 0 0 .25rem; font-size: 1rem; color: var(--dk-text); }
 .thowto p { margin: 0; color: var(--dk-muted); font-size: .92rem; }
@@ -255,3 +256,8 @@ input[type="range"].tslider::-moz-range-thumb:hover { transform: scale(1.15); }
 .faq-lang-btn { padding:.4rem 1.1rem; border:1px solid var(--dk-border,#d0d0d0); border-radius:999px; background:transparent; cursor:pointer; font:inherit; }
 .faq-lang-btn.is-active { font-weight:700; border-color:var(--dk-primary,#6C4CF1); }
 .faq-ur[lang="ur"] { text-align:right; }
+
+/* ---- touch targets: 44px minimum on coarse pointers (WCAG 2.5.8) ---- */
+@media (pointer: coarse) {
+  .tbtn-sm { min-height: 44px; padding: .7rem 1rem; }
+}
