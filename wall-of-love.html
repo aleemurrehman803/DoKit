@@ -54,6 +54,31 @@
         </div>
       </div>
       
+      <section aria-labelledby="wolFormTitle" style="margin-top:2.5rem">
+        <h2 id="wolFormTitle" data-i18n="wol.form_title">Share your experience</h2>
+        <p style="color:var(--text-muted)" data-i18n="wol.form_sub">Your words could be featured on this wall.</p>
+        <form id="wolForm" novalidate style="display:grid;gap:1rem;max-width:32rem;margin-top:1rem">
+          <label><span data-i18n="wol.form_name">Name</span>
+            <input type="text" id="wolName" name="name" maxlength="60" required autocomplete="name" data-i18n-ph="wol.form_name_ph" placeholder="Your name" style="width:100%">
+          </label>
+          <label><span data-i18n="wol.form_msg">Message</span>
+            <textarea id="wolMsgText" name="message" rows="4" maxlength="500" required data-i18n-ph="wol.form_msg_ph" placeholder="What do you love about DoKit?" style="width:100%"></textarea>
+          </label>
+          <label><span data-i18n="wol.form_rating">Rating</span>
+            <select id="wolRating" name="rating">
+              <option value="5">★★★★★</option>
+              <option value="4">★★★★</option>
+              <option value="3">★★★</option>
+              <option value="2">★★</option>
+              <option value="1">★</option>
+            </select>
+          </label>
+          <input type="text" id="wolWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0">
+          <div><button type="submit" class="btn btn-primary" id="wolSubmit" data-i18n="wol.form_submit">Send feedback</button></div>
+          <p id="wolStatus" role="status" hidden></p>
+        </form>
+      </section>
+
       <p style="margin-top:2rem;color:var(--text-muted)"><span data-i18n="wol.cta_text">Have feedback? We'd love to hear from you — </span><a href="contact.html" data-i18n="wol.cta_link">contact us</a>.</p>
     </div>
   </section>
@@ -63,6 +88,7 @@
 <script src="js/i18n-hotfix.js?v=20261008-08" defer></script>
   <script src="js/i18n-misc.js" defer></script>
 <script src="js/ui.js" defer></script>
+<script src="js/wall-of-love.js" defer></script>
 <script>document.addEventListener("DOMContentLoaded",function(){try{window.DKUI&&(DKUI.renderNav("love"),DKUI.renderFooter(),DKUI.init())}catch(e){}});</script>
 <script src="js/analytics.js" defer></script>
 </body>
