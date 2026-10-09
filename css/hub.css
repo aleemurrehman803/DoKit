@@ -1396,3 +1396,10 @@ body.touring { overflow: hidden; }
 .tool-helper summary::-webkit-details-marker { display: none; }
 .tool-helper__grid { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-block-start: var(--sp-3); }
 .tool-helper__grid .chip { text-decoration: none; }
+
+/* ---------- Serial number badge vertical centering (permanent fix) ---------- */
+/* Root cause: ::before pseudo-element text needs line-height:1 for flex centering to work correctly.
+   Applies to all .thowto step badges across all tools and future tools. */
+.thowto li::before {
+  line-height: 1 !important;
+}
