@@ -148,7 +148,10 @@
       try {
         if (window.DKI18N && typeof window.DKI18N.t === "function") {
           var v = window.DKI18N.t("doki_useme");
-          if (typeof v === "string" && v !== "doki_useme") return v;
+          // Accept only a real translation: reject the raw key AND the
+          // humanized fallback ("Doki useme") that t() returns for missing keys.
+          if (typeof v === "string" && v !== "doki_useme" &&
+              v.toLowerCase().replace(/[\s_]+/g, "_") !== "doki_useme") return v;
         }
       } catch (e2) {}
       return "Use me";
@@ -193,6 +196,11 @@
     document.addEventListener("dokit:langchange", function () {
       if (label.isConnected) txt.textContent = labelText();
     });
+    // One delayed refresh: i18n dictionaries may settle after the label is
+    // created (deferred scripts), so re-resolve the text once.
+    setTimeout(function () {
+      if (label.isConnected) txt.textContent = labelText();
+    }, 2000);
    } catch (err) { /* label is decorative — never break the FAB */ }
   }
 
