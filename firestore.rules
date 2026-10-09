@@ -178,25 +178,47 @@ service cloud.firestore {
 
     match /contact_messages/{msgId} {
       // Public form: anyone may submit (with sane validation).
-      allow create: if request.resource.data.name is string
+      // M10 fix: restrict to allowed keys only, prevent field injection.
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'message', 'subject', 'page', 'createdAt', 'userAgent'])
+        && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 120
         && request.resource.data.email is string
         && request.resource.data.email.size() <= 120
         && request.resource.data.message is string
         && request.resource.data.message.size() > 0
-        && request.resource.data.message.size() <= 5000;
+        && request.resource.data.message.size() <= 5000
+        && (!('subject' in request.resource.data) || request.resource.data.subject.size() <= 200)
+        && (!('page' in request.resource.data) || request.resource.data.page.size() <= 200);
       // Inbox is admin-only (mark read / delete).
       allow read, update, delete: if isAdmin();
+    }
+
+    /* ---------- testimonials (Wall of Love) ---------- */
+
+    match /testimonials/{tId} {
+      // Public form: anyone may submit a testimonial (with validation).
+      // M8 fix: was missing, causing permission-denied on live form.
+      allow create: if request.resource.data.keys().hasOnly(['name', 'message', 'rating', 'createdAt', 'approved'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000
+        && (!('rating' in request.resource.data) || (request.resource.data.rating is number && request.resource.data.rating >= 1 && request.resource.data.rating <= 5));
+      allow read: if true; // public wall
+      allow update, delete: if isAdmin();
     }
 
     /* ---------- audit & security telemetry ---------- */
 
     match /admin_audit/{entryId} {
       // Written by the admin panel's logAudit() AND by the client-side
-      // FinSec.auditLog() on financial actions — so create stays open with
-      // size validation. Reads are admin-only.
-      allow create: if request.resource.data.action is string
+      // FinSec.auditLog() on financial actions — requires auth to prevent forgery.
+      // Reads are admin-only.
+      allow create: if isSignedIn()
+        && request.resource.data.action is string
         && request.resource.data.action.size() <= 80
         && (!('details' in request.resource.data)
           || request.resource.data.details.size() <= 500);
@@ -205,8 +227,9 @@ service cloud.firestore {
     }
 
     match /security_events/{eventId} {
-      // Client-side fraud telemetry (FinSec) — create is open with validation.
-      allow create: if request.resource.data.action is string
+      // Client-side fraud telemetry (FinSec) — requires auth to prevent spam.
+      allow create: if isSignedIn()
+        && request.resource.data.action is string
         && request.resource.data.action.size() <= 80;
       allow read: if isAdmin();
       allow update, delete: if false; // append-only
