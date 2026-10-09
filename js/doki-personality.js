@@ -100,8 +100,133 @@
       enhanceFab(fabNow);
     }
 
+    // Batch 2: enhance chat panel (copy buttons + privacy note)
+    enhancePanel(root);
+
     // Add Doki CSS animations
     addDokiStyles();
+  }
+
+  /**
+   * Batch 2: Add copy buttons to bot messages and a privacy note.
+   * WHY: users want to save Doki's answers; privacy note builds trust.
+   */
+  function enhancePanel(root) {
+    // Watch for new bot messages
+    var msgObserver = new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          // Check if it's a bot message or contains one
+          var msgs = [];
+          if (node.classList && node.classList.contains("dk-msg--bot")) msgs.push(node);
+          if (node.querySelectorAll) {
+            node.querySelectorAll(".dk-msg--bot").forEach(function (el) { msgs.push(el); });
+          }
+          msgs.forEach(addCopyButton);
+        });
+      });
+      // Ensure privacy note exists
+      addPrivacyNote(root);
+    });
+
+    var body = root.querySelector(".dk-panel__body");
+    if (body) {
+      msgObserver.observe(body, { childList: true, subtree: true });
+      // Add copy buttons to existing messages
+      body.querySelectorAll(".dk-msg--bot").forEach(addCopyButton);
+    } else {
+      // Body not yet created, observe root
+      msgObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    // Add privacy note (retry if panel not ready)
+    addPrivacyNote(root);
+    // Listen for language changes to update privacy note
+    document.addEventListener("dokit:langchange", function () {
+      var note = root.querySelector(".doki-privacy-note span");
+      if (note) note.textContent = privacyText();
+    });
+  }
+
+  function privacyText() {
+    try {
+      if (window.DKI18N && window.DKI18N.t) {
+        var t = window.DKI18N.t("doki_privacy");
+        if (t && t !== "doki_privacy") return t;
+      }
+    } catch (e) {}
+    // Fallback by language
+    var lang = "en";
+    try { lang = window.DKI18N.getLang() || "en"; } catch (e) {}
+    var texts = {
+      en: "Your chats stay in your browser — nothing is sent anywhere.",
+      ur: "آپ کی چیٹ آپ کے براؤزر میں رہتی ہے — کہیں نہیں بھیجی جاتی۔",
+      ar: "تبقى محادثاتك في متصفحك — لا يُرسل شيء إلى أي مكان.",
+      hi: "आपकी चैट आपके ब्राउज़र में रहती है — कहीं नहीं भेजी जाती।",
+      es: "Tus chats permanecen en tu navegador — nada se envía a ningún lado.",
+      fr: "Vos discussions restent dans votre navigateur — rien n'est envoyé.",
+      pt: "Suas conversas ficam no seu navegador — nada é enviado.",
+      de: "Deine Chats bleiben in deinem Browser — nichts wird gesendet.",
+      tr: "Sohbetleriniz tarayıcınızda kalır — hiçbir yere gönderilmez.",
+      ru: "Ваши чаты остаются в вашем браузере — ничего никуда не отправляется."
+    };
+    return texts[lang] || texts.en;
+  }
+
+  function addPrivacyNote(root) {
+    var panel = root.querySelector(".dk-panel");
+    if (!panel || panel.querySelector(".doki-privacy-note")) return;
+    var foot = root.querySelector(".dk-panel__foot");
+    if (!foot) return;
+    var note = document.createElement("div");
+    note.className = "doki-privacy-note";
+    note.innerHTML = '🔒 <span></span>';
+    note.querySelector("span").textContent = privacyText();
+    foot.parentNode.insertBefore(note, foot);
+  }
+
+  function addCopyButton(msg) {
+    if (!msg || msg.querySelector(".doki-copy-btn")) return;
+    // Don't add to typing indicator or empty messages
+    if (msg.querySelector(".dk-typing")) return;
+    var text = msg.innerText || msg.textContent;
+    if (!text || !text.trim()) return;
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "doki-copy-btn";
+    btn.innerHTML = "📋";
+    btn.setAttribute("aria-label", "Copy");
+    btn.title = "Copy";
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var t = msg.innerText || msg.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () {
+          btn.innerHTML = "✅";
+          setTimeout(function () { btn.innerHTML = "📋"; }, 1500);
+        }).catch(function () { fallbackCopy(t, btn); });
+      } else {
+        fallbackCopy(t, btn);
+      }
+    });
+    msg.appendChild(btn);
+  }
+
+  function fallbackCopy(text, btn) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      btn.innerHTML = "✅";
+      setTimeout(function () { btn.innerHTML = "📋"; }, 1500);
+    } catch (e) {}
   }
 
   /**
@@ -376,6 +501,39 @@
       "@keyframes doki-work {",
       "  0%, 100% { transform: rotate(-5deg); }",
       "  50% { transform: rotate(5deg); }",
+      "}",
+      /* Batch 2: Copy button on bot messages */
+      ".dk-msg--bot { position: relative; }",
+      ".doki-copy-btn {",
+      "  position: absolute;",
+      "  top: 0.4rem;",
+      "  inset-inline-end: 0.4rem;",
+      "  inline-size: 1.75rem;",
+      "  block-size: 1.75rem;",
+      "  border: 1px solid var(--border, rgba(0,0,0,.12));",
+      "  border-radius: 0.5rem;",
+      "  background: var(--surface, #fff);",
+      "  cursor: pointer;",
+      "  font-size: 0.9rem;",
+      "  line-height: 1;",
+      "  opacity: 0;",
+      "  transition: opacity 0.2s ease, transform 0.15s ease;",
+      "}",
+      ".dk-msg--bot:hover .doki-copy-btn,",
+      ".dk-msg--bot:focus-within .doki-copy-btn { opacity: 1; }",
+      ".doki-copy-btn:hover { transform: scale(1.1); }",
+      ".doki-copy-btn:active { transform: scale(0.95); }",
+      /* Batch 2: Privacy note */
+      ".doki-privacy-note {",
+      "  display: flex;",
+      "  align-items: center;",
+      "  justify-content: center;",
+      "  gap: 0.35rem;",
+      "  padding: 0.5rem 1rem;",
+      "  font-size: 0.75rem;",
+      "  color: var(--text-muted, #888);",
+      "  text-align: center;",
+      "  border-top: 1px solid var(--border, rgba(0,0,0,.06));",
       "}"
     ].join("\n");
     document.head.appendChild(s);
