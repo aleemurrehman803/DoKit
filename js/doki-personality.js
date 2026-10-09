@@ -248,7 +248,6 @@
     s.textContent = [
       /* Animated FAB */
       ".doki-fab {",
-      "  position: relative;",
       "  overflow: visible !important;",
       "}",
       ".doki-fab-icon {",
