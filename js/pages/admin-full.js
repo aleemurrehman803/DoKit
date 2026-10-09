@@ -70,6 +70,61 @@
     try { return firebase.firestore.FieldValue; } catch (e) { return null; }
   }
 
+  /* SHA-256 hex digest (async). Shared by the ledger helpers below. */
+  function sha256Hex(str) {
+    var bytes = new TextEncoder().encode(str);
+    return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
+      var arr = new Uint8Array(buf), hex = "";
+      for (var i = 0; i < arr.length; i++) hex += ("0" + arr[i].toString(16)).slice(-2);
+      return hex;
+    });
+  }
+
+  /* ------------------------------------------------------------------
+   * H13 — Transactional coin mutation WITH hash-chained ledger entry.
+   * Ledger schema MUST match js/typefight.js ledgerAppend/ledgerVerify:
+   *   { amount, reason, clientTs, ts, prevHash, hash }
+   *   hash = sha256(prevHash|uid|amount|reason|clientTs)
+   * prevHash is read INSIDE the transaction (same pattern as ledgerAppend)
+   * so concurrent mutations serialize correctly — no chain forks.
+   * Resolves with { newCoins }.
+   * ------------------------------------------------------------------ */
+  function ledgerCreditTx(uid, amount, reason) {
+    var d = db();
+    if (!d) return Promise.reject(new Error("Database unavailable."));
+    amount = Math.trunc(Number(amount)) || 0;
+    reason = String(reason || "manual_adjust").slice(0, 120);
+    if (!amount) return Promise.reject(new Error("amount must be non-zero"));
+    if (typeof uid !== "string" || !uid) return Promise.reject(new Error("Invalid user id."));
+    var userRef = d.collection("users").doc(uid);
+    var ledgerCol = userRef.collection("coin_ledger");
+    return d.runTransaction(function (tx) {
+      return tx.get(ledgerCol.orderBy("clientTs", "desc").limit(1)).then(function (lsnap) {
+        var prevHash = "GENESIS";
+        lsnap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
+        return tx.get(userRef).then(function (usnap) {
+          var curCoins = (usnap.exists && Number(usnap.data().coins)) || 0;
+          var newCoins = curCoins + amount;
+          if (newCoins < 0) throw new Error("Insufficient balance: cannot go negative");
+          var clientTs = Date.now();
+          var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
+          return sha256Hex(payload).then(function (entryHash) {
+            tx.update(userRef, { coins: newCoins });
+            tx.set(ledgerCol.doc(), {
+              amount: amount,
+              reason: reason,
+              clientTs: clientTs,
+              ts: firebase.firestore.FieldValue.serverTimestamp(),
+              prevHash: prevHash,
+              hash: entryHash
+            });
+            return { newCoins: newCoins };
+          });
+        });
+      });
+    });
+  }
+
   /* Normalize Firestore Timestamp / Date / epoch-ms to epoch-ms. */
   function toMillis(v) {
     if (v == null) return 0;
@@ -672,12 +727,14 @@
     });
   }
 
+  /* H13: all coin mutations go through the hash-chained ledger
+   * (ledgerCreditTx) so users.coins can never drift from coin_ledger. */
   function adjustCoins(u, amt) {
-    var d = db(), F = fv();
-    if (!d || !F) return;
-    d.collection("users").doc(u.uid).update({ coins: F.increment(amt) })
-      .then(function () {
-        u.coins += amt;
+    amt = Math.trunc(Number(amt)) || 0;
+    if (!amt || amt <= 0) { alert("Enter a positive number of coins."); return; }
+    ledgerCreditTx(u.uid, amt, "manual_adjust:" + (u.email || u.name || u.uid).toString().slice(0, 60))
+      .then(function (res) {
+        u.coins = res.newCoins;
         renderUsers();
         logAudit("coins_add", u.uid, "+" + amt + " coins (" + (u.email || u.name) + ")");
         openUserDetail(u.uid); // refresh
@@ -688,14 +745,25 @@
   function setCoins(u, val) {
     var d = db();
     if (!d) return;
-    d.collection("users").doc(u.uid).update({ coins: val })
-      .then(function () {
+    val = Math.floor(Number(val)) || 0;
+    if (val < 0) { alert("Coins cannot be negative."); return; }
+    // Read the fresh balance first so the ledger delta is exact.
+    d.collection("users").doc(u.uid).get().then(function (snap) {
+      var cur = (snap.exists && Number(snap.data().coins)) || 0;
+      var delta = val - cur;
+      if (!delta) {
         u.coins = val;
         renderUsers();
-        logAudit("coins_reset", u.uid, "set to 0 (" + (u.email || u.name) + ")");
         openUserDetail(u.uid);
-      })
-      .catch(function (err) { alert("Could not reset coins: " + friendlyDbErr(err)); });
+        return;
+      }
+      return ledgerCreditTx(u.uid, delta, "manual_set:" + val).then(function (res) {
+        u.coins = res.newCoins;
+        renderUsers();
+        logAudit("coins_reset", u.uid, "set to " + val + " (" + (u.email || u.name) + ")");
+        openUserDetail(u.uid);
+      });
+    }).catch(function (err) { alert("Could not reset coins: " + friendlyDbErr(err)); });
   }
 
   /* ================= 2b. BAN / SUSPEND (#8) =================
@@ -766,27 +834,34 @@
   }
 
   function bulkGiveCoins() {
-    var d = db(), F = fv();
-    if (!d || !F) return;
+    var d = db();
+    if (!d) return;
     var amt = parseInt(($("admBulkCoinsAmt") || {}).value, 10);
     if (!amt || amt <= 0) { alert("Enter a positive number of coins."); return; }
     var uids = state.bulk.slice();
     if (!uids.length) return;
     if (!confirm("Give " + amt + " coins to " + uids.length + " user(s)?")) return;
-    var batch = d.batch();
+    /* H13: sequential per-user ledger transactions (not one blind batch) so
+     * every grant lands in the hash-chained coin_ledger. Failures are
+     * collected per user instead of aborting the whole run. */
+    var done = 0, failed = [];
+    var chain = Promise.resolve();
     uids.forEach(function (uid) {
-      batch.update(d.collection("users").doc(uid), { coins: F.increment(amt) });
-    });
-    batch.commit().then(function () {
-      // Optimistic local update.
-      state.users.forEach(function (u) {
-        if (uids.indexOf(u.uid) !== -1) u.coins += amt;
+      chain = chain.then(function () {
+        return ledgerCreditTx(uid, amt, "bulk_grant").then(function (res) {
+          done++;
+          state.users.forEach(function (x) { if (x.uid === uid) x.coins = res.newCoins; });
+        }).catch(function (err) { failed.push(uid + ": " + ((err && err.message) || err)); });
       });
-      logAudit("bulk_coins_add", uids.length + " users", "+" + amt + " coins each");
+    });
+    chain.then(function () {
+      logAudit("bulk_coins_add", uids.length + " users",
+        "+" + amt + " coins each (" + done + " ok, " + failed.length + " failed)");
       state.bulk = [];
       renderUsers();
-      alert("Done — " + amt + " coins given to " + uids.length + " user(s).");
-    }).catch(function (err) { alert("Bulk coin grant failed: " + friendlyDbErr(err)); });
+      alert("Done — " + amt + " coins given to " + done + " of " + uids.length + " user(s)." +
+        (failed.length ? "\nFailed:\n" + failed.join("\n") : ""));
+    });
   }
 
   function bulkSuspend() {
@@ -1140,39 +1215,43 @@
     /* Ledger schema MUST match js/typefight.js ledgerAppend/ledgerVerify:
      * { amount, reason, clientTs, ts, prevHash, hash }
      * hash = sha256(prevHash|uid|amount|reason|clientTs)
-     * We read the last entry for prevHash, compute the hash, THEN transact.
+     *
+     * H1: the credited amount is read from the DEPOSIT DOCUMENT inside the
+     * transaction — the DOM-supplied `amount` is display-only (confirm
+     * dialog) and never touches the ledger or the balance.
+     * H2: prevHash is read INSIDE the transaction (same pattern as
+     * js/typefight.js ledgerAppend) so concurrent approvals serialize
+     * correctly — no chain forks.
      */
-    function sha256hex(str) {
-      var bytes = new TextEncoder().encode(str);
-      return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
-        var arr = new Uint8Array(buf), hex = "";
-        for (var i = 0; i < arr.length; i++) hex += ("0" + arr[i].toString(16)).slice(-2);
-        return hex;
-      });
-    }
+    var credited = 0; // actual credited amount, for the audit log below
 
-    ledgerCol.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
-      var prevHash = "GENESIS";
-      snap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
-      var clientTs = Date.now();
-      var reason = "deposit:" + depId;
-      var payload = prevHash + "|" + userId + "|" + amount + "|" + reason + "|" + clientTs;
-      return sha256hex(payload).then(function (entryHash) {
-        return d.runTransaction(function (tx) {
-          return tx.get(depRef).then(function (depSnap) {
-            if (!depSnap.exists) throw new Error("Deposit not found.");
-            var depData = depSnap.data();
-            if (depData.status !== "pending") throw new Error("Deposit is no longer pending.");
+    d.runTransaction(function (tx) {
+      return tx.get(depRef).then(function (depSnap) {
+        if (!depSnap.exists) throw new Error("Deposit not found.");
+        var depData = depSnap.data();
+        if (depData.status !== "pending") throw new Error("Deposit is no longer pending.");
+        // H1: authoritative amount from the deposit record, not the DOM.
+        var creditAmount = Math.floor(Number(depData.amount)) || 0;
+        if (creditAmount <= 0) throw new Error("Deposit amount on record is invalid.");
+        credited = creditAmount;
 
-            return tx.get(userRef).then(function (userSnap) {
-              var udata = userSnap.exists ? userSnap.data() : {};
-              var curCoins = Number(udata.coins) || 0;
-              var newCoins = curCoins + amount;
+        return tx.get(userRef).then(function (userSnap) {
+          var udata = userSnap.exists ? userSnap.data() : {};
+          var curCoins = Number(udata.coins) || 0;
+          var newCoins = curCoins + creditAmount;
 
+          // H2: prevHash read inside the transaction.
+          return tx.get(ledgerCol.orderBy("clientTs", "desc").limit(1)).then(function (lsnap) {
+            var prevHash = "GENESIS";
+            lsnap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
+            var clientTs = Date.now();
+            var reason = "deposit:" + depId;
+            var payload = prevHash + "|" + userId + "|" + creditAmount + "|" + reason + "|" + clientTs;
+            return sha256Hex(payload).then(function (entryHash) {
               // Atomic: update balance + ledger + deposit status
               tx.update(userRef, { coins: newCoins });
               tx.set(ledgerRef, {
-                amount: amount,
+                amount: creditAmount,
                 reason: reason,
                 clientTs: clientTs,
                 ts: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1190,7 +1269,7 @@
         });
       });
     }).then(function () {
-      logAudit("deposit_approved", depId, "user:" + userId + " amount:" + amount);
+      logAudit("deposit_approved", depId, "user:" + userId + " amount:" + credited);
       loadDeposits();
       loadDashboard();
     }).catch(function (err) {
@@ -1343,11 +1422,17 @@
           var coins = Number(udata.coins) || 0;
           var pendingWd = Number(udata.pending_withdrawal) || 0;
 
+          /* M14: fail loudly instead of silently flooring at zero. If the
+           * balance or the pending hold dropped below the withdrawal amount
+           * (e.g. an intervening reset between lock and settle), abort with
+           * NO money movement rather than paying out more than the balance. */
+          if (coins < wdAmount) throw new Error("Insufficient balance at settle time (" + coins + " < " + wdAmount + "). Aborted — no money moved.");
+          if (pendingWd < wdAmount) throw new Error("Pending hold smaller than withdrawal (" + pendingWd + " < " + wdAmount + "). Aborted — no money moved.");
           /* Settle: remove from BOTH coins and pending_withdrawal.
            * The coins were locked at request time; now they leave the system. */
           tx.update(d.collection("users").doc(wdUserId), {
-            coins: Math.max(0, coins - wdAmount),
-            pending_withdrawal: Math.max(0, pendingWd - wdAmount)
+            coins: coins - wdAmount,
+            pending_withdrawal: pendingWd - wdAmount
           });
           tx.update(wdRef, {
             status: "processed",
