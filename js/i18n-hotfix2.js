@@ -247,3 +247,54 @@
       .observe(document.body, {childList: true, subtree: true});
   } catch(e) {}
 })();
+
+/* Filter out invalid tools from recent list (like meta-title) */
+(function() {
+  var VALID_SLUGS = ['image-resizer','image-compressor','image-converter','board-photo','word-counter','case-converter','typing','typing-lessons','typing-test','typing-games','typing-practice','typing-certificate','typefight','qr-generator','password-generator','unit-converter'];
+  
+  function filterInvalidRecent() {
+    try {
+      // Clean localStorage
+      try {
+        var key = 'dokit_recent_tools';
+        var data = localStorage.getItem(key);
+        if (data) {
+          var list = JSON.parse(data);
+          var filtered = list.filter(function(item) {
+            return item && item.slug && VALID_SLUGS.indexOf(item.slug) >= 0;
+          });
+          if (filtered.length !== list.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
+          }
+        }
+      } catch(e) {}
+      
+      // Remove invalid pills from DOM
+      var pills = document.querySelectorAll('.dkf-recent__chips .dkf-chip');
+      pills.forEach(function(pill) {
+        var href = pill.getAttribute('href') || '';
+        var match = href.match(/\/tools\/([^\/]+)\//);
+        if (match) {
+          var slug = match[1];
+          if (VALID_SLUGS.indexOf(slug) < 0) {
+            pill.style.display = 'none';
+          }
+        }
+        // Also hide if text is "Meta title"
+        var txt = (pill.textContent || '').trim();
+        if (txt === 'Meta title' || txt.indexOf('Meta title') >= 0) {
+          pill.style.display = 'none';
+        }
+      });
+    } catch(e) {}
+  }
+  
+  [1000, 2500, 5000].forEach(function(d) {
+    setTimeout(filterInvalidRecent, d);
+  });
+  
+  try {
+    new MutationObserver(function() { filterInvalidRecent(); })
+      .observe(document.body, {childList: true, subtree: true});
+  } catch(e) {}
+})();
