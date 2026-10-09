@@ -149,6 +149,13 @@
     // Batch 4: Clear button + "/" shortcut
     addClearButton(root);
     initSlashShortcut(root);
+    // Batch 5: Offline, sleep mode
+    initOfflineMessage(root);
+    initSleepMode(root);
+    // Batch 5: Draggable FAB
+    initDraggable(root);
+    // Batch 5: Feedback request button
+    addFeedbackRequestBtn(root);
     // Listen for language changes to update privacy note
     document.addEventListener("dokit:langchange", function () {
       var note = root.querySelector(".doki-privacy-note span");
@@ -465,6 +472,177 @@
         }
       }
     });
+  }
+
+  /**
+   * Batch 5 #8: Draggable FAB - user can position it anywhere.
+   */
+  function initDraggable(root) {
+    if (initDraggable.done) return;
+    initDraggable.done = true;
+    var fab = root.querySelector(".dk-fab");
+    if (!fab) return;
+    // Restore saved position
+    try {
+      var pos = JSON.parse(window.localStorage.getItem("doki_fab_pos") || "null");
+      if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
+        fab.style.left = pos.x + "px";
+        fab.style.top = pos.y + "px";
+        fab.style.right = "auto";
+        fab.style.bottom = "auto";
+      }
+    } catch (e) {}
+
+    var dragging = false, startX, startY, origX, origY;
+    fab.addEventListener("mousedown", startDrag);
+    fab.addEventListener("touchstart", startDrag, { passive: false });
+
+    function startDrag(e) {
+      // Only start drag on long-press (300ms) to avoid conflict with click
+      var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      var timer = setTimeout(function () {
+        dragging = true;
+        fab.classList.add("doki-dragging");
+        var rect = fab.getBoundingClientRect();
+        startX = clientX; startY = clientY;
+        origX = rect.left; origY = rect.top;
+        e.preventDefault();
+      }, 300);
+      function cancel() { clearTimeout(timer); }
+      fab.addEventListener("mouseup", cancel, { once: true });
+      fab.addEventListener("touchend", cancel, { once: true });
+    }
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("touchmove", doDrag, { passive: false });
+    document.addEventListener("mouseup", endDrag);
+    document.addEventListener("touchend", endDrag);
+
+    function doDrag(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      var newX = Math.max(0, Math.min(window.innerWidth - 64, origX + clientX - startX));
+      var newY = Math.max(0, Math.min(window.innerHeight - 64, origY + clientY - startY));
+      fab.style.left = newX + "px";
+      fab.style.top = newY + "px";
+      fab.style.right = "auto";
+      fab.style.bottom = "auto";
+    }
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      fab.classList.remove("doki-dragging");
+      try {
+        var rect = fab.getBoundingClientRect();
+        window.localStorage.setItem("doki_fab_pos", JSON.stringify({ x: rect.left, y: rect.top }));
+      } catch (e) {}
+    }
+  }
+
+  /**
+   * Batch 5 #30: "How to improve Doki?" feedback button in panel.
+   */
+  function addFeedbackRequestBtn(root) {
+    var foot = root.querySelector(".dk-panel__foot");
+    if (!foot || foot.querySelector(".doki-improve-btn")) return;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "doki-improve-btn";
+    var lang = "en";
+    try { lang = window.DKI18N.getLang() || "en"; } catch (e) {}
+    btn.textContent = lang === "ur" ? "💬 Doki کو کیسا بنائیں؟" : "💬 Improve Doki?";
+    btn.addEventListener("click", function () {
+      // Open the existing feedback modal if available
+      var fbBtn = document.querySelector("[data-dkf-feedback-link]");
+      if (fbBtn) fbBtn.click();
+    });
+    // Add above the footer
+    var privacy = root.querySelector(".doki-privacy-note");
+    if (privacy) privacy.parentNode.insertBefore(btn, privacy);
+    else foot.parentNode.insertBefore(btn, foot);
+    // Update on language change
+    document.addEventListener("dokit:langchange", function () {
+      var l = "en";
+      try { l = window.DKI18N.getLang() || "en"; } catch (e) {}
+      btn.textContent = l === "ur" ? "💬 Doki کو کیسا بنائیں؟" : "💬 Improve Doki?";
+    });
+  }
+
+  /**
+   * Batch 5 #3: Panda expressions - change based on state.
+   * Adds classes that can swap the panda SVG or add emotion indicators.
+   */
+  function setPandaMood(root, mood) {
+    var fab = root.querySelector(".dk-fab");
+    if (!fab) return;
+    fab.classList.remove("doki-mood-thinking", "doki-mood-happy", "doki-mood-sleeping");
+    if (mood) fab.classList.add("doki-mood-" + mood);
+  }
+  // Expose for external use
+  window.DokiSetMood = function (mood) {
+    var root = document.getElementById("dk-assistant-root");
+    if (root) setPandaMood(root, mood);
+  };
+  function initOfflineMessage(root) {
+    if (initOfflineMessage.done) return;
+    initOfflineMessage.done = true;
+    function showOfflineNote() {
+      var body = root.querySelector(".dk-panel__body");
+      if (!body || body.querySelector(".doki-offline-note")) return;
+      var panel = root.querySelector(".dk-panel");
+      if (!panel || !panel.classList.contains("open")) return;
+      var note = document.createElement("div");
+      note.className = "dk-msg dk-msg--bot doki-offline-note";
+      var lang = "en";
+      try { lang = window.DKI18N.getLang() || "en"; } catch (e) {}
+      var texts = {
+        en: "📶 You're offline — Doki can still help with basic tools, but AI answers need internet.",
+        ur: "📶 آپ آف لائن ہیں — ڈوکی بنیادی ٹولز میں مدد کر سکتا ہے، لیکن AI جوابات کے لیے انٹرنیٹ چاہیے۔"
+      };
+      note.innerHTML = "<p>" + (texts[lang] || texts.en) + "</p>";
+      body.appendChild(note);
+      body.scrollTop = body.scrollHeight;
+    }
+    window.addEventListener("offline", showOfflineNote);
+    // Check on panel open
+    var panel = root.querySelector(".dk-panel");
+    if (panel) {
+      new MutationObserver(function () {
+        if (!window.navigator.onLine) showOfflineNote();
+      }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+    }
+  }
+
+  /**
+   * Batch 5 #4: Sleep mode when idle.
+   */
+  function initSleepMode(root) {
+    if (initSleepMode.done) return;
+    initSleepMode.done = true;
+    var fab = root.querySelector(".dk-fab");
+    if (!fab) return;
+    var idleTimer = null;
+    var IDLE_MS = 5 * 60 * 1000; // 5 minutes
+    function goSleep() {
+      fab.classList.add("doki-sleeping");
+    }
+    function wakeUp() {
+      fab.classList.remove("doki-sleeping");
+      resetTimer();
+    }
+    function resetTimer() {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(goSleep, IDLE_MS);
+    }
+    ["click", "mousemove", "keydown", "scroll", "touchstart"].forEach(function (ev) {
+      document.addEventListener(ev, wakeUp, { passive: true });
+    });
+    fab.addEventListener("click", wakeUp);
+    resetTimer();
   }
 
   function fallbackCopy(text, btn) {
@@ -880,7 +1058,66 @@
       "  opacity: 0.6;",
       "  transition: opacity 0.15s ease, transform 0.15s ease;",
       "}",
-      ".doki-clear-btn:hover { opacity: 1; transform: scale(1.1); }"
+      ".doki-clear-btn:hover { opacity: 1; transform: scale(1.1); }",
+      /* Batch 5: Sleep mode, dragging, moods */
+      ".doki-fab.doki-sleeping .doki-fab-icon {",
+      "  animation: doki-sleep 3s ease-in-out infinite;",
+      "  filter: grayscale(0.4) brightness(0.9);",
+      "}",
+      "@keyframes doki-sleep {",
+      "  0%, 100% { transform: translateY(0); }",
+      "  50% { transform: translateY(2px); }",
+      "}",
+      ".doki-fab.doki-dragging {",
+      "  cursor: grabbing !important;",
+      "  z-index: 9999 !important;",
+      "  transition: none !important;",
+      "}",
+      ".doki-fab.doki-mood-thinking .doki-fab-icon {",
+      "  animation: doki-think 1s ease-in-out infinite;",
+      "}",
+      "@keyframes doki-think {",
+      "  0%, 100% { transform: rotate(-8deg); }",
+      "  50% { transform: rotate(8deg); }",
+      "}",
+      ".doki-fab.doki-mood-happy .doki-fab-icon {",
+      "  animation: doki-happy 0.6s ease-in-out 3;",
+      "}",
+      "@keyframes doki-happy {",
+      "  0%, 100% { transform: scale(1); }",
+      "  50% { transform: scale(1.15); }",
+      "}",
+      /* Batch 5: Offline note */
+      ".doki-offline-note {",
+      "  background: #fef3c7 !important;",
+      "  border: 1px solid #f59e0b !important;",
+      "}",
+      /* Batch 5: Improve button */
+      ".doki-improve-btn {",
+      "  display: block;",
+      "  width: calc(100% - 2rem);",
+      "  margin: 0.5rem 1rem;",
+      "  padding: 0.5rem;",
+      "  border: 1px dashed var(--border, rgba(0,0,0,.15));",
+      "  border-radius: 0.6rem;",
+      "  background: transparent;",
+      "  color: var(--text-muted, #888);",
+      "  font-size: 0.8rem;",
+      "  cursor: pointer;",
+      "  transition: background-color 0.15s ease;",
+      "}",
+      ".doki-improve-btn:hover {",
+      "  background: var(--surface-2, #f5f3ff);",
+      "  color: var(--text, inherit);",
+      "}",
+      /* Batch 5 #6: Mobile size optimization */
+      "@media (max-width: 480px) {",
+      "  .dk-fab.doki-fab {",
+      "    inline-size: 3.25rem !important;",
+      "    block-size: 3.25rem !important;",
+      "  }",
+      "  .doki-useme { font-size: 0.72rem; }",
+      "}"
     ].join("\n");
     document.head.appendChild(s);
   }
