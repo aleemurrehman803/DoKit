@@ -41,7 +41,8 @@ service cloud.firestore {
 
     // Fields a regular user must never change on their own profile.
     function privilegedUserKeys() {
-      return ['coins', 'suspended', 'suspendReason', 'suspendUntil'];
+      return ['coins', 'suspended', 'suspendReason', 'suspendUntil',
+              'pending_withdrawal', 'last_withdrawal_at', 'withdrawn_today'];
     }
 
     /* ---------- admin registry ---------- */
@@ -136,8 +137,9 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
+        && request.resource.data.amount <= 1000000
         && !request.resource.data.keys()
-             .hasAny(['processedBy', 'processedAt', 'processedAtMs', 'rejectReason']);
+             .hasAny(['processedBy', 'processedAt', 'processedAtMs', 'rejectReason', 'approvals']);
       allow update, delete: if isAdmin();
     }
 
