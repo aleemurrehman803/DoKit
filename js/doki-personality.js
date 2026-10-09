@@ -146,6 +146,9 @@
     addVoiceButton(root);
     // Batch 3: Restore chat history
     restoreChatHistory(root);
+    // Batch 4: Clear button + "/" shortcut
+    addClearButton(root);
+    initSlashShortcut(root);
     // Listen for language changes to update privacy note
     document.addEventListener("dokit:langchange", function () {
       var note = root.querySelector(".doki-privacy-note span");
@@ -369,6 +372,99 @@
       }
     });
     msg.appendChild(btn);
+    // Batch 4: Add timestamp + feedback buttons
+    addTimestamp(msg);
+    if (msg.classList.contains("dk-msg--bot")) addFeedbackButtons(msg);
+  }
+
+  /**
+   * Batch 4 #18: Timestamp on each message.
+   */
+  function addTimestamp(msg) {
+    if (!msg || msg.querySelector(".doki-timestamp")) return;
+    var ts = document.createElement("span");
+    ts.className = "doki-timestamp";
+    try {
+      var now = new Date();
+      var h = now.getHours(), m = now.getMinutes();
+      var ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      ts.textContent = h + ":" + (m < 10 ? "0" : "") + m + " " + ampm;
+    } catch (e) { ts.textContent = ""; }
+    msg.appendChild(ts);
+  }
+
+  /**
+   * Batch 4 #20: 👍👎 feedback on bot answers.
+   */
+  function addFeedbackButtons(msg) {
+    if (!msg || msg.querySelector(".doki-feedback")) return;
+    var wrap = document.createElement("span");
+    wrap.className = "doki-feedback";
+    var up = document.createElement("button");
+    up.type = "button"; up.className = "doki-fb-btn"; up.innerHTML = "👍";
+    up.setAttribute("aria-label", "Good answer"); up.title = "Good answer";
+    var down = document.createElement("button");
+    down.type = "button"; down.className = "doki-fb-btn"; down.innerHTML = "👎";
+    down.setAttribute("aria-label", "Bad answer"); down.title = "Bad answer";
+    function mark(chosen, other) {
+      chosen.classList.add("doki-fb-active");
+      other.classList.remove("doki-fb-active");
+      try {
+        var key = "doki_feedback_" + Date.now();
+        window.localStorage.setItem(key, chosen === up ? "up" : "down");
+      } catch (e) {}
+    }
+    up.addEventListener("click", function (e) { e.stopPropagation(); mark(up, down); });
+    down.addEventListener("click", function (e) { e.stopPropagation(); mark(down, up); });
+    wrap.appendChild(up); wrap.appendChild(down);
+    msg.appendChild(wrap);
+  }
+
+  /**
+   * Batch 4 #22: Clear chat button in panel header.
+   */
+  function addClearButton(root) {
+    var head = root.querySelector(".dk-panel__head");
+    if (!head || head.querySelector(".doki-clear-btn")) return;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "doki-clear-btn";
+    btn.innerHTML = "🗑️";
+    btn.setAttribute("aria-label", "Clear chat");
+    btn.title = "Clear chat";
+    btn.addEventListener("click", function () {
+      var body = root.querySelector(".dk-panel__body");
+      if (body) {
+        body.innerHTML = "";
+        try { window.localStorage.removeItem(DOKI_HIST_KEY); } catch (e) {}
+      }
+    });
+    // Insert before close button
+    var close = head.querySelector(".dk-panel__close");
+    if (close) head.insertBefore(btn, close);
+    else head.appendChild(btn);
+  }
+
+  /**
+   * Batch 4 #15: Press "/" to open Doki.
+   */
+  function initSlashShortcut(root) {
+    if (initSlashShortcut.done) return;
+    initSlashShortcut.done = true;
+    document.addEventListener("keydown", function (e) {
+      // Only when not typing in an input
+      var tag = (e.target && e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        var panel = root.querySelector(".dk-panel");
+        var fab = root.querySelector(".dk-fab");
+        if (panel && !panel.classList.contains("open") && fab) {
+          e.preventDefault();
+          fab.click();
+        }
+      }
+    });
   }
 
   function fallbackCopy(text, btn) {
@@ -744,7 +840,47 @@
       "  .dk-msg { animation: none; }",
       "  .dk-chips .chip:hover { transform: none; }",
       "  .doki-voice-btn.doki-voice-active { animation: none; }",
-      "}"
+      "}",
+      /* Batch 4 #18: Timestamps */
+      ".doki-timestamp {",
+      "  display: block;",
+      "  font-size: 0.65rem;",
+      "  color: var(--text-muted, #aaa);",
+      "  margin-top: 0.25rem;",
+      "  text-align: end;",
+      "}",
+      /* Batch 4 #20: Feedback buttons */
+      ".doki-feedback {",
+      "  display: inline-flex;",
+      "  gap: 0.25rem;",
+      "  margin-inline-start: 0.5rem;",
+      "  vertical-align: middle;",
+      "}",
+      ".doki-fb-btn {",
+      "  border: 1px solid var(--border, rgba(0,0,0,.1));",
+      "  border-radius: 0.4rem;",
+      "  background: transparent;",
+      "  cursor: pointer;",
+      "  font-size: 0.8rem;",
+      "  padding: 0.15rem 0.35rem;",
+      "  line-height: 1;",
+      "  opacity: 0.5;",
+      "  transition: opacity 0.15s ease, transform 0.15s ease;",
+      "}",
+      ".doki-fb-btn:hover { opacity: 1; transform: scale(1.1); }",
+      ".doki-fb-btn.doki-fb-active { opacity: 1; background: var(--surface-2, #f0edff); }",
+      /* Batch 4 #22: Clear button */
+      ".doki-clear-btn {",
+      "  border: none;",
+      "  background: transparent;",
+      "  cursor: pointer;",
+      "  font-size: 1.1rem;",
+      "  padding: 0.25rem;",
+      "  border-radius: 0.4rem;",
+      "  opacity: 0.6;",
+      "  transition: opacity 0.15s ease, transform 0.15s ease;",
+      "}",
+      ".doki-clear-btn:hover { opacity: 1; transform: scale(1.1); }"
     ].join("\n");
     document.head.appendChild(s);
   }
