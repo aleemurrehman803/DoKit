@@ -306,12 +306,22 @@ body, .site-header, .site-footer, .card, .tool-card, .faq-item, .btn {
 
 /* ============ 42. Back to top ============ */
 #back-to-top {
-  position: fixed; inset-block-end: 1.25rem; inset-inline-end: 1.25rem; z-index: 900;
+  /* Stacked ABOVE the Doki FAB on the same side (never overlaps it or the
+     "Use me" label, in both LTR and RTL). FAB top ≈ 5.5rem, label top ≈ 8.1rem. */
+  position: fixed;
+  inset-block-end: calc(var(--sp-5, 1.5rem) + 7.25rem);
+  inset-inline-start: var(--sp-5, 1.5rem);
+  inset-inline-end: auto;
+  z-index: 900;
   inline-size: 3rem; block-size: 3rem; border-radius: 50%; border: none; cursor: pointer;
   background: var(--primary); color: #fff; font-size: 1.3rem; line-height: 1;
   box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,.15));
   opacity: 0; transform: translateY(12px); pointer-events: none;
   transition: opacity .3s ease, transform .3s ease;
+}
+/* Follow the FAB up when the sticky CTA pushes it */
+body.has-sticky-cta #back-to-top {
+  inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 7.25rem);
 }
 #back-to-top.show { opacity: 1; transform: none; pointer-events: auto; }
 #back-to-top:hover { transform: translateY(-3px); }
