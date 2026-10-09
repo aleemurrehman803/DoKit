@@ -84,6 +84,20 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
         try {
           db.collection("users").doc(user.uid).get().then(function (snap) {
             var d = (snap && snap.exists) ? (snap.data() || {}) : {};
+            // Permanent fix: create user doc on first sign-in if missing.
+            // Without this, suspend enforcement and other per-user features break.
+            if (!snap || !snap.exists) {
+              try {
+                db.collection("users").doc(user.uid).set({
+                  email: user.email || "",
+                  displayName: user.displayName || "",
+                  createdAt: Date.now(),
+                  suspended: false,
+                  suspendReason: "",
+                  suspendUntil: 0
+                }, { merge: true }).catch(function () {});
+              } catch (e) {}
+            }
             var until = Number(d.suspendUntil) || 0;
             var suspended = !!d.suspended && (!until || until > Date.now());
             if (suspended) {
