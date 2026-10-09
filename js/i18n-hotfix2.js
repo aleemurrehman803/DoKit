@@ -128,3 +128,18 @@
     window.addEventListener('load', function() { setTimeout(createBackToTop, 1000); });
   }
 })();
+
+/* Demo textarea fix */
+(function() {
+  function fixDemo() {
+    try {
+      var m = location.search.match(/[?&]lang=([a-z]+)/);
+      if (!m || m[1] !== 'ur') return;
+      var ta = document.getElementById('demoText');
+      if (ta && ta.value.indexOf('DoKit makes everyday tasks') === 0) {
+        ta.value = 'ڈوکٹ روزمرہ کے کام تیز، مفت اور نجی بناتا ہے۔';
+      }
+    } catch(e) {}
+  }
+  [800, 2000, 4000].forEach(function(d) { setTimeout(fixDemo, d); });
+})();
