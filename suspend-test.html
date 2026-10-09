@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Suspend E2E Test</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+</head><body>
+<h1>Suspend E2E Test</h1>
+<div id="status">Initializing...</div>
+<script>
+// This page tests suspend enforcement by signing in as the suspended test user.
+// DKF.onUser should detect suspended=true and redirect to suspended.html.
+var statusEl = document.getElementById('status');
+function setStatus(s) { statusEl.textContent = s; console.log('[TEST]', s); }
+
+setStatus('Waiting for DKF...');
+// Wait for DKF to be ready, then sign in
+var tries = 0;
+var iv = setInterval(function() {
+  tries++;
+  if (window.DKF && DKF.auth) {
+    clearInterval(iv);
+    doSignIn();
+  } else if (tries > 50) {
+    clearInterval(iv);
+    setStatus('FAIL: DKF not loaded');
+  }
+}, 200);
+
+function doSignIn() {
+  setStatus('Signing in as dokit-suspend-test@example.com...');
+  // Register onUser BEFORE signing in so we catch the auth state change
+  DKF.onUser(function(user) {
+    if (user) {
+      setStatus('Signed in as ' + user.email + ' (uid=' + user.uid + '). Waiting for suspend check...');
+      // The suspend check happens inside onUser. If suspended, it redirects.
+      // If we're still here after 5s, check what happened.
+      setTimeout(function() {
+        var loc = window.location.href;
+        if (/suspended\.html/.test(loc)) {
+          setStatus('PASS: Redirected to suspended.html');
+          document.body.innerHTML = '<h1 style="color:green">PASS: Suspended user was redirected to suspended.html</h1><p>URL: ' + loc + '</p>';
+        } else {
+          setStatus('FAIL: Not redirected. Still at: ' + loc);
+          document.body.innerHTML = '<h1 style="color:red">FAIL: Suspended user was NOT redirected</h1><p>Still at: ' + loc + '</p>';
+        }
+      }, 5000);
+    } else {
+      setStatus('Not signed in');
+    }
+  });
+  
+  DKF.auth().signInWithEmailAndPassword('dokit-suspend-test@example.com', 'Test123456')
+    .then(function() { setStatus('Sign-in request sent...'); })
+    .catch(function(e) { setStatus('FAIL: Sign-in error: ' + e.message); });
+}
+</script>
+</body></html>
