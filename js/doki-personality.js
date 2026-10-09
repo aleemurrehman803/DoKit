@@ -253,6 +253,8 @@
   function addVoiceButton(root) {
     var foot = root.querySelector(".dk-panel__foot");
     if (!foot || foot.querySelector(".doki-voice-btn")) return;
+    // D-02 fix: skip if assistant-enhance.js already added its voice button (avoid duplicates)
+    if (foot.querySelector(".btn-sm")) return;
     // Check browser support
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return; // Not supported, skip silently
@@ -330,16 +332,16 @@
     var lang = "en";
     try { lang = window.DKI18N.getLang() || "en"; } catch (e) {}
     var texts = {
-      en: "Your chats stay in your browser — nothing is sent anywhere.",
-      ur: "آپ کی چیٹ آپ کے براؤزر میں رہتی ہے — کہیں نہیں بھیجی جاتی۔",
-      ar: "تبقى محادثاتك في متصفحك — لا يُرسل شيء إلى أي مكان.",
-      hi: "आपकी चैट आपके ब्राउज़र में रहती है — कहीं नहीं भेजी जाती।",
-      es: "Tus chats permanecen en tu navegador — nada se envía a ningún lado.",
-      fr: "Vos discussions restent dans votre navigateur — rien n'est envoyé.",
-      pt: "Suas conversas ficam no seu navegador — nada é enviado.",
-      de: "Deine Chats bleiben in deinem Browser — nichts wird gesendet.",
-      tr: "Sohbetleriniz tarayıcınızda kalır — hiçbir yere gönderilmez.",
-      ru: "Ваши чаты остаются в вашем браузере — ничего никуда не отправляется."
+      en: "Chats stay in your browser. AI answers are sent to Google/OpenAI to generate replies.",
+      ur: "چیٹ آپ کے براؤزر میں رہتی ہے۔ AI جوابات کے لیے آپ کا سوال Google/OpenAI کو بھیجا جاتا ہے۔",
+      ar: "تبقى المحادثات في متصفحك. تُرسل أسئلتك إلى Google/OpenAI لتوليد إجابات الذكاء الاصطناعي.",
+      hi: "चैट आपके ब्राउज़र में रहती है। AI उत्तरों के लिए आपका प्रश्न Google/OpenAI को भेजा जाता है।",
+      es: "Los chats permanecen en tu navegador. Las respuestas de IA se envían a Google/OpenAI.",
+      fr: "Les discussions restent dans votre navigateur. Les réponses IA sont envoyées à Google/OpenAI.",
+      pt: "As conversas ficam no seu navegador. As respostas de IA são enviadas ao Google/OpenAI.",
+      de: "Chats bleiben in deinem Browser. KI-Antworten werden an Google/OpenAI gesendet.",
+      tr: "Sohbetler tarayıcınızda kalır. Yapay zeka yanıtları için Google/OpenAI'a gönderilir.",
+      ru: "Чаты остаются в вашем браузере. ИИ-ответы отправляются в Google/OpenAI."
     };
     return texts[lang] || texts.en;
   }
