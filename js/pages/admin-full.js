@@ -312,22 +312,25 @@
     var d30 = now - 30 * 864e5;
     var d7 = now - 7 * 864e5;
 
-    var pUsers = d.collection("users").get();
+    var pUsers = d.collection("users").limit(1000).get();
+    var pUserCount = d.collection("users").count().get();
     var pRuns = d.collectionGroup("tool_runs").limit(RUNS_SCAN_LIMIT).get();
 
-    Promise.all([pUsers, pRuns]).then(function (res) {
-      var uSnap = res[0], rSnap = res[1];
+    Promise.all([pUsers, pUserCount, pRuns]).then(function (res) {
+      var uSnap = res[0], cSnap = res[1], rSnap = res[2];
 
-      // Users + coins + new users
+      // Users + coins + new users (sample-based for coins to save quota)
       var coins = 0, newUsers = 0;
       uSnap.forEach(function (doc) {
         var u = doc.data() || {};
         coins += Number(u.coins) || 0;
         if (toMillis(u.createdAt) >= d7) newUsers++;
       });
-      setHtml("statUsers", "<strong>" + fmtNum(uSnap.size) + "</strong>");
-      setHtml("statCoins", "<strong>" + fmtNum(coins) + "</strong>");
-      setHtml("statNew", "<strong>" + fmtNum(newUsers) + "</strong>");
+      var totalUsers = cSnap.data().count;
+      setHtml("statUsers", "<strong>" + fmtNum(totalUsers) + "</strong>");
+      // Note: coins/newUsers are from 1000-user sample to protect Spark quota
+      setHtml("statCoins", "<strong>~" + fmtNum(coins) + "</strong>");
+      setHtml("statNew", "<strong>~" + fmtNum(newUsers) + "</strong>");
 
       // Tool runs (30d) + recent activity
       var runs = [];
