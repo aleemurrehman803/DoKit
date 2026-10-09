@@ -171,7 +171,7 @@
           var fl = document.createElement("link");
           fl.rel = "stylesheet";
           fl.setAttribute("data-dkf", "features-css");
-          fl.href = U("/css/features.css");
+          fl.href = U("/css/features.css?v=20261009-02");
           head.appendChild(fl);
         }
         if (!document.querySelector('script[data-dkf="features-js"]')) {
