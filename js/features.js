@@ -301,15 +301,29 @@
   }
 
   function initFeedback() {
-    if (!$("body") || $(".dkf-fab--fb")) return;
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "dkf-fab dkf-fab--fb";
-    b.textContent = "💬";
-    b.setAttribute("aria-label", T("fb_send", "Send feedback"));
-    b.title = T("fb_send", "Send feedback");
-    b.addEventListener("click", openFeedbackModal);
-    document.body.appendChild(b);
+    // Feedback lives in the footer (not a floating button) — cleaner UI.
+    // The floating .dkf-fab--fb is no longer created.
+    var host = footerBottom();
+    if (!host || !host.isConnected) return false;
+    if (host.querySelector("[data-dkf-feedback-link]")) return true;
+    var link = document.createElement("button");
+    link.type = "button";
+    link.setAttribute("data-dkf-feedback-link", "1");
+    link.className = "dkf-footer-feedback";
+    link.innerHTML = "💬 <span>" + T("fb_send", "Send feedback") + "</span>";
+    link.setAttribute("aria-label", T("fb_send", "Send feedback"));
+    link.addEventListener("click", openFeedbackModal);
+    host.appendChild(link);
+    // Update text on language change (like Doki's "Use me" label).
+    try {
+      document.addEventListener("dokit:langchange", function () {
+        var el = host.querySelector("[data-dkf-feedback-link] span");
+        if (el) el.textContent = T("fb_send", "Send feedback");
+        var btn = host.querySelector("[data-dkf-feedback-link]");
+        if (btn) btn.setAttribute("aria-label", T("fb_send", "Send feedback"));
+      });
+    } catch (e) {}
+    return true;
   }
 
   /* ---------------- B) Newsletter row + D) shortcuts hint (footer extras) ---------------- */
@@ -432,7 +446,8 @@
     function ensure() {
       var n = ensureNewsletter();
       var k = ensureKbdHint();
-      return n || k;
+      var f = initFeedback();
+      return n || k || f;
     }
     if (!ensure()) {
       // Footer not rendered yet (deferred page scripts) — poll briefly.
@@ -448,6 +463,7 @@
         var fb = $(".footer-bottom");
         if (fb && !fb.querySelector(".dkf-news")) ensureNewsletter();
         if (fb && !fb.querySelector(".dkf-kbd-hint")) ensureKbdHint();
+        if (fb && !fb.querySelector("[data-dkf-feedback-link]")) initFeedback();
       });
       var root = document.documentElement || document.body;
       if (root) mo.observe(root, { childList: true, subtree: true });
