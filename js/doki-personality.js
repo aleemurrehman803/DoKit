@@ -121,6 +121,74 @@
     fab.setAttribute("aria-label", dokiChatLabel);
     fab.classList.add("doki-fab");
     inlinePanda(fab, svgSrc);
+    addUsemeLabel(fab);
+  }
+
+  /**
+   * "Use me" callout label above the FAB (suggestions #2, #27, #28).
+   * WHY: New visitors don't know the panda is clickable. A small pill above
+   * the button, translated into all 10 languages via the i18n dictionary,
+   * teaches the affordance once — then gets out of the way.
+   * BEHAVIOR: shows until (a) user clicks ×, (b) user opens the chat panel
+   * once, or (c) 25s pass. Choice remembered in localStorage (doki_useme_off).
+   * @param {HTMLElement} fab - The .dk-fab button element.
+   */
+  function addUsemeLabel(fab) {
+    try {
+      if (window.localStorage.getItem("doki_useme_off") === "1") return;
+    } catch (e) {}
+    var root = document.getElementById("dk-assistant-root");
+    if (!root || root.querySelector(".doki-useme")) return;
+
+    function labelText() {
+      try {
+        if (window.DKI18N && typeof window.DKI18N.t === "function") {
+          var v = window.DKI18N.t("doki_useme");
+          if (typeof v === "string" && v !== "doki_useme") return v;
+        }
+      } catch (e2) {}
+      return "Use me";
+    }
+
+    var label = document.createElement("span");
+    label.className = "doki-useme";
+    label.setAttribute("role", "note");
+    var txt = document.createElement("span");
+    txt.className = "doki-useme-text";
+    txt.textContent = labelText();
+    var x = document.createElement("button");
+    x.type = "button";
+    x.className = "doki-useme-x";
+    x.setAttribute("aria-label", "Dismiss");
+    x.textContent = "×";
+    label.appendChild(txt);
+    label.appendChild(x);
+    root.insertBefore(label, fab);
+
+    function dismiss(permanent) {
+      if (!label.isConnected) return;
+      label.classList.add("doki-useme--hide");
+      setTimeout(function () { if (label.parentNode) label.parentNode.removeChild(label); }, 300);
+      if (permanent) { try { window.localStorage.setItem("doki_useme_off", "1"); } catch (e3) {} }
+      // First interaction: stop the attention pulse too (suggestion #4)
+      try { fab.classList.add("doki-seen"); } catch (e4) {}
+    }
+
+    x.addEventListener("click", function (ev) { ev.stopPropagation(); dismiss(true); });
+    // Clicking the label opens the chat (it's an invitation, after all)
+    label.addEventListener("click", function (ev) {
+      if (ev.target === x) return;
+      dismiss(true);
+      try { fab.click(); } catch (e5) {}
+    });
+    // Auto-hide permanently after first chat open (FAB click toggles the panel)
+    fab.addEventListener("click", function () { dismiss(true); }, { once: true });
+    // Gentle auto-hide after 25s so it never nags
+    setTimeout(function () { dismiss(false); }, 25000);
+    // Keep label in sync when the user switches language
+    document.addEventListener("dokit:langchange", function () {
+      if (label.isConnected) txt.textContent = labelText();
+    });
   }
 
   /**
@@ -225,6 +293,68 @@
       "@keyframes doki-dot {",
       "  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }",
       "  30% { transform: translateY(-6px); opacity: 1; }",
+      "}",
+      /* "Use me" callout label above the FAB (suggestions #2, #27, #28) */
+      ".doki-useme {",
+      "  position: fixed;",
+      "  z-index: 219;",
+      "  inset-block-end: calc(var(--sp-5, 1.25rem) + 4.6rem);",
+      "  inset-inline-start: calc(var(--sp-5, 1.25rem) + 2rem);",
+      "  transform: translateX(-50%);",
+      "  display: inline-flex;",
+      "  align-items: center;",
+      "  gap: 0.4rem;",
+      "  padding: 0.35rem 0.35rem 0.35rem 0.8rem;",
+      "  background: var(--brand, #4F46E5);",
+      "  color: #fff;",
+      "  font-size: 0.8rem;",
+      "  font-weight: 600;",
+      "  border-radius: 999px;",
+      "  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,.18));",
+      "  cursor: pointer;",
+      "  white-space: nowrap;",
+      "  animation: doki-useme-in 0.4s ease-out;",
+      "  transition: opacity 0.3s ease, transform 0.3s ease;",
+      "}",
+      "[dir=\"rtl\"] .doki-useme {",
+      "  transform: translateX(50%);",
+      "  padding: 0.35rem 0.8rem 0.35rem 0.35rem;",
+      "}",
+      ".doki-useme--hide { opacity: 0; pointer-events: none; }",
+      ".doki-useme-x {",
+      "  display: inline-flex;",
+      "  align-items: center;",
+      "  justify-content: center;",
+      "  inline-size: 1.25rem;",
+      "  block-size: 1.25rem;",
+      "  border: none;",
+      "  border-radius: 50%;",
+      "  background: rgba(255,255,255,.22);",
+      "  color: #fff;",
+      "  font-size: 0.9rem;",
+      "  line-height: 1;",
+      "  cursor: pointer;",
+      "}",
+      ".doki-useme-x:hover { background: rgba(255,255,255,.38); }",
+      "@keyframes doki-useme-in {",
+      "  from { opacity: 0; transform: translateX(-50%) translateY(8px); }",
+      "  to { opacity: 1; transform: translateX(-50%) translateY(0); }",
+      "}",
+      "[dir=\"rtl\"] .doki-useme { animation-name: doki-useme-in-rtl; }",
+      "@keyframes doki-useme-in-rtl {",
+      "  from { opacity: 0; transform: translateX(50%) translateY(8px); }",
+      "  to { opacity: 1; transform: translateX(50%) translateY(0); }",
+      "}",
+      "body.has-sticky-cta .doki-useme {",
+      "  inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 4.6rem);",
+      "}",
+      /* First-visit pulse: stop the attention ring after first interaction (#4) */
+      ".doki-fab.doki-seen::after { animation: none; opacity: 0; }",
+      /* Respect reduced motion: calm the FAB for sensitive users (#1) */
+      "@media (prefers-reduced-motion: reduce) {",
+      "  .doki-fab-icon { animation: none; }",
+      "  .doki-fab::after { animation: none; opacity: 0; }",
+      "  .doki-useme { animation: none; }",
       "}",
       /* Working laptop animation */
       ".doki-working {",
