@@ -66,20 +66,30 @@
   background: var(--primary, #6C4CF1);
   color: var(--primary-contrast, #fff);
 }
-/* On tool pages the feedback button floats above the WhatsApp button. */
-body.dkf-has-wa .dkf-fab--fb {
-  inset-block-end: calc(var(--sp-4, 1rem) + 3.75rem);
+/* Feedback now lives in the footer (not floating) — see .dkf-footer-feedback.
+   The old floating .dkf-fab--fb rules are kept for backward compatibility
+   but the button is no longer created. */
+/* ---------- Footer feedback link (beautiful, non-intrusive) ---------- */
+.dkf-footer-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border, rgba(108, 76, 241, 0.25));
+  background: color-mix(in srgb, var(--primary, #6C4CF1) 8%, transparent);
+  color: var(--text, inherit);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-/* Never overlap the Doki assistant: stack feedback above back-to-top,
-   on the same side as Doki. Back-to-top top ≈ 11.75rem from bottom. */
-.dkf-fab--fb {
-  inset-block-end: calc(var(--sp-5, 1.5rem) + 11rem);
-  inset-inline-start: var(--sp-5, 1.5rem);
-  inset-inline-end: auto;
+.dkf-footer-feedback:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--primary, #6C4CF1) 15%, transparent);
+  border-color: var(--primary, #6C4CF1);
 }
-body.has-sticky-cta .dkf-fab--fb {
-  inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 11rem);
-}
+.dkf-footer-feedback:active { transform: translateY(0) scale(0.97); }
 
 /* ---------- Modal (feedback + shortcuts help) ---------- */
 .dkf-modal-backdrop {
