@@ -1267,6 +1267,23 @@
       "@media (prefers-reduced-motion: reduce) {",
       "  .doki-side-tab { transition: none; }",
       "  .doki-side-tab-text { transition: none; opacity: 1; }",
+      "}",
+      /* Fix: panel overflow:hidden clips the side tabs. Make it visible and */
+      /* keep rounded corners on header (top) and footer (bottom) instead. */
+      ".dk-panel:has(.doki-side-tabs) {",
+      "  overflow: visible !important;",
+      "}",
+      ".dk-panel:has(.doki-side-tabs) .dk-panel__head {",
+      "  border-start-start-radius: inherit;",
+      "  border-start-end-radius: inherit;",
+      "}",
+      ".dk-panel:has(.doki-side-tabs) .dk-panel__foot {",
+      "  border-end-start-radius: inherit;",
+      "  border-end-end-radius: inherit;",
+      "  overflow: hidden;",
+      "}",
+      ".dk-panel:has(.doki-side-tabs) .dk-panel__body {",
+      "  overflow-y: auto;",
       "}"
     ].join("\n");
     document.head.appendChild(s);
