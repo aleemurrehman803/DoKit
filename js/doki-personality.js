@@ -156,6 +156,9 @@
     initDraggable(root);
     // Batch 5: Feedback request button
     addFeedbackRequestBtn(root);
+    // User request Oct 9: panda avatar in header + side tabs
+    addPandaToHeader(root);
+    addSideTabs(root);
     // Listen for language changes to update privacy note
     document.addEventListener("dokit:langchange", function () {
       var note = root.querySelector(".doki-privacy-note span");
@@ -587,6 +590,85 @@
     var root = document.getElementById("dk-assistant-root");
     if (root) setPandaMood(root, mood);
   };
+
+  /**
+   * Panel header panda avatar (user request Oct 9, 2026).
+   * WHY: The header showed only "🎧 Doki" text; the panda brand was missing.
+   * Inserts the same doki-panda.png used on the FAB at the start of the header.
+   */
+  function addPandaToHeader(root) {
+    var head = root.querySelector(".dk-panel__head");
+    if (!head || head.querySelector(".doki-head-panda")) return;
+    var src = (typeof window.DKU === "function") ? window.DKU("/assets/doki-panda.png") : "/assets/doki-panda.png";
+    var img = document.createElement("img");
+    img.className = "doki-head-panda";
+    img.src = src;
+    img.alt = "Doki";
+    img.draggable = false;
+    head.insertBefore(img, head.firstChild);
+  }
+
+  /**
+   * Side tabs for Improve + Privacy (user request Oct 9, 2026).
+   * WHY: User wants "Doki کو کیسا بنائیں؟" and the privacy note as slim
+   * tabs stuck to the panel's side edge. Hover → tab slides out smoothly
+   * to reveal full content; mouse leaves → slides back and sticks.
+   * The old inline .doki-improve-btn and .doki-privacy-note are removed
+   * to avoid duplication.
+   */
+  function addSideTabs(root) {
+    var panel = root.querySelector(".dk-panel");
+    if (!panel || panel.querySelector(".doki-side-tabs")) return;
+
+    // Remove old inline versions (avoid duplicates)
+    var oldImprove = root.querySelector(".doki-improve-btn");
+    if (oldImprove) oldImprove.remove();
+    var oldPrivacy = root.querySelector(".doki-privacy-note");
+    if (oldPrivacy) oldPrivacy.remove();
+
+    var wrap = document.createElement("div");
+    wrap.className = "doki-side-tabs";
+
+    var lang = "en";
+    try { lang = (window.DKI18N && window.DKI18N.getLang && window.DKI18N.getLang()) || "en"; } catch (e) {}
+    var improveLabel = lang === "ur" ? "Doki کو کیسا بنائیں؟" : "Improve Doki?";
+
+    // Tab 1: Improve Doki
+    var tab1 = document.createElement("div");
+    tab1.className = "doki-side-tab";
+    tab1.innerHTML = '<span class="doki-side-tab-icon">💬</span><span class="doki-side-tab-text"></span>';
+    tab1.querySelector(".doki-side-tab-text").textContent = improveLabel;
+    tab1.setAttribute("role", "button");
+    tab1.setAttribute("tabindex", "0");
+    tab1.setAttribute("aria-label", improveLabel);
+    function openFeedback() {
+      var fbBtn = document.querySelector("[data-dkf-feedback-link]");
+      if (fbBtn) fbBtn.click();
+    }
+    tab1.addEventListener("click", openFeedback);
+    tab1.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFeedback(); } });
+
+    // Tab 2: Privacy
+    var tab2 = document.createElement("div");
+    tab2.className = "doki-side-tab";
+    tab2.innerHTML = '<span class="doki-side-tab-icon">🔒</span><span class="doki-side-tab-text"></span>';
+    tab2.querySelector(".doki-side-tab-text").textContent = privacyText();
+    tab2.setAttribute("aria-label", "Doki privacy");
+
+    wrap.appendChild(tab1);
+    wrap.appendChild(tab2);
+    panel.appendChild(wrap);
+
+    // Update labels on language change
+    document.addEventListener("dokit:langchange", function () {
+      var l = "en";
+      try { l = (window.DKI18N && window.DKI18N.getLang && window.DKI18N.getLang()) || "en"; } catch (e) {}
+      var texts = wrap.querySelectorAll(".doki-side-tab-text");
+      if (texts[0]) texts[0].textContent = l === "ur" ? "Doki کو کیسا بنائیں؟" : "Improve Doki?";
+      if (texts[1]) texts[1].textContent = privacyText();
+    });
+  }
+
   function initOfflineMessage(root) {
     if (initOfflineMessage.done) return;
     initOfflineMessage.done = true;
@@ -1117,6 +1199,74 @@
       "    block-size: 3.25rem !important;",
       "  }",
       "  .doki-useme { font-size: 0.72rem; }",
+      "}",
+      /* User request Oct 9, 2026: panda avatar in panel header */
+      ".doki-head-panda {",
+      "  width: 2rem;",
+      "  height: 2rem;",
+      "  border-radius: 50%;",
+      "  object-fit: cover;",
+      "  background: #fff;",
+      "  flex: none;",
+      "  margin-inline-end: 0.5rem;",
+      "}",
+      /* User request Oct 9, 2026: side tabs (Improve + Privacy) */
+      /* Slim tabs stuck to the panel's outer edge; hover slides them out */
+      ".doki-side-tabs {",
+      "  position: absolute;",
+      "  inset-inline-end: 100%;",  /* stick to outer side of panel */
+      "  top: 30%;",
+      "  display: flex;",
+      "  flex-direction: column;",
+      "  gap: 0.5rem;",
+      "  z-index: 5;",
+      "}",
+      ".doki-side-tab {",
+      "  display: flex;",
+      "  align-items: center;",
+      "  gap: 0.5rem;",
+      "  max-width: 2.5rem;",  /* collapsed: icon only */
+      "  overflow: hidden;",
+      "  white-space: nowrap;",
+      "  background: var(--surface, #fff);",
+      "  border: 1px solid var(--border, rgba(0,0,0,.12));",
+      "  border-inline-end: none;",
+      "  border-radius: 0.75rem 0 0 0.75rem;",
+      "  padding: 0.6rem 0.55rem;",
+      "  cursor: pointer;",
+      "  box-shadow: -2px 2px 8px rgba(0,0,0,.08);",
+      "  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),",
+      "              background-color 0.2s ease, box-shadow 0.2s ease;",
+      "}",
+      "[dir='rtl'] .doki-side-tab {",
+      "  border-radius: 0 0.75rem 0.75rem 0;",
+      "  border-inline-end: 1px solid var(--border, rgba(0,0,0,.12));",
+      "  border-inline-start: none;",
+      "  box-shadow: 2px 2px 8px rgba(0,0,0,.08);",
+      "}",
+      ".doki-side-tab:hover,",
+      ".doki-side-tab:focus-visible {",
+      "  max-width: 16rem;",  /* expanded: full text */
+      "  background: var(--surface-2, #f5f3ff);",
+      "  box-shadow: -3px 3px 14px rgba(0,0,0,.12);",
+      "}",
+      ".doki-side-tab-icon {",
+      "  font-size: 1.1rem;",
+      "  flex: none;",
+      "}",
+      ".doki-side-tab-text {",
+      "  font-size: 0.8rem;",
+      "  color: var(--text, inherit);",
+      "  opacity: 0;",
+      "  transition: opacity 0.25s ease 0.1s;",
+      "}",
+      ".doki-side-tab:hover .doki-side-tab-text,",
+      ".doki-side-tab:focus-visible .doki-side-tab-text {",
+      "  opacity: 1;",
+      "}",
+      "@media (prefers-reduced-motion: reduce) {",
+      "  .doki-side-tab { transition: none; }",
+      "  .doki-side-tab-text { transition: none; opacity: 1; }",
       "}"
     ].join("\n");
     document.head.appendChild(s);
