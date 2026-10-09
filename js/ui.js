@@ -1572,7 +1572,7 @@ window.DK_BASE=function(){try{var l=document.querySelector('link[rel="manifest"]
     if (!document.querySelector('link[data-dk-polish]')) {
       var link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = U("/css/polish.css?v=20261009-04");
+      link.href = U("/css/polish.css?v=20261009-05");
       link.setAttribute("data-dk-polish", "1");
       document.head.appendChild(link);
     }
