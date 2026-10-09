@@ -1398,8 +1398,15 @@ body.touring { overflow: hidden; }
 .tool-helper__grid .chip { text-decoration: none; }
 
 /* ---------- Serial number badge vertical centering (permanent fix) ---------- */
-/* Root cause: ::before pseudo-element text needs line-height:1 for flex centering to work correctly.
+/* Root cause: ::before pseudo-element with display:flex centers the text box,
+   but font metrics (ascent/descent) make digits appear low. Using grid with
+   place-items:center plus a small optical lift for perfect visual centering.
    Applies to all .thowto step badges across all tools and future tools. */
 .thowto li::before {
+  display: grid !important;
+  place-items: center !important;
   line-height: 1 !important;
+  /* Optical adjustment: nudge text up slightly to compensate for font descent */
+  padding-bottom: 0.08em !important;
+  box-sizing: border-box !important;
 }
