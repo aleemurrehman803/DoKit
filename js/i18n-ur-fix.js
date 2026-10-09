@@ -23,6 +23,9 @@ var d={
 "wol.q2":"اردو سپورٹ حیرت انگیز ہے۔ آخرکار ایک ٹول جو میری زبان کا احترام کرتا ہے۔",
 "wol.q3":"صاف، تیز اور مفت۔ اور کیا چاہیے؟",
 "design_system.title":"🎨 ڈیزائن سسٹم",
+"tool_boardphoto_name":"🎓 بورڈ فوٹو",
+"tool_boardphoto_desc":"بورڈ کی تصویر سے صاف ڈاکومنٹ بنائیں",
+"demo_text":"ڈوکٹ روزمرہ کے کام تیز، مفت اور نجی بناتا ہے۔",
 };
 if(window.DKI18N&&window.DKI18N.add)window.DKI18N.add("ur",d);
 else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push(["ur",d]);}
