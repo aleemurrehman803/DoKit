@@ -142,11 +142,168 @@
 
     // Add privacy note (retry if panel not ready)
     addPrivacyNote(root);
+    // Batch 3: Add voice input button
+    addVoiceButton(root);
+    // Batch 3: Restore chat history
+    restoreChatHistory(root);
     // Listen for language changes to update privacy note
     document.addEventListener("dokit:langchange", function () {
       var note = root.querySelector(".doki-privacy-note span");
       if (note) note.textContent = privacyText();
     });
+    // Batch 3: Save chat history on new messages
+    watchChatHistory(root);
+  }
+
+  /**
+   * Batch 3: Save/restore chat history in localStorage.
+   * WHY: users can continue where they left off.
+   */
+  var DOKI_HIST_KEY = "doki_chat_history";
+  var DOKI_HIST_MAX = 50; // max messages to keep
+
+  function getChatHistory() {
+    try {
+      var raw = window.localStorage.getItem(DOKI_HIST_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.slice(-DOKI_HIST_MAX) : [];
+    } catch (e) { return []; }
+  }
+
+  function saveChatHistory(root) {
+    try {
+      var body = root.querySelector(".dk-panel__body");
+      if (!body) return;
+      var msgs = [];
+      body.querySelectorAll(".dk-msg").forEach(function (el) {
+        // Skip typing indicators and chips-only containers
+        if (el.querySelector(".dk-typing")) return;
+        var isUser = el.classList.contains("dk-msg--user");
+        var text = el.innerText || el.textContent || "";
+        text = text.trim();
+        // Skip empty and chip containers (chips have buttons)
+        if (!text || el.classList.contains("dk-chips")) return;
+        // Remove copy button text (📋/✅)
+        text = text.replace(/[📋✅]/g, "").trim();
+        if (text) msgs.push({ user: isUser, text: text.slice(0, 2000) });
+      });
+      window.localStorage.setItem(DOKI_HIST_KEY, JSON.stringify(msgs.slice(-DOKI_HIST_MAX)));
+    } catch (e) {}
+  }
+
+  function restoreChatHistory(root) {
+    var hist = getChatHistory();
+    if (!hist.length) return;
+    var body = root.querySelector(".dk-panel__body");
+    if (!body || body.children.length) return; // only restore to empty panel
+    hist.forEach(function (m) {
+      var div = document.createElement("div");
+      div.className = "dk-msg " + (m.user ? "dk-msg--user" : "dk-msg--bot");
+      var p = document.createElement("p");
+      p.textContent = m.text;
+      div.appendChild(p);
+      body.appendChild(div);
+      if (!m.user) addCopyButton(div);
+    });
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function watchChatHistory(root) {
+    var body = root.querySelector(".dk-panel__body");
+    if (!body) return;
+    var saveTimer = null;
+    var observer = new MutationObserver(function () {
+      // Debounce saves
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () { saveChatHistory(root); }, 1000);
+    });
+    observer.observe(body, { childList: true, subtree: true });
+    // Also save when panel closes
+    var panel = root.querySelector(".dk-panel");
+    if (panel) {
+      new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          if (m.attributeName === "class") {
+            var isOpen = panel.classList.contains("open");
+            if (!isOpen) saveChatHistory(root);
+          }
+        });
+      }).observe(panel, { attributes: true });
+    }
+  }
+
+  /**
+   * Batch 3: Voice input via Web Speech API.
+   * WHY: hands-free input, accessibility, mobile-friendly.
+   */
+  function addVoiceButton(root) {
+    var foot = root.querySelector(".dk-panel__foot");
+    if (!foot || foot.querySelector(".doki-voice-btn")) return;
+    // Check browser support
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return; // Not supported, skip silently
+
+    var input = foot.querySelector("input");
+    var sendBtn = foot.querySelector("button");
+    if (!input) return;
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "doki-voice-btn";
+    btn.innerHTML = "🎤";
+    btn.setAttribute("aria-label", "Voice input");
+    btn.title = "Voice input";
+
+    var recog = null;
+    var listening = false;
+
+    btn.addEventListener("click", function () {
+      if (listening && recog) {
+        recog.stop();
+        return;
+      }
+      try {
+        recog = new SR();
+        var lang = "en-US";
+        try { lang = (window.DKI18N.getLang() || "en") + ""; } catch (e) {}
+        var langMap = { en: "en-US", ur: "ur-PK", ar: "ar-SA", hi: "hi-IN", es: "es-ES", fr: "fr-FR", pt: "pt-BR", de: "de-DE", tr: "tr-TR", ru: "ru-RU" };
+        recog.lang = langMap[lang] || "en-US";
+        recog.interimResults = false;
+        recog.maxAlternatives = 1;
+
+        recog.onstart = function () {
+          listening = true;
+          btn.classList.add("doki-voice-active");
+          btn.innerHTML = "🔴";
+        };
+        recog.onend = function () {
+          listening = false;
+          btn.classList.remove("doki-voice-active");
+          btn.innerHTML = "🎤";
+        };
+        recog.onresult = function (e) {
+          var text = e.results[0][0].transcript;
+          if (text) {
+            input.value = text;
+            input.focus();
+          }
+        };
+        recog.onerror = function () {
+          listening = false;
+          btn.classList.remove("doki-voice-active");
+          btn.innerHTML = "🎤";
+        };
+        recog.start();
+      } catch (e) {}
+    });
+
+    // Insert before send button
+    if (sendBtn && sendBtn.parentNode === foot) {
+      foot.insertBefore(btn, sendBtn);
+    } else {
+      foot.appendChild(btn);
+    }
   }
 
   function privacyText() {
@@ -534,6 +691,59 @@
       "  color: var(--text-muted, #888);",
       "  text-align: center;",
       "  border-top: 1px solid var(--border, rgba(0,0,0,.06));",
+      "}",
+      /* Batch 3: Voice input button */
+      ".doki-voice-btn {",
+      "  inline-size: 2.25rem;",
+      "  block-size: 2.25rem;",
+      "  border: 1px solid var(--border, rgba(0,0,0,.12));",
+      "  border-radius: 50%;",
+      "  background: var(--surface, #fff);",
+      "  cursor: pointer;",
+      "  font-size: 1.1rem;",
+      "  line-height: 1;",
+      "  flex-shrink: 0;",
+      "  transition: transform 0.15s ease, background-color 0.15s ease;",
+      "}",
+      ".doki-voice-btn:hover { transform: scale(1.08); }",
+      ".doki-voice-btn:active { transform: scale(0.95); }",
+      ".doki-voice-btn.doki-voice-active {",
+      "  background: #ef4444;",
+      "  border-color: #ef4444;",
+      "  animation: doki-voice-pulse 1s ease-in-out infinite;",
+      "}",
+      "@keyframes doki-voice-pulse {",
+      "  0%, 100% { transform: scale(1); }",
+      "  50% { transform: scale(1.12); }",
+      "}",
+      /* Batch 3: Message entrance animations */
+      ".dk-msg {",
+      "  animation: doki-msg-in 0.3s ease-out;",
+      "}",
+      "@keyframes doki-msg-in {",
+      "  from { opacity: 0; transform: translateY(10px) scale(0.98); }",
+      "  to { opacity: 1; transform: translateY(0) scale(1); }",
+      "}",
+      ".dk-msg--user { animation-name: doki-msg-in-user; }",
+      "@keyframes doki-msg-in-user {",
+      "  from { opacity: 0; transform: translateY(10px) translateX(10px); }",
+      "  to { opacity: 1; transform: translateY(0) translateX(0); }",
+      "}",
+      ".dk-msg--bot { animation-name: doki-msg-in-bot; }",
+      "@keyframes doki-msg-in-bot {",
+      "  from { opacity: 0; transform: translateY(10px) translateX(-10px); }",
+      "  to { opacity: 1; transform: translateY(0) translateX(0); }",
+      "}",
+      /* Batch 3: Chip hover bounce */
+      ".dk-chips .chip {",
+      "  transition: transform 0.15s ease, background-color 0.15s ease;",
+      "}",
+      ".dk-chips .chip:hover { transform: translateY(-2px) scale(1.03); }",
+      ".dk-chips .chip:active { transform: translateY(0) scale(0.97); }",
+      "@media (prefers-reduced-motion: reduce) {",
+      "  .dk-msg { animation: none; }",
+      "  .dk-chips .chip:hover { transform: none; }",
+      "  .doki-voice-btn.doki-voice-active { animation: none; }",
       "}"
     ].join("\n");
     document.head.appendChild(s);
