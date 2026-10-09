@@ -305,6 +305,26 @@ body, .site-header, .site-footer, .card, .tool-card, .faq-item, .btn {
 [dir="rtl"] [data-tip]:hover::after, [dir="rtl"] [data-tip]:focus-visible::after { transform: translateX(50%) translateY(0); }
 
 /* ============ 42. Back to top ============ */
+/* NOTE: The real button has id="dk-backtop" (created by js/i18n-hotfix2.js
+   with inline bottom:80px). The #back-to-top rule below is kept for
+   compatibility but the #dk-backtop override with !important is what applies.
+   Gap from Doki top (5.5rem) is 6rem = 96px (user request Oct 9, 2026). */
+#dk-backtop {
+  bottom: 11.5rem !important;
+  inset-block-end: 11.5rem !important;
+}
+[dir="rtl"] #dk-backtop {
+  right: 1.5rem !important;
+  left: auto !important;
+}
+[dir="ltr"] #dk-backtop {
+  left: 1.5rem !important;
+  right: auto !important;
+}
+body.has-sticky-cta #dk-backtop {
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 10rem) !important;
+  inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px) + 10rem) !important;
+}
 #back-to-top {
   /* Stacked ABOVE the Doki FAB on the same side (never overlaps it or the
      "Use me" label, in both LTR and RTL). FAB top ≈ 5.5rem, label top ≈ 8.1rem.
