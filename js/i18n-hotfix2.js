@@ -143,3 +143,59 @@
   }
   [800, 2000, 4000].forEach(function(d) { setTimeout(fixDemo, d); });
 })();
+
+/* Direct DOM fix for Board Photo card and Design System link - bypasses timing issues */
+(function() {
+  function isUrdu() {
+    try {
+      var m = location.search.match(/[?&]lang=([a-z]+)/);
+      if (m) return m[1] === 'ur';
+      try { return localStorage.getItem('dokit_lang') === 'ur'; } catch(e) {}
+    } catch(e) {}
+    return document.documentElement.lang === 'ur';
+  }
+  
+  function fixBoardPhotoAndDesignSystem() {
+    if (!isUrdu()) return;
+    try {
+      // Fix Board Photo tool card - find by raw key text
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      var node;
+      var toFix = [];
+      while (node = walker.nextNode()) {
+        var t = node.nodeValue;
+        if (t && (t.indexOf('Tool boardphoto name') >= 0 || t.indexOf('Tool boardphoto desc') >= 0)) {
+          toFix.push(node);
+        }
+      }
+      toFix.forEach(function(n) {
+        if (n.nodeValue.indexOf('Tool boardphoto name') >= 0) {
+          n.nodeValue = n.nodeValue.replace(/Tool boardphoto name/g, '🎓 بورڈ فوٹو');
+        }
+        if (n.nodeValue.indexOf('Tool boardphoto desc') >= 0) {
+          n.nodeValue = n.nodeValue.replace(/Tool boardphoto desc/g, 'بورڈ کی تصویر سے صاف ڈاکومنٹ بنائیں');
+        }
+      });
+      
+      // Fix Design System link - find by text or href
+      var links = document.querySelectorAll('a');
+      links.forEach(function(a) {
+        var txt = (a.textContent || '').trim();
+        if (txt === '🎨 Design System' || txt === 'Design System') {
+          // Preserve emoji, replace text
+          a.innerHTML = a.innerHTML.replace(/Design System/g, 'ڈیزائن سسٹم');
+        }
+      });
+    } catch(e) {}
+  }
+  
+  // Run multiple times + observe DOM changes
+  [1000, 2500, 5000, 8000, 12000].forEach(function(d) {
+    setTimeout(fixBoardPhotoAndDesignSystem, d);
+  });
+  
+  try {
+    new MutationObserver(function() { fixBoardPhotoAndDesignSystem(); })
+      .observe(document.body, {childList: true, subtree: true, characterData: true});
+  } catch(e) {}
+})();
