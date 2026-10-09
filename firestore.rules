@@ -360,9 +360,11 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // Doki AI knowledge base — admin-only.
+    // Doki AI knowledge base — public read (D-03: DKKbSearch needs it),
+    // writes stay admin-only.
     match /ai_knowledge/{entryId} {
-      allow read, write: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Translation status matrix — admin-only.

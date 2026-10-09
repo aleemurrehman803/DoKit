@@ -225,7 +225,36 @@
    */
   function ask(prompt) {
     try { if (window.DokiActivity && DokiActivity.start) DokiActivity.start("thinking"); } catch (e) {}
-    return askGemini(prompt).then(function (result) {
+    // D-03: try admin-curated Firestore KB before AI providers.
+    var kbPromise = (function () {
+      try {
+        if (window.DKKbSearch) {
+          if (window.DokiActivity && DokiActivity.setStatus) DokiActivity.setStatus("searching");
+          return window.DKKbSearch(prompt).then(function (entry) {
+            if (entry && entry.a) {
+              try { if (window.DKMemory) DKMemory.log(prompt, entry.a, null); } catch (e2) {}
+              return String(entry.a).slice(0, 500);
+            }
+            return null;
+          });
+        }
+      } catch (e) {}
+      return Promise.resolve(null);
+    })();
+    return kbPromise.then(function (kbResult) {
+      if (kbResult) {
+        try {
+          if (window.DokiActivity) {
+            if (DokiActivity.setStatus && DokiActivity.stop) {
+              DokiActivity.setStatus("writing");
+              setTimeout(function () { try { DokiActivity.stop(); } catch (e3) {} }, 900);
+            } else if (DokiActivity.stop) { DokiActivity.stop(); }
+          }
+        } catch (e2) {}
+        return kbResult;
+      }
+      return askGemini(prompt);
+    }).then(function (result) {
       if (result) {
         // Log to memory
         try { if (window.DKMemory) DKMemory.log(prompt, result, null); } catch (e) {}
