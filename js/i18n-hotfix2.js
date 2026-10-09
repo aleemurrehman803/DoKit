@@ -101,7 +101,7 @@
     var btn = document.createElement('button');
     btn.id = 'dk-backtop';
     btn.innerHTML = '↑';
-    btn.style.cssText = 'position:fixed;bottom:80px;right:20px;width:44px;height:44px;border-radius:50%;background:#2563eb;color:#fff;border:none;font-size:20px;cursor:pointer;display:none;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+    btn.style.cssText = 'position:fixed;bottom:184px;right:24px;width:44px;height:44px;border-radius:50%;background:#2563eb;color:#fff;border:none;font-size:20px;cursor:pointer;display:none;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
     
     function updateLabel() {
       btn.setAttribute('aria-label', isUrdu() ? 'اوپر جائیں' : 'Back to top');
