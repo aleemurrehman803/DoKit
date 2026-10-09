@@ -134,11 +134,15 @@
    * @param {HTMLElement} fab - The .dk-fab button element.
    */
   function addUsemeLabel(fab) {
+   try {
     try {
       if (window.localStorage.getItem("doki_useme_off") === "1") return;
     } catch (e) {}
     var root = document.getElementById("dk-assistant-root");
     if (!root || root.querySelector(".doki-useme")) return;
+    // Insert relative to the FAB's actual parent (FAB may be nested, not a
+    // direct child of root — root.insertBefore would throw NotFoundError).
+    var parent = fab.parentNode || root;
 
     function labelText() {
       try {
@@ -163,7 +167,7 @@
     x.textContent = "×";
     label.appendChild(txt);
     label.appendChild(x);
-    root.insertBefore(label, fab);
+    parent.insertBefore(label, fab);
 
     function dismiss(permanent) {
       if (!label.isConnected) return;
@@ -189,6 +193,7 @@
     document.addEventListener("dokit:langchange", function () {
       if (label.isConnected) txt.textContent = labelText();
     });
+   } catch (err) { /* label is decorative — never break the FAB */ }
   }
 
   /**
