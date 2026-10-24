@@ -1,105 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="theme-color" content="#6C4CF1">
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="apple-touch-icon" href="../assets/icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title data-i18n="meta.tools_title">All Tools — DoKit | Every Tool You'll Ever Need</title>
-<meta name="description" data-i18n-content="meta.tools_desc" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoKit Tools – All Free Online Tools | DoKit</title>
+<meta name="description" content="Every DoKit tool runs in your browser — image resizer, compressor, converter, word counter, case converter, board photo, password generator, unit converter, QR generator and typing test. No signup, no uploads, no watermark.">
+<meta property="og:title" content="DoKit Tools – All Free Online Tools | DoKit">
+<meta property="og:description" content="Every DoKit tool runs in your browser — image resizer, compressor, converter, word counter, case converter, board photo, password generator, unit converter, QR generator and typing test. No signup, no uploads, no watermark.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="All Tools — DoKit | Every Tool You'll Ever Need">
-<meta property="og:description" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/tools/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="All Tools — DoKit | Every Tool You'll Ever Need">
-<meta name="twitter:description" content="Every tool you'll ever need — free, private, in your browser. Browse DoKit's image tools, text tools, and the TypeMaster typing school.">
-<meta name="twitter:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../css/tokens.css">
-<link rel="stylesheet" href="../css/hub.css">
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/">
+<link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main">
-  <section class="section">
-    <div class="container">
-      <nav aria-label="Breadcrumb">
-        <ol class="breadcrumb">
-          <li><a href="../" data-i18n="crumb_home">Home</a></li>
-          <li aria-current="page" data-i18n="nav_all_tools">All Tools</li>
-        </ol>
-      </nav>
-      <div class="section-head" style="text-align:start;margin-inline:0">
-        <h1 data-i18n="tools.h1">Every tool you'll ever need</h1>
-        <p style="color:var(--text-muted)" data-i18n="tools.lede">Free, private, and running entirely in your browser. Search or filter by category below.</p>
-      </div>
-      <div class="search-wrap" style="margin-inline:0;margin-bottom:var(--sp-4)">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
-        <input class="text-input" type="search" id="toolSearch" data-i18n-ph="search_ph" placeholder="Search tools… e.g. resize, words" autocomplete="off">
-      </div>
-      <div class="chips" style="justify-content:flex-start" role="group" data-i18n-aria="cat_label" aria-label="Filter by category">
-        <button type="button" class="chip" data-cat="all" aria-pressed="true" data-i18n="cat_all">All</button>
-        <button type="button" class="chip" data-cat="image" aria-pressed="false" data-i18n="cat_image">Image</button>
-        <button type="button" class="chip" data-cat="text" aria-pressed="false" data-i18n="cat_text">Text</button>
-        <button type="button" class="chip" data-cat="typing" aria-pressed="false" data-i18n="cat_typing">Typing</button>
-        <button type="button" class="chip" data-cat="util" aria-pressed="false" data-i18n="cat_util">Utilities</button>
-      </div>
-      <p style="color:var(--text-muted);font-size:var(--fs-sm)" id="toolsCount" aria-live="polite"></p>
-      <!-- UI/UX #43 (Oct 8, 2026): "Which tool?" helper -->
-      <details class="tool-helper">
-        <summary><span aria-hidden="true">🤔</span> <span data-i18n="tools.helper_q">Not sure which tool you need?</span></summary>
-        <p data-i18n="tools.helper_d">Tell us what you want to do — we'll point you to the right tool:</p>
-        <div class="tool-helper__grid">
-          <a class="chip" href="image-compressor/"><span aria-hidden="true">🗜️</span> <span data-i18n="tools.helper_c1">Make an image file smaller</span></a>
-          <a class="chip" href="image-resizer/"><span aria-hidden="true">📐</span> <span data-i18n="tools.helper_c2">Change an image's dimensions</span></a>
-          <a class="chip" href="image-converter/"><span aria-hidden="true">🔄</span> <span data-i18n="tools.helper_c3">Change image format (PNG ↔ JPG)</span></a>
-          <a class="chip" href="word-counter/"><span aria-hidden="true">📝</span> <span data-i18n="tools.helper_c4">Count words in my text</span></a>
-          <a class="chip" href="case-converter/"><span aria-hidden="true">🔤</span> <span data-i18n="tools.helper_c5">UPPERCASE ↔ lowercase text</span></a>
-          <a class="chip" href="../typing/"><span aria-hidden="true">⌨️</span> <span data-i18n="tools.helper_c6">Practice typing faster</span></a>
-        </div>
-      </details>
-      <div class="grid" id="toolsGrid" aria-live="polite"></div>
-      <div class="empty-state" id="toolsEmpty" style="display:none">
-        <span class="empty-state__icon" aria-hidden="true">🔍</span>
-        <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
-      </div>
-
-      <a class="tool-card" href="../contact.html" style="margin-top:var(--sp-6);border-style:dashed">
-        <span class="tool-card__icon" aria-hidden="true">💡</span>
-        <h2 class="tool-card__name" data-i18n="tools_suggest_title" dir="auto">Can't find what you need?</h2>
-        <p class="tool-card__desc" data-i18n="tools_suggest_desc" dir="auto">Tell us the tool you're missing — we read every suggestion and build the most-wanted ones first.</p>
-        <span class="tool-card__foot"><span class="btn btn-ghost btn-sm" data-i18n="tools_suggest_btn" dir="auto">Suggest a tool →</span></span>
-      </a>
-    </div>
-  </section>
-</main>
-<footer id="site-foot"></footer>
-<script src="../js/i18n-v2.js" defer></script>
-  <script src="../js/i18n-hotfix.js?v=20261008-08" defer></script>
-<script src="../js/i18n-meta.js" defer></script>
-<script src="../js/i18n-patch.js" defer></script>
-  <script src="../js/i18n-tools-shared.js" defer></script>
-<script src="../js/ui.js" defer></script>
-<script src="../js/tools-data.js" defer></script>
-<script src="../js/pages/tools.js" defer></script>
-<div id="dk-assistant-root"></div>
-<script src="../js/assistant-kb.js" defer></script>
-<script src="../js/assistant.js" defer></script>
-<script src="../js/assistant-ai.js" defer></script>
-<script src="../js/assistant-memory.js" defer></script>
-<script src="../js/assistant-enhance.js" defer></script>
-<script src="../js/doki-personality.js?v=20261008-06" defer></script>
-<script type="module" src="../js/assistant-ai-init.js"></script>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../">Home</a><a href="../tools/">Tools</a><a href="../typing/">Typing</a><a href="../guides/">Guides</a><a href="../pricing/">Pricing</a><a href="../blog/">Blog</a><a href="../about/">About</a><a href="../contact/">Contact</a><a href="../faq/">FAQ</a></navlinks></div></header>
+<main id="main"><section class="block"><div class="container"><h1>All Tools</h1><p style="color:var(--muted)">Every DoKit tool runs in your browser — no signup, no uploads, no watermark.</p>
+<div class="searchbox"><input id="tool-search" type="text" placeholder="Search tools…" aria-label="Search tools"></div>
+<div class="grid"><article class="card tool-card" data-name="image resizer"><span class="tag">Privacy-first</span><h3><a class="cardlink" href="../tools/image-resizer/">Image Resizer</a></h3><p>Resize JPG, PNG and WebP to exact pixels or a percentage — privately in your browser.</p></article><article class="card tool-card" data-name="image compressor"><span class="tag">Exact-KB targets</span><h3><a class="cardlink" href="../tools/image-compressor/">Image Compressor</a></h3><p>Shrink images to an exact size — 50KB, 100KB, 200KB or your own target.</p></article><article class="card tool-card" data-name="image converter"><span class="tag">Batch ready</span><h3><a class="cardlink" href="../tools/image-converter/">Image Converter</a></h3><p>Convert between PNG, JPG and WebP. Batch up to 10 files, no uploads.</p></article><article class="card tool-card" data-name="word counter"><span class="tag">Live stats</span><h3><a class="cardlink" href="../tools/word-counter/">Word Counter</a></h3><p>Live words, characters, sentences and reading time as you type.</p></article><article class="card tool-card" data-name="case converter"><span class="tag">Code cases</span><h3><a class="cardlink" href="../tools/case-converter/">Case Converter</a></h3><p>UPPERCASE, lowercase, Title Case, camelCase, snake_case and more.</p></article><article class="card tool-card" data-name="typing test"><span class="tag">Urdu + English</span><h3><a class="cardlink" href="../typing/">Typing Test</a></h3><p>Check your WPM and accuracy, plus Urdu typing lessons with a phonetic keyboard.</p></article><article class="card tool-card" data-name="board photo"><h3><a class="cardlink" href="board-photo/">Board Photo</a></h3><p>Exam & admission photos in the exact size your board wants.</p></article><article class="card tool-card" data-name="password generator"><h3><a class="cardlink" href="password-generator/">Password Generator</a></h3><p>Strong passwords, made on your device, never sent anywhere.</p></article><article class="card tool-card" data-name="unit converter"><h3><a class="cardlink" href="unit-converter/">Unit Converter</a></h3><p>Length, weight, temperature, volume and more, instantly.</p></article><article class="card tool-card" data-name="qr generator"><h3><a class="cardlink" href="qr-generator/">QR Generator</a></h3><p>QR codes for links and text, made in your browser.</p></article></div>
+<p class="note" style="margin-top:22px"><b>Privacy note:</b> files never leave your device. All processing happens on your phone or computer.</p>
+</div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../tools/" data-pricing="../pricing/" data-faq="../faq/" data-contact="../contact/" data-compressor="../tools/image-compressor/" data-resizer="../tools/image-resizer/" data-converter="../tools/image-converter/" data-counter="../tools/word-counter/" data-case="../tools/case-converter/" data-typing="../typing/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<footer class="site"><div class="container"><div class="footgrid"><div><a class="logo" href="../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><p style="color:var(--muted)">Every tool you'll ever need — free tools that run in your browser. No signup, no uploads, no watermark.</p><p><a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a></p></div><div><b>Tools</b><a href="../tools/image-resizer/">Image Resizer</a><a href="../tools/image-compressor/">Image Compressor</a><a href="../tools/image-converter/">Image Converter</a><a href="../tools/word-counter/">Word Counter</a><a href="../tools/case-converter/">Case Converter</a><a href="../typing/">Typing Test</a></div><div><b>More tools</b><a href="../tools/board-photo/">Board Photo</a><a href="../tools/password-generator/">Password Generator</a><a href="../tools/unit-converter/">Unit Converter</a><a href="../tools/qr-generator/">QR Generator</a></div><div><b>Company</b><a href="../about/">About</a><a href="../contact/">Contact</a><a href="../pricing/">Pricing</a><a href="../faq/">FAQ</a><a href="../blog/">Blog</a><a href="../guides/">Guides</a><a href="../coming-soon/">Coming Soon</a></div></div><p class="footbase">Developed by Malik Jalil Ur Rehman Khokhar · © 2026 DoKit. All rights reserved. · <a href="../privacy/">Privacy</a> · <a href="../terms/">Terms</a></p></div></footer><script src="../assets/js/main.js" defer></script>
 </body>
 </html>

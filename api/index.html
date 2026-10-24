@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API Documentation | DoKit</title>
+<meta name="description" content="The planned DoKit API: endpoints, authentication and rate limits. API access arrives with the backend in Phase 3.">
+<meta property="og:title" content="API Documentation | DoKit">
+<meta property="og:description" content="The planned DoKit API: endpoints, authentication and rate limits. API access arrives with the backend in Phase 3.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/api/">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../">Home</a><a href="../tools/">Tools</a><a href="../typing/">Typing</a><a href="../guides/">Guides</a><a href="../pricing/">Pricing</a><a href="../blog/">Blog</a><a href="../about/">About</a><a href="../contact/">Contact</a><a href="../faq/">FAQ</a></nav></div></header>
+<main id="main"><section class="block"><div class="container">
+<h1>DoKit API</h1>
+<p style="color:var(--muted)">The planned DoKit API. It is not live yet — this page documents the interface so integrations can be planned.</p>
+<p>Base URL: <code>https://api.dokit.app/v1</code></p>
+<h2>Quickstart</h2>
+<p>Requests use JSON. Responses are JSON. See Authentication for how access is granted.</p>
+<h2>Authentication</h2>
+<p>API calls use a personal API key sent in the request. Key creation and management open with the backend in Phase 3. See <a href="../account/api-keys/">API keys</a>.</p>
+<h2>Endpoints</h2>
+<div class="tablewrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>What it does</th></tr></thead><tbody><tr><td>POST</td><td><code>/image/resize</code></td><td>Resize an image (PNG, JPEG, WebP).</td></tr><tr><td>POST</td><td><code>/image/compress</code></td><td>Compress an image, optionally to a max KB size.</td></tr><tr><td>POST</td><td><code>/image/convert</code></td><td>Convert between PNG, JPEG and WebP.</td></tr><tr><td>POST</td><td><code>/text/wordcount</code></td><td>Count words and characters in text.</td></tr><tr><td>POST</td><td><code>/text/caseconvert</code></td><td>Convert text between case styles.</td></tr><tr><td>GET</td><td><code>/typing/leaderboard?game=battle&amp;limit=10</code></td><td>Top battle players.</td></tr><tr><td>GET</td><td><code>/user/profile</code></td><td>Account profile (requires sign-in).</td></tr></tbody></table></div>
+<h2>Rate limits</h2>
+<p>Rate limits apply per API key. Exact limits are published when the API launches.</p>
+<h2>Error codes</h2>
+<p>Errors return a standard JSON error response with a code and a message.</p>
+<h2>Webhooks</h2>
+<p>Webhooks are planned for the future. They are not available yet.</p><div class="note"><b>Phase 3 note:</b> API access needs the backend. Live data arrives with the self-hosted backend in Phase 3 — nothing here is faked, and nothing you type is sent anywhere.</div>
+</div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../tools/" data-pricing="../pricing/" data-faq="../faq/" data-contact="../contact/" data-compressor="../tools/image-compressor/" data-resizer="../tools/image-resizer/" data-converter="../tools/image-converter/" data-counter="../tools/word-counter/" data-case="../tools/case-converter/" data-typing="../typing/" data-lessons="../typing/lessons/" data-games="../typing/games/" data-board="../tools/board-photo/" data-password="../tools/password-generator/" data-unit="../tools/unit-converter/" data-qr="../tools/qr-generator/" data-battle="../typefight/battle/" data-wall="../wall-of-love/" data-changelog="../changelog/" data-status="../status/" data-api="../api/" data-design="../design-system/" data-practice="../typing/practice/" data-results="../typing/results/" data-progress="../typing/progress/" data-dashboard="../typing/dashboard/" data-certificate="../typing/certificate/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<script src="../assets/js/main.js" defer></script>
+</body>
+</html>

@@ -1,215 +1,31 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title data-i18n="meta.compressor_title">Free Image Compressor Online — Reduce JPG, PNG, WebP Size | DoKit</title>
-<meta name="description" data-i18n-content="meta.compressor_desc" content="Compress images online for free. Shrink JPG, PNG, and WebP photos with a quality slider or set a target size. Files never leave your device."/>
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/image-compressor/"/>
-<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
-<meta name="theme-color" content="#6C4CF1"/>
-<link rel="manifest" href="../../manifest.webmanifest"/>
-<link rel="apple-touch-icon" href="../../assets/icon.svg"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta property="og:title" content="Free Image Compressor Online | DoKit"/>
-<meta property="og:description" content="Shrink images without visible quality loss — quality slider or target-size mode."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="../../assets/og-cover.jpg"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
-<link rel="stylesheet" href="../../css/tokens.css"/>
-<link rel="stylesheet" href="../../css/hub.css"/>
-<link rel="stylesheet" href="tool.css"/>
-<script src="../../js/i18n-v2.js" defer></script>
-<script src="../../js/i18n-hotfix.js?v=20261008-08" defer></script>
-<script src="../../js/i18n-meta.js" defer></script>
-  <script src="../../js/i18n-tools-shared.js" defer></script>
-<script src="../../js/ui.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
-<script src="../../js/firebase.js?v=20261008-05" defer></script>
-<script src="../../js/site-wide.js" defer></script>
-<script src="../../js/maintenance.js" defer></script>
-<script src="../../js/journey.js" defer></script>
-<!-- Instant upload preview (must load BEFORE tool.js: the tool clears
-     fileInput.value in its change handler, so this listener has to be
-     registered first) -->
-<script src="../../js/tool-preview.js" defer></script>
-<script src="tool.js" defer></script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"How much smaller will my image get?","acceptedAnswer":{"@type":"Answer","text":"It depends on the photo, but quality 80 JPEG is usually 40–70% smaller than the original with no visible difference. PNG screenshots often shrink even more when converted to WebP."}},
-{"@type":"Question","name":"What does target-size mode do?","acceptedAnswer":{"@type":"Answer","text":"You type a maximum file size (for example 200 KB) and DoKit automatically searches for the highest quality setting that fits under it — handy for upload limits on forms and profiles."}},
-{"@type":"Question","name":"Will compression remove metadata?","acceptedAnswer":{"@type":"Answer","text":"Yes. The image is redrawn on a fresh canvas, which strips EXIF data including GPS location."}},
-{"@type":"Question","name":"Is there a limit on how many images I can compress?","acceptedAnswer":{"@type":"Answer","text":"No daily limits and no sign-up. Compress one image at a time here, or use the Image Converter to batch-convert up to 10 images at once."}}]}
-</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"HowTo","name":"How to compress an image","step":[
-{"@type":"HowToStep","name":"Upload your image","text":"Drag & drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse."},
-{"@type":"HowToStep","name":"Choose quality or a target size","text":"Drag the quality slider and watch the live size estimate, or switch to target-size mode and type the maximum KB you want."},
-{"@type":"HowToStep","name":"Compare and download","text":"Drag the comparison slider to check quality, then download your smaller image — watermark-free."}]}
-</script>
-<script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Free Image Compressor Online", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "url": "https://aleemurrehman803.github.io/DoKit/tools/image-compressor/", "description": "Shrink images without visible quality loss — quality slider or target-size mode.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "isAccessibleForFree": true}
-</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compress Image to 100KB, 50KB or Any Size Online Free | DoKit</title>
+<meta name="description" content="Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.">
+<meta property="og:title" content="Compress Image to 100KB, 50KB or Any Size Online Free | DoKit">
+<meta property="og:description" content="Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/image-compressor/">
+<link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main" class="twrap">
-  <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page" data-i18n="toolnames.compressor">Image Compressor</span>
-  </nav>
-
-  <div class="thero">
-  <div class="thero-icon" aria-hidden="true">
-    <!-- Image Compressor: photo squeezed by inward arrows = shrinking file size -->
-    <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
-      <defs>
-        <linearGradient id="tig-compress" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
-        </linearGradient>
-      </defs>
-      <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-compress)"/>
-      <rect x="22" y="25" width="28" height="22" rx="3" fill="none" stroke="#fff" stroke-width="3"/>
-      <circle cx="29" cy="32" r="2.6" fill="#fff"/>
-      <path d="M22 43l8-8 6 6 5-5 9 9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M8 36h7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-      <path d="M12 32l3 4-3 4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M64 36h-7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-      <path d="M60 32l-3 4 3 4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </div>
-    <h1 data-i18n="toolnames.compressor">Image Compressor</h1>
-    <p data-i18n="compressor.hero_desc">Make images smaller without visible quality loss — drag the quality slider, or set a target size and let DoKit find the sweet spot.</p>
-    <p><span class="tprivacy">🔒 <span data-i18n="img.privacy">Your files never leave your device — everything happens in your browser.</span></span></p>
-  </div>
-
-  <section class="tcard" aria-labelledby="tool-h">
-    <h2 id="tool-h" class="sr-only" data-i18n="toolnames.compressor">Image Compressor</h2>
-
-    <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
-      <div class="tdrop-icon" aria-hidden="true">🗜️</div>
-      <p class="tdrop-title" id="dz-t" data-i18n="compressor.drop_title">Drag &amp; drop your image here</p>
-      <p class="tdrop-sub"><span data-i18n="resizer.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="resizer.drop_browse">browse your files</button></p>
-      <p class="tdrop-hint" data-i18n="compressor.drop_hint">PNG, JPEG, WebP · up to 25 MB</p>
-      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp"/>
-    </div>
-      <p class="tdrop-privacy" data-i18n="saas.privacy_line">🔒 Files never leave your device — 100% private.</p>
-      <p style="margin-top:.4rem"><button type="button" class="tbtn tbtn-ghost tbtn-sm" data-sample="image"><span data-i18n="saas.try_sample">Try with sample</span></button></p>
-
-    <div id="controls" hidden>
-      <div class="tfield" style="margin-block-start:1rem">
-        <span id="modeLabel" style="font-weight:600;font-size:.9rem" data-i18n="compressor.mode">Compression mode</span>
-        <div class="tseg" role="group" aria-labelledby="modeLabel" style="margin-inline-start:.75rem">
-          <button type="button" id="modeQ" aria-pressed="true" data-i18n="compressor.mode_quality">Manual quality</button>
-          <button type="button" id="modeT" aria-pressed="false" data-i18n="compressor.mode_target">Target size</button>
-        </div>
-      </div>
-      <div class="trow">
-        <div class="tfield field">
-          <label class="label" for="fmt" data-i18n="resizer.format">Output format</label>
-          <select class="tselect input" id="fmt">
-            <option value="jpg">JPEG</option>
-            <option value="webp">WebP</option>
-            <option value="png">PNG</option>
-          </select>
-        </div>
-        <div class="tfield field" id="qRow">
-          <label class="label" for="q"><span data-i18n="resizer.quality">Quality</span> — <output class="tslider-val" id="qVal" for="q">80</output></label>
-          <input type="range" class="tslider" id="q" min="1" max="100" value="80"/>
-        </div>
-        <div class="tfield field" id="tRow" hidden>
-          <label class="label" for="targetKb" data-i18n="compressor.target_kb">Target size (KB)</label>
-          <input class="tinput input" id="targetKb" type="number" min="5" max="25000" value="200"/>
-          <p class="thint hint" data-i18n="compressor.target_hint">Example: 200 — DoKit picks the best quality under this size.</p>
-          <p class="thint hint"></p>
-        </div>
-      </div>
-      <div class="tstats" id="estStats" aria-live="polite">
-        <div class="tstat"><p class="tstat-k" data-i18n="compressor.estimate">Estimated output</p><p class="tstat-v" id="estSize">—</p></div>
-        <div class="tstat"><p class="tstat-k" data-i18n="common.original">Original</p><p class="tstat-v" id="origSize">—</p></div>
-      </div>
-      <p class="tnotice" data-i18n="compressor.tip">Tip: photos saved as PNG are huge — converting to WebP typically saves around 70%.</p>
-      <div id="notice" class="tnotice" style="margin-block-start:.75rem" hidden></div>
-    </div>
-
-    <div id="result" aria-live="polite" style="margin-block-start:1rem">
-      <div class="tempty empty-state" id="emptyState" data-w4-empty>
-        <div class="empty-icon empty-state__icon" aria-hidden="true">✨</div>
-        <p class="empty-state__title" data-i18n="tools2.empty_title">Nothing here yet</p>
-        <p class="empty-state__text" data-i18n="compressor.empty">Your compressed image will appear here.</p>
-        <p class="empty-state__action"><button type="button" class="tbtn tbtn-primary tbtn-sm" data-empty-browse><span data-i18n="tools2.empty_add_images">Add images</span></button></p>
-      </div>
-    </div>
-  </section>
-  <div class="saas-steps" data-saas-steps>
-    <div class="saas-step" data-step="1"><span class="saas-step-n">1</span><span data-i18n="saas.step1">Add your files</span></div>
-    <div class="saas-step" data-step="2"><span class="saas-step-n">2</span><span data-i18n="saas.step2">Choose settings</span></div>
-    <div class="saas-step" data-step="3"><span class="saas-step-n">3</span><span data-i18n="resizer.howto_4t">Download</span></div>
-    <button type="button" class="saas-steps-x" aria-label="Dismiss">×</button>
-  </div>
-  <section class="section saas-compare" aria-labelledby="cmp-h-compressor">
-    <div class="container">
-      <h2 id="cmp-h-compressor" class="sr-only" data-i18n="saas.compare_title">Why DoKit?</h2>
-      <div class="compare-table">
-        <div class="compare-col compare-old">
-          <h3 data-i18n="saas.old_way">The old way</h3>
-          <p data-i18n="saas.cmp_old_compressor">Desktop software: install, learn, pay — or lose quality.</p>
-        </div>
-        <div class="compare-vs" aria-hidden="true">VS</div>
-        <div class="compare-col compare-new">
-          <h3>DoKit</h3>
-          <p data-i18n="saas.cmp_new_compressor">DoKit: drag, slide, done — quality kept.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  
-  <aside class="saas-next" data-saas-next>
-    <span data-i18n="saas.next_label">Next best action:</span>
-    <a href="../image-resizer/" data-i18n="tshared.try_it">Try it →</a>
-  </aside>
-<section class="tsection collapsible" aria-labelledby="howto-h">
-    <h2 id="howto-h" data-i18n="compressor.howto_title">How to compress an image</h2>
-    <ol class="thowto">
-      <li><div><h3 data-i18n="compressor.howto_1t">Upload your image</h3><p data-i18n="compressor.howto_1d">Drag &amp; drop a PNG, JPEG, or WebP file (up to 25 MB) into the box, or click to browse.</p></div></li>
-      <li><div><h3 data-i18n="compressor.howto_2t">Choose quality or a target size</h3><p data-i18n="compressor.howto_2d">Drag the quality slider and watch the live size estimate, or switch to target-size mode and type the maximum KB you want.</p></div></li>
-      <li><div><h3 data-i18n="compressor.howto_3t">Compare and download</h3><p data-i18n="compressor.howto_3d">Drag the comparison slider to check quality, then download your smaller image — watermark-free.</p></div></li>
-    </ol>
-    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-  </section>
-
-  <section class="tsection collapsible" aria-labelledby="tips-h">
-    <h2 id="tips-h" data-i18n="resizer.tips_title">Pro tips</h2>
-    <ul class="ttips">
-      <li><strong data-i18n="compressor.tip_1t">The 80–85 sweet spot</strong> <span data-i18n="compressor.tip_1d">For JPEG photos, quality 80–85 usually halves the file size compared to 95+, with differences only visible when zoomed in. Drag the comparison slider to check yourself.</span></li>
-      <li><strong data-i18n="compressor.tip_2t">Try WebP for bigger savings</strong> <span data-i18n="compressor.tip_2d">WebP keeps the same visual quality as JPEG at roughly 25–35% smaller size — ideal for web images. Choose JPEG only when compatibility with old software matters.</span></li>
-    </ul>
-    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-  </section>
-
-  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-  <h2 id="faq-h" data-i18n="resizer.faq_title">Frequently asked questions</h2>
-<details><summary data-i18n="compressor.faq_q1">How much smaller will my image get?</summary><p class="tfaq-a" data-i18n="compressor.faq_a1">It depends on the photo, but quality 80 JPEG is usually 40–70% smaller than the original with no visible difference. PNG screenshots often shrink even more when converted to WebP.</p></details>
-    <details><summary data-i18n="compressor.faq_q2">What does target-size mode do?</summary><p class="tfaq-a" data-i18n="compressor.faq_a2">You type a maximum file size (for example 200 KB) and DoKit automatically searches for the highest quality setting that fits under it — handy for upload limits on forms and profiles.</p></details>
-    <details><summary data-i18n="compressor.faq_q3">Will compression remove metadata?</summary><p class="tfaq-a" data-i18n="compressor.faq_a3">Yes. The image is redrawn on a fresh canvas, which strips EXIF data including GPS location.</p></details>
-    <details><summary data-i18n="compressor.faq_q4">Is there a limit on how many images I can compress?</summary><p class="tfaq-a" data-i18n="compressor.faq_a4">No daily limits and no sign-up. Compress one image at a time here, or use the Image Converter to batch-convert up to 10 images at once.</p></details>
-
-  <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-</section>
-
-  <section class="tsection" aria-labelledby="rel-h">
-    <h2 id="rel-h" data-i18n="resizer.related">Related tools</h2>
-    <div class="trelated">
-      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
-      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
-      <a class="trel-card" href="../word-counter/"><h3 data-i18n="toolnames.word_counter">Word Counter</h3><p data-i18n="toolnames.desc_word_counter">Live word, character, and reading-time stats.</p></a>
-      <a class="trel-card" href="../case-converter/"><h3 data-i18n="toolnames.case_converter">Case Converter</h3><p data-i18n="toolnames.desc_case_converter">Convert text between six letter cases.</p></a>
-    </div>
-  </section>
-</main>
-<footer id="dk-footer"></footer>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../../">Home</a><a href="../../tools/">Tools</a><a href="../../typing/">Typing</a><a href="../../guides/">Guides</a><a href="../../pricing/">Pricing</a><a href="../../blog/">Blog</a><a href="../../about/">About</a><a href="../../contact/">Contact</a><a href="../../faq/">FAQ</a></navlinks></div></header>
+<main id="main"><section class="block"><div class="container"><h1>Image Compressor – Shrink Images to Any Size</h1><p style="color:var(--muted)">Hit an exact file size for forms and portals — 50KB, 100KB, 200KB or your own target.</p><div class="toolbox"><label for="cp-file">Choose an image (PNG, JPG or WebP, up to 25 MB)</label>
+<input id="cp-file" type="file" accept="image/png,image/jpeg,image/webp">
+<p id="cp-note"></p>
+<div class="row"><div><label for="cp-target">Target size</label>
+<select id="cp-target"><option value="100">100 KB</option><option value="50">50 KB</option><option value="200">200 KB</option><option value="custom">Custom…</option></select></div>
+<div><label for="cp-custom">Custom target (KB)</label><input id="cp-custom" type="number" min="1" placeholder="e.g. 150"></div>
+<div><label for="cp-fmt">Output format</label>
+<select id="cp-fmt"><option value="keep">JPEG (best for photos)</option><option value="webp">WebP (smaller)</option></select></div></div>
+<p><button class="btn" id="cp-go">Compress image</button></p><div id="cp-result" class="result" aria-live="polite"></div>
+<p class="note"><b>Exact-KB tip:</b> portals and forms often demand photos under 50KB, 100KB or 200KB. Pick the target and DoKit searches for the quality that hits it. PNG is lossless, so for the smallest sizes choose WebP output.</p></div><h2>How it works</h2><ol><li>Choose an image from your device.</li><li>Pick a target size (or your own custom target).</li><li>Download the compressed image at or under the target.</li></ol><div class="note"><b>Private by design:</b> your files are processed on your device and never uploaded to any server.</div><h2>Related tools</h2><p><a href="../image-resizer/">Image Resizer</a> · <a href="../image-converter/">Image Converter</a> · <a href="../../guides/how-to-compress-image-to-100kb/">100KB guide</a></p></div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../../tools/" data-pricing="../../pricing/" data-faq="../../faq/" data-contact="../../contact/" data-compressor="../../tools/image-compressor/" data-resizer="../../tools/image-resizer/" data-converter="../../tools/image-converter/" data-counter="../../tools/word-counter/" data-case="../../tools/case-converter/" data-typing="../../typing/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<footer class="site"><div class="container"><div class="footgrid"><div><a class="logo" href="../../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><p style="color:var(--muted)">Every tool you'll ever need — free tools that run in your browser. No signup, no uploads, no watermark.</p><p><a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a></p></div><div><b>Tools</b><a href="../../tools/image-resizer/">Image Resizer</a><a href="../../tools/image-compressor/">Image Compressor</a><a href="../../tools/image-converter/">Image Converter</a><a href="../../tools/word-counter/">Word Counter</a><a href="../../tools/case-converter/">Case Converter</a><a href="../../typing/">Typing Test</a></div><div><b>Company</b><a href="../../about/">About</a><a href="../../contact/">Contact</a><a href="../../pricing/">Pricing</a><a href="../../faq/">FAQ</a><a href="../../blog/">Blog</a><a href="../../guides/">Guides</a><a href="../../coming-soon/">Coming Soon</a></div></div><p class="footbase">Developed by Malik Jalil Ur Rehman Khokhar · © 2026 DoKit. All rights reserved. · <a href="../../privacy/">Privacy</a> · <a href="../../terms/">Terms</a></p></div></footer><script src="../../assets/js/main.js" defer></script><script src="../../assets/js/tools.js" defer></script>
 </body>
 </html>

@@ -1,310 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" dir="ltr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title data-i18n="meta.boardphoto_title">Board Photo — BISE &amp; University Exam Photo Maker | DoKit</title>
-<meta name="description" data-i18n-content="meta.boardphoto_desc" content="Make the perfect exam photo for Pakistani boards & universities: pick your board (BISE, BIE, FBISE, universities), upload a photo, and download it at the exact size, background and KB your board requires. Free, private, in your browser."/>
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/tools/board-photo/"/>
-<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml"/>
-<meta name="theme-color" content="#6C4CF1"/>
-<link rel="manifest" href="../../manifest.webmanifest"/>
-<link rel="apple-touch-icon" href="../../assets/icon.svg"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta property="og:title" content="Board Photo — BISE & University Exam Photo Maker | DoKit"/>
-<meta property="og:description" content="Exam photos at your board's exact size, background and KB. Pick BISE/BIE/university, upload, download. Free & private."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"/>
-<link rel="stylesheet" href="../../css/tokens.css"/>
-<link rel="stylesheet" href="../../css/hub.css"/>
-<link rel="stylesheet" href="tool.css"/>
-<script src="../../js/i18n-v2.js?v=20261008-03" defer></script>
-<script src="../../js/i18n-hotfix.js?v=20261008-08" defer></script>
-<script src="../../js/i18n-boardphoto.js?v=20261008-09" defer></script>
-<script src="../../js/i18n-meta.js" defer></script>
-  <script src="../../js/i18n-tools-shared.js?v=20261008-03" defer></script>
-<script src="../../js/ui.js?v=20261008-03" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
-<script src="../../js/firebase.js?v=20261008-05" defer></script>
-<script src="../../js/site-wide.js?v=20261008-03" defer></script>
-<script src="../../js/maintenance.js?v=20261008-03" defer></script>
-<script src="../../js/journey.js?v=20261008-03" defer></script>
-<script src="tool.js?v=20261008-09" defer></script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Which boards and universities are included?","acceptedAnswer":{"@type":"Answer","text":"BISE Peshawar, BISE Swat, BISE Mardan, BISE Kohat and BISE D.I. Khan (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Quetta (white background), BISE Bahawalpur (150×200 px, 8–22 KB, blue background), FBISE, LUMS, NUST, UET Lahore, Punjab University, University of Karachi, IBA Karachi, COMSATS, AIOU, AJK Board and more. Boards marked “typical” use the common Pakistani exam standard — please confirm with your board."}},
-{"@type":"Question","name":"What does the verified badge mean?","acceptedAnswer":{"@type":"Answer","text":"“Verified” means the size, background and file-size limit were read from an official board notification or the board's own website. “Typical” means the board hasn't published specs, so the common Pakistani exam standard is used — confirm with your board before submitting."}},
-{"@type":"Question","name":"What if my board is missing?","acceptedAnswer":{"@type":"Answer","text":"Use the generic “Pakistani admission (typical)” preset, or type your board's width, height and KB target into the custom fields — every field is editable."}},
-{"@type":"Question","name":"Is my photo uploaded anywhere?","acceptedAnswer":{"@type":"Answer","text":"Never. Everything runs in your browser with JavaScript — your photo never leaves your device."}},
-{"@type":"Question","name":"How is the photo cropped?","acceptedAnswer":{"@type":"Answer","text":"The tool auto-crops to your board's exact dimensions, keeping the head fully in frame with headroom — your face is never altered or cut."}},
-{"@type":"Question","name":"What file format do I get?","acceptedAnswer":{"@type":"Answer","text":"A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal."}}]}
-</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"HowTo","name":"How to make a board exam photo","step":[
-{"@type":"HowToStep","name":"Find your board","text":"Type your board or university name in the search box and pick it from the list. Check the spec card for exact size, background and KB."},
-{"@type":"HowToStep","name":"Upload your photo","text":"Drop a clear front-facing photo into the upload box, or click to browse your files."},
-{"@type":"HowToStep","name":"Auto-fit to board specs","text":"The photo is auto-cropped to your board's exact dimensions and compressed to fit the KB target — face kept fully in frame."},
-{"@type":"HowToStep","name":"Download","text":"Download the JPG and upload it straight to your board's admission or registration portal."}]}
-</script>
-<!-- pages-rebuild -->
-<script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Board Photo — BISE & University Exam Photo Maker", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "url": "https://aleemurrehman803.github.io/DoKit/tools/board-photo/", "description": "Exam photos at your board's exact size, background and KB. Pick BISE/BIE/university, upload, download. Free & private.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "isAccessibleForFree": true}
-</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board Photo – Exam Photo Maker | DoKit</title>
+<meta name="description" content="Make a board or university admission photo in the exact size and file size your board requires. Free, private, in your browser.">
+<meta property="og:title" content="Board Photo – Exam Photo Maker | DoKit">
+<meta property="og:description" content="Make a board or university admission photo in the exact size and file size your board requires. Free, private, in your browser.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/tools/board-photo/">
+<link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main" class="twrap">
-  <nav class="tcrumb" aria-label="Breadcrumb">
-    <a href="../../" data-i18n="common.crumb_home">Home</a><span class="tcrumb-sep" aria-hidden="true">/</span><a href="../" data-i18n="common.crumb_tools">Tools</a><span class="tcrumb-sep" aria-hidden="true">/</span><span class="tcrumb-cur" aria-current="page">Board Photo</span>
-  </nav>
-
-  <div class="thero">
-  <div class="thero-icon" aria-hidden="true">
-    <!-- Board Photo: graduation cap -->
-    <svg viewBox="0 0 72 72" focusable="false" aria-hidden="true">
-      <defs>
-        <linearGradient id="tig-board" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#6C4CF1"/>
-        </linearGradient>
-      </defs>
-      <rect x="6" y="6" width="60" height="60" rx="16" fill="url(#tig-board)"/>
-      <path d="M36 20L14 29l22 9 18-7.4V42h4V29L36 20z" fill="#fff"/>
-      <path d="M24 38.5V46c0 3 5.4 5.5 12 5.5s12-2.5 12-5.5v-7.5l-12 4.9-12-4.9z" fill="#fff" opacity=".85"/>
-      <path d="M54 42v10" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="54" cy="54" r="2.5" fill="#fff"/>
-    </svg>
-  </div>
-    <h1 data-i18n="bp.title">Board Photo</h1>
-    <p data-i18n="bp.hero_desc">Exam &amp; admission photos for Pakistani boards &amp; universities — exact size, background and KB your board asks for. Free, private, in your browser.</p>
-    <p><span class="tprivacy">🔒 <span data-i18n="bp.privacy">Your photo never leaves your device — 100% private.</span></span></p>
-  </div>
-
-  <section class="tcard" aria-labelledby="tool-h">
-    <h2 id="tool-h" class="sr-only">Board Photo</h2>
-
-    <!-- Step 1: board -->
-    <div class="bstep">
-      <h3 class="bstep-h"><span class="bstep-n">1</span> <span data-i18n="bp.step1" id="bpStep1">Find your board or university</span></h3>
-      <div class="tfield field">
-        <label class="label" id="boardDropLabel" data-i18n="bp.search_label">Search boards &amp; universities</label>
-        <div class="bdrop" id="boardDrop">
-          <button type="button" class="bdrop-toggle tinput" id="boardToggle" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="boardDropLabel boardToggleLabel">
-            <span class="bdrop-value" id="boardToggleLabel" data-i18n="bp.select_placeholder">Select your board / university</span>
-            <span class="bdrop-caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="bdrop-menu" id="boardMenu" hidden>
-            <div class="bdrop-searchwrap">
-              <input class="tinput bdrop-search" id="boardSearch" type="search" autocomplete="off" placeholder="Type to search… e.g. BISE Lahore" data-i18n-ph="bp.search_ph" aria-label="Search boards and universities"/>
-            </div>
-            <ul class="bdrop-list" id="boardList" role="listbox" aria-label="Boards and universities"></ul>
-            <p class="thint bdrop-none" id="boardNone" hidden data-i18n="bp.no_match">No match — pick “Pakistani admission (typical)” or set a custom size below.</p>
-          </div>
-        </div>
-      </div>
-      <div class="bspec" id="boardInfo" hidden></div>
-      <details class="tdetails" style="margin-block-start:.6rem">
-        <summary data-i18n="bp.custom_title">Custom size (board not listed?)</summary>
-        <div class="trow" style="margin-block-start:.6rem">
-          <div class="tfield"><label for="cw"><span data-i18n="bp.width">Width (px)</span></label><input class="tinput" id="cw" type="number" min="10" max="4000" value="200"/></div>
-          <div class="tfield"><label for="ch"><span data-i18n="bp.height">Height (px)</span></label><input class="tinput" id="ch" type="number" min="10" max="4000" value="230"/></div>
-          <div class="tfield"><label for="ckb"><span data-i18n="bp.kb">Max size (KB)</span></label><input class="tinput" id="ckb" type="number" min="1" max="10240" value="50"/></div>
-        </div>
-        <div class="tbtnrow"><button type="button" class="tbtn tbtn-ghost tbtn-sm" id="customBtn" data-i18n="bp.custom_apply">Use custom size</button></div>
-      </details>
-    </div>
-
-    <!-- Step 2: upload -->
-    <div class="bstep">
-      <h3 class="bstep-h"><span class="bstep-n">2</span> <span data-i18n="bp.step2" id="bpStep2">Upload your photo</span></h3>
-      <div class="tdrop" id="dz" role="button" tabindex="0" aria-labelledby="dz-t">
-        <div class="tdrop-icon" aria-hidden="true">📷</div>
-        <p class="tdrop-title" id="dz-t" data-i18n="bp.drop_title">Drag &amp; drop your photo here</p>
-        <p class="tdrop-sub"><span data-i18n="bp.drop_or">or</span> <button type="button" id="browseBtn" data-i18n="bp.drop_browse">browse your files</button></p>
-        <p class="tdrop-hint" data-i18n="bp.drop_hint">PNG, JPEG, WebP · up to 25 MB · one photo</p>
-        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" aria-label="Choose your photo"/>
-      </div>
-      <p class="tnotice" style="margin-block-start:.8rem" data-i18n="bp.integrity_note">Your face is never altered — only size, framing and file size change.</p>
-    </div>
-
-    <!-- Step 3: result -->
-    <div class="bstep" id="resultStep" hidden>
-      <h3 class="bstep-h"><span class="bstep-n">3</span> <span data-i18n="bp.step3">Download your board photo</span></h3>
-      <div class="bpreview">
-        <div class="bpreview-wrap" id="previewWrap">
-          <img id="resultImg" alt="Your board-ready photo" loading="lazy"/>
-          <div class="bface-guide" id="faceGuide" hidden aria-hidden="true"></div>
-        </div>
-        <div class="bresult-meta">
-          <span class="bpill" id="pillDims">–</span>
-          <span class="bpill" id="pillSize">–</span>
-        </div>
-        <p class="thint" id="resultNote" hidden></p>
-        <div class="bbg-row" id="bgRow">
-          <p class="bbg-label" data-i18n="bp.bg_label">Background colour</p>
-          <div class="bbg-btns" role="group" aria-label="Background colour">
-            <button type="button" class="bbg-btn" data-bg="#ffffff"><span class="bbg-swatch" style="background:#ffffff" aria-hidden="true"></span><span data-i18n="bp.bg_white">White</span></button>
-            <button type="button" class="bbg-btn" data-bg="#e6f0ff"><span class="bbg-swatch" style="background:#e6f0ff" aria-hidden="true"></span><span data-i18n="bp.bg_blue">Blue</span></button>
-            <button type="button" class="bbg-btn" data-bg="#d93b3b"><span class="bbg-swatch" style="background:#d93b3b" aria-hidden="true"></span><span data-i18n="bp.bg_red">Red</span></button>
-            <button type="button" class="bbg-btn" data-bg="board"><span class="bbg-swatch bbg-swatch-board" aria-hidden="true"></span><span data-i18n="bp.bg_board">Board default</span></button>
-            <button type="button" class="bbg-btn" data-bg="original"><span class="bbg-swatch bbg-swatch-orig" aria-hidden="true"></span><span data-i18n="bp.bg_original">Keep original</span></button>
-          </div>
-        </div>
-        <div class="tbtnrow" style="justify-content:center">
-          <button type="button" class="tbtn tbtn-primary" id="downloadBtn" data-i18n="bp.download">Download JPG</button>
-          <button type="button" class="tbtn tbtn-ghost" id="sheetBtn" data-i18n="bp.print_sheet">Print Sheet (4×6)</button>
-          <button type="button" class="tbtn tbtn-ghost" id="waBtn" data-i18n="bp.share_wa">Share on WhatsApp</button>
-          <button type="button" class="tbtn tbtn-ghost" id="againBtn" data-i18n="bp.again">Use another photo</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Advanced options -->
-    <div class="badv" id="advSection">
-      <button type="button" class="badv-toggle" id="advToggle" aria-expanded="false" aria-controls="advBody">
-        <span data-i18n="bp.adv_title">⚙️ Mazeed Options (Advanced)</span>
-        <span class="badv-chev" aria-hidden="true">▾</span>
-      </button>
-      <div class="badv-body" id="advBody" hidden>
-        <div class="badv-inner">
-          <div class="badv-grid">
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">✨</div>
-              <h4 data-i18n="bp.enhance_t">Auto Enhance</h4>
-              <p data-i18n="bp.enhance_d">One-click brightness &amp; contrast fix</p>
-              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="enhanceBtn" data-i18n="bp.enhance_btn">Enhance photo</button>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">🔄</div>
-              <h4 data-i18n="bp.rot_t">Rotate &amp; Flip</h4>
-              <p data-i18n="bp.rot_d">Fix a tilted photo</p>
-              <div class="tbtnrow" style="margin-block-start:0">
-                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotL" data-i18n-aria="bp.rot_l" aria-label="Rotate left">⟲</button>
-                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="rotR" data-i18n-aria="bp.rot_r" aria-label="Rotate right">⟳</button>
-                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="flipH" data-i18n="bp.flip_h">⇋ Flip</button>
-              </div>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">📏</div>
-              <h4 data-i18n="bp.preset_t">My Presets</h4>
-              <p data-i18n="bp.preset_d">Save the current size for reuse</p>
-              <div class="trow" style="margin-block-end:.5rem">
-                <div class="tfield" style="margin:0;flex:1"><input class="tinput" id="presetName" data-i18n-ph="bp.preset_name_ph" placeholder="Preset name (optional)"/></div>
-                <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="savePresetBtn" data-i18n="bp.preset_save">Save preset</button>
-              </div>
-              <div class="bchips" id="presetRow"></div>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">🏷️</div>
-              <h4 data-i18n="bp.stamp_t">Name / Date Stamp</h4>
-              <p data-i18n="bp.stamp_d">Print name &amp; date on the photo</p>
-              <div class="tfield" style="margin-block-end:.5rem"><input class="tinput" id="stampName" data-i18n-ph="bp.stamp_name_ph" placeholder="Your name"/></div>
-              <label class="tcheck"><input type="checkbox" id="stampDate"/> <span data-i18n="bp.stamp_date">Add today's date</span></label>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">📸</div>
-              <h4 data-i18n="bp.cam_t">Camera</h4>
-              <p data-i18n="bp.cam_d">Take a photo right now</p>
-              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="camBtn" data-i18n="bp.cam_btn">Use Camera</button>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">🌓</div>
-              <h4 data-i18n="bp.bw_t">Black &amp; White</h4>
-              <p data-i18n="bp.bw_d">Grayscale mode</p>
-              <label class="bswitch"><input type="checkbox" id="bwToggle"/><span class="btrack" aria-hidden="true"></span><span data-i18n="bp.bw_t">Black &amp; White</span></label>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">📐</div>
-              <h4 data-i18n="bp.guide_t">Face Guide</h4>
-              <p data-i18n="bp.guide_d">Show head-position oval</p>
-              <label class="bswitch"><input type="checkbox" id="guideToggle"/><span class="btrack" aria-hidden="true"></span><span data-i18n="bp.guide_t">Face Guide</span></label>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">📧</div>
-              <h4 data-i18n="bp.email_t">Email Photo</h4>
-              <p data-i18n="bp.email_d">Open your mail app</p>
-              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="emailBtn" data-i18n="bp.email_btn">Email photo</button>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">💾</div>
-              <h4 data-i18n="bp.hist_t">Recent Photos</h4>
-              <p data-i18n="bp.hist_d">Last 5 processed photos</p>
-              <div class="bhist" id="histRow"><p class="thint" style="margin:0" data-i18n="bp.hist_empty">No recent photos yet.</p></div>
-            </div>
-            <div class="badv-card">
-              <div class="bicon" aria-hidden="true">📦</div>
-              <h4 data-i18n="bp.batch_t">Batch Mode</h4>
-              <p data-i18n="bp.batch_d">Process many photos at once</p>
-              <button type="button" class="tbtn tbtn-ghost tbtn-sm" id="batchBtn" data-i18n="bp.batch_btn">Choose photos</button>
-              <input type="file" id="batchInput" accept="image/png,image/jpeg,image/webp" multiple hidden/>
-              <ul class="bbatch" id="batchList"></ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="terror" id="errBox" hidden role="alert"></div>
-  </section>
-
-  <section class="tsection collapsible" aria-labelledby="howto-h">
-    <h2 id="howto-h" data-i18n="bp.howto_title">How to make a board exam photo</h2>
-    <ol class="thowto">
-      <li><div><h3 data-i18n="bp.howto_1t">Find your board</h3><p data-i18n="bp.howto_1d">Type your board or university name and pick it from the list. Check the spec card for the exact size, background and KB.</p></div></li>
-      <li><div><h3 data-i18n="bp.howto_2t">Upload your photo</h3><p data-i18n="bp.howto_2d">Drop a clear, front-facing photo into the box. A plain background matching your board's requirement works best.</p></div></li>
-      <li><div><h3 data-i18n="bp.howto_3t">Auto-fit to board specs</h3><p data-i18n="bp.howto_3d">The photo is auto-cropped to your board's exact dimensions and compressed to fit the KB target — your face stays fully in frame.</p></div></li>
-      <li><div><h3 data-i18n="bp.howto_4t">Download</h3><p data-i18n="bp.howto_4d">Download the JPG and upload it straight to your board's admission or registration portal.</p></div></li>
-    </ol>
-    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-  </section>
-
-  <section class="tsection collapsible" aria-labelledby="tips-h">
-    <h2 id="tips-h" data-i18n="bp.tips_title">Pro tips</h2>
-    <ul class="ttips">
-      <li><strong data-i18n="bp.tip_1t">Use a plain background photo</strong> <span data-i18n="bp.tip_1d">Boards reject busy backgrounds. Take the photo against a plain wall in the colour your board asks for (usually white or blue).</span></li>
-      <li><strong data-i18n="bp.tip_2t">Face the camera, neutral expression</strong> <span data-i18n="bp.tip_2d">Look straight at the camera with eyes open and a neutral expression — the same rules as a passport photo.</span></li>
-      <li><strong data-i18n="bp.tip_3t">Check “typical” specs with your board</strong> <span data-i18n="bp.tip_3d">Boards marked “typical” haven't published official specs — the common Pakistani exam standard is used. Confirm the size with your board before submitting.</span></li>
-    </ul>
-    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-  </section>
-
-  <section class="tsection tfaq collapsible" aria-labelledby="faq-h">
-    <h2 id="faq-h" data-i18n="bp.faq_title">Frequently asked questions</h2>
-    <details><summary data-i18n="bp.faq_q1">Which boards and universities are included?</summary><p class="tfaq-a" data-i18n="bp.faq_a1">BISE Peshawar, BISE Swat, BISE Mardan, BISE Kohat and BISE D.I. Khan (300×300 px, white background), BIE Karachi (passport size, blue background), BBISE Quetta (white background), BISE Bahawalpur (150×200 px, 8–22 KB, blue background), FBISE, LUMS, NUST, UET Lahore, Punjab University, University of Karachi, IBA Karachi, COMSATS, AIOU, AJK Board and more. Boards marked “typical” use the common Pakistani exam standard — please confirm with your board.</p></details>
-    <details><summary data-i18n="bp.faq_q2">What does the verified badge mean?</summary><p class="tfaq-a" data-i18n="bp.faq_a2">“Verified” means the size, background and file-size limit were read from an official board notification or the board's own website. “Typical” means the board hasn't published specs, so the common Pakistani exam standard is used — confirm with your board before submitting.</p></details>
-    <details><summary data-i18n="bp.faq_q3">What if my board is missing?</summary><p class="tfaq-a" data-i18n="bp.faq_a3">Use the generic “Pakistani admission (typical)” preset, or type your board's width, height and KB target into the custom fields — every field is editable.</p></details>
-    <details><summary data-i18n="bp.faq_q4">Is my photo uploaded anywhere?</summary><p class="tfaq-a" data-i18n="bp.faq_a4">Never. Everything runs in your browser with JavaScript — your photo never leaves your device.</p></details>
-    <details><summary data-i18n="bp.faq_q5">How is the photo cropped?</summary><p class="tfaq-a" data-i18n="bp.faq_a5">The tool auto-crops to your board's exact dimensions, keeping the head fully in frame with headroom — your face is never altered or cut.</p></details>
-    <details><summary data-i18n="bp.faq_q6">What file format do I get?</summary><p class="tfaq-a" data-i18n="bp.faq_a6">A JPG sized to your board's exact pixels and compressed to fit at or under the KB target, ready to upload to the board's portal.</p></details>
-    <p class="thint tnote-soon" hidden data-i18n="common.coming_soon">Full translation coming soon.</p>
-  </section>
-
-  <section class="tsection" aria-labelledby="rel-h">
-    <h2 id="rel-h" data-i18n="bp.related">Related tools</h2>
-    <div class="trelated">
-      <a class="trel-card" href="../image-resizer/"><h3 data-i18n="toolnames.resizer">Image Resizer</h3><p data-i18n="toolnames.desc_resizer">Change image dimensions in pixels or percent.</p></a>
-      <a class="trel-card" href="../image-compressor/"><h3 data-i18n="toolnames.compressor">Image Compressor</h3><p data-i18n="toolnames.desc_compressor">Shrink file size without visible quality loss.</p></a>
-      <a class="trel-card" href="../image-converter/"><h3 data-i18n="toolnames.converter">Image Converter</h3><p data-i18n="toolnames.desc_converter">Convert between PNG, JPEG, and WebP.</p></a>
-    </div>
-  </section>
-</main>
-<div class="btoast" id="toast" role="status" aria-live="polite" hidden></div>
-<div class="bcam-modal" id="camModal" hidden>
-  <div class="bcam-box" role="dialog" aria-modal="true" aria-labelledby="camTitle">
-    <button type="button" class="bcam-x" id="camX" aria-label="Close">×</button>
-    <h3 id="camTitle" data-i18n="bp.cam_title">Take a photo</h3>
-    <video id="camVideo" playsinline autoplay muted></video>
-    <p class="thint" id="camErr" hidden></p>
-    <div class="tbtnrow" style="justify-content:center">
-      <button type="button" class="tbtn tbtn-primary" id="camShot" data-i18n="bp.cam_shot">Capture</button>
-      <button type="button" class="tbtn tbtn-ghost" id="camClose" data-i18n="bp.cam_close">Close</button>
-    </div>
-  </div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../../">Home</a><a href="../../tools/">Tools</a><a href="../../typing/">Typing</a><a href="../../guides/">Guides</a><a href="../../pricing/">Pricing</a><a href="../../blog/">Blog</a><a href="../../about/">About</a><a href="../../contact/">Contact</a><a href="../../faq/">FAQ</a></nav></div></header>
+<main id="main"><section class="block"><div class="container">
+<h1>Board Photo</h1>
+<p style="color:var(--muted)">Choose your board or university, upload a photo, and get it in the exact size and file size required. Everything happens in your browser — your photo is never uploaded anywhere.</p>
+<div class="toolbox">
+<label for="bp-filter">Search board or university</label>
+<input id="bp-filter" type="text" autocomplete="off" placeholder="Type a board name, e.g. Bahawalpur">
+<label for="bp-board">Board / university</label>
+<select id="bp-board"></select>
+<div id="bp-spec" class="result"></div>
+<label for="bp-file">Your photo</label>
+<input id="bp-file" type="file" accept="image/*">
+<p><button class="btn" id="bp-make">Make board photo</button></p>
+<canvas id="bp-canvas" style="max-width:100%;display:none"></canvas>
+<p id="bp-msg"></p>
+<p><a id="bp-download" class="btn ghost" style="display:none" download="board-photo.jpg">Download photo</a></p>
 </div>
-<footer id="dk-footer"></footer>
-
+<div class="note"><b>What this tool does not do:</b> it crops and resizes your photo to the board's size and fits it into the file-size limit on a solid background. It does not remove backgrounds and cannot check photo rules beyond the published size and file-size limits. Board rules change — always check your board's latest notice before submitting.</div>
+</div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../../tools/" data-pricing="../../pricing/" data-faq="../../faq/" data-contact="../../contact/" data-compressor="../../tools/image-compressor/" data-resizer="../../tools/image-resizer/" data-converter="../../tools/image-converter/" data-counter="../../tools/word-counter/" data-case="../../tools/case-converter/" data-typing="../../typing/" data-lessons="../../typing/lessons/" data-games="../../typing/games/" data-board="../../tools/board-photo/" data-password="../../tools/password-generator/" data-unit="../../tools/unit-converter/" data-qr="../../tools/qr-generator/" data-battle="../../typefight/battle/" data-wall="../../wall-of-love/" data-changelog="../../changelog/" data-status="../../status/" data-api="../../api/" data-design="../../design-system/" data-practice="../../typing/practice/" data-results="../../typing/results/" data-progress="../../typing/progress/" data-dashboard="../../typing/dashboard/" data-certificate="../../typing/certificate/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<script src="../../assets/js/main.js" defer></script><script src="../../assets/js/board-photo.js" defer></script>
 </body>
 </html>

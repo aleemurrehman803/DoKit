@@ -1,70 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/verify/">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://www.google.com https://accounts.google.com https://oauth2.googleapis.com; frame-src https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="theme-color" content="#6C4CF1">
-<title>Verify Certificate — TypeFight — DoKit</title>
-<meta name="description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify Battle Certificate | DoKit</title>
+<meta name="description" content="Check a TypeFight certificate. Verification arrives with the backend in Phase 3.">
+<meta property="og:title" content="Verify Battle Certificate | DoKit">
+<meta property="og:description" content="Check a TypeFight certificate. Verification arrives with the backend in Phase 3.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Verify Certificate — TypeFight — DoKit">
-<meta property="og:description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typefight/verify/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Verify Certificate — TypeFight — DoKit">
-<meta name="twitter:description" content="Verify a DoKit TypeFight certificate. Check that it is genuine.">
-<link rel="icon" href="../../assets/logo.svg" type="image/svg+xml">
-<link rel="manifest" href="../../manifest.webmanifest">
-<link rel="stylesheet" href="../../css/tokens.css">
-<link rel="stylesheet" href="../../css/hub.css">
-<style>
-  .verdict { border-radius:1rem; padding:2rem; text-align:center; }
-  .verdict-valid { border:3px solid #1F7A4D; background:#eef7f0; }
-  .verdict-invalid { border:3px solid #C93A3A; background:#fdf0f0; }
-  .verdict h2 { margin:.25rem 0 1rem; }
-</style>
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/verify/">
+<link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main">
-  <section class="section">
-    <div class="container" style="max-width:40rem">
-      <h1>🔍 Verify certificate</h1>
-      <p style="color:var(--text-muted)">Scan result checker — confirms a TypeFight certificate is genuine.</p>
-
-      <div id="verifyLoading" class="card" style="text-align:center">
-        <p style="color:var(--text-muted)">Checking certificate…</p>
-      </div>
-
-      <div id="verifyResult" style="display:none"></div>
-
-      <div class="card" style="margin-top:var(--sp-4)">
-        <h3>Check another</h3>
-        <form id="verifyForm">
-          <p><input class="text-input" id="verifyId" placeholder="Certificate ID or Reg. No (e.g. DK-2026-000001)" style="width:100%" autocomplete="off" aria-label="Certificate ID or registration number"></p>
-          <p><button class="btn btn-primary" type="submit">Verify</button></p>
-        </form>
-      </div>
-      <p style="margin-top:var(--sp-3)"><a href="../">← TypeFight home</a></p>
-    </div>
-  </section>
-</main>
-<footer id="site-foot"></footer>
-<script src="../../js/i18n-v2.js" defer></script>
-<script src="../../js/ui.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
-<script src="../../js/firebase.js?v=20261008-05" defer></script>
-<script src="../../js/dk-utils.js" defer></script>
-<script src="../../js/typefight.js" defer></script>
-<script src="../../js/pages/typefight-verify.js" defer></script>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../../">Home</a><a href="../../tools/">Tools</a><a href="../../typing/">Typing</a><a href="../../guides/">Guides</a><a href="../../pricing/">Pricing</a><a href="../../blog/">Blog</a><a href="../../about/">About</a><a href="../../contact/">Contact</a><a href="../../faq/">FAQ</a></nav></div></header>
+<main id="main"><section class="block"><div class="container">
+<h1>Verify Battle Certificate</h1>
+<p style="color:var(--muted)">Enter a battle certificate number. Full verification against issued records arrives with Phase 3.</p><form class="phase3-form toolbox"><label for="sh-certid">Certificate number</label><input id="sh-certid" type="text" placeholder="e.g. TF-2026-0001"><p><button class="btn" type="submit">Check format</button></p><div class="phase3-note note" hidden><b>Phase 3 note:</b> this action connects with the self-hosted backend in Phase 3. Nothing was sent or saved.</div></form>
+</div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../../tools/" data-pricing="../../pricing/" data-faq="../../faq/" data-contact="../../contact/" data-compressor="../../tools/image-compressor/" data-resizer="../../tools/image-resizer/" data-converter="../../tools/image-converter/" data-counter="../../tools/word-counter/" data-case="../../tools/case-converter/" data-typing="../../typing/" data-lessons="../../typing/lessons/" data-games="../../typing/games/" data-board="../../tools/board-photo/" data-password="../../tools/password-generator/" data-unit="../../tools/unit-converter/" data-qr="../../tools/qr-generator/" data-battle="../../typefight/battle/" data-wall="../../wall-of-love/" data-changelog="../../changelog/" data-status="../../status/" data-api="../../api/" data-design="../../design-system/" data-practice="../../typing/practice/" data-results="../../typing/results/" data-progress="../../typing/progress/" data-dashboard="../../typing/dashboard/" data-certificate="../../typing/certificate/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<script src="../../assets/js/main.js" defer></script>
 </body>
 </html>

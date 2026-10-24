@@ -1,339 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com https://*.googleapis.com https://*.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="theme-color" content="#6C4CF1">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="assets/icon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title data-i18n="meta.home_title">DoKit — Every tool you'll ever need | Free Online Tools</title>
-<meta name="description" data-i18n-content="meta.home_desc" content="DoKit: free online tools that run in your browser. Resize images, count words, convert files, master typing — private by design, no sign-up.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/">
-<link rel="alternate" hreflang="en" href="https://aleemurrehman803.github.io/DoKit/?lang=en">
-<link rel="alternate" hreflang="ur" href="https://aleemurrehman803.github.io/DoKit/?lang=ur">
-<link rel="alternate" hreflang="ar" href="https://aleemurrehman803.github.io/DoKit/?lang=ar">
-<link rel="alternate" hreflang="hi" href="https://aleemurrehman803.github.io/DoKit/?lang=hi">
-<link rel="alternate" hreflang="es" href="https://aleemurrehman803.github.io/DoKit/?lang=es">
-<link rel="alternate" hreflang="fr" href="https://aleemurrehman803.github.io/DoKit/?lang=fr">
-<link rel="alternate" hreflang="pt" href="https://aleemurrehman803.github.io/DoKit/?lang=pt">
-<link rel="alternate" hreflang="de" href="https://aleemurrehman803.github.io/DoKit/?lang=de">
-<link rel="alternate" hreflang="tr" href="https://aleemurrehman803.github.io/DoKit/?lang=tr">
-<link rel="alternate" hreflang="ru" href="https://aleemurrehman803.github.io/DoKit/?lang=ru">
-<link rel="alternate" hreflang="x-default" href="https://aleemurrehman803.github.io/DoKit/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoKit – Free Online Tools: Image Resizer, Compressor, Converter, Word Counter & Typing Test</title>
+<meta name="description" content="DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words, and practise typing.">
+<meta property="og:title" content="DoKit – Free Online Tools: Image Resizer, Compressor, Converter, Word Counter & Typing Test">
+<meta property="og:description" content="DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words, and practise typing.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="DoKit — Every tool you'll ever need">
-<meta property="og:description" content="Free online tools: image resizer, compressor, converter, word counter, case converter, typing school. Private by design.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary">
-<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/hub.css">
-<style>/* Critical: prevent FOUC before hub.css loads.
-   Theme-aware: respects data-theme set by the early script below. */
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fff;color:#1a1a2e}
-[data-theme="dark"] body{background:#12101F;color:#F2EFFD}
-ul[class],ol[class]{list-style:none;margin:0;padding:0}
-img{max-width:100%;height:auto}
-.hero-illustration{max-width:100%}
-#site-nav{min-height:4.25rem}
-#site-foot{min-height:10rem}
-</style>
-<script>/* Early theme: apply saved theme before CSS paints (prevents white flash in dark mode) */
-(function(){try{var t=localStorage.getItem("dokit_theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.setAttribute("data-theme","dark")}}catch(e){}})();</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"DoKit","alternateName":"DoKit — Every tool you'll ever need","url":"https://aleemurrehman803.github.io/DoKit/","inLanguage":["en","ur"]}
-</script>
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/">
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main">
-
-  <!-- HERO -->
-  <section class="hero hero-mesh bg-noise">
-    <div class="container hero__grid">
-      <div class="hero__copy">
-        <span class="eyebrow" data-i18n="hero_eyebrow">Free online tools</span>
-        <h1><span data-i18n="hero_title">Get everyday tasks done in seconds</span> — <span class="hero-sep">|</span> <span class="hero-free" data-i18n="hero_free">free.</span></h1>
-<style>
-.hero-free {
-  color: #dc2626;
-  font-weight: 800;
-}
-.hero-sep {
-  color: #dc2626;
-  font-weight: 800;
-  font-size: 1.2em;
-  animation: blink-sep 1s infinite;
-  margin: 0 4px;
-}
-@keyframes blink-sep {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-</style>
-        <p data-i18n="hero_tag" class="tagline">Resize images, count words, master typing — fast, free, and private. Nothing leaves your browser.</p>
-        <!-- trust badges removed per user request -->
-        <div class="hero-cta">
-          <a class="btn btn-primary btn-lg" href="tools/" data-i18n="hero_cta_tools">Browse all tools</a>
-          <a class="btn btn-ghost" href="typing/" data-i18n="hero_cta_typing">Start typing practice</a>
-        </div>
-        <!-- UI/UX #24 (Oct 8, 2026): changelog discovery -->
-        <p class="hero-changelog"><a href="changelog.html" data-i18n="changelog.title">📝 Changelog</a></p>
-      </div>
-      <div class="hero__visual">
-    <img src="assets/hero-illustration.webp" alt="DoKit tools illustration" data-i18n-aria="hero_img_alt" class="hero-illustration" loading="eager">
-  </div>
-    </div>
-    <div class="container">
-      <div class="search-wrap">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <label class="sr-only" for="toolSearch" data-i18n="search_label">Search tools</label>
-        <input class="text-input" type="search" id="toolSearch" placeholder="Search tools… e.g. resize, words" data-i18n-ph="search_ph" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchSuggest" aria-autocomplete="list">
-        <!-- UI/UX #5 (Oct 8, 2026): autocomplete suggestions -->
-        <div class="search-suggest" id="searchSuggest" role="listbox" aria-label="Tool suggestions" hidden></div>
-      </div>
-      <p class="dk-hint" id="searchHint" hidden><span data-i18n="home2.hint_a">Tip: press</span> <kbd>/</kbd> <span data-i18n="home2.hint_b">to search</span><button type="button" class="dk-hint__close" data-hint-close data-i18n-aria="home2.hint_dismiss" aria-label="Dismiss tip">✕</button></p>
-    </div>
-    <div class="wave-div" aria-hidden="true"><svg viewBox="0 0 1440 72" preserveAspectRatio="none" focusable="false"><path d="M0,38 C240,70 480,6 720,36 C960,66 1200,10 1440,38 L1440,72 L0,72 Z"/></svg></div>
-  </section>
-
-  <!-- UI/UX #1 (Oct 8, 2026): interactive live demo below the hero -->
-  <section class="section demo-section" aria-labelledby="demo-h">
-    <div class="container">
-      <div class="demo-card">
-        <div class="demo-copy">
-          <p class="section-kicker heading-accent" data-i18n="home2.demo_kicker">Try it right now</p>
-          <h2 id="demo-h" data-i18n="home2.demo_title">Live in your browser</h2>
-          <p data-i18n="home2.demo_sub">Type below — the counts update instantly. Your text never leaves this page.</p>
-          <a class="btn btn-ghost" href="tools/word-counter/" data-i18n="home2.demo_open">Open Word Counter →</a>
-        </div>
-        <div class="demo-widget">
-          <label class="sr-only" for="demoText" data-i18n="home2.demo_label">Try the word counter</label>
-          <textarea id="demoText" class="text-input demo-text" rows="4" data-i18n="demo_text">DoKit makes everyday tasks fast, free, and private.</textarea>
-          <div class="demo-stats" aria-live="polite">
-            <div class="demo-stat"><strong id="demoWords">8</strong><span data-i18n="home2.demo_words">words</span></div>
-            <div class="demo-stat"><strong id="demoChars">51</strong><span data-i18n="home2.demo_chars">characters</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- BROWSE BY CATEGORY -->
-  <section class="section cats-section" aria-labelledby="cats-h">
-    <div class="container">
-      <div class="section-head reveal">
-        <p class="section-kicker heading-accent" data-i18n="home2.kicker_cats">Find your tool</p>
-        <h2 id="cats-h" data-i18n="cats_title">Browse by category</h2>
-        <div class="section-rule" aria-hidden="true"></div>
-        <p data-i18n="cats_sub">Tap a category to see its tools — or search above.</p>
-      </div>
-      <div class="cats-overlap">
-        <div id="recentBox" hidden></div>
-        <div class="cat-list" id="catList" aria-live="polite"></div>
-        <div class="cat-panel-full" id="catPanel" aria-live="polite"></div>
-        <div class="empty-state" id="toolsEmpty" style="display:none">
-          <span class="empty-state__icon" aria-hidden="true">🔍</span>
-          <p data-i18n="tools_empty">No tools match your search. Try another word.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="wave-div wave-div--soft" aria-hidden="true"><svg viewBox="0 0 1440 72" preserveAspectRatio="none" focusable="false"><path d="M0,38 C240,70 480,6 720,36 C960,66 1200,10 1440,38 L1440,72 L0,72 Z"/></svg></div>
-
-  <!-- WHY DOKIT -->
-  <div class="band">
-    <section class="section">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="section-kicker heading-accent" data-i18n="home2.kicker_why">The DoKit promise</p>
-          <h2 data-i18n="why_title">Why DoKit?</h2>
-          <p data-i18n="why_sub">Built differently — on purpose.</p>
-        </div>
-        <div class="grid why-stagger">
-          <div class="card reveal" style="--reveal-delay:.05s">
-            <div class="tool-card__icon" aria-hidden="true">🔒</div>
-            <h3 data-i18n="why1_t">Private by design</h3>
-            <p data-i18n="why1_d">Your files never leave your device. Everything runs in your browser — nothing to hack, nothing to leak.</p>
-          </div>
-          <div class="card reveal" style="--reveal-delay:.12s">
-            <div class="tool-card__icon" aria-hidden="true">⚡</div>
-            <h3 data-i18n="why2_t">Blazing fast</h3>
-            <p data-i18n="why2_d">Zero bloat, zero tracking scripts. Pages open in a blink and tools respond instantly.</p>
-          </div>
-          <div class="card reveal" style="--reveal-delay:.19s">
-            <div class="tool-card__icon" aria-hidden="true">🎁</div>
-            <h3 data-i18n="why3_t">Free core, forever</h3>
-            <p data-i18n="why3_d">Every tool on this page is free to use — no account, no watermarks, no catches.</p>
-          </div>
-          <div class="card reveal" style="--reveal-delay:.26s">
-            <div class="tool-card__icon" aria-hidden="true">🌐</div>
-            <h3 data-i18n="why4_t">English + اردو</h3>
-            <p data-i18n="why4_d">A full Urdu interface with right-to-left layout, alongside English.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- SOCIAL PROOF -->
-  <section class="section" aria-labelledby="proof-h">
-    <div class="container">
-      <div class="section-head reveal">
-        <p class="section-kicker heading-accent" data-i18n="home2.kicker_proof">Loved in real life</p>
-        <h2 id="proof-h" data-i18n="home2.proof_t">Made for everyday people</h2>
-        <div class="section-rule" aria-hidden="true"></div>
-        <p data-i18n="home2.proof_sub">Students, freelancers and shop owners reach for DoKit daily — no sign-up, no learning curve.</p>
-      </div>
-      <div class="grid stats-grid reveal" style="grid-template-columns:repeat(2,1fr)">
-        <div class="stat"><div class="stat__num" data-countup="6">6</div><div class="stat__label" data-i18n="stat_tools_l">Free tools</div></div>
-        <div class="stat"><div class="stat__num"><span data-countup="100">100</span>%</div><div class="stat__label" data-i18n="stat_private_l">Private — files stay on your device</div></div>
-        <div class="stat"><div class="stat__num" data-countup="0">0</div><div class="stat__label" data-i18n="stat_signup_l">Sign-up required</div></div>
-        <div class="stat"><div class="stat__num" data-countup="2">2</div><div class="stat__label" data-i18n="stat_lang_l">Languages</div></div>
-      </div>
-      <div class="grid love-grid reveal">
-        <div class="card love-card">
-          <span class="badge" data-i18n="home2.seg1_t">Students</span>
-          <p data-i18n="home2.seg1_d">Word counts checked and essays polished — right before the deadline, no account needed.</p>
-        </div>
-        <div class="card love-card">
-          <span class="badge" data-i18n="home2.seg2_t">Freelancers</span>
-          <p data-i18n="home2.seg2_d">Client images resized and compressed in the browser — nothing uploaded, nothing to explain.</p>
-        </div>
-        <div class="card love-card">
-          <span class="badge" data-i18n="home2.seg3_t">Small shops</span>
-          <p data-i18n="home2.seg3_d">Product photos converted and shrunk before listing — files never leave the device.</p>
-        </div>
-        <div class="card love-card">
-          <span data-i18n="home2.seg4_t" class="badge">Teachers</span>
-          <p data-i18n="home2.seg4_d">Typing lessons and practice for the whole class — free forever, no accounts to manage.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ TEASER -->
-  <section class="section">
-    <div class="container" style="max-width:44rem">
-      <div class="section-head reveal">
-        <h2 data-i18n="faq_teaser_t">Quick answers</h2>
-        <p data-i18n="faq_teaser_sub">The three questions everyone asks first.</p>
-      </div>
-      <div class="faq-accordion" id="faqTeaser">
-        <!-- Scroll-reveal: each item fades/slides in with stagger as it enters the viewport (see js/ui.js initReveal). -->
-        <div class="faq-item reveal" data-delay="0">
-          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq1_q">Is DoKit really free?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
-          <div class="faq-a" data-i18n="fq1_a">Yes — every tool listed here is free with no account, no watermarks, and no usage caps on normal use.</div>
-        </div>
-        <div class="faq-item reveal" data-delay="120">
-          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq2_q">Do my files get uploaded anywhere?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
-          <div class="faq-a" data-i18n="fq2_a">Never. Image tools process your files inside your own browser.</div>
-        </div>
-        <div class="faq-item reveal" data-delay="240">
-          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="fq3_q">Do I need to create an account?</span><span class="faq-chevron" aria-hidden="true">▾</span></button>
-          <div class="faq-a" data-i18n="fq3_a">No. Open a tool and use it.</div>
-        </div>
-      </div>
-      <p style="text-align:center;margin-top:var(--sp-5)"><a href="faq.html" data-i18n="faq_more">More questions</a> →</p>
-    </div>
-  </section>
-
-  <!-- WALL OF LOVE TEASER -->
-  <section class="section" aria-labelledby="wol-h">
-    <div class="container" style="max-width:56rem">
-      <div class="section-head reveal">
-        <h2 id="wol-h" data-i18n="wol.title">What people say about DoKit</h2>
-        <p data-i18n="wol.sub">Real feedback from people who use DoKit every day.</p>
-      </div>
-      <div class="trelated">
-        <div class="trel-card reveal" data-delay="0">
-          <p data-i18n="wol.q1">&ldquo;DoKit&rsquo;s image tools saved me hours. No upload, no waiting &mdash; everything happens instantly in the browser.&rdquo;</p>
-          <p style="color:var(--text-muted);font-size:.9em" data-i18n="wol.attr">&mdash; A satisfied user</p>
-        </div>
-        <div class="trel-card reveal" data-delay="120">
-          <p data-i18n="wol.q2">&ldquo;The Urdu support is amazing. Finally a tool that respects my language.&rdquo;</p>
-          <p style="color:var(--text-muted);font-size:.9em" data-i18n="wol.attr">&mdash; A satisfied user</p>
-        </div>
-        <div class="trel-card reveal" data-delay="240">
-          <p data-i18n="wol.q3">&ldquo;Clean, fast, and free. What more could you ask for?&rdquo;</p>
-          <p style="color:var(--text-muted);font-size:.9em" data-i18n="wol.attr">&mdash; A satisfied user</p>
-        </div>
-      </div>
-      <p style="text-align:center;margin-top:var(--sp-5)"><a href="wall-of-love.html" data-i18n="wol.more">Read more love</a> &rarr;</p>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="section">
-    <div class="container">
-      <div class="band-dark cta-band reveal">
-        <div class="cta-band__copy">
-          <h2 data-i18n="cta_t">Ready to get things done?</h2>
-          <p data-i18n="cta_d">Join thousands of people using DoKit's free tools every day. No signup required.</p>
-        </div>
-        <p class="cta-band__action" style="margin:0"><a class="btn btn-accent btn-lg" href="tools/" data-i18n="cta_btn">Explore tools</a></p>
-      </div>
-    </div>
-  </section>
-
-</main>
-<footer id="site-foot"></footer>
-<!-- UI/UX #3 (Oct 8, 2026): mobile sticky CTA, appears after 600px scroll -->
-<div class="sticky-cta" id="stickyCta" hidden>
-  <a class="btn btn-primary" href="tools/" data-i18n="home2.sticky_cta">🔧 Browse tools</a>
-</div>
-<script src="js/i18n-v2.js?v=20261008-03" defer></script>
-<script src="js/i18n-boardphoto.js?v=20261008-03" defer></script>
-<script src="js/i18n-hotfix.js?v=20261008-08" defer></script>
-<script src="js/i18n-misc.js" defer></script>
-<script src="js/i18n-meta.js?v=20261008-10" defer></script>
-<script src="js/i18n-ur-extra.js?v=20261008-23" defer></script>
-<script src="js/i18n-ur-fix.js?v=20261008-23" defer></script>
-<script src="js/i18n-hotfix2.js?v=20261009-01" defer></script>
-<script src="js/i18n-newsletter.js?v=20261009-01" defer></script>
-<script src="js/i18n-fr-extra.js?v=20261008-23" defer></script>
-<script src="js/i18n-tr-extra.js?v=20261008-23" defer></script>
-<script src="js/i18n-es-extra.js?v=20261008-23" defer></script>
-<script src="js/i18n-pt-extra.js?v=20261008-23" defer></script>
-<script src="js/i18n-ru-p1.js?v=20261008-23" defer></script>
-<script src="js/i18n-ru-p2.js?v=20261008-20" defer></script>
-<script src="js/i18n-ru-p3.js?v=20261008-20" defer></script>
-<script src="js/i18n-de-p1.js?v=20261008-23" defer></script>
-<script src="js/i18n-de-p2.js?v=20261008-20" defer></script>
-<script src="js/i18n-de-p3.js?v=20261008-20" defer></script>
-<script src="js/i18n-hi-p1.js?v=20261008-23" defer></script>
-<script src="js/i18n-hi-p2.js?v=20261008-20" defer></script>
-<script src="js/i18n-hi-p3.js?v=20261008-20" defer></script>
-<script src="js/i18n-ar-p1.js?v=20261008-23" defer></script>
-<script src="js/i18n-ar-p2.js?v=20261008-20" defer></script>
-<script src="js/i18n-ar-p3.js?v=20261008-20" defer></script>
-<script src="js/i18n-patch.js?v=20261008-03" defer></script>
-<script src="js/i18n-home.js?v=20261008-22" defer></script>
-<script src="js/ui.js?v=20261009-05" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
-<script src="js/firebase.js?v=20261008-05" defer></script>
-<script src="js/site-wide.js?v=20261009-02" defer></script>
-<script src="js/maintenance.js?v=20261008-03" defer></script>
-<script src="js/tools-data.js?v=20261008-03" defer></script>
-<script src="js/pages/home.js?v=20261008-22" defer></script>
-<div id="dk-assistant-root"></div>
-<script src="js/assistant-kb.js?v=20261008-03" defer></script>
-<script src="js/assistant.js?v=20261008-03" defer></script>
-<script src="js/assistant-ai.js?v=20261009-10" defer></script>
-<script src="js/assistant-memory.js?v=20261008-03" defer></script>
-<script src="js/assistant-enhance.js?v=20261008-03" defer></script>
-<script src="js/doki-personality.js?v=20261009-10" defer></script>
-<script type="module" src="js/assistant-ai-init.js"></script>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="./"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="./">Home</a><a href="tools/">Tools</a><a href="typing/">Typing</a><a href="guides/">Guides</a><a href="pricing/">Pricing</a><a href="blog/">Blog</a><a href="about/">About</a><a href="contact/">Contact</a><a href="faq/">FAQ</a></navlinks></div></header>
+<main id="main"><section class="hero"><canvas id="hero-canvas" aria-hidden="true"></canvas><div class="glow a"></div><div class="glow b"></div><div class="container hero-inner">
+<p class="eyebrow">DoKit — Free Online Tools</p>
+<h1>Every tool <span class="grad">you'll ever need</span></h1>
+<p class="lead">DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words, and practise typing.</p>
+<p class="type-line">Try: <span id="type-rotator">Image Resizer</span></p>
+<div class="searchbox"><input id="tool-search" type="text" placeholder="Search tools — try “compress”…" aria-label="Search tools"><a class="btn" href="#tools">Go to tools</a></div>
+<p><a class="btn" href="tools/">Browse all tools</a> <a class="btn ghost" href="pricing/">See pricing</a> <button class="btn ghost" id="pause-motion" style="margin-left:8px">Pause motion</button></p>
+<div class="float-card a">🖼️ Image Resizer</div><div class="float-card b">🗜️ 100KB Compressor</div><div class="float-card c">⌨️ Typing Test</div>
+<div class="stats"><div><b>10</b><span>free tools</span></div><div><b>100%</b><span>private — files never uploaded</span></div><div><b>0</b><span>sign-ups needed</span></div><div><b>10</b><span>languages</span></div></div>
+</div></section>
+<section class="block" id="tools"><div class="container"><h2>All tools, one hub</h2><p style="color:var(--muted)">Everything runs on your device. Pick a tool and start — no account, no waiting.</p><div class="grid"><article class="card tool-card" data-name="image resizer"><span class="tag">Privacy-first</span><h3><a class="cardlink" href="tools/image-resizer/">Image Resizer</a></h3><p>Resize JPG, PNG and WebP to exact pixels or a percentage — privately in your browser.</p></article><article class="card tool-card" data-name="image compressor"><span class="tag">Exact-KB targets</span><h3><a class="cardlink" href="tools/image-compressor/">Image Compressor</a></h3><p>Shrink images to an exact size — 50KB, 100KB, 200KB or your own target.</p></article><article class="card tool-card" data-name="image converter"><span class="tag">Batch ready</span><h3><a class="cardlink" href="tools/image-converter/">Image Converter</a></h3><p>Convert between PNG, JPG and WebP. Batch up to 10 files, no uploads.</p></article><article class="card tool-card" data-name="word counter"><span class="tag">Live stats</span><h3><a class="cardlink" href="tools/word-counter/">Word Counter</a></h3><p>Live words, characters, sentences and reading time as you type.</p></article><article class="card tool-card" data-name="case converter"><span class="tag">Code cases</span><h3><a class="cardlink" href="tools/case-converter/">Case Converter</a></h3><p>UPPERCASE, lowercase, Title Case, camelCase, snake_case and more.</p></article><article class="card tool-card" data-name="typing test"><span class="tag">Urdu + English</span><h3><a class="cardlink" href="typing/">Typing Test</a></h3><p>Check your WPM and accuracy, plus Urdu typing lessons with a phonetic keyboard.</p></article><article class="card tool-card" data-name="board photo"><h3><a class="cardlink" href="tools/board-photo/">Board Photo</a></h3><p>Exam & admission photos in the exact size your board wants.</p></article><article class="card tool-card" data-name="password generator"><h3><a class="cardlink" href="tools/password-generator/">Password Generator</a></h3><p>Strong passwords, made on your device, never sent anywhere.</p></article><article class="card tool-card" data-name="unit converter"><h3><a class="cardlink" href="tools/unit-converter/">Unit Converter</a></h3><p>Length, weight, temperature, volume and more, instantly.</p></article><article class="card tool-card" data-name="qr generator"><h3><a class="cardlink" href="tools/qr-generator/">QR Generator</a></h3><p>QR codes for links and text, made in your browser.</p></article></div></div></section>
+<section class="block"><div class="container"><h2>Why DoKit?</h2><div class="grid">
+<div class="card reveal"><h3>🔒 Privacy first</h3><p>Your files are processed on your device and never sent anywhere. No tracking scripts, no advertising cookies.</p></div>
+<div class="card reveal"><h3>🚀 Free forever</h3><p>Every basic tool is free with no usage caps and no watermarks. Optional Pro plans fund development — they never take away what was free.</p></div>
+<div class="card reveal"><h3>🌐 Made for everyone</h3><p>Built for students, freelancers, and teachers in Pakistan and worldwide — in 10 languages, on any modern phone or computer.</p></div>
+</div></div></section>
+<section class="block"><div class="container"><h2>Popular guides</h2><div class="grid">
+<article class="card"><h3><a class="cardlink" href="guides/how-to-resize-image-without-losing-quality/">How to Resize an Image Without Losing Quality</a></h3><p>Keep the aspect ratio locked, resize from the original, and pick the right format.</p></article>
+<article class="card"><h3><a class="cardlink" href="guides/how-to-compress-image-to-100kb/">How to Compress an Image to 100KB</a></h3><p>Forms and portals reject oversized photos. Hit an exact KB target without ruining quality.</p></article>
+</div></div></section>
+<section class="block"><div class="container"><h2>From the blog</h2><div class="grid">
+<article class="card"><h3><a class="cardlink" href="blog/ai-consulting-for-small-business/">AI Consulting for Small Business: What It Actually Means</a></h3><p>An honest, hype-free explainer — what small businesses actually get, and what to watch out for.</p></article>
+<article class="card"><h3><a class="cardlink" href="blog/ai-automation-for-small-business/">AI Automation for Small Business: Where to Start</a></h3><p>Workflows, document processing and email sequences — the practical starting points.</p></article>
+<article class="card"><h3><a class="cardlink" href="blog/how-much-does-ai-consulting-cost/">How Much Does AI Consulting Cost?</a></h3><p>Why quotes vary so much, and what drives the price — without invented promises.</p></article>
+</div></div></section>
+<section class="block"><div class="container"><h2>Simple, honest pricing</h2><p style="color:var(--muted)">Start free. Pro is Rs 300 and Team is Rs 1500. Real prices only — no hidden charges.</p><p><a class="btn" href="pricing/">See pricing</a></p></div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="tools/" data-pricing="pricing/" data-faq="faq/" data-contact="contact/" data-compressor="tools/image-compressor/" data-resizer="tools/image-resizer/" data-converter="tools/image-converter/" data-counter="tools/word-counter/" data-case="tools/case-converter/" data-typing="typing/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<footer class="site"><div class="container"><div class="footgrid"><div><a class="logo" href="./"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><p style="color:var(--muted)">Every tool you'll ever need — free tools that run in your browser. No signup, no uploads, no watermark.</p><p><a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a></p></div><div><b>Tools</b><a href="tools/image-resizer/">Image Resizer</a><a href="tools/image-compressor/">Image Compressor</a><a href="tools/image-converter/">Image Converter</a><a href="tools/word-counter/">Word Counter</a><a href="tools/case-converter/">Case Converter</a><a href="typing/">Typing Test</a></div><div><b>More tools</b><a href="tools/board-photo/">Board Photo</a><a href="tools/password-generator/">Password Generator</a><a href="tools/unit-converter/">Unit Converter</a><a href="tools/qr-generator/">QR Generator</a></div><div><b>Company</b><a href="about/">About</a><a href="contact/">Contact</a><a href="pricing/">Pricing</a><a href="faq/">FAQ</a><a href="blog/">Blog</a><a href="guides/">Guides</a><a href="coming-soon/">Coming Soon</a></div></div><p class="footbase">Developed by Malik Jalil Ur Rehman Khokhar · © 2026 DoKit. All rights reserved. · <a href="privacy/">Privacy</a> · <a href="terms/">Terms</a></p></div></footer><script src="assets/js/main.js" defer></script>
 </body>
 </html>

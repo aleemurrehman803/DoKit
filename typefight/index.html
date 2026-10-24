@@ -1,143 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-<meta name="theme-color" content="#6C4CF1">
-<title>TypeFight — Typing Battles (Coming Soon) — DoKit</title>
-<meta name="description" content="TypeFight: skill-based typing battles. Enter, race the same text, winner takes the pot. Teaser — coming in Phase 5.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TypeFight – Typing Battles | DoKit</title>
+<meta name="description" content="TypeFight turns typing into a sport: enter a room, race the same text, fastest and most accurate wins.">
+<meta property="og:title" content="TypeFight – Typing Battles | DoKit">
+<meta property="og:description" content="TypeFight turns typing into a sport: enter a room, race the same text, fastest and most accurate wins.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="TypeFight — Typing Battles (Coming Soon) — DoKit">
-<meta property="og:description" content="TypeFight: skill-based typing battles. Enter, race the same text, winner takes the pot. Teaser — coming in Phase 5.">
-<meta property="og:url" content="https://aleemurrehman803.github.io/DoKit/typefight/">
-<meta property="og:image" content="https://aleemurrehman803.github.io/DoKit/assets/og-cover.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="TypeFight — Typing Battles (Coming Soon) — DoKit">
-<meta name="twitter:description" content="TypeFight: skill-based typing battles. Enter, race the same text, winner takes the pot. Teaser — coming in Phase 5.">
-<link rel="canonical" href="https://aleemurrehman803.github.io/DoKit/typefight/">
-<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="apple-touch-icon" href="../assets/icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="stylesheet" href="../css/tokens.css">
-<link rel="stylesheet" href="../css/hub.css">
-<link rel="stylesheet" href="./tool.css">
+<meta name="theme-color" content="#12101F">
+<link rel="canonical" href="https://aleemurrehman803.github.io/dokit/typefight/">
+<link rel="stylesheet" href="../assets/css/style.css">
 </head>
-<body data-nav="">
-<a class="skip-link" href="#main">Skip to content</a>
-<header id="site-nav"></header>
-<main id="main">
-  <section class="tf-hero">
-    <div class="container">
-      <nav aria-label="Breadcrumb">
-        <ol class="breadcrumb">
-          <li><a href="../">Home</a></li>
-          <li><a href="../tools/">All Tools</a></li>
-          <li aria-current="page">TypeFight</li>
-        </ol>
-      </nav>
-      <span class="badge badge-amber">Coming soon</span>
-      <h1>⚔️ <span>TypeFight</span></h1>
-      <p class="tf-tag">Skill-based typing battles. Real stakes, real winners — coming soon.</p>
-      <p style="margin-top:var(--sp-4)"><a class="btn btn-primary" href="../typing/">⌨️ Practice now</a> <a class="btn btn-ghost" href="#tfNotifyCard">Get notified</a></p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container" style="max-width:46rem">
-      <div id="langNote" class="card" style="display:none;border-color:var(--dk-amber);margin-bottom:var(--sp-4)"><p style="margin:0"></p></div>
-
-      <h2>The concept</h2>
-      <p>TypeFight turns typing into a sport. Players enter a battle room, race the same text, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p>
-
-      <h2>How it will work</h2>
-      <div class="tf-steps">
-        <div class="card tf-step"><span class="tf-step__n">1</span><h3>Enter</h3><p>Join a battle room with a small entry.</p></div>
-        <div class="card tf-step"><span class="tf-step__n">2</span><h3>Race</h3><p>Everyone types the same text, live.</p></div>
-        <div class="card tf-step"><span class="tf-step__n">3</span><h3>Winner takes the pot</h3><p>Fastest + most accurate typist wins the pooled entries.</p></div>
-      </div>
-
-      <h2>⚔️ Play now — virtual coins mode is live</h2>
-      <div class="grid" style="margin-bottom:var(--sp-4)">
-        <a class="card" href="./profile.html" style="text-decoration:none;color:inherit"><h3>👤 Fighter profile</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">Build your battle identity</p></a>
-        <a class="card" href="./battle.html" style="text-decoration:none;color:inherit"><h3>⚔️ Battle</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">60-second race vs bots</p></a>
-        <a class="card" href="./wallet.html" style="text-decoration:none;color:inherit"><h3>🪙 Wallet</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">Balance &amp; tamper-evident history</p></a>
-        <a class="card" href="./certificate.html" style="text-decoration:none;color:inherit"><h3>🏆 Certificates</h3><p style="color:var(--text-muted);font-size:var(--fs-sm)">QR-verified achievements</p></a>
-      </div>
-      <p style="color:var(--text-muted);font-size:var(--fs-sm)">🪙 Virtual coins only — no cash value, cannot be withdrawn. Real-money mode stays locked pending legal clearance.</p>
-
-      <h2>Virtual coins — start earning today</h2>
-      <div class="card">
-        <p><strong>🪙 DoKit Coins</strong> are already live across the site. Every typing session, lesson, and daily streak earns you coins — stored safely in your own browser (<code>dk_coins</code> in localStorage, no account needed).</p>
-        <ul>
-          <li>Practice typing daily to build your coin balance</li>
-          <li>Coins unlock battle entries when TypeFight launches</li>
-          <li>Top coin holders get early access to beta battles</li>
-        </ul>
-        <p style="margin-bottom:0"><a class="btn btn-primary" href="../typing/">⌨️ Practice now — earn coins</a></p>
-      </div>
-
-      <h2>Anti-fraud pillars</h2>
-      <div class="grid">
-        <div class="card"><h3>Live keystroke analysis</h3><p>Paste and automation patterns are detected and rejected.</p></div>
-        <div class="card"><h3>Verified identities</h3><p>One account per person — no smurfing.</p></div>
-        <div class="card"><h3>Proctored finals</h3><p>High-stake finals use screen + camera verification.</p></div>
-        <div class="card"><h3>Transparent pots</h3><p>Every pot and payout is publicly auditable.</p></div>
-      </div>
-
-      <div class="card tf-phase">
-        <h2>Honest timeline</h2>
-        <p>TypeFight needs a real backend — matchmaking, payments, and fraud review can't run in a browser alone. It's planned for Phase 5. This page is just the teaser; leave your email and we'll tell you when battles open.</p>
-      </div>
-
-      <div class="card" id="tfNotifyCard">
-        <h2>Get notified</h2>
-        <form id="tfNotifyForm">
-          <div class="field">
-            <label for="tfName">Name</label>
-            <input class="text-input" type="text" id="tfName" required autocomplete="name">
-          </div>
-          <div class="field">
-            <label for="tfEmail">Email</label>
-            <input class="text-input" type="email" id="tfEmail" required autocomplete="email" dir="ltr">
-          </div>
-          <button class="btn btn-primary btn-block" type="submit">Notify me</button>
-        </form>
-      </div>
-
-      <p style="margin-top:var(--sp-6)"><a href="../tools/">Back to tools</a> →</p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container" style="max-width:46rem">
-      <h2>Frequently asked questions</h2>
-      <div class="tf-faq">
-        <details><summary>What is TypeFight?</summary><p>TypeFight turns typing into a sport: players enter a battle room, everyone types the same text live, and the fastest, most accurate typist takes the pot. Pure skill — no luck, no pay-to-win.</p></details>
-        <details><summary>When does TypeFight launch?</summary><p>It is planned for Phase 5, after the typing school and core tools are complete. Building it needs a real backend — matchmaking, payments, and fraud review cannot run in a browser alone. Leave your email above and we will tell you when battles open.</p></details>
-        <details><summary>Will it cost money?</summary><p>Entering a battle will cost a small entry fee — that fee is exactly what forms the prize pot. Watching and practicing will always be free.</p></details>
-        <details><summary>How will winners be paid?</summary><p>Winnings will be paid out through standard digital payment methods to the winner's verified account, and every pot and payout will be publicly auditable.</p></details>
-        <details><summary>How is cheating prevented?</summary><p>Battles use live keystroke analysis that rejects paste and automation patterns, one verified account per person, screen-plus-camera verification for high-stake finals, and transparent, auditable pots.</p></details>
-      </div>
-    </div>
-  </section>
-</main>
-<footer id="site-foot"></footer>
-<div id="dk-assistant-root"></div>
-<script src="../js/i18n-v2.js" defer></script>
-<script src="../js/i18n-hotfix.js?v=20261008-08" defer></script>
-<script src="../js/ui.js" defer></script>
-<script src="./tool.js" defer></script>
-<script src="../js/assistant-kb.js" defer></script>
-<script src="../js/assistant.js" defer></script>
-<script src="../js/assistant-ai.js" defer></script>
-<script src="../js/assistant-memory.js" defer></script>
-<script src="../js/assistant-enhance.js" defer></script>
-<script src="../js/doki-personality.js?v=20261008-06" defer></script>
-<script type="module" src="../js/assistant-ai-init.js"></script>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="container nav"><a class="logo" href="../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><button class="navtoggle" id="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button><nav class="navlinks" id="nav-links"><a href="../">Home</a><a href="../tools/">Tools</a><a href="../typing/">Typing</a><a href="../guides/">Guides</a><a href="../pricing/">Pricing</a><a href="../blog/">Blog</a><a href="../about/">About</a><a href="../contact/">Contact</a><a href="../faq/">FAQ</a></nav></div></header>
+<main id="main"><section class="block"><div class="container">
+<h1>TypeFight</h1>
+<p style="color:var(--muted)">Skill-based typing battles. Real stakes, real winners — pure skill, no luck, no pay-to-win.</p>
+<h2>How it will work</h2>
+<p>1. <b>Enter</b> — Join a battle room. 2. <b>Race</b> — Everyone types the same text, live. 3. <b>Winner takes the pot</b> — Fastest and most accurate typist wins.</p>
+<div class="note"><b>Virtual coins only:</b> DoKit coins have no cash value and cannot be withdrawn. Real-money mode stays locked pending legal clearance.</div>
+<div class="grid">
+<article class="card"><h3><a class="cardlink" href="battle/">Battle</a></h3><p>60-second race against bots.</p></article><article class="card"><h3><a class="cardlink" href="wallet/">Wallet</a></h3><p>Coin balance and history.</p></article><article class="card"><h3><a class="cardlink" href="profile/">Fighter Profile</a></h3><p>Your battle identity.</p></article><article class="card"><h3><a class="cardlink" href="certificate/">Certificates</a></h3><p>Battle achievements.</p></article><article class="card"><h3><a class="cardlink" href="verify/">Verify Certificate</a></h3><p>Check a certificate.</p></article></div>
+</div></section></main>
+<button id="chat-fab" aria-label="Open Doki chatbot">💬</button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview"><div class="chead">Doki — DoKit Assistant <span style="font-weight:400;color:var(--muted)">(preview)</span></div><div id="chat-log"><div class="msg bot">Assalam-o-Alaikum! Main Doki hoon. Is preview me main sirf sahi page tak pahuncha sakta hoon — live jawab Phase 3 me backend ke saath aayenge. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../tools/" data-pricing="../pricing/" data-faq="../faq/" data-contact="../contact/" data-compressor="../tools/image-compressor/" data-resizer="../tools/image-resizer/" data-converter="../tools/image-converter/" data-counter="../tools/word-counter/" data-case="../tools/case-converter/" data-typing="../typing/" data-lessons="../typing/lessons/" data-games="../typing/games/" data-board="../tools/board-photo/" data-password="../tools/password-generator/" data-unit="../tools/unit-converter/" data-qr="../tools/qr-generator/" data-battle="../typefight/battle/" data-wall="../wall-of-love/" data-changelog="../changelog/" data-status="../status/" data-api="../api/" data-design="../design-system/" data-practice="../typing/practice/" data-results="../typing/results/" data-progress="../typing/progress/" data-dashboard="../typing/dashboard/" data-certificate="../typing/certificate/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" aria-label="Chatbot sawal"><button class="btn" type="submit">Send</button></form></div>
+<script src="../assets/js/main.js" defer></script>
 </body>
 </html>
