@@ -48,8 +48,8 @@
       done = true;
       var st = stats();
       opts.resultEl.textContent =
-        'Result: ' + st.wpm + ' WPM, ' + st.acc + '% accuracy, ' +
-        st.correct + ' correct characters out of ' + typed.length + ' typed.';
+        (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') +
+        st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
       if (opts.onFinish) { opts.onFinish(st); }
     }
     opts.inputEl.addEventListener('input', function () {
@@ -90,7 +90,7 @@
     var nextEl = document.getElementById('ls-next');
     var completeBtn = document.getElementById('ls-complete');
     if (titleEl) { titleEl.textContent = lesson.title; }
-    if (keysEl) { keysEl.textContent = 'Keys: ' + lesson.keys; }
+    if (keysEl) { keysEl.textContent = (window.dkT ? window.dkT('rsv_0981', 'Keys: ') : 'Keys: ') + lesson.keys; }
     if (prevEl) { prevEl.href = n > 1 ? '?n=' + (n - 1) : '?n=1'; }
     if (nextEl) {
       nextEl.href = n < window.LESSONS.length ? '?n=' + (n + 1)
@@ -111,8 +111,8 @@
     function refreshDone() {
       if (doneEl && window.DK2) {
         doneEl.textContent = window.DK2.isLessonDone(lesson.id)
-          ? 'Completed \u2713 (saved on this device)'
-          : 'Not completed yet';
+          ? (window.dkT ? window.dkT('rsv_0962', 'Completed \u2713 (saved on this device)') : 'Completed \u2713 (saved on this device)')
+          : (window.dkT ? window.dkT('rsv_0986', 'Not completed yet') : 'Not completed yet');
       }
     }
     var engine = createEngine({
@@ -165,11 +165,11 @@
     if (prSelect) {
       PRACTICE_PASSAGES.forEach(function (p, i) {
         var o = document.createElement('option');
-        o.value = i; o.textContent = p.name;
+        o.value = i; var _nk = {'Easy Text':'rsv_1016','Medium Text':'rsv_1018','Hard Text':'rsv_1017'}[p.name]; o.textContent = (_nk && window.dkT) ? window.dkT(_nk, p.name) : p.name;
         prSelect.appendChild(o);
       });
       var customOpt = document.createElement('option');
-      customOpt.value = 'custom'; customOpt.textContent = 'My own text';
+      customOpt.value = 'custom'; customOpt.textContent = (window.dkT ? window.dkT('rsv_0983', 'My own text') : 'My own text');
       prSelect.appendChild(customOpt);
       prSelect.addEventListener('change', function () {
         if (prSelect.value === 'custom') { return; }

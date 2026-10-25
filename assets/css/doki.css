@@ -1,0 +1,146 @@
+/* Doki character — item 119 (Oct 25, 2026; PHOTO PASS same day per owner order).
+ * WHY this rewrite: the owner rejected the SVG likeness (twice) and ordered
+ * "no excuse" — fix it by every means. The visible avatar is now the video's
+ * OWN frame (phase2/assets/img/doki-photo.png), fitted so the WHOLE
+ * character sits inside the circle with no clipping. The redrawn SVG
+ * (phase2/assets/img/doki-character.svg) stays on disk as BACKUP ONLY and
+ * is no longer inlined on any page.
+ * WHY <img>, not inlined SVG: a photo cannot be drawn by CSS groups.
+ * States are classes on the container + JS img-src swaps (main.js):
+ * - motion = CSS transforms on the photo (header) or a brightness pulse
+ *   (FAB — see below; the FAB button's violet background forbids any
+ *   translation, which would expose a violet crescent at the circle edge).
+ * - thinking = violet dots overlay (HTML spans, not SVG groups).
+ * - sleep = JS swaps the img to doki-photo-sleep.png (the video's OWN
+ *   closed-eye blink frame, same transform, so the swap is seamless)
+ *   + a floating zzz overlay.
+ * - idle blink = JS swaps to the sleep photo for ~150ms every ~5s, idle only.
+ * - greeting/success = motion only. HONEST LIMIT: the photo's expression
+ *   cannot change — no overlay fakes a smile, worried eyes, or a mouth.
+ * - error = shake motion only, same reason.
+ * - mic = pulsing ring overlay + glow.
+ * Motion is CSS keyframes only. prefers-reduced-motion kills the motion
+ * but keeps state overlays visible (static). */
+
+/* ---- container + photo ---- */
+.doki { display: inline-block; line-height: 0; position: relative; }
+/* The photo fills its span edge to edge; the span's border-radius (FAB)
+ * or this rule (header) makes the circle. No scale/crop: the asset itself
+ * was fitted to the circle, so any CSS zoom would re-clip the character. */
+.doki-photo { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+
+/* ---- state overlays: hidden by default, shown per state ---- */
+.doki-thinkdots,
+.doki-zzz,
+.doki-micring { display: none; }
+.doki-thinkdots { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); gap: 4px; }
+.doki-thinkdots i { width: 7px; height: 7px; border-radius: 50%; background: #6C4CF1; display: inline-block; }
+.doki-zzz { position: absolute; top: 0; right: 2px; font-weight: 800; font-size: 14px; color: #6C4CF1; letter-spacing: 1px; }
+.doki-zzz span { display: inline-block; }
+.doki-micring { position: absolute; inset: -5px; border: 3px solid #6C4CF1; border-radius: 50%; }
+
+/* ---- idle (default): gentle breathing ---- */
+/* Header: the photo bobs against the panel surface (natural backdrop). */
+.chead .doki--idle .doki-photo { animation: doki-bob 4s ease-in-out infinite; }
+/* FAB: NO translation — the violet button behind the circle would show as
+ * a crescent at the edge. A brightness pulse breathes with zero geometry
+ * change, so the whole character never clips. */
+#chat-fab .doki--idle .doki-photo { animation: doki-breathe 4s ease-in-out infinite; }
+
+/* ---- working: same breathing as idle (the photo has no arms to type;
+ * when a provider is pending, thinking dots join it — see handler) ---- */
+.chead .doki--working .doki-photo { animation: doki-bob 4s ease-in-out infinite; }
+#chat-fab .doki--working .doki-photo { animation: doki-breathe 4s ease-in-out infinite; }
+
+/* ---- greeting: a small hop (twice, then idle pose) ---- */
+.chead .doki--greeting .doki-photo { animation: doki-hop 0.45s ease 2; }
+
+/* ---- thinking: violet dots bounce above the head ---- */
+.chead .doki--thinking .doki-photo { animation: doki-bob 4s ease-in-out infinite; }
+.doki--thinking .doki-thinkdots { display: flex; }
+.doki--thinking .doki-thinkdots i { animation: doki-dot 1s ease-in-out infinite; }
+.doki--thinking .doki-thinkdots i:nth-child(2) { animation-delay: 0.15s; }
+.doki--thinking .doki-thinkdots i:nth-child(3) { animation-delay: 0.3s; }
+
+/* ---- success: a small hop (twice, then idle pose) ---- */
+.chead .doki--success .doki-photo { animation: doki-hop 0.45s ease 2; }
+
+/* ---- sleep: slow breathing + floating Zzz (img swap is done by JS) ---- */
+.chead .doki--sleep .doki-photo { animation: doki-bob 6s ease-in-out infinite; }
+.doki--sleep .doki-zzz { display: block; }
+.doki--sleep .doki-zzz span { animation: doki-zzz 2.4s ease-in-out infinite; }
+.doki--sleep .doki-zzz span:nth-child(2) { animation-delay: 0.3s; }
+.doki--sleep .doki-zzz span:nth-child(3) { animation-delay: 0.6s; }
+
+/* ---- error: one small shake (motion only — the photo cannot frown) ---- */
+.chead .doki--error .doki-photo { animation: doki-shake 0.5s ease 2; }
+
+/* ---- mic (real voice input): pulsing violet ring + glow ---- */
+.chead .doki--mic .doki-photo { animation: doki-bob 4s ease-in-out infinite; }
+.doki--mic .doki-micring { display: block; animation: doki-micpulse 1.6s ease-in-out infinite; }
+.doki--mic { filter: drop-shadow(0 0 14px rgba(108, 76, 241, 0.55)) drop-shadow(0 0 34px rgba(108, 76, 241, 0.30)); }
+
+/* ---- face variant: the photo IS the whole character at every size, so
+ * no crop, no group-hiding, no responsive face-only variant is needed.
+ * .doki--face stays on the spans only so existing JS selectors keep working. */
+.doki--face .doki-photo { border-radius: 50%; }
+
+/* ---- dark-background violet glow (panel header / dark sections) ---- */
+.doki--glow { filter: drop-shadow(0 0 14px rgba(108, 76, 241, 0.55)) drop-shadow(0 0 34px rgba(108, 76, 241, 0.30)); }
+
+/* ---- size helpers (parent wires these to #chat-fab / .chead) ---- */
+.doki-fab { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex: none; }
+.doki-head { width: 64px; height: 64px; flex: none; }
+
+/* ---- mic button inside the chat form ---- */
+.doki-mic-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; flex: none; }
+.doki-mic-btn svg { display: block; }
+
+/* ---- keyframes (CSS only, no JS motion) ---- */
+@keyframes doki-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes doki-breathe {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.06); }
+}
+@keyframes doki-hop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes doki-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+@keyframes doki-zzz {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+@keyframes doki-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+@keyframes doki-micpulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 0.25; }
+}
+
+/* ---- reduced motion: overlays stay visible, motion stops ---- */
+@media (prefers-reduced-motion: reduce) {
+  .doki-photo,
+  .doki-thinkdots i,
+  .doki-zzz span,
+  .doki-micring { animation: none !important; }
+}
+
+/* ---- integration (item 119): FAB + header instances on live pages ---- */
+/* WHY here, not style.css: doki.css loads after style.css, so these
+ * integration rules win without touching shared chrome CSS. */
+/* FAB: the 60px button holds a 60px photo span exactly (the 56px
+ * .doki-fab helper would leave a violet ring). Flex centers the span;
+ * padding:0 removes the button's default padding so the span fills the
+ * button edge to edge; overflow:hidden clips it to the round button. */
+#chat-fab { padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#chat-fab .doki { width: 60px; height: 60px; border-radius: 50%; overflow: hidden; flex: none; }

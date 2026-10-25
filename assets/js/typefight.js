@@ -55,8 +55,8 @@
     boardEl.innerHTML = '';
     rows.forEach(function (r, i) {
       var li = document.createElement('li');
-      li.textContent = (i + 1) + '. ' + r.name + ' \u2014 '
-        + r.chars + ' chars' + (r.bot ? ' (bot)' : '');
+      li.textContent = (i + 1) + '. ' + (r.name === 'You' ? (window.dkT ? window.dkT('rsv_1057', 'You') : 'You') : r.name) + ' \u2014 '
+        + r.chars + (window.dkT ? window.dkT('rsv_0948', ' chars') : ' chars') + (r.bot ? ' (bot)' : '');
       boardEl.appendChild(li);
     });
   }
@@ -77,8 +77,8 @@
     done = true; clearInterval(timer); inputEl.disabled = true;
     var st = stats();
     renderBoard();
-    resultEl.textContent = 'Finished! ' + st.wpm + ' WPM, ' + st.acc
-      + '% accuracy. Coins and certificates arrive with Phase 3.';
+    resultEl.textContent = (window.dkT ? window.dkT('rsv_0978', 'Finished! ') : 'Finished! ') + st.wpm + ' WPM, ' + st.acc
+      + (window.dkT ? window.dkT('rsv_0957', '% accuracy.') : '% accuracy.');
     if (window.DK2) {
       window.DK2.saveResult({ type: 'battle', wpm: st.wpm, acc: st.acc });
     }
@@ -86,7 +86,7 @@
   // Pasting is blocked during races (anti-cheat, stated on the page).
   inputEl.addEventListener('paste', function (e) {
     e.preventDefault();
-    resultEl.textContent = 'Pasting is disabled during a race.';
+    resultEl.textContent = (window.dkT ? window.dkT('rsv_0992', 'Pasting is disabled during a race.') : 'Pasting is disabled during a race.');
   });
   inputEl.addEventListener('input', function () {
     if (done) { return; }

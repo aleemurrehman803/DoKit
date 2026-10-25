@@ -1,24 +1,13 @@
 {
-  "background_color": "#12101F",
-  "description": "Every tool you'll ever need — free online tools that run in your browser.",
-  "display": "standalone",
-  "icons": [
-    {
-      "sizes": "192x192",
-      "src": "assets/icon-192.png",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "sizes": "512x512",
-      "src": "assets/icon-512.png",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "name": "DoKit",
-  "scope": "./",
+  "name": "DoKit \u2014 Every tool you'll ever need",
   "short_name": "DoKit",
-  "start_url": "./",
-  "theme_color": "#6C4CF1"
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#12101F",
+  "theme_color": "#12101F",
+  "icons": [
+    {"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
 }

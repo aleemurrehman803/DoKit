@@ -32,7 +32,7 @@ function finish(){
   var st = stats();
   resEl.innerHTML = '';
   var p = document.createElement('p');
-  p.textContent = 'Result: ' + st.wpm + ' WPM, ' + st.acc + '% accuracy, ' + st.correct + ' correct characters out of ' + typed.length + ' typed.';
+  p.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
   resEl.appendChild(p);
   // Phase 2b: record the finished test on this device
   // (only if the shared store loaded; never crash).

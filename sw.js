@@ -1,1 +1,37 @@
-var CACHE="dokit-v4",CORE=["./","./offline.html","./css/tokens.css","./css/hub.css","./js/i18n-v2.js","./js/ui.js","./js/tools-data.js","./js/assistant.js","./js/assistant-kb.js","./assets/logo.svg","./manifest.webmanifest","./tools/qr-generator/","./tools/password-generator/","./tools/unit-converter/","./js/vendor/qrcode.min.js","./js/site-wide.js"];function isStaticAsset(t){return/\.(css|js|svg|png|jpg|jpeg|webp|webmanifest|woff2?)$/i.test(t.pathname)}self.addEventListener("install",function(t){t.waitUntil(caches.open(CACHE).then(function(t){return t.addAll(CORE)}).then(function(){return self.skipWaiting()}).catch(function(){return self.skipWaiting()}))}),self.addEventListener("activate",function(t){t.waitUntil(caches.keys().then(function(t){return Promise.all(t.filter(function(t){return t!==CACHE}).map(function(t){return caches.delete(t)}))}).then(function(){return self.clients.claim()}))}),self.addEventListener("fetch",function(t){var e=new URL(t.request.url);"GET"===t.request.method&&e.origin===self.location.origin&&("navigate"!==t.request.mode?isStaticAsset(e)&&t.respondWith(caches.match(t.request).then(function(e){return e||fetch(t.request).then(function(e){if(e&&e.ok){var n=e.clone();caches.open(CACHE).then(function(e){e.put(t.request,n)})}return e})})):t.respondWith(fetch(t.request).then(function(e){if(e&&e.ok){var n=e.clone();caches.open(CACHE).then(function(e){e.put(t.request,n)})}return e}).catch(function(){return caches.match(t.request).then(function(t){return t||caches.match("./offline.html")})})))});
+/* DoKit service worker (restore).
+ * Precache the core shell so the site opens offline; navigations fall
+ * back to the offline page when the network is gone. */
+// v5 (Oct 25): bumped from dokit-v1 so updated builds replace stale
+// cached files — the activate handler below already deletes old caches.
+var CACHE = 'dokit-v2';
+var ORIGIN = self.location.origin;
+var BASE = self.location.pathname.replace(/sw\.js$/, '');
+function u(p) { return ORIGIN + BASE + p; }
+var CORE = [u(''), u('tools/'), u('typing/'), u('guides/'),
+  u('pricing/'), u('faq/'), u('offline/'),
+  u('assets/css/style.css'), u('assets/js/main.js')];
+self.addEventListener('install', function (e) {
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return c.addAll(CORE);
+  }).then(function () { return self.skipWaiting(); }));
+});
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys().then(function (keys) {
+    return Promise.all(keys.filter(function (k) { return k !== CACHE; })
+      .map(function (k) { return caches.delete(k); }));
+  }).then(function () { return self.clients.claim(); }));
+});
+self.addEventListener('fetch', function (e) {
+  if (e.request.method !== 'GET') { return; }
+  var url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) { return; }
+  if (e.request.mode === 'navigate') {
+    e.respondWith(fetch(e.request).catch(function () {
+      return caches.match(u('offline/'));
+    }));
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(function (hit) {
+    return hit || fetch(e.request);
+  }));
+});

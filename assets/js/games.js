@@ -43,8 +43,8 @@
       var best = bestGet('dk2_game_best_fall');
       if (score > best) { bestSet('dk2_game_best_fall', score); best = score; }
       if (wfBest) { wfBest.textContent = best; }
-      wfMsg.textContent = 'Game over! Score: ' + score
-        + (score >= best && score > 0 ? ' \u2014 new best!' : '');
+      wfMsg.textContent = (window.dkT ? window.dkT('rsv_0979', 'Game over! Score: ') : 'Game over! Score: ') + score
+        + (score >= best && score > 0 ? (window.dkT ? window.dkT('rsv_0945', ' \u2014 new best!') : ' \u2014 new best!') : '');
       wfInput.disabled = true;
     }
     wfStart.addEventListener('click', function () {
@@ -106,9 +106,9 @@
             bestSet('dk2_game_best_sprint', sScore); best = sScore;
           }
           if (wsBest) { wsBest.textContent = best; }
-          wsMsg.textContent = 'Time! You typed ' + sScore + ' words ('
+          wsMsg.textContent = (window.dkT ? window.dkT('rsv_1010', 'Time! You typed ') : 'Time! You typed ') + sScore + (window.dkT ? window.dkT('rsv_0953', ' words (') : ' words (')
             + sScore + ' WPM)' + (sScore >= best && sScore > 0
-              ? ' \u2014 new best!' : '');
+              ? (window.dkT ? window.dkT('rsv_0945', ' \u2014 new best!') : ' \u2014 new best!') : '');
         }
       }, 1000);
     });

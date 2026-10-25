@@ -10,13 +10,17 @@
   var tbody = document.getElementById('rs-rows');
   if (tbody) {
     if (results.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4">No results yet on this device. '
-        + 'Finish a test, lesson or practice session and it will appear here.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4">' + (window.dkT ? window.dkT('rsv_1063', 'No results yet on this device. ') : 'No results yet on this device. ')
+        + (window.dkT ? window.dkT('rsv_1064', 'Finish a test, lesson or practice session and it will appear here.') : 'Finish a test, lesson or practice session and it will appear here.') + '</td></tr>';
     } else {
       results.forEach(function (r) {
         var tr = document.createElement('tr');
         var when = new Date(r.date).toLocaleString();
-        var what = r.type + (r.lesson ? ' (' + r.lesson + ')' : '');
+        // Result-type normalisation (read-side, never rename at write):
+        // typing tests save {kind:'Test'}, battles save {type:'battle'},
+        // and the certificate picker depends on kind==='Test' — so the
+        // Results table must accept both shapes, never print "undefined".
+        var what = (r.type || r.kind || 'Session') + (r.lesson ? ' (' + r.lesson + ')' : '');
         tr.innerHTML = '<td>' + when + '</td><td>' + what + '</td><td>'
           + r.wpm + '</td><td>' + r.acc + '%</td>';
         tbody.appendChild(tr);
@@ -53,11 +57,11 @@
   if (pg) {
     var total = (window.LESSONS ? window.LESSONS.length : 0);
     pg.innerHTML =
-      '<p><span class="statnum">' + agg.sessions + '</span> sessions &nbsp; '
-      + '<span class="statnum">' + agg.best + '</span> best WPM &nbsp; '
-      + '<span class="statnum">' + agg.avgAcc + '%</span> average accuracy &nbsp; '
+      '<p><span class="statnum">' + agg.sessions + '</span>' + (window.dkT ? window.dkT('rsv_1065', ' sessions ') : ' sessions ') + '&nbsp; '
+      + '<span class="statnum">' + agg.best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '&nbsp; '
+      + '<span class="statnum">' + agg.avgAcc + '%</span>' + (window.dkT ? window.dkT('rsv_1067', ' average accuracy ') : ' average accuracy ') + '&nbsp; '
       + '<span class="statnum">' + agg.lessonsDone + ' / ' + total
-      + '</span> lessons completed</p>';
+      + '</span>' + (window.dkT ? window.dkT('rsv_1068', ' lessons completed') : ' lessons completed') + '</p>';
     var list = document.getElementById('pg-lessons');
     if (list && window.LESSONS) {
       var done = window.DK2.getLessons();
@@ -74,9 +78,9 @@
   var db = document.getElementById('db-stats');
   if (db) {
     db.innerHTML =
-      '<p><span class="statnum">' + agg.sessions + '</span> sessions &nbsp; '
-      + '<span class="statnum">' + agg.best + '</span> best WPM &nbsp; '
-      + '<span class="statnum">' + agg.avgAcc + '%</span> average accuracy</p>';
+      '<p><span class="statnum">' + agg.sessions + '</span>' + (window.dkT ? window.dkT('rsv_1065', ' sessions ') : ' sessions ') + '&nbsp; '
+      + '<span class="statnum">' + agg.best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '&nbsp; '
+      + '<span class="statnum">' + agg.avgAcc + '%</span>' + (window.dkT ? window.dkT('rsv_1067', ' average accuracy ') : ' average accuracy ') + '</p>';
   }
 
   // -- Typing profile: local stats only (typing/profile/) ------------------
@@ -84,7 +88,6 @@
   var pf = document.getElementById('pf-stats');
   if (pf) {
     pf.innerHTML =
-      '<p><span class="statnum">' + agg.sessions + '</span> sessions on this '
-      + 'device &nbsp; <span class="statnum">' + agg.best + '</span> best WPM</p>';
+      '<p><span class="statnum">' + agg.sessions + '</span>' + (window.dkT ? window.dkT('rsv_1069', ' sessions on this device ') : ' sessions on this device ') + '&nbsp; <span class="statnum">' + agg.best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '</p>';
   }
 })();

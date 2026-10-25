@@ -6,7 +6,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-appl
 a{color:var(--violet2)}
 a:hover{color:var(--amber)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
-.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;background:var(--amber);color:#17142E;padding:8px 12px;z-index:100}
+/* WHY clip instead of left:-9999px: the -9999px offset breaks paint on RTL pages in Chromium (blank frame) and can explode the scroll area; the clip pattern hides the link identically for sighted users while keeping it keyboard-focusable. */
+.skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:#17142E;padding:8px 12px;z-index:100}
 .container{max-width:1120px;margin:0 auto;padding:0 20px}
 header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
@@ -40,6 +41,8 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .searchbox input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:13px 16px;font-size:16px}
 .float-card{position:absolute;background:rgba(29,25,51,.9);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.35);animation:floaty 5s ease-in-out infinite}
 .float-card.a{right:6%;top:18%}.float-card.b{right:16%;top:52%;animation-delay:1.2s}.float-card.c{right:3%;top:68%;animation-delay:2.1s}
+/* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */
+[dir="rtl"] .float-card{display:none}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px}
 .stats b{font-size:22px;display:block}.stats span{color:var(--muted);font-size:14px}
@@ -80,7 +83,12 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 #chat-fab:hover{transform:translateY(-2px)}
 #chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:340px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
 #chat-panel.open{display:block}
-#chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800}
+.dk-thinking{display:inline-flex;gap:4px;align-items:center}
+.dk-thinking i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:dkthink 1s infinite}
+.dk-thinking i:nth-child(2){animation-delay:.15s}
+.dk-thinking i:nth-child(3){animation-delay:.3s}
+@keyframes dkthink{0%,100%{opacity:.25;transform:none}50%{opacity:1;transform:translateY(-2px)}}
+#chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
 #chat-log{padding:14px 18px;max-height:280px;overflow:auto}
 .msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:#12101F}
 .msg.bot{border-left:3px solid var(--violet)}
@@ -101,11 +109,6 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 /* ---- Phase 2b additions (one place — shared by all rebuilt pages) ---- */
 /* Admin tabs: buttons in a wrapping row; panels hidden until opened. */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-.tabbtn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 14px;font-size:15px;font-weight:600;cursor:pointer}
-.tabbtn:hover{border-color:var(--amber);color:var(--amber)}
-.tabbtn.active{background:var(--violet);color:#fff;border-color:var(--violet)}
-.tabpanel{display:none}
-.tabpanel.open{display:block}
 /* On-screen keyboard (Urdu page): rows of tappable letter keys. */
 .kb{margin:14px 0}
 .kb-row{display:flex;gap:6px;flex-wrap:wrap;margin:5px 0}
@@ -119,3 +122,173 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .sw-violet{background:#6C4CF1}.sw-amber{background:#FFC531}.sw-ink{background:#17142E}.sw-bg{background:#12101F}.sw-surface{background:#1D1933}
 /* SAMPLE badge for certificate previews (never a real certificate). */
 .sample-badge{display:inline-block;border:2px solid var(--amber);color:var(--amber);border-radius:8px;padding:4px 10px;font-weight:800;letter-spacing:2px}
+
+
+/* ---- Restore additions (audit gap restore — one place, shared) ---- */
+/* Header controls: language selector, profile avatar menu, theme toggle. */
+.nav-actions{display:flex;gap:8px;align-items:center}
+.lang-drop,.prof-drop{position:relative}
+.lang-btn,.theme-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer}
+.lang-btn:hover,.theme-btn:hover{border-color:var(--amber);color:var(--amber)}
+.lang-menu,.prof-menu,.app-panel{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
+.lang-menu li{padding:8px 10px;border-radius:8px;cursor:pointer}
+.lang-menu li:hover{background:var(--surface2);color:var(--amber)}
+.lang-menu li[aria-selected="true"]{color:var(--amber);font-weight:700}
+.prof-menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.prof-menu a:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
+.dk-avatarbtn,.app-btn{background:var(--surface2);border:1px solid var(--line);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer}
+.dk-avatarbtn:hover,.app-btn:hover{border-color:var(--amber);color:var(--amber)}
+.dk-avatarbtn__inner{display:flex}
+#chat-fab img, #chat-fab .doki-svg{display:block;border-radius:50%;object-fit:cover}
+/* Light theme: same tokens, light values (dark stays the default). */
+[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470}
+[data-theme="light"] header.site{background:rgba(246,244,255,.92)}
+[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
+/* PWA install banner + site announcement banner (both hidden unless set). */
+.install-banner,.site-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;flex-wrap:wrap}
+/* Sticky CTA + dismissible tip banner on the home page. */
+.sticky-cta{position:sticky;bottom:20px;z-index:40;display:flex;justify-content:center;pointer-events:none}
+.sticky-cta a{pointer-events:auto}
+.tip-banner{display:flex;gap:12px;align-items:center;justify-content:space-between}
+/* Favorites: star on tool cards + panel on the home page. */
+.fav-star{background:transparent;border:0;font-size:20px;cursor:pointer;color:var(--muted)}
+.fav-star.on{color:var(--amber)}
+/* Guided tour overlay (opened only by the Tour button, never auto). */
+.tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:none}
+.tour-backdrop.open{display:block}
+.tour-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:420px;width:calc(100vw - 40px);z-index:96}
+/* Tool filter chips + picker chips (shared active state). */
+.chip.active{background:var(--violet);color:#fff;border-color:var(--violet)}
+.pick.sel{background:var(--violet);color:#fff;border-color:var(--violet)}
+/* Captcha box on login/signup (client-side code, never a real gate). */
+.captcha-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.captcha-code{font-size:24px;font-weight:800;letter-spacing:6px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 10px,#2e2a5e 10px,#2e2a5e 20px);border:1px solid var(--line);border-radius:10px;padding:8px 16px;user-select:none}
+/* Typing finger keyboard: zones tint the key's bottom edge; the
+   active key (current character) gets the amber fill. */
+/* Progress charts + timeline (device-local data only). */
+.chart-wrap{overflow-x:auto}
+.chart-wrap canvas{max-width:100%}
+/* Certificates: print only the certificate, never the chrome. */
+@media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
+/* Urdu pages: right-aligned inputs under RTL. */
+[dir="rtl"] input[type=text],[dir="rtl"] textarea{text-align:right}
+
+.pick{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;margin:3px}
+/* DoKit — on-screen keyboard styles (companion to keyboard.js).
+ * INTEGRATION: copy these rules into phase2/assets/css/style.css
+ * (do NOT load this as a separate per-page stylesheet, and do NOT
+ * paste a <style> block into a page — the project rule is no per-page
+ * <style>). Class names match keyboard.js exactly.
+ * Finger zones are tinted subtly so the learner can see which hand
+ * owns each key; .next is the strong highlight for the current key. */
+.kb { display: flex; flex-direction: column; gap: 4px; max-width: 640px; }
+.kb-row { display: flex; gap: 4px; }
+.kb .key {
+  flex: 1 1 0; min-width: 0; text-align: center; padding: 8px 2px;
+  border: 1px solid var(--border, #e2e8f0); border-radius: 6px;
+  background: var(--surface-2, #f1f5f9); font-size: .9rem; user-select: none;
+}
+.kb .key.wide { flex-grow: 2; }
+.kb .key.space { flex-grow: 8; }
+/* Finger zones: left hand cool, right hand warm — a learning aid only. */
+.kb .key.f-lpinky, .kb .key.f-lring, .kb .key.f-lmiddle, .kb .key.f-lindex { background: #eef2ff; }
+.kb .key.f-rindex, .kb .key.f-rmiddle, .kb .key.f-rring, .kb .key.f-rpinky { background: #fff7ed; }
+.kb .key.next { outline: 2px solid #1a56db; outline-offset: 1px; font-weight: 700; }
+.kb .key.pressed { background: #1a56db; color: #fff; }
+
+/* How-to steps panels (restored old saas-steps pattern, new design tokens). */
+.saas-steps{display:flex;gap:12px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:20px;position:relative;flex-wrap:wrap}
+.saas-step{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.saas-step-n{display:inline-flex;align-items:center;justify-content:center;width:1.6rem;height:1.6rem;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:12px}
+.saas-step.done{color:var(--text)}
+.saas-step.done .saas-step-n{background:var(--good);border-color:var(--good);color:#fff}
+.saas-step.done .saas-step-n::before{content:"\2713"}
+.saas-step.done .saas-step-n{font-size:0}
+.saas-steps-x{margin-inline-start:auto;background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--muted)}
+
+/* Sticky result action bar (restored old features.css UI/UX #17).
+ * Mobile-only mirror of the page's [data-sticky-action] button. */
+.dkf-sticky-action{position:fixed;inset-inline:0;bottom:0;z-index:210;display:flex;justify-content:center;padding:8px 16px calc(8px + env(safe-area-inset-bottom));background:rgba(29,25,51,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+.dkf-sticky-action[hidden]{display:none}
+.dkf-sticky-action .btn{inline-size:100%;max-inline-size:28rem;min-height:48px}
+@media (min-width:769px){.dkf-sticky-action{display:none}}
+body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
+
+
+/* ---- Header items 99/103: profile menu rows + app launcher ---- */
+/* WHY only extensions above: the hover effect is NOT redesigned — the
+   launcher tiles/buttons were only ADDED to the existing hover
+   selectors. The rules here are layout only (grid, flex rows, panel
+   size) and carry no hover values of their own. */
+.app-drop{position:relative}
+.app-panel{width:min(360px,calc(100vw - 32px));padding:12px}
+.app-head{margin:12px 4px 6px;font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.app-head:first-child{margin-top:0}
+.app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.app-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;text-align:center;line-height:1.3}
+.app-tile svg{flex:0 0 auto}
+.prof-menu a.prof-row{display:flex;align-items:center;gap:10px}
+.prof-menu a.prof-row svg{flex:0 0 auto}
+.prof-menu a[hidden],.app-tile[hidden]{display:none}
+@media(max-width:600px){.nav-actions{gap:4px}.app-drop{position:static}.app-panel{left:12px;right:12px;width:auto}#langCur{display:none}}
+
+
+/* ---- Hover fixes + nav dropdowns (items 105–114, 117–118, Oct 25) ---- */
+/* WHY appended, not edited in place: these rules must win over earlier
+   equal-specificity rules (the .kb companion block, .navlinks a.active)
+   by source order, and appending keeps every existing line untouched. */
+/* F1 [105] typing keyboard readability: the .kb companion block used
+   light fallbacks (var(--border, #e2e8f0), var(--surface-2, #f1f5f9))
+   that do not exist as tokens, so dark-theme keys rendered pale text
+   on pale keys (~1.1:1). Dark tokens below fix all keys; the finger
+   fills become surface vs surface2 (zone distinction kept, readable
+   in dark AND light themes since both use tokens). .next/.pressed kept. */
+.kb .key{background:var(--surface2);border-color:var(--line);color:var(--text)}
+.kb .key.f-lpinky,.kb .key.f-lring,.kb .key.f-lmiddle,.kb .key.f-lindex{background:var(--surface)}
+.kb .key.f-rindex,.kb .key.f-rmiddle,.kb .key.f-rring,.kb .key.f-rpinky{background:var(--surface2)}
+/* F2 [106] shared hover transition: the existing .15s pattern, extended
+   to every hoverable that snapped at 0s. .btn/.card/.reveal already
+   have their own transitions and are deliberately NOT listed here. */
+.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
+/* F3 [107] form-field hover (focus behaviour untouched). */
+input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,select:hover,textarea:hover{border-color:var(--amber)}
+/* F4 [108] active nav-link hover: the violet ring on violet was
+   invisible — an amber ring is visible on violet. Rows inside a
+   dropdown keep the menu look even when the active-marker lands on
+   them (the shared active-marker matches every #nav-links link). */
+.navlinks a.active:hover{box-shadow:0 0 0 2px var(--amber)}
+.nav-drop-menu a.active{background:var(--surface2);color:var(--amber);box-shadow:none}
+/* F5 [109] favourite-star hover. F6 [110] FAQ row highlight.
+   F7 [111] steps close-button hover. F8 [112] picker-chip hover
+   (selected chips keep their violet state: :not(.sel)). */
+.fav-star:hover{color:var(--amber)}
+.faq summary:hover{background:var(--surface2)}
+.saas-steps-x:hover{color:var(--amber)}
+.pick:not(.sel):hover{border-color:var(--amber);color:var(--amber)}
+/* F9 [113] open-motion: menus/panels animate in on open (the animation
+   runs when hidden is removed, so no JS change was needed). Close
+   stays instant: the shared hidden-toggle mechanism cannot animate
+   out without rewriting verified bindMenu/chat/tab toggles — see the
+   parent report for that gap. Theme switch fades via body transition. */
+@keyframes dkmenuin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.lang-menu,.prof-menu,.app-panel,.nav-drop-menu{animation:dkmenuin .15s ease-out}
+#chat-panel.open{animation:dkmenuin .15s ease-out}
+body{transition:background-color .15s,color .15s}
+/* F10 [114] entrance animation for non-home pages: main.js adds
+   .dk-enter to <main> on pages without the home hero canvas.
+   Reduced-motion kills it via the existing global rule. */
+@keyframes dkpagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+main.dk-enter{animation:dkpagein .4s ease-out}
+/* Nav dropdowns [117–118]: profile-menu look/values, left-aligned
+   under the parent link. The parent <a> keeps its link + active
+   behaviour; the caret toggles the menu (see bindNavDrop in main.js:
+   click toggle, outside-click/Esc close, focus return, hover-open
+   on desktop, tap on mobile). */
+.nav-drop{position:relative;display:flex;align-items:center}
+.nav-drop-caret{background:transparent;border:0;color:var(--text);cursor:pointer;padding:8px 2px;font-size:14px;line-height:1}
+.nav-drop-caret:hover{color:var(--amber)}
+.nav-drop-menu{position:absolute;left:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
+.nav-drop-menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text);font-weight:400}
+.nav-drop-menu a:hover{background:var(--surface2);color:var(--amber);box-shadow:none}
+
+/* F11 (Oct 25): dead selectors pruned — .tabbtn/.tabpanel/.key.active/.key[data-finger] had 0 uses in HTML/JS. */

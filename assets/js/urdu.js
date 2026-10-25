@@ -41,8 +41,8 @@
         var text = outEl.textContent;
         if (!text) { return; }
         if (navigator.clipboard) { navigator.clipboard.writeText(text); }
-        copyBtn.textContent = 'Copied!';
-        setTimeout(function () { copyBtn.textContent = 'Copy Urdu text'; }, 1500);
+        copyBtn.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
+        setTimeout(function () { copyBtn.textContent = (window.dkT ? window.dkT('rsv_0189', 'Copy Urdu text') : 'Copy Urdu text'); }, 1500);
       });
     }
   }
@@ -96,7 +96,7 @@
     if (urSelect) {
       PRACTICE.forEach(function (p, i) {
         var o = document.createElement('option');
-        o.value = i; o.textContent = 'Passage ' + (i + 1);
+        o.value = i; o.textContent = (window.dkT ? window.dkT('rsv_0991', 'Passage ') : 'Passage ') + (i + 1);
         urSelect.appendChild(o);
       });
       urSelect.addEventListener('change', function () {
@@ -105,4 +105,23 @@
     }
     urEngine.load(PRACTICE[0]);
   }
+  // Restore: Urdu page tabs (Converter / Lessons / Test) — plain
+  // visibility switching, no data. The EN/UR toggle beside the tabs
+  // switches between the English typing hub and this Urdu page.
+  (function urTabs(){
+    var bar = document.getElementById('ur-tabs'); if (!bar) { return; }
+    var btns = bar.querySelectorAll('[data-urtab]');
+    function show(id) {
+      document.querySelectorAll('[data-urpanel]').forEach(function (el) {
+        el.hidden = (el.getAttribute('data-urpanel') !== id);
+      });
+      btns.forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-urtab') === id);
+      });
+    }
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () { show(b.getAttribute('data-urtab')); });
+    });
+    show('converter');
+  })();
 })();

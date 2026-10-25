@@ -1,0 +1,24 @@
+/* Terms pages (item 104, Oct 25, 2026). Page-scoped styles ONLY for
+ * /terms/ and /terms-ur/ — never shared style.css (file-disjoint rule:
+ * another worker owns shared chrome/CSS concurrently). Uses only
+ * existing design-system variables (no new palette). Sidebar stacks
+ * above content under 900px (site breakpoint). Grid order flips
+ * automatically in RTL (sidebar on the right). No animations, so
+ * prefers-reduced-motion needs no override here. */
+.terms-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.terms-nav{position:sticky;top:84px;max-height:calc(100vh - 104px);overflow:auto;padding:16px 18px}
+.terms-nav ul{list-style:none;margin:0;padding:0}
+.terms-nav li{margin:0}
+.terms-nav a{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.terms-nav a:hover{background:var(--surface2)}
+.terms-nav .terms-nav-part a{font-weight:800;color:var(--amber)}
+.terms-body section{margin:0 0 32px;scroll-margin-top:90px}
+.terms-body h2{margin-top:8px}
+.terms-body h3{margin-top:20px}
+.terms-part h2{padding-bottom:10px;border-bottom:2px solid var(--line)}
+.terms-meta{color:var(--muted)}
+.terms-banner{margin-bottom:24px}
+@media(max-width:900px){
+  .terms-layout{display:block}
+  .terms-nav{position:static;max-height:none;margin-bottom:28px}
+}

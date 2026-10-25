@@ -37,7 +37,7 @@
     function generate() {
       var chars = pool();
       var len = parseInt(pwLen.value, 10) || 16;
-      if (!chars) { pwOut.textContent = 'Pick at least one character set.'; return; }
+      if (!chars) { pwOut.textContent = (window.dkT ? window.dkT('rsv_0995', 'Pick at least one character set.') : 'Pick at least one character set.'); return; }
       var buf = new Uint32Array(len);
       window.crypto.getRandomValues(buf);
       var out = '';
@@ -45,7 +45,7 @@
       pwOut.textContent = out;
       // Entropy hint: length x log2(pool size), rounded — a guide only.
       var bits = Math.round(len * Math.log(chars.length) / Math.log(2));
-      if (pwBits) { pwBits.textContent = 'About ' + bits + ' bits of entropy.'; }
+      if (pwBits) { pwBits.textContent = (window.dkT ? window.dkT('rsv_0958', 'About ') : 'About ') + bits + (window.dkT ? window.dkT('rsv_0946', ' bits of entropy.') : ' bits of entropy.'); }
     }
     if (pwLen) {
       pwLen.addEventListener('input', function () {
@@ -122,7 +122,7 @@
     }
     function convert() {
       var v = parseFloat(ucVal.value);
-      if (isNaN(v)) { ucOut.textContent = 'Enter a number.'; return; }
+      if (isNaN(v)) { ucOut.textContent = (window.dkT ? window.dkT('rsv_0974', 'Enter a number.') : 'Enter a number.'); return; }
       var cat = ucCat.value, from = ucFrom.value, to = ucTo.value, res;
       if (cat === 'temperature') {
         res = convertTemp(v, from, to);
@@ -154,9 +154,9 @@
     var qrMsg = document.getElementById('qr-msg');
     qrGen.addEventListener('click', function () {
       var text = qrText.value.trim();
-      if (!text) { qrMsg.textContent = 'Type some text or a link first.'; return; }
+      if (!text) { qrMsg.textContent = (window.dkT ? window.dkT('rsv_1011', 'Type some text or a link first.') : 'Type some text or a link first.'); return; }
       if (typeof window.QRCode === 'undefined') {
-        qrMsg.textContent = 'QR library could not load. Please reload the page.';
+        qrMsg.textContent = (window.dkT ? window.dkT('rsv_0997', 'QR library could not load. Please reload the page.') : 'QR library could not load. Please reload the page.');
         return;
       }
       qrBox.innerHTML = '';
@@ -164,7 +164,7 @@
       // qrcodejs API: new QRCode(element, {text, width, height}).
       new window.QRCode(qrBox, { text: text, width: size, height: size,
         correctLevel: window.QRCode.CorrectLevel.M });
-      qrMsg.textContent = 'QR code ready. Download it below.';
+      qrMsg.textContent = (window.dkT ? window.dkT('rsv_0996', 'QR code ready. Download it below.') : 'QR code ready. Download it below.');
       var canvas = qrBox.querySelector('canvas');
       var img = qrBox.querySelector('img');
       if (canvas) {
