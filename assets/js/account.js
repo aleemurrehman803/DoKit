@@ -163,7 +163,15 @@
           });
         }
         return ref.set(data, { merge: true });
-      }).catch(function(){ /* offline-safe: ignore */ });
+      }).catch(function(err){
+        /* Diagnostic (live-test 5, Oct 26): this catch used to swallow
+         * every failure silently, which hid three straight live-test
+         * failures. A failed user-doc write must stay visible in the
+         * console so the next test can report the real reason
+         * (rules denial, network, or otherwise). Behaviour is
+         * unchanged: the signup still proceeds to the dashboard. */
+        try { console.warn('[DKA] ensureUserDoc failed:', err && err.code, err && err.message); } catch (e) {}
+      });
     },
 
     /* True when the signed-in user has an admins/{uid} doc (the owner
