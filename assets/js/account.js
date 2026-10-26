@@ -838,7 +838,15 @@
         if (parts[1]) {
           parts[1].forEach(function (doc) {
             var d = doc.data() || {};
-            if (d.displayName || d.name) { names[doc.id] = d.displayName || d.name; }
+            /* Item #49: opted-out members render as 'Private member' in
+             * admin tree/table — via the shared DKREF.privacyNameFor
+             * rule, so the label can never drift between views. When
+             * DKREF is absent, fall back to the old name mapping (the
+             * privacy mask then cannot apply, same as before). */
+            if (window.DKREF && window.DKREF.privacyNameFor) {
+              var label = window.DKREF.privacyNameFor(d);
+              if (label) { names[doc.id] = label; }
+            } else if (d.displayName || d.name) { names[doc.id] = d.displayName || d.name; }
           });
         }
         /* Attach per-invitee earnings for the admin rows: one ledger

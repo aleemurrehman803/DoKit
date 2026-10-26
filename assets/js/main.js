@@ -1165,6 +1165,49 @@ function dokiMicStop(){
   } catch (e) {}
 })();
 
+/* Homepage shoutout slot (item #55): the homepage does not list
+ * referrals.js, so this loader (same pattern as the wallet loader
+ * above) creates the slot right after the hero section — never
+ * touching the hero itself — loads referrals.js exactly once, and
+ * renders the slot when it arrives. Homepage only: site root with
+ * nothing after it (live /DoKit/, local /). Any deeper path is a
+ * tool/page index, not the home, and no slot is created there. */
+(function loadHomepageShoutout(){
+  try {
+    var p = location.pathname || '';
+    if (p.charAt(p.length - 1) !== '/') { return; }
+    var root = p.replace(/\/+$/, '');
+    if (root !== '' && root !== '/DoKit') { return; }
+    if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); return; }
+    if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
+    var main = document.getElementById('main');
+    if (!main) { return; }
+    var hero = main.querySelector('section.hero');
+    if (!hero || !hero.parentNode) { return; }
+    var slot = document.getElementById('home-shoutout');
+    if (!slot) {
+      var section = document.createElement('section');
+      section.className = 'block';
+      slot = document.createElement('div');
+      slot.id = 'home-shoutout';
+      section.appendChild(slot);
+      hero.parentNode.insertBefore(section, hero.nextSibling);
+    }
+    var src = '';
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    var marker = 'assets/js/main.js';
+    var at = src ? src.indexOf(marker) : -1;
+    if (at < 0) { return; }
+    var s = document.createElement('script');
+    s.src = src.slice(0, at) + 'assets/js/referrals.js';
+    s.defer = true;
+    s.onload = function () {
+      try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) {}
+    };
+    document.head.appendChild(s);
+  } catch (e) {}
+})();
+
 /* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
  * EVENTS (only these two shapes, nothing else is ever collected):
  *   pageview  {type, page, lang, ts} and tool_used {type, page, tool, action, ts}.

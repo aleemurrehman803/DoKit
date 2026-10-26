@@ -153,7 +153,7 @@
     BATTLE_POOL: 500, SHOUTOUT_PRIZE: 500,
     RATE_VERSION: 1,
     RATES_HISTORY: [{ version: 1, from: '2026-10-26', note: 'Phase-0 lock' }],
-    GRACE_DAYS: 30, RATE_ANNOUNCEMENT: null
+    GRACE_DAYS: 30, RATE_ANNOUNCEMENT: null, /* {version, announcedAt, note} — null until the owner announces; the banner renders only when set (item #47). */
   };
   /* Rank thresholds by ACTIVE friends. Starter is the base rank (no
    * minimum); the brief lists it first (Starter 1) — it is the rank every
@@ -329,6 +329,17 @@
      * the contract's member-column key, so no new i18n key is needed. */
     var word = T('ref_table_col_member', 'Member');
     return id ? (word + ' ' + String(id).slice(0, 6)) : word;
+  }
+  function privacyNameFor(udoc) {
+    /* Item #49: a member who opted out (referralPrivate) is NEVER shown
+     * by name in admin tree/table — not even when they have no display
+     * name, because the memberLabel fallback ('Member ' + uid fragment)
+     * would still identify them. Admins keep the uid for Grant/Pause
+     * actions (it stays in the row's data-id); only the DISPLAY label
+     * is masked. Non-admin trees never receive this flag by rules, so
+     * they are unaffected. */
+    if (udoc && udoc.referralPrivate) { return 'Private member'; }
+    return (udoc && (udoc.displayName || udoc.name)) || '';
   }
   function referralLink(uid, signupBase) {
     var base = signupBase;
@@ -539,6 +550,7 @@
       renderTreasury(pageUid);
       renderCoachForecast(pageUid);
       renderGlobe(pageUid);
+      renderRateAnnouncement();
     }
   }
   function fillDashboard(summary) {
@@ -2933,7 +2945,21 @@
     });
     return d.collection('battles').doc(wk).set({
       teams: mapped, winnerUid: winnerUid, pool: RATES.BATTLE_POOL, status: 'published', publishedAt: serverTimestamp()
-    }).then(function () { return true; });
+    }).then(function () {
+      /* Item #52: winning-team badge. The team is identified by its
+       * captain (winnerUid), so the captain earns 'battle-champion'
+       * once, append-only like every other badge — a re-publish never
+       * duplicates it, and a badge failure never fails the publish
+       * (the board is the source of truth; members are paid separately
+       * at pay time). */
+      return d.collection('users').doc(winnerUid).get().then(function (snap) {
+        var udoc = (snap && snap.exists) ? (snap.data() || {}) : {};
+        var badges = Array.isArray(udoc.badges) ? udoc.badges.slice() : [];
+        if (badges.indexOf('battle-champion') !== -1) { return true; }
+        badges.push('battle-champion');
+        return d.collection('users').doc(winnerUid).update({ badges: badges }).then(function () { return true; });
+      }).catch(function () { return true; });
+    });
   }
   function adminPayBattle(adminUid, wk) {
     var d = coreDb();
@@ -3452,22 +3478,55 @@
       return true;
     }).catch(function () { return false; });
   }
+  function shoutoutCardHtml(doc) {
+    /* Shared star card (item #55): the referrals-page shoutout and the
+     * homepage slot render the SAME markup from the SAME public doc —
+     * never a second copy that can drift. */
+    return '<p>' + esc('Star') + ': ' + esc(doc.uid || '') + ' · ' + esc('Prize') + ': ' + esc(String(doc.prize || 0)) + '</p>'
+      + '<p>' + esc(doc.story || '') + '</p>';
+  }
+  function renderHomepageShoutout(attempt) {
+    /* Item #55: homepage slot. The container is created by the main.js
+     * loader on the homepage only (no generator or homepage-HTML edit,
+     * so the frozen hero is untouched); this fills it from the same
+     * public shoutouts doc the referrals page reads. Firebase arrives
+     * via account.js's async SDK chain, so the first attempts usually
+     * find no db yet: retry a few times, then leave the slot empty —
+     * never a fabricated or stale card. Empty/pending states render
+     * honestly once the db is reachable. */
+    if (typeof document === 'undefined') { return Promise.resolve(false); }
+    var container = document.getElementById('home-shoutout');
+    if (!container) { return Promise.resolve(false); }
+    if (!coreDb()) {
+      var n = (typeof attempt === 'number') ? attempt : 0;
+      if (n >= 4) { return Promise.resolve(false); }
+      return new Promise(function (resolve) {
+        setTimeout(function () { renderHomepageShoutout(n + 1).then(resolve); }, 1000);
+      });
+    }
+    var titleText = 'Monthly shoutout';
+    var pendingText = 'Admin approval pending for this feature.';
+    var emptyText = 'No shoutout published for this month yet.';
+    return loadPublicDoc('shoutouts', monthKey(new Date())).then(function (res) {
+      var html = ['<h3>' + esc(titleText) + '</h3>'];
+      if (res.rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
+      else if (!res.doc) { html.push('<p>' + esc(emptyText) + '</p>'); }
+      else { html.push(shoutoutCardHtml(res.doc)); }
+      container.innerHTML = html.join('');
+      return true;
+    }).catch(function () { return false; });
+  }
   function renderShoutout() {
     var container = refxContainer('refx-shoutout');
     if (!container) { return Promise.resolve(false); }
     var titleText = 'Monthly shoutout';
     var pendingText = 'Admin approval pending for this feature.';
     var emptyText = 'No shoutout published for this month yet.';
-    var starText = 'Star';
-    var prizeText = 'Prize';
     return loadPublicDoc('shoutouts', monthKey(new Date())).then(function (res) {
       var html = ['<h3>' + esc(titleText) + '</h3>'];
       if (res.rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
       else if (!res.doc) { html.push('<p>' + esc(emptyText) + '</p>'); }
-      else {
-        html.push('<p>' + esc(starText) + ': ' + esc(res.doc.uid || '') + ' · ' + esc(prizeText) + ': ' + esc(String(res.doc.prize || 0)) + '</p>');
-        html.push('<p>' + esc(res.doc.story || '') + '</p>');
-      }
+      else { html.push(shoutoutCardHtml(res.doc)); }
       container.innerHTML = html.join('');
       return true;
     }).catch(function () { return false; });
@@ -3707,6 +3766,53 @@
       return true;
     }).catch(function () { return false; });
   }
+  function rateGraceLeft(announcedAt, nowMs) {
+    /* Item #47: days left in the 30-day rate-change grace window.
+     * Returns null when no announcement (or no date) exists, a
+     * negative number when grace has ended — the render interprets
+     * both, so no fake countdown ever shows. */
+    var t = toMs(announcedAt);
+    if (isNaN(t)) { return null; }
+    var now = isNaN(toMs(nowMs)) ? Date.now() : toMs(nowMs);
+    return Math.ceil((t + RATES.GRACE_DAYS * 86400000 - now) / 86400000);
+  }
+  function renderRateAnnouncement() {
+    /* Item #47: rate-change grace banner. Invisible until the owner
+     * announces a change (RATE_ANNOUNCEMENT is null today): no banner,
+     * no countdown, no DOM change — shipping it now costs nothing and
+     * it activates the day an announcement is set. When set, it pins
+     * to the TOP of the referrals page (insertBefore firstChild), so
+     * call order in the page render does not affect prominence. */
+    if (typeof document === 'undefined') { return false; }
+    var main = document.getElementById('ref-main');
+    if (!main) { return false; }
+    var existing = document.getElementById('refx-rate-banner');
+    var a = RATES.RATE_ANNOUNCEMENT;
+    if (!a) {
+      try { if (existing && existing.parentNode) { existing.parentNode.removeChild(existing); } } catch (e) {}
+      return false;
+    }
+    var left = rateGraceLeft(a.announcedAt, Date.now());
+    var graceText = (left == null) ? '' : (left < 0 ? 'Rate-change grace ended.' : 'Rate-change grace: ' + left + ' days left.');
+    var html = '<h3>Rate change</h3><p>Version ' + esc(String(a.version != null ? a.version : RATES.RATE_VERSION))
+      + (a.note ? ' · ' + esc(String(a.note)) : '')
+      + (graceText ? ' · ' + esc(graceText) : '') + '</p>';
+    var box = existing;
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'refx-rate-banner';
+      try { main.insertBefore(box, main.firstChild || null); } catch (e) { main.appendChild(box); }
+    }
+    box.innerHTML = html;
+    return true;
+  }
+  /* Delegated decisions (26 Oct 2026, item #51): the advanced forecast
+   * below is NOT Silver-gated — no Silver tier exists in the
+   * referral-only economy, so gating would hide the forecast from
+   * everyone (a regression, not a feature). Best-channel prediction
+   * is NOT built — no channel data exists, and predicting from
+   * nothing would be fabrication. If the owner defines Silver or
+   * channel data later, gating/prediction slot in here. */
   function renderCoachForecast(uid) {
     var container = refxContainer('refx-coach');
     if (!container || !uid) { return Promise.resolve(false); }
@@ -3840,6 +3946,19 @@
    * admClick. Publish actions compute from live admin reads, never
    * from the queue's own displayed rows, so a stale queue view can
    * never publish stale winners. */
+  function appealSlaText(createdAt, nowMs) {
+    /* Item #45: 48h appeal SLA as display text (no new CSS, no new dict
+     * key — the queue render assembles HTML arrays, the same pattern
+     * the featured/coach renders use). Returns '' when no date exists,
+     * so a row without a timestamp never shows a fake countdown. */
+    var t = toMs(createdAt);
+    if (isNaN(t)) { return ''; }
+    var now = isNaN(toMs(nowMs)) ? Date.now() : toMs(nowMs);
+    var hoursLeft = 48 - Math.floor((now - t) / 3600000);
+    if (hoursLeft > 48) { hoursLeft = 48; }
+    if (hoursLeft <= 0) { return 'SLA OVERDUE'; }
+    return 'SLA: ' + hoursLeft + 'h left';
+  }
   function renderAdminQueue(containerEl, adminUid) {
     if (typeof document === 'undefined' || !containerEl) { return Promise.resolve(false); }
     var queueEl = null;
@@ -3891,7 +4010,12 @@
       else {
         html.push('<ul>');
         q.claims.forEach(function (c) {
+          /* Item #45: appeal rows carry their 48h SLA state; every other
+           * kind renders exactly as before (the helper returns '' for
+           * non-appeals and dateless rows). */
+          var slaText = (c.kind === 'appeal') ? appealSlaText(c.createdAt, Date.now()) : '';
           html.push('<li>' + esc(c.kind || '') + ' · ' + esc(String(c.amount)) + ' · ' + esc(c.uid || '')
+            + (slaText ? ' · <strong>' + esc(slaText) + '</strong>' : '')
             + ' <button class="btn ghost" type="button" data-refx-action="q-settle-claim" data-refx-id="' + esc(c._id || '') + '">' + esc(settleText) + '</button>'
             + ' <button class="btn ghost" type="button" data-refx-action="q-reject-claim" data-refx-id="' + esc(c._id || '') + '">' + esc(rejectText) + '</button></li>');
         });
@@ -4135,7 +4259,7 @@
     renderReferralsPage: renderReferralsPage,
     fillDashboard: fillDashboard,
     formatReferralRow: formatReferralRow,
-    renderAdminList: renderAdminList,
+    renderAdminList: renderAdminList, privacyNameFor: privacyNameFor,
     csvExport: csvExport,
     toCsv: toCsv,
     adminGrant: adminGrant,
@@ -4192,10 +4316,10 @@
     renderGoal: renderGoal, renderChallenges: renderChallenges,
     renderFeatured: renderFeatured, renderAmbassador: renderAmbassador,
     renderQR: renderQR, renderPairStreak: renderPairStreak,
-    renderBattles: renderBattles, renderShoutout: renderShoutout,
+    renderBattles: renderBattles, renderShoutout: renderShoutout, renderHomepageShoutout: renderHomepageShoutout, shoutoutCardHtml: shoutoutCardHtml,
     renderPosters: renderPosters, renderSeason: renderSeason,
-    renderTreasury: renderTreasury, renderCoachForecast: renderCoachForecast,
-    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue
+    renderTreasury: renderTreasury, renderCoachForecast: renderCoachForecast, rateGraceLeft: rateGraceLeft, renderRateAnnouncement: renderRateAnnouncement,
+    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText
   };
   root.DKREF = DKREF;
   if (typeof module !== 'undefined' && module.exports) { module.exports = DKREF; }
