@@ -224,7 +224,7 @@ setInterval(dokiBlinkTick, 5000);
 // overlap the question (same matcher as the KB path); with no overlap
 // it returns 'DK_NOT_GROUNDED' WITHOUT calling the API, and the handler
 // falls back to the KB/links path. No invented answers, ever.
-var DK_GEMINI_KEY = 'AQ.Ab8RN6IKtIuTGoZ1gG2M76MIqN4S6rVDOeaDlg8CZlFOIgXqtw';
+var DK_GEMINI_KEY = 'AQ.Ab8RN6K3TddyU2da9OACwSPMCFvI1v3GEZhzfsewPMzVP6nrYg';
 function dokiLoadFaq(){
   if (window.DKFAQ || document.querySelector('script[data-dk-faq]')) { return; }
   try {
@@ -682,6 +682,20 @@ function dokiMicStop(){
       if (kind === 'guest') { el.hidden = authed; }
       else if (kind === 'auth') { el.hidden = !authed; }
     });
+    // Oct 26: the waffle's Account section holds auth-only tiles now
+    // (Login/Sign up live in the profile menu). For guests every tile
+    // is hidden, so hide the Account heading too — never show an
+    // empty section. Signed-in users see heading + tiles as before.
+    try {
+      var head = document.querySelector('#appPanel [data-app-section="account"]');
+      if (head) {
+        var grid = head.nextElementSibling, anyVisible = false;
+        if (grid) {
+          grid.querySelectorAll('a').forEach(function (a) { if (!a.hidden) { anyVisible = true; } });
+        }
+        head.hidden = !anyVisible;
+      }
+    } catch (e) {}
   }
   window.dkApplyHeaderAuth = applyHeaderAuth;
   try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) {}
@@ -749,11 +763,23 @@ function dokiMicStop(){
     }
     function apply(t) {
       document.documentElement.setAttribute('data-theme', t);
-      btn.textContent = (t === 'dark') ? '☀️' : '🌙';
-      btn.setAttribute('aria-label', dkT(t === 'dark' ? 'rsv_1019' : 'rsv_1020', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'));
+      // Oct 26: the toggle now lives inside the profile menu as a row
+      // (icon + translated label spans). Update the spans when they
+      // exist; fall back to the old icon-only text on any page whose
+      // header predates the row markup, so nothing ever breaks.
+      var ic = btn.querySelector('.theme-ic'),
+          lb = btn.querySelector('.theme-label'),
+          label = dkT(t === 'dark' ? 'rsv_1019' : 'rsv_1020', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      if (ic) { ic.textContent = (t === 'dark') ? '☀️' : '🌙'; }
+      else { btn.textContent = (t === 'dark') ? '☀️' : '🌙'; }
+      if (lb) { lb.textContent = label; }
+      btn.setAttribute('aria-label', label);
     }
     apply(current());
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function (e) {
+      // Stop here so the profile menu's document-click closer does
+      // not shut the menu the moment the theme is switched.
+      if (e) { e.stopPropagation(); }
       var next = (current() === 'dark') ? 'light' : 'dark';
       try { localStorage.setItem('dokit_theme', next); } catch (e) {}
       apply(next);
