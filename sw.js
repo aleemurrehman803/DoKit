@@ -9,7 +9,8 @@
 // page now loads account.js + Firebase) replaces stale cached JS —
 // without the bump, browsers holding v3 keep serving the old files
 // and the activation writer can never fire.
-var CACHE = 'dokit-v4';
+// v8 (Oct 26): dokit-v5 — referral capture fallback needs fresh account.js.
+var CACHE = 'dokit-v5';
 var ORIGIN = self.location.origin;
 var BASE = self.location.pathname.replace(/sw\.js$/, '');
 function u(p) { return ORIGIN + BASE + p; }

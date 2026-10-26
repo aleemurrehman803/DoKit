@@ -267,10 +267,31 @@
    * defensively: if the element is absent, consent is simply not
    * recorded, never an exception. Consent is recorded, never assumed:
    * an unchecked/absent box means no consent fields at all. */
+
+  /* Referral capture fallback (live-test 3, Oct 26): test 3 showed a
+   * referred signup with NO referrerId and NO referrals doc, i.e. the
+   * stored ?ref= never reached the signup handler (e.g. tab or
+   * storage edge). sessionStorage stays primary; at SUBMIT time also
+   * re-read ?ref= from the current page URL, so a signup submitted
+   * on a ?ref= URL still attributes even if storage was lost. No
+   * localStorage mirror: a stored ref could misattribute a later
+   * unrelated signup. Returning users never reach these paths
+   * (ensureUserDoc is creation-only; Google gates on isNewUser). */
+  function getCapturedRef() {
+    try {
+      var s = sessionStorage.getItem('dokit_ref') || '';
+      if (s) { return s; }
+    } catch (e) {}
+    try {
+      var m = /[?&]ref=([^&#]+)/.exec(location.search || '');
+      if (m && m[1]) { return decodeURIComponent(m[1]); }
+    } catch (e) {}
+    return '';
+  }
   function referralSignupFields(u) {
     var fields = { referralCode: u.uid };
     try {
-      var ref = sessionStorage.getItem('dokit_ref') || '';
+      var ref = getCapturedRef();
       if (ref && ref !== u.uid) { fields.referrerId = ref; }
     } catch (e) {}
     try {
@@ -1205,7 +1226,7 @@
           /* Referral: doc id = new uid, only when a ?ref= was captured
            * and it is not the user's own uid (rules enforce the same). */
           try {
-            var ref = sessionStorage.getItem('dokit_ref') || '';
+            var ref = getCapturedRef();
             if (ref && ref !== u.uid) {
               jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
                 referrerUid: ref,
@@ -1247,7 +1268,7 @@
           var jobs = [DKA.ensureUserDoc(u, referralSignupFields(u))];
           if (isNew) {
             try {
-              var ref = sessionStorage.getItem('dokit_ref') || '';
+              var ref = getCapturedRef();
               if (ref && ref !== u.uid) {
                 jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
                   referrerUid: ref,
