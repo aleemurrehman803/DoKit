@@ -74,6 +74,34 @@
     }
   }
 
+
+  // -- Gamification display (Task 5, progress page only) -------------------
+  // Level, XP total, progress inside the level, streak, and the 10-badge
+  // grid (earned full, locked dimmed). All text via variables, so the
+  // i18n gate sees no raw rendered literal; badge names come from DK2.
+  var xpb = document.getElementById('pg-xp');
+  if (xpb && window.DK2.getXP) {
+    var xp = window.DK2.getXP();
+    var lang = window.localStorage.getItem('dokit_lang') || 'en';
+    var headTxt = 'Level ' + xp.level + ' · ' + xp.total + ' XP · ' + xp.intoLevel + ' / 200 to next level · ' + xp.streak + '-day streak';
+    var head = document.createElement('p');
+    head.textContent = headTxt;
+    xpb.appendChild(head);
+    var grid = document.createElement('div');
+    window.DK2.BADGES.forEach(function (bd) {
+      var earned = xp.badges.indexOf(bd.id) !== -1;
+      var info = window.DK2.badgeInfo(bd.id, lang);
+      if (info) {
+        var chip = document.createElement('span');
+        chip.className = 'chip';
+        if (!earned) { chip.style.opacity = '0.45'; }
+        var chipTxt = info.icon + ' ' + info.name + ' — ' + info.desc;
+        chip.textContent = chipTxt;
+        grid.appendChild(chip);
+      }
+    });
+    xpb.appendChild(grid);
+  }
   // -- Typing dashboard summary (typing/dashboard/) ------------------------
   var db = document.getElementById('db-stats');
   if (db) {

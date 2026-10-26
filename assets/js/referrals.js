@@ -18,10 +18,11 @@
  *   — the same writer pattern as give-coins / deposit-approval / claim
  *   approval in account.js. A non-admin calling it gets a rules denial,
  *   never a silent credit.
- * - Milestone BONUS amounts, welcome-bonus granting, gift/trial/upgrade/
- *   renewal/refund settlement are Phase 2. Their numbers are recorded in
- *   RATES for reference only; this module grants NOTHING for them and
- *   shows the welcome bonus as planned, never as granted coins.
+ * - Task 9 settles three doc rules inside adminGrant (same admin-only
+ *   path, same idempotency): milestone bonuses (#4), the first-referral
+ *   bonus (#5) and the invitee welcome bonus (#38). Gift/trial/upgrade/
+ *   renewal/refund settlement remain Phase 2+ (numbers in RATES for
+ *   reference only; this module grants NOTHING for them).
  * - typing_activations: the match block WAS approved (owner-delegated
  *   expert decision, Oct 26) and lives in firestore.rules right after
  *   the referrals block. recordActivation below writes ONE proof doc
@@ -103,10 +104,10 @@
   }
 
   /* ---------- LOCKED NUMBERS (Phase 0 owner answers, 26 Oct 2026) ----------
-   * Change a number here and ONLY here. Phase 2/3/4 numbers are NOT
-   * implemented in this phase — the Phase 2 figures below are reference
-   * constants only (plans, gift, trial, upgrade, renewal, refund) and no
-   * code in this file spends, grants or settles them. */
+   * Change a number here and ONLY here. Milestone, first-referral and
+   * welcome numbers ARE settled by adminGrant (Task 9); plans, gift,
+   * trial, upgrade, renewal and refund figures below stay reference
+   * constants only, and no code in this file spends or settles them. */
   var RATES = {
     PRO_COINS: 300,            /* Pro plan price, coins (Phase 2) */
     TEAM_COINS: 1500,          /* Team plan price, coins (Phase 2) */
@@ -114,8 +115,10 @@
     VALIDITY_DAYS: 30,         /* plan validity, days (Phase 2) */
     LEVELS: { 1: 20, 2: 5, 3: 2 }, /* reward per level, chain max 3 */
     CHAIN_MAX: 3,
-    MILESTONES: [10, 25, 50, 100], /* counts only — bonus amounts Phase 2 */
-    WELCOME_BONUS: 10,         /* planned only — NOT granted client-side */
+    MILESTONES: [10, 25, 50, 100], /* milestone counts (doc #4) */
+    MILESTONE_BONUSES: { 10: 50, 25: 150, 50: 400, 100: 1000 }, /* doc #4 */
+    FIRST_REFERRAL_BONUS: 10,  /* doc #5: first active friend pays 20 + 10 */
+    WELCOME_BONUS: 10,         /* doc #38: invitee, on first test, via adminGrant */
     GIFT_COINS: 300, GIFT_VALIDITY_DAYS: 30,   /* Phase 2 */
     TRIAL_COINS: 50, TRIAL_VALIDITY_DAYS: 7,   /* Phase 2, once only */
     UPGRADE_DIFF: 1200,        /* Team minus Pro (Phase 2) */
@@ -189,9 +192,10 @@
   /* ---------- shared summary (ONE query pair, shared result) ------------
    * loadMyReferralSummary runs exactly two reads: the caller's own
    * referrals (rules: referrerUid == uid, L1 only) and the caller's own
-   * coin_ledger entries with reason 'referral reward' — the SAME ledger
-   * source the site already displays, never a second coin count. Total
-   * coins shown elsewhere stays users.coins, untouched by this module. */
+   * coin_ledger entries with a referral reason (legs, milestone, first
+   * and welcome bonuses) — the SAME ledger source the site already
+   * displays, never a second coin count. Total coins shown elsewhere
+   * stays users.coins, untouched by this module. */
   function db() {
     try {
       if (root.DKA && root.DKA.db) {
@@ -220,8 +224,10 @@
   function computeStats(referrals, ledgerEntries) {
     var stats = {
       total: 0, active: 0, pending: 0, paused: 0,
-      totalEarnings: 0, perInvitee: {}
+      totalEarnings: 0, monthlyEarnings: 0, perInvitee: {}
     };
+    var now = new Date();
+    var thisMonth = now.getFullYear() + '-' + now.getMonth();
     (referrals || []).forEach(function (r) {
       var st = normalizeStatus(r);
       stats.total++;
@@ -232,6 +238,19 @@
     (ledgerEntries || []).forEach(function (e) {
       var amt = Number(e.amount) || 0;
       stats.totalEarnings += amt;
+      /* This-month slice (Part 2 header): entries whose createdAt falls
+       * in the current month. Entries without a readable date still count
+       * toward the lifetime total, never toward the month slice. */
+      var dd = null;
+      try {
+        if (e.createdAt && typeof e.createdAt.toDate === 'function') { dd = e.createdAt.toDate(); }
+        else if (e.createdAt instanceof Date) { dd = e.createdAt; }
+        else if (typeof e.createdAt === 'number') { dd = new Date(e.createdAt); }
+        else if (typeof e.createdAt === 'string') { dd = new Date(e.createdAt); }
+      } catch (err) {}
+      if (dd && !isNaN(dd.getTime()) && dd.getFullYear() + '-' + dd.getMonth() === thisMonth) {
+        stats.monthlyEarnings += amt;
+      }
       if (e.inviteeUid) {
         stats.perInvitee[e.inviteeUid] = (stats.perInvitee[e.inviteeUid] || 0) + amt;
       }
@@ -250,7 +269,7 @@
       d.collection('referrals').where('referrerUid', '==', uid).get()
         .then(snapshotRows).catch(function () { return []; }),
       d.collection('users').doc(uid).collection('coin_ledger')
-        .where('reason', '==', 'referral reward').get()
+        .where('reason', 'in', ['referral reward', 'milestone bonus', 'first referral bonus', 'welcome bonus']).get()
         .then(snapshotRows).catch(function () { return []; })
     ]).then(function (parts) {
       return { referrals: parts[0], ledger: parts[1], stats: computeStats(parts[0], parts[1]) };
@@ -295,17 +314,22 @@
   /* ---------- shared renderers (all sections use these, none re-derive) - */
   function renderStats(idOrEl, summary) {
     var s = (summary && summary.stats) || computeStats([], []);
+    /* Task 9 display additions (Part 2 header): this-month earnings and
+     * friends-remaining to the next rank. Built in their own statements
+     * as plain variables (no new dkT keys — the gate requires every key
+     * in all 10 languages, and these two figures are numbers with a
+     * short English label, the same pattern Tasks 3-6 used). */
+    var monthlyText = 'This month: ' + (s.monthlyEarnings || 0);
+    var remainingText = s.nextRank ? (s.rankRemaining + ' more to ' + s.nextRank) : '';
     var html = '<p><b>' + esc(T('ref_stat_earnings', 'Total earnings')) + ':</b> '
-      + esc(String(s.totalEarnings)) + ' · <b>' + esc(T('ref_stat_friends', 'Active friends')) + ':</b> '
+      + esc(String(s.totalEarnings)) + ' · ' + esc(monthlyText)
+      + ' · <b>' + esc(T('ref_stat_friends', 'Active friends')) + ':</b> '
       + esc(String(s.active)) + ' · <b>' + esc(T('ref_stat_rank', 'Rank')) + ':</b> '
       + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending rewards')) + ':</b> '
       + esc(String(s.pending)) + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
       + esc(String(s.rankProgress)) + '%'
-      /* Next rank + remaining count stay in the summary object (rankFor)
-       * for callers that have a full sentence key for them; the stats
-       * header does not assemble a sentence from fragments, because a
-       * fragment sentence would not translate correctly. */
       + (s.nextRank ? (' · ' + esc(s.nextRank)) : '')
+      + (remainingText ? (' · ' + esc(remainingText)) : '')
       + '</p>';
     return setHtml(idOrEl, html);
   }
@@ -611,11 +635,80 @@
     var d = db();
     if (!d || !adminUid || !referralId) { return Promise.reject(new Error(window.dkT ? window.dkT('ref_err_input', 'Missing grant input.') : 'Missing grant input.')); }
     var ref = d.collection('referrals').doc(referralId);
+    /* Task 9 bonus settlement (doc #4 milestones, #5 first referral,
+     * #38 invitee welcome). Pays BEFORE the row flip, with counts
+     * computed as active + 1, so a failed grant stays pending and
+     * retryable; every bonus first checks the recipient's ledger for
+     * the same reason (and milestone, where applicable), so a retried
+     * grant can never double-pay — the same discipline as the legs. */
+    function payBonuses(l1Uid) {
+      var bonusTotal = 0;
+      function payOnce(uid, amount, entry) {
+        return d.collection('users').doc(uid).collection('coin_ledger')
+          .where('reason', '==', entry.reason).get().then(function (lsnap) {
+            var paid = false;
+            lsnap.forEach(function (doc) {
+              var dd = doc.data() || {};
+              if (entry.milestone != null) {
+                if (dd.milestone === entry.milestone) { paid = true; }
+              } else { paid = true; }
+            });
+            if (paid) { return 0; }
+            bonusTotal += amount;
+            return d.collection('users').doc(uid).update({
+              coins: root.firebase.firestore.FieldValue.increment(amount)
+            }).then(function () {
+              var rec = { uid: uid, amount: amount, by: adminUid,
+                reason: entry.reason, referralId: referralId,
+                createdAt: serverTimestamp() };
+              if (entry.milestone != null) { rec.milestone = entry.milestone; }
+              if (entry.inviteeUid) { rec.inviteeUid = entry.inviteeUid; }
+              return d.collection('users').doc(uid).collection('coin_ledger').add(rec);
+            }).then(function () { return amount; });
+          });
+      }
+      return payOnce(referralId, RATES.WELCOME_BONUS, { reason: 'welcome bonus' })
+        .then(function () {
+          return d.collection('referrals').where('referrerUid', '==', l1Uid).get()
+            .then(snapshotRows);
+        })
+        .then(function (rows) {
+          var activeNow = 0;
+          rows.forEach(function (r) { if (normalizeStatus(r) === 'active') { activeNow++; } });
+          var newCount = activeNow + 1;
+          var seq = Promise.resolve();
+          if (newCount === 1) {
+            seq = seq.then(function () {
+              return payOnce(l1Uid, RATES.FIRST_REFERRAL_BONUS,
+                { reason: 'first referral bonus', inviteeUid: referralId });
+            });
+          }
+          Object.keys(RATES.MILESTONE_BONUSES).forEach(function (k) {
+            var t = Number(k);
+            if (newCount >= t) {
+              seq = seq.then(function () {
+                return payOnce(l1Uid, RATES.MILESTONE_BONUSES[k],
+                  { reason: 'milestone bonus', milestone: t, inviteeUid: referralId });
+              });
+            }
+          });
+          return seq;
+        })
+        .then(function () { return bonusTotal; });
+    }
     return ref.get().then(function (snap) {
       var cur = (snap && snap.exists) ? (snap.data() || {}) : null;
       if (!cur) { throw new Error(window.dkT ? window.dkT('ref_err_notfound', 'Referral not found.') : 'Referral not found.'); }
       if (normalizeStatus(cur) !== 'pending') { throw new Error(window.dkT ? window.dkT('ref_err_stale', 'Referral is no longer pending.') : 'Referral is no longer pending.'); }
       if (!cur.referrerUid) { throw new Error(window.dkT ? window.dkT('ref_err_incomplete', 'Referral record is incomplete.') : 'Referral record is incomplete.'); }
+      /* Task 9 self-row defense: capture already blocks ref == own uid
+       * in two places, but a manually-created self-row must never pay.
+       * Plain variable string (no new dkT key — the gate requires every
+       * key in all 10 languages). Checked before any payment. */
+      if (cur.referrerUid === referralId) {
+        var selfMsg = 'Self-referral cannot be granted.';
+        throw new Error(selfMsg);
+      }
       return { cur: cur, referrerUid: cur.referrerUid };
     }).then(function (ctx) {
       /* Walk the referrer chain (admin reads all referrals docs, so
@@ -676,6 +769,9 @@
         });
       });
       return chain.then(function () {
+        return payBonuses(legs[0].uid);
+      }).then(function (bonusTotal) {
+        total += bonusTotal;
         return ref.update({ status: 'active', rewarded: true, rewardedAt: serverTimestamp(), grantedBy: adminUid });
       }).then(function () { return total; });
     })

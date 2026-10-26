@@ -114,6 +114,12 @@
         typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
     }
     markDone(lesson.id);
+    // Gamification (Task 5): lesson XP + badges, once per lesson.
+    // Urdu lessons use their own 'ur-' keys (as DK2 does); scholar is
+    // the English curriculum only, so no beginner ids are passed.
+    if (window.DK2 && window.DK2.afterActivity) {
+      window.DK2.afterActivity('lesson', st, { lessonId: 'ur-' + lesson.id, beginnerIds: [] });
+    }
     refreshDone(lesson);
   }
 

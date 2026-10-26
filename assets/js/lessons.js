@@ -127,6 +127,18 @@
           window.DK2.saveResult({ type: 'lesson', lesson: lesson.id,
             wpm: st.wpm, acc: st.acc });
           window.DK2.markLesson(lesson.id);
+          // Gamification (Task 5): lesson XP + badges, once per lesson
+          // (perfect bonus once, on the first 100% finish). Scholar needs
+          // the beginner ids; without LESSONS it is skipped, never faked.
+          if (window.DK2.afterActivity) {
+            var beginnerIds = [];
+            if (window.LESSONS) {
+              window.LESSONS.forEach(function (ls) {
+                if (ls.level === 'beginner') { beginnerIds.push(ls.id); }
+              });
+            }
+            window.DK2.afterActivity('lesson', st, { lessonId: lesson.id, beginnerIds: beginnerIds });
+          }
         }
         refreshDone();
       }
@@ -155,6 +167,9 @@
         if (window.DK2) {
           window.DK2.saveResult({ type: 'practice',
             wpm: st.wpm, acc: st.acc });
+          // Gamification (Task 5, historical else-branch): practice
+          // touches the streak only — no XP, no badges.
+          if (window.DK2.afterActivity) { window.DK2.afterActivity('practice', st, {}); }
         }
       }
     });
@@ -178,7 +193,7 @@
     }
     if (prUse) {
       prUse.addEventListener('click', function () {
-        var text = (prCustom.value || '').trim();
+        var text = (prCustom.value || '').replace(/\n/g, ' ').trim();
         if (text) { prEngine.load(text); }
       });
     }

@@ -3,8 +3,25 @@
  * (Easy ~25, Medium ~45, Hard ~65 WPM). Bots are game opponents, not
  * fake users: they are labelled 'Bot' on the leaderboard.
  * No sign-in and no coins in this build: winnings, wallets and
- * certificates connect with the Phase 3 backend. Pasting is blocked
- * during a race (the old anti-cheat rule, kept honestly). */
+ * certificates connect with the Phase 3 backend.
+ * Anti-cheat (Task 6, restored historical client-side heuristics from
+ * typefight-battle.js — indicators, NOT proof; a determined cheater
+ * with devtools can bypass anything client-side):
+ *   1. Paste/drop: inputType insertFromPaste/insertFromDrop is
+ *      rejected (input rolled back) and flagged as paste_detected.
+ *      (The paste-event block below already stops Ctrl+V pastes.)
+ *   2. Keystroke timing: median keydown interval < 20ms over 20+
+ *      samples is flagged as inhuman_timing.
+ *   3. Sanity cap: WPM > 150 is flagged as impossible_wpm.
+ *   4. Automation: > 50 chars with fewer than half as many keydowns
+ *      is flagged as automation.
+ * A flagged race shows "Under review" with its reason and is NOT
+ * saved, so no battle certificate can be issued from it. Nothing is
+ * banned, no account action is taken, and referral/XP are untouched
+ * (this module never feeds them); the player can race again at once.
+ * NOT restored: the historical coin award (no coins exist in this
+ * build) and any typing-test anti-cheat (the historical typing test
+ * had none — pasting there stays allowed). */
 (function () {
   'use strict';
   var PASSAGE = {"id": "medium", "name": "Medium Text", "text": "Learning to type quickly takes patience and daily practice, but the reward is worth every minute you invest. When your fingers know where each key lives, your thoughts can flow straight onto the screen without interruption. Start slowly and focus on accuracy first; speed will follow naturally as your muscle memory grows stronger each week. Many students are surprised by how fast they improve once they stop looking down at their hands. Set a small daily goal, track your words per minute, and celebrate every new personal record you achieve."};
@@ -63,7 +80,7 @@
   function stats() {
     var correct = 0;
     for (var i = 0; i < typed.length; i++) {
-      if (typed[i] === PASSAGE[i]) { correct++; }
+      if (typed[i] === TEXT[i]) { correct++; }
     }
     var mins = started ? (Date.now() - startTime) / 60000 : 0;
     var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
@@ -72,11 +89,46 @@
     accEl.textContent = acc + '%';
     return { wpm: wpm, acc: acc };
   }
+  // Historical anti-cheat: first flag wins; flags are indicators,
+  // not proof, and live only for the current race.
+  var keyTimes = [];
+  var flagged = false;
+  var flagReason = '';
+  function flag(reason) {
+    if (!flagged) { flagged = true; flagReason = reason; }
+  }
+  function runCheatChecks() {
+    // 1. Keystroke timing: median interval < 20ms over 20+ samples.
+    if (keyTimes.length > 20) {
+      var intervals = [];
+      for (var i = 1; i < keyTimes.length; i++) { intervals.push(keyTimes[i] - keyTimes[i - 1]); }
+      intervals.sort(function (a, b) { return a - b; });
+      var median = intervals[Math.floor(intervals.length / 2)];
+      if (median < 20) { flag('inhuman_timing'); }
+    }
+    // 2. Sanity cap on WPM.
+    var s = stats();
+    if (s.wpm > 150) { flag('impossible_wpm'); }
+    // 3. Very few keystrokes but lots of chars (automation).
+    if (typed.length > 50 && keyTimes.length < typed.length * 0.5) { flag('automation'); }
+  }
   function finish() {
     if (done) { return; }
     done = true; clearInterval(timer); inputEl.disabled = true;
     var st = stats();
     renderBoard();
+    runCheatChecks();
+    if (flagged) {
+      // Historical consequence: under review, no reward, no
+      // certificate — the race is not saved, so the certificate page
+      // cannot issue from it. Stats stay visible; no ban, no
+      // accusation; the player can race again immediately.
+      var flagMsg = 'Under review: unusual input pattern detected (' + flagReason + '). '
+        + st.wpm + ' WPM, ' + st.acc
+        + '% accuracy \u2014 this race was not saved, so no certificate can be issued from it. You can start a new race.';
+      resultEl.textContent = flagMsg;
+      return;
+    }
     resultEl.textContent = (window.dkT ? window.dkT('rsv_0978', 'Finished! ') : 'Finished! ') + st.wpm + ' WPM, ' + st.acc
       + (window.dkT ? window.dkT('rsv_0957', '% accuracy.') : '% accuracy.');
     if (window.DK2) {
@@ -88,8 +140,19 @@
     e.preventDefault();
     resultEl.textContent = (window.dkT ? window.dkT('rsv_0992', 'Pasting is disabled during a race.') : 'Pasting is disabled during a race.');
   });
-  inputEl.addEventListener('input', function () {
+  inputEl.addEventListener('keydown', function () {
+    keyTimes.push(Date.now());
+  });
+  inputEl.addEventListener('input', function (ev) {
     if (done) { return; }
+    // Historical paste/drop detection: reject the insertion, roll
+    // the input back to the last good value, and flag the race.
+    if (ev.inputType && (ev.inputType === 'insertFromPaste' || ev.inputType === 'insertFromDrop')) {
+      flag('paste_detected');
+      inputEl.value = typed;
+      render();
+      return;
+    }
     typed = inputEl.value;
     if (!started && typed.length > 0) { started = true; startTime = Date.now(); }
     if (typed.length >= TEXT.length) { finish(); }
@@ -103,6 +166,7 @@
       return { name: name, wpm: base * (0.9 + Math.random() * 0.2), chars: 0 };
     });
     typed = ''; started = false; done = false; left = 60;
+    keyTimes = []; flagged = false; flagReason = '';
     inputEl.value = ''; inputEl.disabled = false;
     timeEl.textContent = '60s'; wpmEl.textContent = '0';
     accEl.textContent = '100%'; resultEl.textContent = '';

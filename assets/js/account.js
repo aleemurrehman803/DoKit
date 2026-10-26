@@ -425,6 +425,9 @@
             showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
           });
         });
+        /* Verify form must work without the cloud SDK too (device
+         * certificates verify via the same-browser fallback). */
+        bindVfForm();
         return;
       }
       DKA.onUser(function(user){
@@ -550,16 +553,27 @@
     var acc = parseCertNum($('cert-acc') ? $('cert-acc').textContent : '');
     var dateStr = ($('cert-date') ? $('cert-date').textContent : '').trim();
     var ref = makeCertRef();
-    DKA.db().collection('certificates').doc(ref).set({
+    // Full result fields when the sheet carries them (typing only;
+    // battle sheets have no gross/duration/language elements, so the
+    // fields stay absent rather than invented).
+    var doc = {
       ownerUid: user.uid, kind: kind, name: name, wpm: wpm, acc: acc,
       date: dateStr,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function () {
+    };
+    var gross = parseCertNum($('cert-gross') ? $('cert-gross').textContent : '');
+    if (gross) { doc.gross = gross; }
+    var dur = parseCertNum($('cert-duration') ? $('cert-duration').textContent : '');
+    if (dur) { doc.durationSec = dur; }
+    var langTxt = ($('cert-language') ? $('cert-language').textContent : '').trim();
+    if (langTxt && langTxt !== '\u2014') { doc.language = (langTxt === 'English') ? 'en' : langTxt; }
+    DKA.db().collection('certificates').doc(ref).set(doc).then(function () {
       var refEl = $('cert-ref');
       if (refEl) { refEl.textContent = ref; }
-      // The practice line is the first <p> inside the sheet; replace it
-      // so a printed copy no longer claims to be unverified.
-      var st = document.querySelector('#cert-filled p');
+      // The practice note carries .cert-practice (the authority line is
+      // the first <p>, not the practice note); replace it so a printed
+      // copy no longer claims to be unverified.
+      var st = document.querySelector('#cert-filled .cert-practice');
       if (st) {
         st.textContent = (window.dkT ? window.dkT('acct_cert_verifiable', 'Issued certificate \u2014 verifiable.') : 'Issued certificate \u2014 verifiable.');
       }
@@ -1057,6 +1071,132 @@
     return '<div class="adm-row">' + escHtml(d.amount) + ' · ' + escHtml(d.method || '')
       + ' · ' + escHtml(d.status || 'pending') + (extra || '') + '</div>';
   }
+  /* Verify form binding, standalone so it also runs when the cloud SDK
+   * is unreachable: device certificates must verify offline via the
+   * same-browser fallback — the historical verification behavior. The
+   * dataset.dka guard keeps it bound exactly once per page load. */
+  function bindVfForm(){
+    var vf = $('vf-form');
+    if (vf && !vf.dataset.dka) {
+      vf.dataset.dka = '1';
+      // Historical verification: Firestore-first lookup, same-browser
+      // localStorage fallback (device certificates), ?reg= auto-verify.
+      function vfNorm(s) {
+        return String(s || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      }
+      function vfLocal(id, kind) {
+        try {
+          for (var i = 0; i < window.localStorage.length; i++) {
+            var k = window.localStorage.key(i);
+            if (k && k.indexOf('dk_cert_') === 0) {
+              var rec = JSON.parse(window.localStorage.getItem(k));
+              // Device records carry either a typing registration (regNo) or a
+      // TypeFight serial (serial). No Firestore serial-field query is
+      // attempted: certificates list is admin-only in the current
+      // rules, so a public serial query would be denied. Serials
+      // verify through this device-record fallback; issued
+      // documents verify by their document id.
+      if (rec && (rec.regNo === id || rec.serial === id)) {
+                var rk = rec.kind || 'typing';
+                if (kind === 'typing' ? (rk === 'typing' || rk === 'Test') : rk === 'battle') { return rec; }
+              }
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+      function vfClearResult() {
+        var rEl = $('vf-result');
+        if (rEl) { rEl.hidden = true; }
+      }
+      function vfRender(d, src) {
+        // Build the result HTML in its own statement so no literal
+        // sits at the render position below (js-gate rule).
+        // src: 'cloud' = Firestore issued document (Valid);
+        // 'device' = same-browser record (not independently verified).
+        // No 'revoked' state exists: issued documents carry no status
+        // field, so none is claimed here.
+        var resEl = $('vf-result');
+        var nm = (window.dkT ? window.dkT('rsv_0210', 'Display name') : 'Display name');
+        var when = d.date || (d.issuedAt ? new Date(d.issuedAt).toLocaleDateString() : '');
+        var statusTxt = (src === 'cloud')
+          ? 'Status: Valid \u2014 issued certificate on file.'
+          : 'Status: Device record \u2014 this browser only, not independently verified.';
+        var extraTxt = '';
+        if (d.gross) { extraTxt += ' \u00b7 ' + d.gross + ' WPM gross'; }
+        if (d.durationSec) { extraTxt += ' \u00b7 ' + d.durationSec + ' seconds'; }
+        if (d.language) { extraTxt += ' \u00b7 ' + (d.language === 'en' ? 'English' : d.language); }
+        var html = '<b>' + nm + ':</b> ' + (d.name || '')
+          + '<br>' + (d.wpm || 0) + ' WPM \u00b7 ' + (d.acc || 0) + '% \u00b7 ' + when + extraTxt
+          + '<br>' + statusTxt;
+        if (resEl) { resEl.innerHTML = html; resEl.hidden = false; }
+        showMsg('vf-err', '', false);
+      }
+      function vfNotFound() {
+        vfClearResult();
+        showMsg('vf-err',
+          (window.dkT ? window.dkT('acct_cert_nf', 'No matching certificate found for this number.') : 'No matching certificate found for this number.'), true);
+      }
+      function vfLookup(rawId) {
+        var id = vfNorm(rawId);
+        var kind = vf.getAttribute('data-kind') || 'typing';
+        if (!id) { return false; }
+        if (!DKA.db()) {
+          // Cloud unavailable: device records still verify on this device.
+          var fb0 = vfLocal(id, kind);
+          if (fb0) { vfRender(fb0, 'device'); return true; }
+          vfClearResult();
+          showMsg('vf-err',
+            (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
+          return false;
+        }
+        DKA.db().collection('certificates').doc(id).get().then(function (snap) {
+          var d = null;
+          var src = 'cloud';
+          if (snap.exists) {
+            d = snap.data() || {};
+            if (d.kind !== kind) { d = null; }
+          }
+          if (!d) { d = vfLocal(id, kind); src = 'device'; }
+          if (!d) { throw nfErr(); }
+          vfRender(d, src);
+        }).catch(function (err) {
+          if (err && err.code === 'nf') { vfNotFound(); return; }
+          // Cloud lookup failed: fall back to this browser's records
+          // before reporting the error (historical fallback order).
+          var fb = vfLocal(id, kind);
+          if (fb) { vfRender(fb, 'device'); return; }
+          vfClearResult();
+          showMsg('vf-err', friendlyError(err), true);
+        });
+        return true;
+      }
+      vf.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var idIn = $('vf-id');
+        vfLookup(idIn ? idIn.value : '');
+      });
+      // Auto-verify when opened via a certificate QR code / link.
+      // Typing links carry ?reg=; battle links carry ?id= (document
+      // id) or ?serial= (DK-YYYY-NNNNNN device serial).
+      try {
+        var qp = new URLSearchParams(window.location.search);
+        var q = (vf.getAttribute('data-kind') === 'battle')
+          ? (qp.get('id') || qp.get('serial') || qp.get('reg'))
+          : qp.get('reg');
+        if (q) {
+          var nq = vfNorm(q);
+          var qi = $('vf-id');
+          if (qi) { qi.value = nq; }
+          if (!vfLookup(nq)) {
+            // Cloud DB not ready yet: one bounded retry; manual Verify
+            // always remains available.
+            setTimeout(function () { vfLookup(nq); }, 2000);
+          }
+        }
+      } catch (e) {}
+    }
+  }
   function bindStaticForms(){
     // Deposit "where to send": admin-configured accounts, or an honest
     // not-configured note. Never invented addresses.
@@ -1185,41 +1325,7 @@
         });
       });
     }
-    var vf = $('vf-form');
-    if (vf && !vf.dataset.dka) {
-      vf.dataset.dka = '1';
-      vf.addEventListener('submit', function (ev) {
-        ev.preventDefault();
-        var idIn = $('vf-id');
-        var id = idIn ? idIn.value.trim().toUpperCase() : '';
-        var kind = vf.getAttribute('data-kind') || 'typing';
-        if (!DKA.db()) {
-          showMsg('vf-err',
-            (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
-          return;
-        }
-        DKA.db().collection('certificates').doc(id).get().then(function (snap) {
-          var resEl = $('vf-result');
-          if (!snap.exists) { throw nfErr(); }
-          var d = snap.data() || {};
-          if (d.kind !== kind) { throw nfErr(); }
-          // Build the result HTML in its own statement so no literal
-          // sits at the render position below (js-gate rule).
-          var nm = (window.dkT ? window.dkT('rsv_0210', 'Display name') : 'Display name');
-          var html = '<b>' + nm + ':</b> ' + (d.name || '')
-            + '<br>' + (d.wpm || 0) + ' WPM \u00b7 ' + (d.acc || 0) + '% \u00b7 ' + (d.date || '');
-          if (resEl) { resEl.innerHTML = html; resEl.hidden = false; }
-          showMsg('vf-err', '', false);
-        }).catch(function (err) {
-          if (err && err.code === 'nf') {
-            showMsg('vf-err',
-              (window.dkT ? window.dkT('acct_cert_nf', 'No matching certificate found for this number.') : 'No matching certificate found for this number.'), true);
-          } else {
-            showMsg('vf-err', friendlyError(err), true);
-          }
-        });
-      });
-    }
+    bindVfForm();
     var login = $('acct-login-form');
     if (login && !login.dataset.dka) {
       login.dataset.dka = '1';

@@ -24,10 +24,15 @@ function stats(){
   var correct = 0; for(var i = 0; i < typed.length; i++){ if(typed[i] === passage[i]) correct++; }
   var mins = (Date.now() - startTime) / 60000;
   var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
+  // Net WPM counts correct characters only; gross WPM counts every typed
+  // character. Both use the same elapsed time, so the certificate can
+  // show them side by side without inventing either value.
+  var gross = mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
   var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
-  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct};
+  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct, gross: gross};
 }
 function finish(){
+  if(done) return;
   done = true; clearInterval(timer);
   var st = stats();
   resEl.innerHTML = '';
@@ -38,11 +43,21 @@ function finish(){
   // (only if the shared store loaded; never crash).
   try{
     if(window.DK2){
-      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(wpm),acc:Math.round(acc)});
+      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en'});
     }
   }catch(e){}
   // Referral activation (silent): first consented test only; never breaks typing.
   try{ if(window.DKREF && window.DKREF.recordActivation){ window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } }catch(e){}
+  // Gamification (Task 5, historical rules): test XP + badges, once per
+  // identical result per day; never breaks typing. wpm here is already
+  // net-style (correct chars / 5 / minutes), i.e. historical nwpm.
+  try{
+    if(window.DK2 && window.DK2.afterActivity){
+      var day = new Date().toISOString().slice(0, 10);
+      var testKey = 'test:' + day + ':' + Math.round(st.wpm) + ':' + Math.round(st.acc);
+      window.DK2.afterActivity('test', { nwpm: Math.round(st.wpm), dur: limit, acc: Math.round(st.acc) }, { testKey: testKey });
+    }
+  }catch(e){}
 }
 function reset(newPassage){
   if(newPassage) passage = newPassage;

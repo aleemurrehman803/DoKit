@@ -1141,3 +1141,111 @@ function dokiMicStop(){
       document.head.appendChild(s);
     } catch (e) {}
   })();
+
+/* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
+ * EVENTS (only these two shapes, nothing else is ever collected):
+ *   pageview  {type, page, lang, ts} and tool_used {type, page, tool, action, ts}.
+ * NO PII BY CONTRACT: no cookies, no fingerprinting, no IP storage, no typed
+ * text, no names, no emails, no uids, no tokens. Referrer is host-only, never
+ * the full URL. Respects navigator.doNotTrack === "1" (module no-ops).
+ * DESTINATION: Firestore collection "analytics", one doc per event, batched
+ * with a WriteBatch every 5s (MAX_BATCH 40), plus a best-effort flush when
+ * the tab hides. Field limits: page <= 200 chars, extra strings <= 120,
+ * type <= 30, tool slug <= 60, lang <= 8, ref host <= 80, action <= 40.
+ * FAILURE CONTRACT (historical, kept): every failure is silent — analytics
+ * never breaks the page. No Firestore yet (account.js still loading its SDK)
+ * means the queued events drop; later events flow once DKA.db() exists.
+ * ADAPTATIONS vs the old file (only these two): the db accessor is phase2's
+ * DKA.db() (account.js, the ported successor of the old DKF.db()); the
+ * writer lives here in main.js (site-wide carrier, as the old site-wide.js
+ * loader carried it) instead of a separate analytics.js file, because the
+ * brief forbids new files. Admin-panel reads are NOT restored (out of scope).
+ * RULES (already in firestore.rules, verified, not changed): analytics docs
+ * allow create when page is a non-empty string <= 200 chars; read admin-only;
+ * update/delete never. */
+(function () {
+  'use strict';
+  if (typeof navigator !== 'undefined' && navigator.doNotTrack === '1') { return; }
+  var QUEUE = [];
+  var FLUSH_MS = 5000;
+  var MAX_BATCH = 40;
+  var flushing = false;
+  function lang() {
+    try { return (window.DKI18N && DKI18N.getLang && DKI18N.getLang()) || document.documentElement.lang || 'en'; }
+    catch (e) { return 'en'; }
+  }
+  function page() {
+    try {
+      var p = window.location.pathname || '/';
+      p = p.replace(/index\.html$/, '');
+      return p.slice(0, 200) || '/';
+    } catch (e) { return '/'; }
+  }
+  function toolSlug() {
+    var m = page().match(/^\/DoKit\/tools\/([^\/]+)\/?$/) || window.location.pathname.match(/\/tools\/([^\/]+)\/?$/);
+    return m ? m[1].slice(0, 60) : null;
+  }
+  function enqueue(type, extra) {
+    try {
+      var e = { type: type, page: page(), lang: String(lang()).slice(0, 8), ts: null };
+      if (extra && typeof extra === 'object') {
+        for (var k in extra) {
+          if (Object.prototype.hasOwnProperty.call(extra, k) && typeof extra[k] === 'string') {
+            e[k] = extra[k].slice(0, 120);
+          }
+        }
+      }
+      try {
+        var r = document.referrer ? new URL(document.referrer).hostname : '';
+        if (r && r !== window.location.hostname) { e.ref = r.slice(0, 80); }
+      } catch (e2) {}
+      QUEUE.push(e);
+      if (QUEUE.length >= MAX_BATCH) { flush(); }
+    } catch (e3) {}
+  }
+  function flush() {
+    if (flushing || !QUEUE.length) { return; }
+    var db = null;
+    try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e) {}
+    if (!db) { QUEUE.length = 0; return; }
+    flushing = true;
+    var batch = QUEUE.splice(0, MAX_BATCH);
+    try {
+      var wb = db.batch();
+      var col = db.collection('analytics');
+      batch.forEach(function (e) {
+        e.ts = firebase.firestore.FieldValue.serverTimestamp();
+        wb.set(col.doc(), e);
+      });
+      wb.commit().then(function () { flushing = false; if (QUEUE.length) { flush(); } },
+        function () { flushing = false; });
+    } catch (e) { flushing = false; }
+  }
+  function init() {
+    try {
+      enqueue('pageview', {});
+      setInterval(flush, FLUSH_MS);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') { flush(); }
+      });
+      var slug = toolSlug();
+      if (slug) {
+        document.addEventListener('click', function (ev) {
+          try {
+            var b = ev.target && ev.target.closest ? ev.target.closest('button, a.btn, input[type=submit]') : null;
+            if (!b) { return; }
+            var label = (b.textContent || b.value || '').trim().slice(0, 40);
+            enqueue('tool_used', { tool: slug, action: label });
+          } catch (e) {}
+        }, { passive: true });
+      }
+    } catch (e) {}
+  }
+  window.DKAnalytics = {
+    track: function (type, extra) { enqueue(String(type).slice(0, 30), extra || {}); },
+    toolUsed: function (tool, action) { enqueue('tool_used', { tool: tool, action: action }); },
+    flush: flush
+  };
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+})();
