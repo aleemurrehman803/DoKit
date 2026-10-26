@@ -230,6 +230,11 @@ body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 .prof-menu a.prof-row{display:flex;align-items:center;gap:10px}
 .prof-menu a.prof-row svg{flex:0 0 auto}
 .prof-menu a[hidden],.app-tile[hidden]{display:none}
+/* Oct 26: hidden must actually hide — .btn sets display:inline-block,
+   which beats the UA [hidden] rule, so .btn[hidden] elements (e.g. the
+   Update Profile button for guests) were visible with no JS binding
+   behind them. A global [hidden] rule restores hidden semantics. */
+[hidden]{display:none!important}
 @media(max-width:600px){.nav-actions{gap:4px}.app-drop{position:static}.app-panel{left:12px;right:12px;width:auto}#langCur{display:none}}
 
 
