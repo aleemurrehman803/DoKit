@@ -437,6 +437,18 @@
   function renderReferralsPage(summary, fields, link) {
     /* Defensive: the sibling page task owns the HTML. Every container is
      * guarded — an absent container is skipped, never an exception. */
+    /* Signed-in flip (live-test fix, Oct 26): the page ships with the
+     * guest card visible and #ref-main hidden, and until now NOTHING
+     * ever flipped them — so a signed-in user still saw the "Sign in"
+     * prompt. This render runs only for signed-in users (account.js
+     * authed binding), so hiding the guest card and revealing the
+     * main view here is exactly the signed-in state. */
+    try {
+      var guestEl = (typeof document !== 'undefined') ? document.getElementById('ref-guest') : null;
+      var mainEl = (typeof document !== 'undefined') ? document.getElementById('ref-main') : null;
+      if (guestEl) { guestEl.hidden = true; }
+      if (mainEl) { mainEl.hidden = false; }
+    } catch (e) {}
     renderStats('ref-stats', summary);
     renderTree('ref-tree', summary);
     renderTable('ref-table', summary);

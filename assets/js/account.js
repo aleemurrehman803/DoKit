@@ -244,6 +244,18 @@
       sessionStorage.setItem('dokit_ref', decodeURIComponent(refMatch[1]));
     }
   } catch (e) {}
+  /* Referral consent visibility (live-test fix, Oct 26): the signup
+   * checkbox wrap ships hidden, and until now NOTHING ever unhid it —
+   * so consent could never be given and the activation writer always
+   * skipped. Once a referral is captured (URL param just now, or an
+   * earlier page in this tab), reveal the checkbox so the user can
+   * actually agree. Deferred scripts run after DOM parse, so the
+   * element exists here when present; absent on other pages = no-op. */
+  try {
+    var capturedRef = sessionStorage.getItem('dokit_ref') || '';
+    var consentWrap = document.getElementById('ref-consent-wrap');
+    if (capturedRef && consentWrap) { consentWrap.hidden = false; }
+  } catch (e) {}
   /* Referral Phase 1 — signup fields for a NEW user doc (used by BOTH
    * signup flows below, so email and Google signups behave identically):
    * referralCode is always the user's own uid (the referral link IS
