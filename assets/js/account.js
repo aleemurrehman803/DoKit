@@ -138,15 +138,29 @@
         if (!snap.exists) {
           data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           data.coins = 0;
-          /* Referral Phase 1: creation-only extras (referrerId /
-           * referralCode / consent) are applied ONLY to a brand-new doc.
-           * A returning user signing in again never gets a referrer
-           * overwritten by a later ?ref= visit — the first referrer
-           * stands. All four fields are owner-writable (none is in the
-           * privileged keys list in firestore.rules). */
+          /* Referral Phase 1: extras (referrerId / referralCode /
+           * consent) are applied to a brand-new doc. A returning user
+           * signing in again never gets a referrer overwritten by a
+           * later ?ref= visit — the first referrer stands. All four
+           * fields are owner-writable (none is in the privileged keys
+           * list in firestore.rules). */
           if (extra) {
             Object.keys(extra).forEach(function (k) { data[k] = extra[k]; });
           }
+        } else if (extra) {
+          /* Referral race fix (live-test 4, Oct 26): the onUser
+           * fallback can plant a bare doc (numeric createdAt, no
+           * referral fields) BEFORE this handler runs, and the old
+           * creation-only rule then dropped the extras entirely.
+           * Fill referral fields that are still MISSING — never
+           * overwrite an existing referrerId, so the first referrer
+           * still stands. */
+          var existing = snap.data() || {};
+          ['referrerId', 'referralCode', 'referralActivationConsent', 'referralConsentAt'].forEach(function (k) {
+            if (extra[k] !== undefined && (existing[k] === undefined || existing[k] === '' || existing[k] === null)) {
+              data[k] = extra[k];
+            }
+          });
         }
         return ref.set(data, { merge: true });
       }).catch(function(){ /* offline-safe: ignore */ });
@@ -1214,14 +1228,18 @@
         showMsg('acct-err', '', false);
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
+        /* Race fix (live-test 4, Oct 26): hold the auto-redirect
+         * (bindAuthedPages) until this handler's jobs finish, or the
+         * navigation aborts the attribution writes mid-flight. */
+        window.__dokitSigningUp = true;
         a.createUserWithEmailAndPassword(email.trim(), pass).then(function(cred){
           var u = cred.user;
           var jobs = [];
           if (name.trim()) { jobs.push(u.updateProfile({ displayName: name.trim() }).catch(function(){})); }
           /* Referral Phase 1: new doc gets referralCode (= own uid) +
            * referrerId (if captured) + consent (if the box was checked).
-           * ensureUserDoc applies these creation-only, so this is safe
-           * even if the doc somehow already exists. */
+           * ensureUserDoc fills missing referral fields, so this is
+           * safe even if the fallback doc already exists. */
           jobs.push(DKA.ensureUserDoc(u, referralSignupFields(u)));
           /* Referral: doc id = new uid, only when a ?ref= was captured
            * and it is not the user's own uid (rules enforce the same). */
@@ -1237,9 +1255,11 @@
           } catch (e) {}
           return Promise.all(jobs);
         }).then(function(){
+          window.__dokitSigningUp = false;
           try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
           location.href = '../dashboard/';
         }).catch(function(err){
+          window.__dokitSigningUp = false;
           showMsg('acct-err', DKA.friendlyError(err), true);
         });
       });
@@ -1251,11 +1271,14 @@
         showMsg('acct-err', '', false);
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
+        /* Race fix (live-test 4, Oct 26): same hold as email signup —
+         * no auto-redirect until this handler's jobs finish. */
+        window.__dokitSigningUp = true;
         a.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(cred){
           /* Referral Phase 1: Google signup previously created NO
            * referrals doc and NO referral fields (email signup did) —
            * that gap is closed here so both flows match. The user-doc
-           * fields are creation-only (see ensureUserDoc), so returning
+           * fields fill missing only (see ensureUserDoc), so returning
            * Google users are untouched. The referrals doc is created
            * only for a genuinely new user (additionalUserInfo.isNewUser
            * when the SDK provides it); without that flag we skip the
@@ -1282,9 +1305,11 @@
             try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
           });
         }).then(function(){
+          window.__dokitSigningUp = false;
           var here = location.pathname;
           location.href = /account\/(login|signup)\//.test(here) ? '../dashboard/' : here;
         }).catch(function(err){
+          window.__dokitSigningUp = false;
           showMsg('acct-err', DKA.friendlyError(err), true);
         });
       });
@@ -1542,8 +1567,13 @@
     var dashMain = $('dash-main');
     if (dashMain) { dashMain.hidden = false; }
     /* Already signed in but sitting on login/signup: move to dashboard
-     * (avoids signing in twice; dashboard is the account home). */
-    if (($('acct-login-form') || $('acct-signup-form')) && !/dashboard\//.test(location.pathname)) {
+     * (avoids signing in twice; dashboard is the account home).
+     * Race fix (live-test 4, Oct 26): while a signup handler is still
+     * writing its attribution jobs, do NOT redirect — the navigation
+     * used to abort the handler mid-flight, leaving a bare fallback
+     * doc with no referrerId/consent/referrals doc. The handler
+     * redirects to dashboard itself once its jobs finish. */
+    if (($('acct-login-form') || $('acct-signup-form')) && !/dashboard\//.test(location.pathname) && !window.__dokitSigningUp) {
       location.href = '../dashboard/';
       return;
     }
