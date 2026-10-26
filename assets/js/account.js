@@ -380,6 +380,10 @@
     if (tpMain) { tpMain.hidden = true; }
     var tpGuest = $('tp-account-guest');
     if (tpGuest) { tpGuest.hidden = false; }
+    /* Update Profile (Oct 26): guests never see the button or form —
+     * the full-info form is signed-in only, like the profile form. */
+    var ubG = $('prof-update-btn'); if (ubG) { ubG.hidden = true; }
+    var prfG = $('prof-form'); if (prfG) { prfG.hidden = true; }
   }
 
   /* ---------- login / signup / reset / Google ---------- */
@@ -1544,6 +1548,104 @@
             showMsg('acct-err', (window.dkT ? window.dkT('acct_saved', 'Saved.') : 'Saved.'), false);
             syncHeader(user, Object.assign({}, doc, payload));
           }).catch(function(err){
+            showMsg('acct-err', DKA.friendlyError(err), true);
+          });
+        });
+      }
+    }
+    /* Update Profile form (Oct 26, user order): full information in
+     * sections — personal, blood group, address, contact, education,
+     * work — opened by the Update Profile button on the profile page.
+     * WHY one nested map: the future CV maker tool reads exactly one
+     * place, users/{uid}.profileInfo, instead of hunting scattered
+     * fields. Top-level displayName/photoURL are synced too, so the
+     * header and dashboard keep working. profileInfo is NOT a
+     * privileged key in firestore.rules, so owner updates are allowed.
+     * View/edit flow: opening the form shows saved data read-only;
+     * Edit enables the fields; Save writes and returns to read-only.
+     * First-time users (no saved data) get editable fields at once.
+     * Photo is a URL (same as the existing photo field) — Spark has
+     * no file storage, so no file upload is promised here. */
+    var ub = $('prof-update-btn');
+    if (ub) { ub.hidden = false; }
+    var prf = $('prof-form');
+    if (prf && user) {
+      var pi = (doc && doc.profileInfo) || {};
+      var addr = pi.address || {}, cont = pi.contact || {},
+          edu = pi.education || {}, work = pi.professional || {};
+      function profVal(id, v) {
+        var el = $(id); if (el) { el.value = (v === undefined || v === null) ? '' : v; }
+      }
+      function profFill() {
+        profVal('prof-fullname', pi.fullName || displayNameOf(user, doc));
+        profVal('prof-father', pi.fatherName);
+        profVal('prof-dob', pi.dob);
+        profVal('prof-gender', pi.gender);
+        profVal('prof-photo', pi.photoURL || doc.photoURL || '');
+        profVal('prof-blood', pi.bloodGroup);
+        profVal('prof-street', addr.street);
+        profVal('prof-city', addr.city);
+        profVal('prof-country', addr.country);
+        profVal('prof-phone', cont.phone);
+        setText('prof-email-ro', user.email || '');
+        profVal('prof-qual', edu.qualification);
+        profVal('prof-institution', edu.institution);
+        profVal('prof-field', edu.field);
+        profVal('prof-year', edu.year);
+        profVal('prof-occupation', work.occupation);
+        profVal('prof-skills', work.skills);
+        profVal('prof-languages', work.languages);
+      }
+      function profSetDisabled(dis) {
+        prf.querySelectorAll('input, select').forEach(function (el) { el.disabled = dis; });
+      }
+      function profCollect() {
+        var g = function (id) { var el = $(id); return el ? el.value.trim() : ''; };
+        var year = parseInt(g('prof-year'), 10);
+        return {
+          fullName: g('prof-fullname'), fatherName: g('prof-father'),
+          dob: g('prof-dob'), gender: g('prof-gender'),
+          photoURL: g('prof-photo'), bloodGroup: g('prof-blood'),
+          address: { street: g('prof-street'), city: g('prof-city'), country: g('prof-country') },
+          contact: { phone: g('prof-phone') },
+          education: { qualification: g('prof-qual'), institution: g('prof-institution'), field: g('prof-field'), year: isNaN(year) ? '' : year },
+          professional: { occupation: g('prof-occupation'), skills: g('prof-skills'), languages: g('prof-languages') },
+          updatedAt: Date.now()
+        };
+      }
+      if (ub && !ub.dataset.dka) {
+        ub.dataset.dka = '1';
+        ub.addEventListener('click', function () {
+          profFill();
+          prf.hidden = false;
+          // Saved data opens read-only (Edit re-enables); a blank
+          // form opens editable so first entry needs no extra click.
+          profSetDisabled(!!(pi && Object.keys(pi).length));
+          prf.scrollIntoView();
+        });
+      }
+      var eb = $('prof-edit-btn');
+      if (eb && !eb.dataset.dka) {
+        eb.dataset.dka = '1';
+        eb.addEventListener('click', function () { profSetDisabled(false); var f = $('prof-fullname'); if (f) { f.focus(); } });
+      }
+      var cb = $('prof-cancel-btn');
+      if (cb && !cb.dataset.dka) {
+        cb.dataset.dka = '1';
+        cb.addEventListener('click', function () { prf.hidden = true; });
+      }
+      if (!prf.dataset.dka) {
+        prf.dataset.dka = '1';
+        prf.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var info = profCollect();
+          var payload = { displayName: info.fullName, photoURL: info.photoURL, profileInfo: info };
+          DKA.userDoc(user.uid).set(payload, { merge: true }).then(function () {
+            pi = info;
+            showMsg('acct-err', (window.dkT ? window.dkT('acct_saved', 'Saved.') : 'Saved.'), false);
+            profSetDisabled(true);
+            syncHeader(user, Object.assign({}, doc, payload));
+          }).catch(function (err) {
             showMsg('acct-err', DKA.friendlyError(err), true);
           });
         });

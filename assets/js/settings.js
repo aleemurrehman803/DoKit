@@ -91,9 +91,16 @@
     var btn = $('themeTog');
     if (!btn) { return; }
     var t = getLS('dokit_theme', 'dark');
-    btn.textContent = (t === 'dark') ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', dkT(t === 'dark' ? 'rsv_1019' : 'rsv_1020',
-      t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'));
+    // Oct 26: keep the profile-menu row's icon + label spans intact
+    // (same span handling as main.js); fall back to icon-only text.
+    var ic = btn.querySelector('.theme-ic'),
+        lb = btn.querySelector('.theme-label'),
+        label = dkT(t === 'dark' ? 'rsv_1019' : 'rsv_1020',
+          t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    if (ic) { ic.textContent = (t === 'dark') ? '☀️' : '🌙'; }
+    else { btn.textContent = (t === 'dark') ? '☀️' : '🌙'; }
+    if (lb) { lb.textContent = label; }
+    btn.setAttribute('aria-label', label);
   }
   function applyTheme(t, save) {
     try { document.documentElement.setAttribute('data-theme', t); } catch (e) {}
