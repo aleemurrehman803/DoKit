@@ -1975,6 +1975,71 @@
       }).catch(function () { return false; });
   }
 
+  /* ---------- bug-report + appeal forms (Oct 26) ----------
+   * WHY these exist: BUG_BONUS was defined but no UI could ever file
+   * a bug claim, and no UI could appeal a claim — so the 'bug' and
+   * 'appeal' kinds in the published reward_claims rules were
+   * unreachable from the site. These forms are the missing creators.
+   * Both submit through the existing createClaim path, whose doc
+   * shape (uid == auth.uid, status 'pending', amount 1-1000, detail
+   * a map, exactly the six allowed keys) is exactly what the
+   * published rules validate — so no rules change was needed.
+   * Everything below is pure (no DOM, no Firestore) so the unit
+   * tests cover the validation and the picker scope exactly. */
+  function bugFormPayload(description) {
+    /* A bug report is valid only with a real description — an empty
+     * report can never submit. The amount is the locked BUG_BONUS
+     * constant, never user-typed: the reporter describes the bug,
+     * the admin decides the payout at settle time. */
+    var desc = (description == null) ? '' : String(description).trim();
+    if (!desc) { return null; }
+    return { kind: 'bug', amount: RATES.BUG_BONUS, detail: { description: desc } };
+  }
+  function appealableClaims(uid, claims) {
+    /* The appeal picker scope, as pure data: ONLY the signed-in
+     * user's own claims (the listMyClaims query already scopes by
+     * uid; the uid check here is defense in depth, never the sole
+     * guard), excluding appeal claims themselves (an appeal appeals
+     * a decision, never another appeal) and claims already covered
+     * by a live (non-rejected) appeal (no duplicate appeals for one
+     * decision). */
+    var appealed = {};
+    (claims || []).forEach(function (c) {
+      if (c && c.kind === 'appeal' && c.status !== 'rejected' && c.detail && c.detail.appealedClaimId) {
+        appealed[c.detail.appealedClaimId] = true;
+      }
+    });
+    var out = [];
+    (claims || []).forEach(function (c) {
+      if (!c || c.uid !== uid) { return; }
+      if (c.kind === 'appeal') { return; }
+      if (appealed[c._id || c.id]) { return; }
+      out.push(c);
+    });
+    return out;
+  }
+  function appealFormPayload(uid, claims, pickedId, reason) {
+    /* An appeal is valid only with a picked appealable claim and a
+     * real reason — nothing picked, a picked claim that is not the
+     * user's appealable claim, or an empty reason all return null,
+     * so no invalid appeal can ever reach createClaim. The amount is
+     * ALWAYS copied from the picked claim: there is deliberately no
+     * amount input, so a user can never appeal for more than the
+     * claim was worth. On approval the settle path pays this amount
+     * plus the APPEAL_APOLOGY, exactly like every other appeal. */
+    var why = (reason == null) ? '' : String(reason).trim();
+    if (!why || !pickedId) { return null; }
+    var list = appealableClaims(uid, claims);
+    var picked = null;
+    for (var i = 0; i < list.length; i++) {
+      if ((list[i]._id || list[i].id) === pickedId) { picked = list[i]; break; }
+    }
+    var amount = picked ? Number(picked.amount) : 0;
+    if (!picked || !(amount > 0) || amount > 1000) { return null; }
+    return { kind: 'appeal', amount: amount,
+      detail: { appealedClaimId: pickedId, appealedKind: picked.kind || '', reason: why } };
+  }
+
   function renderClaims(uid) {
     var container = refxContainer('refx-claims');
     if (!container || !uid) { return Promise.resolve(false); }
@@ -1985,6 +2050,7 @@
     var myClaimsText = 'My claims';
     var emptyClaimsText = 'No claims yet.';
     var claimBtnText = 'Claim';
+    var invalidText = 'Please complete the form before submitting.';
     return Promise.all([
       loadMyClaims(uid), loadMyLedgerFull(uid),
       loadMyReferralSummary(uid).catch(function () { return { referrals: [], stats: computeStats([], []) }; }),
@@ -2101,6 +2167,44 @@
       buttons.forEach(function (b, i) {
         html.push('<p>' + esc(b.label) + ' · ' + esc(String(b.amount)) + ' <button class="btn ghost" type="button" data-refx-action="claim" data-refx-kind="' + esc(b.kind) + '" data-refx-amount="' + esc(String(b.amount)) + '" data-refx-idx="' + esc(String(i)) + '"' + (b.disabled ? ' disabled' : '') + '>' + esc(claimBtnText) + '</button></p>');
       });
+      /* Bug-report + appeal forms: the two missing creators, in this
+       * same container. A successful submit re-renders this whole
+       * section through renderClaims(uid) below, so the new claim
+       * appears in My claims at once and the appeal picker refreshes
+       * (an appealed claim leaves the picker on re-render). The
+       * appeal form has deliberately NO amount input — the amount
+       * comes from the picked claim in the handler, never from the
+       * user. Labels are plain variables in the html-array pattern
+       * the rest of this render uses (no new dict keys, no new CSS). */
+      var bugTitleText = 'Report a bug';
+      var bugDescLabelText = 'What went wrong?';
+      var bugSubmitText = 'Report bug';
+      var bugAmountNoteText = 'Reward on approval: ' + String(RATES.BUG_BONUS) + ' coins';
+      var appealTitleText = 'Appeal a claim';
+      var appealPickLabelText = 'Claim to appeal';
+      var appealChooseText = 'Choose a claim...';
+      var appealReasonLabelText = 'Why should this be reconsidered?';
+      var appealSubmitText = 'Submit appeal';
+      var appealNoneText = 'No claims available to appeal yet.';
+      var appealAmountNoteText = 'The appealed amount is taken from the picked claim. Approval pays it back plus an apology bonus.';
+      var appealable = appealableClaims(uid, claims);
+      html.push('<h4>' + esc(bugTitleText) + '</h4>');
+      html.push('<p>' + esc(bugDescLabelText) + ' <input type="text" data-refx-bug-desc> '
+        + '<button class="btn ghost" type="button" data-refx-action="bug">' + esc(bugSubmitText) + '</button></p>');
+      html.push('<p>' + esc(bugAmountNoteText) + '</p>');
+      html.push('<h4>' + esc(appealTitleText) + '</h4>');
+      if (!appealable.length) {
+        html.push('<p>' + esc(appealNoneText) + '</p>');
+      } else {
+        html.push('<p>' + esc(appealPickLabelText) + ' <select data-refx-appeal-pick><option value="">' + esc(appealChooseText) + '</option>');
+        appealable.forEach(function (c) {
+          var cid = c._id || c.id || '';
+          html.push('<option value="' + esc(cid) + '">' + esc((c.kind || '') + ' · ' + String(c.amount) + ' · ' + fmtDate(c.createdAt) + ' · ' + (c.status || '')) + '</option>');
+        });
+        html.push('</select> ' + esc(appealReasonLabelText) + ' <input type="text" data-refx-appeal-reason> '
+          + '<button class="btn ghost" type="button" data-refx-action="appeal">' + esc(appealSubmitText) + '</button></p>');
+        html.push('<p>' + esc(appealAmountNoteText) + '</p>');
+      }
       html.push('<h4>' + esc(myClaimsText) + '</h4>');
       if (!claims.length) { html.push('<p>' + esc(emptyClaimsText) + '</p>'); }
       else {
@@ -2112,7 +2216,36 @@
       }
       container.innerHTML = html.join('');
       refxBind(container, function (btn) {
+        var action = btn.getAttribute('data-refx-action');
+        if (action === 'bug' || action === 'appeal') {
+          /* Bug/appeal forms: validate through the pure payload
+           * builders (the same checks the unit tests cover) — an
+           * invalid form notes the problem and never calls
+           * createClaim, so no empty report and no invented amount
+           * can ever reach the queue. A valid form submits, notes
+           * success, and re-renders the whole section. */
+          var payload = null;
+          if (action === 'bug') {
+            var descEl = container.querySelector('[data-refx-bug-desc]');
+            payload = bugFormPayload(descEl ? descEl.value : '');
+          } else {
+            var pickEl = container.querySelector('[data-refx-appeal-pick]');
+            var reasonEl = container.querySelector('[data-refx-appeal-reason]');
+            payload = appealFormPayload(uid, claims, pickEl ? pickEl.value : '', reasonEl ? reasonEl.value : '');
+          }
+          if (!payload) { refxNote(container, invalidText); return; }
+          btn.disabled = true;
+          createClaim(uid, payload.kind, payload.amount, payload.detail).then(function () {
+            refxNote(container, sentText);
+            renderClaims(uid);
+          }).catch(function () {
+            refxNote(container, pendingText);
+            btn.disabled = false;
+          });
+          return;
+        }
         var idx = Number(btn.getAttribute('data-refx-idx'));
+
         var b = buttons[idx];
         if (!b) { return; }
         btn.disabled = true;
@@ -4319,7 +4452,7 @@
     renderBattles: renderBattles, renderShoutout: renderShoutout, renderHomepageShoutout: renderHomepageShoutout, shoutoutCardHtml: shoutoutCardHtml,
     renderPosters: renderPosters, renderSeason: renderSeason,
     renderTreasury: renderTreasury, renderCoachForecast: renderCoachForecast, rateGraceLeft: rateGraceLeft, renderRateAnnouncement: renderRateAnnouncement,
-    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText
+    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText, bugFormPayload: bugFormPayload, appealableClaims: appealableClaims, appealFormPayload: appealFormPayload
   };
   root.DKREF = DKREF;
   if (typeof module !== 'undefined' && module.exports) { module.exports = DKREF; }
