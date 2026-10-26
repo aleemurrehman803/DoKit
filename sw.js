@@ -1,9 +1,11 @@
 /* DoKit service worker (restore).
  * Precache the core shell so the site opens offline; navigations fall
  * back to the offline page when the network is gone. */
-// v5 (Oct 25): bumped from dokit-v1 so updated builds replace stale
-// cached files — the activate handler below already deletes old caches.
-var CACHE = 'dokit-v2';
+// v6 (Oct 26): bumped from dokit-v2 so the Oct 26 account.js / main.js /
+// style.css replace stale cached files — the Oct 26 profile form click
+// did nothing in browsers holding the v2 cache (old account.js has no
+// Update Profile binding). The activate handler deletes old caches.
+var CACHE = 'dokit-v3';
 var ORIGIN = self.location.origin;
 var BASE = self.location.pathname.replace(/sw\.js$/, '');
 function u(p) { return ORIGIN + BASE + p; }
