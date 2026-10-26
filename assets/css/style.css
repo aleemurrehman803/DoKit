@@ -336,3 +336,36 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 .footbase a:hover{color:var(--amber);text-decoration:underline;transform:translateY(-1px)}
 .footbase span{transition:color .18s}
 .footbase span:hover{color:var(--text)}
+/* ---- Referral Phase 1 (Oct 26): page-scoped .ref-* styles ONLY ----
+WHY page-scoped: these classes exist only on account/referrals/ and
+the dashboard card, so they cannot restyle any other page. WHY these
+tokens: they are the existing :root tokens (Violet #6C4CF1, Amber
+#FFC531, Ink #17142E, dark bg #12101F, surface #1D1933) — no new
+palette, no framework, lightweight CSS only. WHY the same motion as
+the waffle tiles: hover lift + icon scale + amber glow, and panel
+fade/slide + staggered entrance with backwards fill, so hover still
+works after the entrance finishes (same pattern as .app-tile). WHY no
+separate reduced-motion block here: the global rule at line 106
+already kills ALL animations/transitions under
+prefers-reduced-motion (verified: `*{animation:none!important;
+transition:none!important}`), so these animations are covered. */
+.ref-section{margin-top:28px}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
+.ref-grid .ref-stat:nth-child(1){animation-delay:.02s}
+.ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
+.ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
+.ref-grid .ref-stat:nth-child(4){animation-delay:.14s}
+.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-stat b{color:var(--amber);font-size:1.25em}
+@keyframes refFadeIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ref-card{animation:refFadeIn .4s ease-out backwards}
+.ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
+.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;animation:refFadeIn .4s ease-out backwards}
+.ref-level:nth-of-type(1){animation-delay:.05s}
+.ref-level:nth-of-type(2){animation-delay:.10s}
+.ref-level:nth-of-type(3){animation-delay:.15s}
+.ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-legend{color:var(--muted)}

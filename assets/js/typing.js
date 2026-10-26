@@ -41,6 +41,8 @@ function finish(){
       window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(wpm),acc:Math.round(acc)});
     }
   }catch(e){}
+  // Referral activation (silent): first consented test only; never breaks typing.
+  try{ if(window.DKREF && window.DKREF.recordActivation){ window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } }catch(e){}
 }
 function reset(newPassage){
   if(newPassage) passage = newPassage;

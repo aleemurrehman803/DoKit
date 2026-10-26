@@ -125,7 +125,7 @@
     /* Create/merge the user's profile doc on sign-in. Owner-create rules
      * allow coins == 0 (or absent) and forbid suspension fields, so this
      * payload carries neither suspension nor a starting balance above 0. */
-    ensureUserDoc: function(user){
+    ensureUserDoc: function(user, extra){
       if (!user || !user.uid || !DKA.db()) { return Promise.resolve(); }
       var ref = DKA.userDoc(user.uid);
       return ref.get().then(function(snap){
@@ -138,6 +138,15 @@
         if (!snap.exists) {
           data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           data.coins = 0;
+          /* Referral Phase 1: creation-only extras (referrerId /
+           * referralCode / consent) are applied ONLY to a brand-new doc.
+           * A returning user signing in again never gets a referrer
+           * overwritten by a later ?ref= visit — the first referrer
+           * stands. All four fields are owner-writable (none is in the
+           * privileged keys list in firestore.rules). */
+          if (extra) {
+            Object.keys(extra).forEach(function (k) { data[k] = extra[k]; });
+          }
         }
         return ref.set(data, { merge: true });
       }).catch(function(){ /* offline-safe: ignore */ });
@@ -177,6 +186,12 @@
                 db.collection('users').doc(user.uid).set({
                   email: user.email || '',
                   displayName: user.displayName || '',
+                  /* Referral Phase 1 fallback creation: a doc created
+                   * here (not via a signup form) still gets its own
+                   * referralCode so the invite link always works.
+                   * referrerId is NOT set here — only the signup flows
+                   * may attribute a referrer, never a later sign-in. */
+                  referralCode: user.uid,
                   createdAt: Date.now()
                 }, { merge: true }).catch(function(){});
               } catch (e) {}
@@ -229,6 +244,32 @@
       sessionStorage.setItem('dokit_ref', decodeURIComponent(refMatch[1]));
     }
   } catch (e) {}
+  /* Referral Phase 1 — signup fields for a NEW user doc (used by BOTH
+   * signup flows below, so email and Google signups behave identically):
+   * referralCode is always the user's own uid (the referral link IS
+   * ?ref=<uid>, so no lookup collection is needed); referrerId is the
+   * captured ?ref= value only when present and not the user's own uid
+   * (self-referral is also blocked by the referrals create rule);
+   * referralActivationConsent comes from the signup consent checkbox
+   * (id ref-consent, HTML added by the sibling page task) — wired
+   * defensively: if the element is absent, consent is simply not
+   * recorded, never an exception. Consent is recorded, never assumed:
+   * an unchecked/absent box means no consent fields at all. */
+  function referralSignupFields(u) {
+    var fields = { referralCode: u.uid };
+    try {
+      var ref = sessionStorage.getItem('dokit_ref') || '';
+      if (ref && ref !== u.uid) { fields.referrerId = ref; }
+    } catch (e) {}
+    try {
+      var consentEl = document.getElementById('ref-consent');
+      if (consentEl && consentEl.checked) {
+        fields.referralActivationConsent = true;
+        fields.referralConsentAt = Date.now();
+      }
+    } catch (e) {}
+    return fields;
+  }
 
   /* ---------- small DOM helpers ---------- */
   function $(id){ return document.getElementById(id); }
@@ -600,11 +641,66 @@
         return '<div class="adm-row">' + escHtml(d.action || '') + ' · ' + escHtml(d.target || '') + ' · ' + escHtml(d.by || '') + '</div>';
       });
     }).catch(function () {});
-    db.collection('referrals').get().then(function (snap) {
-      admRender('adm-referrals', snap, function (id, d) {
-        return '<div class="adm-row">Referrer ' + escHtml(d.referrerUid || '') + ' · Joined ' + escHtml(id) + ' · Rewarded: ' + (d.rewarded ? 'yes' : 'no') + '</div>';
-      });
-    }).catch(function () {});
+    /* Referral Phase 1 admin view: the full tree, not just a count.
+     * Admins read the whole referrals collection plus user docs for
+     * display names (admin list reads are allowed by the rules), so
+     * DKREF groups rows by referrer with Grant / Pause / Resume
+     * buttons per row (wired in admClick) and a CSV export button.
+     * Per-row coin figures come from the referrer's own ledger entries
+     * with reason 'referral reward' — the same source as the user
+     * views, never a second count. If DKREF failed to load, fall back
+     * to the old one-line render rather than a blank section. */
+    (function loadAdmReferrals() {
+      if (!window.DKREF) {
+        db.collection('referrals').get().then(function (snap) {
+          admRender('adm-referrals', snap, function (id, d) {
+            return '<div class="adm-row">Referrer ' + escHtml(d.referrerUid || '') + ' · Joined ' + escHtml(id) + ' · Rewarded: ' + (d.rewarded ? 'yes' : 'no') + '</div>';
+          });
+        }).catch(function () {});
+        return;
+      }
+      Promise.all([
+        db.collection('referrals').get(),
+        db.collection('users').get().catch(function () { return null; })
+      ]).then(function (parts) {
+        var rows = [];
+        parts[0].forEach(function (doc) {
+          var d = doc.data() || {};
+          d._id = doc.id;
+          rows.push(d);
+        });
+        var names = {};
+        if (parts[1]) {
+          parts[1].forEach(function (doc) {
+            var d = doc.data() || {};
+            if (d.displayName || d.name) { names[doc.id] = d.displayName || d.name; }
+          });
+        }
+        /* Attach per-invitee earnings for the admin rows: one ledger
+         * read per referrer is avoided by reading each referrer's
+         * ledger only for referrers actually present in the rows. */
+        var referrers = [];
+        rows.forEach(function (r) {
+          if (r.referrerUid && referrers.indexOf(r.referrerUid) < 0) { referrers.push(r.referrerUid); }
+        });
+        var ledgerJobs = referrers.map(function (uid) {
+          return db.collection('users').doc(uid).collection('coin_ledger')
+            .where('reason', '==', 'referral reward').get().then(function (lsnap) {
+              lsnap.forEach(function (ldoc) {
+                var e = ldoc.data() || {};
+                rows.forEach(function (r) {
+                  if (r._id === e.inviteeUid) { r._coins = (r._coins || 0) + (Number(e.amount) || 0); }
+                });
+              });
+            }).catch(function () {});
+        });
+        return Promise.all(ledgerJobs).then(function () {
+          admData.referrals = rows;
+          admData.referralNames = names;
+          window.DKREF.renderAdminList('adm-referrals', rows, names);
+        });
+      }).catch(function () {});
+    })();
     db.collection('competitors').get().then(function (snap) {
       admRender('adm-competitors', snap, function (id, d) {
         return '<div class="adm-row"><b>' + escHtml(d.name || '') + '</b> ' + escHtml(d.note || '') + '</div>';
@@ -796,6 +892,30 @@
           return db.collection('users').doc(c.uid).collection('coin_ledger').add({uid: c.uid, amount: c.amount, by: currentUser.uid, reason: 'claim approval', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
         }).then(function () { admAudit(act, id); done(); }).catch(fail);
       }
+    } else if (act === 'ref-export') {
+      /* Referral CSV export (no row needed — the button sits in the
+       * section header). Rows are the cached admin render, exported
+       * through the single DKREF.csvExport writer. */
+      if (window.DKREF) { window.DKREF.csvExport(admData.referrals || []); }
+    } else if (act === 'ref-grant' || act === 'ref-pause' || act === 'ref-resume') {
+      /* Referral Phase 1 admin actions (admin-only by rules; a
+       * non-admin click fails at Firestore, never silently).
+       * Grant: DKREF.adminGrant re-reads the row LIVE and refuses
+       * unless it is still pending, then settles the full chain
+       * (L1 20 / L2 5 / L3 2) via ledger + coins increments + row
+       * flip — the deposit-approval
+       * pattern, with the same double-click guard (button dies on
+       * first click, re-enabled only on failure). Pause/resume flip
+       * the admin-only paused flag on the row. */
+      if (!id || !window.DKREF) { return; }
+      b.disabled = true;
+      var refJob;
+      if (act === 'ref-grant') {
+        refJob = window.DKREF.adminGrant(currentUser.uid, id);
+      } else {
+        refJob = window.DKREF.adminSetPaused(id, act === 'ref-pause');
+      }
+      refJob.then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; fail(err); });
     } else if (act === 'inbox-del') {
       if (!id) { return; }
       if (!window.confirm((window.dkT ? window.dkT('acct_adm_confirm_delete', 'Delete this message?') : 'Delete this message?'))) { return; }
@@ -1065,7 +1185,11 @@
           var u = cred.user;
           var jobs = [];
           if (name.trim()) { jobs.push(u.updateProfile({ displayName: name.trim() }).catch(function(){})); }
-          jobs.push(DKA.ensureUserDoc(u));
+          /* Referral Phase 1: new doc gets referralCode (= own uid) +
+           * referrerId (if captured) + consent (if the box was checked).
+           * ensureUserDoc applies these creation-only, so this is safe
+           * even if the doc somehow already exists. */
+          jobs.push(DKA.ensureUserDoc(u, referralSignupFields(u)));
           /* Referral: doc id = new uid, only when a ?ref= was captured
            * and it is not the user's own uid (rules enforce the same). */
           try {
@@ -1095,7 +1219,35 @@
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
         a.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(cred){
-          return DKA.ensureUserDoc(cred.user);
+          /* Referral Phase 1: Google signup previously created NO
+           * referrals doc and NO referral fields (email signup did) —
+           * that gap is closed here so both flows match. The user-doc
+           * fields are creation-only (see ensureUserDoc), so returning
+           * Google users are untouched. The referrals doc is created
+           * only for a genuinely new user (additionalUserInfo.isNewUser
+           * when the SDK provides it); without that flag we skip the
+           * doc rather than risk attributing a returning user to a
+           * later ?ref= visit. A create on an existing doc would be
+           * an admin-only update under the rules, so the .catch below
+           * is a second guard, never the primary one. */
+          var u = cred.user;
+          var isNew = cred.additionalUserInfo && cred.additionalUserInfo.isNewUser;
+          var jobs = [DKA.ensureUserDoc(u, referralSignupFields(u))];
+          if (isNew) {
+            try {
+              var ref = sessionStorage.getItem('dokit_ref') || '';
+              if (ref && ref !== u.uid) {
+                jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
+                  referrerUid: ref,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  rewarded: false
+                }).catch(function(){}));
+              }
+            } catch (e) {}
+          }
+          return Promise.all(jobs).then(function(){
+            try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
+          });
         }).then(function(){
           var here = location.pathname;
           location.href = /account\/(login|signup)\//.test(here) ? '../dashboard/' : here;
@@ -1393,14 +1545,71 @@
         } catch (e) { done(); }
       });
     }
-    /* Referral count: referrers may list ONLY their own referrals
-     * (rules: where referrerUid == uid), so the count is real. */
-    var refCount = $('dash-ref-count');
-    if (refCount && DKA.db()) {
-      DKA.db().collection('referrals').where('referrerUid', '==', user.uid).get()
-        .then(function(snap){ refCount.textContent = String(snap.size); })
-        .catch(function(){ refCount.textContent = '0'; });
-    }
+    /* Referral Phase 1 — dashboard card + referrals page + profile,
+     * all from ONE shared summary (no second count query anywhere).
+     * DKREF.loadMyReferralSummary reads the caller's own referrals
+     * (rules: where referrerUid == uid, L1 only — so the count is
+     * real) and the caller's own 'referral reward' ledger entries.
+     * The same summary object fills the dashboard spans, renders the
+     * referrals-page containers (if the sibling page task added them
+     * on this page) and the consent status. If DKREF failed to load,
+     * the old count-only query runs as a fallback so the dashboard
+     * never regresses to blank. */
+    (function bindReferralSections() {
+      if (!DKA.db()) { return; }
+      if (!window.DKREF) {
+        var refCount = $('dash-ref-count');
+        if (refCount) {
+          DKA.db().collection('referrals').where('referrerUid', '==', user.uid).get()
+            .then(function(snap){ refCount.textContent = String(snap.size); })
+            .catch(function(){ refCount.textContent = '0'; });
+        }
+        return;
+      }
+      Promise.all([
+        window.DKREF.loadMyReferralSummary(user.uid),
+        window.DKREF.userReferralFields(user.uid).catch(function () { return {}; })
+      ]).then(function (parts) {
+        var summary = parts[0];
+        var fields = parts[1] || {};
+        /* Fresh field read may be empty on a read failure — fall back
+         * to the user doc already loaded at boot, never to invented
+         * values. */
+        if (!fields.referralCode && doc) {
+          fields = {
+            referralCode: doc.referralCode || user.uid,
+            referrerId: doc.referrerId || '',
+            referralActivationConsent: !!doc.referralActivationConsent,
+            referralConsentAt: doc.referralConsentAt || 0
+          };
+        }
+        window.DKREF.fillDashboard(summary);
+        /* Referrals page (containers owned by the sibling page task;
+         * DKREF guards every absent container, so this is safe on
+         * pages without them — dashboard-only pages just skip). */
+        if ($('ref-stats') || $('ref-tree') || $('ref-table') || $('ref-share') || $('ref-consent-status')) {
+          /* signupUrl is the bare signup page URL (no ?ref= yet) —
+           * passing refEl.textContent would double the ?ref= param,
+           * since that element already holds the full link. */
+          window.DKREF.renderReferralsPage(summary, fields,
+            window.DKREF.referralLink(user.uid, signupUrl));
+        }
+        /* Profile entrance: the profile button (sibling HTML) leads to
+         * the same referrals view as the nav link — one view, two
+         * entrances, one shared module (DRY). Anchor or button both
+         * handled; absent element skipped silently. */
+        var profBtn = $('ref-profile-btn');
+        if (profBtn) {
+          var refPageUrl = siteRoot() + 'account/referrals/';
+          if (profBtn.tagName === 'A') { profBtn.href = refPageUrl; }
+          else if (!profBtn.dataset.dka) {
+            profBtn.dataset.dka = '1';
+            profBtn.addEventListener('click', function () { location.href = refPageUrl; });
+          }
+        }
+      }).catch(function () { /* referral sections are best-effort;
+        * coins, profile and dashboard keep working without them. */ });
+    })();
     /* Referral card on non-dashboard pages (subscription): hidden by
      * default, revealed only when signed in. */
     var refCard = $('dash-ref-card');
