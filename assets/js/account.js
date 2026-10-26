@@ -171,6 +171,11 @@
          * (rules denial, network, or otherwise). Behaviour is
          * unchanged: the signup still proceeds to the dashboard. */
         try { console.warn('[DKA] ensureUserDoc failed:', err && err.code, err && err.message); } catch (e) {}
+        /* Exact-diagnosis (live-test 6, Oct 26): the automated browser
+         * cannot open DevTools, so a console warning alone never
+         * reaches the test. Remember the failure where the signup
+         * handler can see it and show it on the page instead. */
+        try { window.__dokitDocError = err; } catch (e) {}
       });
     },
 
@@ -1240,6 +1245,7 @@
          * (bindAuthedPages) until this handler's jobs finish, or the
          * navigation aborts the attribution writes mid-flight. */
         window.__dokitSigningUp = true;
+        window.__dokitDocError = null;
         a.createUserWithEmailAndPassword(email.trim(), pass).then(function(cred){
           var u = cred.user;
           var jobs = [];
@@ -1264,6 +1270,12 @@
           return Promise.all(jobs);
         }).then(function(){
           window.__dokitSigningUp = false;
+          /* If the profile-doc write failed, do NOT redirect away
+           * silently (that hid four straight live-test failures).
+           * Stay and show the real reason on the page, so the test
+           * — and the user — can read the exact error code. */
+          var de = window.__dokitDocError; window.__dokitDocError = null;
+          if (de) { showMsg('acct-err', DKA.friendlyError(de) + ' [' + (de.code || 'unknown') + ']', true); return; }
           try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
           location.href = '../dashboard/';
         }).catch(function(err){
@@ -1282,6 +1294,7 @@
         /* Race fix (live-test 4, Oct 26): same hold as email signup —
          * no auto-redirect until this handler's jobs finish. */
         window.__dokitSigningUp = true;
+        window.__dokitDocError = null;
         a.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(cred){
           /* Referral Phase 1: Google signup previously created NO
            * referrals doc and NO referral fields (email signup did) —
@@ -1315,6 +1328,10 @@
         }).then(function(){
           window.__dokitSigningUp = false;
           var here = location.pathname;
+          /* Same visible-failure rule as email signup, but only on
+           * signup pages — login behaviour is unchanged. */
+          var de2 = window.__dokitDocError; window.__dokitDocError = null;
+          if (de2 && /\/signup\//.test(here)) { showMsg('acct-err', DKA.friendlyError(de2) + ' [' + (de2.code || 'unknown') + ']', true); return; }
           location.href = /account\/(login|signup)\//.test(here) ? '../dashboard/' : here;
         }).catch(function(err){
           window.__dokitSigningUp = false;
