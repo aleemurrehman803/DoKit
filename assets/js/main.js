@@ -1142,6 +1142,29 @@ function dokiMicStop(){
     } catch (e) {}
   })();
 
+/* Referral module loader: the wallet daily-claim button (wf-claim-btn)
+ * prices its claim from DKREF.dailyClaimRate (streak wiring, owner order
+ * 26 Oct 2026), but the wallet page does not list referrals.js — so load
+ * it here when the button exists, exactly once. Click-time lookup means
+ * load order vs account.js never matters; if the load fails, the claim
+ * handler falls back to DAILY_CLAIM (flat 10). */
+(function loadReferralModule(){
+  try {
+    if (window.DKREF) { return; }
+    if (!document.getElementById('wf-claim-btn')) { return; }
+    if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
+    var src = '';
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    var marker = 'assets/js/main.js';
+    var at = src ? src.indexOf(marker) : -1;
+    if (at < 0) { return; }
+    var s = document.createElement('script');
+    s.src = src.slice(0, at) + 'assets/js/referrals.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  } catch (e) {}
+})();
+
 /* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
  * EVENTS (only these two shapes, nothing else is ever collected):
  *   pageview  {type, page, lang, ts} and tool_used {type, page, tool, action, ts}.

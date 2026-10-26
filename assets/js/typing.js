@@ -11,6 +11,10 @@ var PASSAGES = {
   pangram: 'Pack my box with five dozen liquor jugs and watch how fast the quick brown fox can jump over the lazy dog near the river bank today.'
 };
 var passage = PASSAGES.home, typed = '', started = false, startTime = 0, timer = null, limit = 60, left = 60, done = false;
+// HOOKS (referral-complete §7): true once a paste lands during this
+// test (paste event or insertFromPaste input). Decides the verified
+// flag on the saved result; reset() clears it for the next test.
+var pasted = false;
 function render(){
   passageEl.innerHTML = '';
   for(var i = 0; i < passage.length; i++){
@@ -31,6 +35,64 @@ function stats(){
   var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
   wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct, gross: gross};
 }
+// HOOKS (referral-complete §7): stamp the signed-in user's doc with
+// lastTestAt and, when set, clear coinsFrozen (a finished test proves
+// the account is back in use). Read-then-update, signed-in only,
+// best-effort silent: every failure path swallows, so typing never
+// breaks. No privileged field is touched (coins/suspension keys are
+// never in the update); the FieldValue fallback is Date.now().
+function stampLastTest(){
+  try{
+    var db = null, auth = null;
+    try{ if(window.DKA && window.DKA.db){ db = window.DKA.db(); } }catch(e){}
+    if(!db){ try{ if(window.firebase && window.firebase.firestore){ db = window.firebase.firestore(); } }catch(e){} }
+    try{
+      if(window.DKA && window.DKA.auth){ auth = window.DKA.auth(); }
+      else if(window.firebase && window.firebase.auth){ auth = window.firebase.auth(); }
+    }catch(e){}
+    var user = auth ? auth.currentUser : null;
+    if(!db || !user || !user.uid){ return; }
+    var ref = db.collection('users').doc(user.uid);
+    ref.get().then(function(snap){
+      var d = (snap && snap.exists) ? (snap.data() || {}) : null;
+      if(!d){ return; }
+      var upd = {};
+      try{ upd.lastTestAt = window.firebase.firestore.FieldValue.serverTimestamp(); }
+      catch(e){ upd.lastTestAt = Date.now(); }
+      if(d.coinsFrozen){ upd.coinsFrozen = false; }
+      ref.update(upd).catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
+}
+// HOOKS (referral-complete §7): when a challenge marker is pending in
+// localStorage, record the local completion marker the challenge
+// renderer confirms. typing.js NEVER writes challenge docs — only
+// this local key. The marker may be JSON ({challengeId, uid?}) or a
+// bare challenge id; a marker naming another user is not ours and is
+// skipped. Pending is left for the renderer to clear, so a repeated
+// finish only refreshes the same marker's timestamp.
+function recordChallengeDone(){
+  try{
+    var raw = localStorage.getItem('dk_challenge_pending');
+    if(!raw){ return; }
+    var challengeId = null, pendingUid = null;
+    try{
+      var parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object'){ challengeId = parsed.challengeId || parsed.id || null; pendingUid = parsed.uid || parsed.toUid || null; }
+      else{ challengeId = String(parsed); }
+    }catch(e){ challengeId = raw; }
+    if(!challengeId){ return; }
+    var uid = null;
+    try{
+      var auth2 = null;
+      if(window.DKA && window.DKA.auth){ auth2 = window.DKA.auth(); }
+      else if(window.firebase && window.firebase.auth){ auth2 = window.firebase.auth(); }
+      uid = auth2 ? auth2.currentUser.uid : null;
+    }catch(e){}
+    if(pendingUid && uid && pendingUid !== uid){ return; }
+    localStorage.setItem('dk_challenge_done', JSON.stringify({ challengeId: challengeId, at: Date.now() }));
+  }catch(e){}
+}
 function finish(){
   if(done) return;
   done = true; clearInterval(timer);
@@ -43,11 +105,20 @@ function finish(){
   // (only if the shared store loaded; never crash).
   try{
     if(window.DK2){
-      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en'});
+      // HOOKS (referral-complete §7): verified is true only when no
+      // paste landed during this test. New results only — old DK2
+      // results are never rewritten (DK2.saveResult stores the
+      // object as given, so the flag persists for the speed-
+      // milestone check, which counts verified-only results).
+      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,verified:!pasted});
     }
   }catch(e){}
   // Referral activation (silent): first consented test only; never breaks typing.
   try{ if(window.DKREF && window.DKREF.recordActivation){ window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } }catch(e){}
+  // HOOKS (referral-complete §7): lastTestAt (+ unfreeze) and the
+  // local challenge-done marker; both silent, neither breaks typing.
+  try{ stampLastTest(); }catch(e){}
+  try{ recordChallengeDone(); }catch(e){}
   // Gamification (Task 5, historical rules): test XP + badges, once per
   // identical result per day; never breaks typing. wpm here is already
   // net-style (correct chars / 5 / minutes), i.e. historical nwpm.
@@ -61,12 +132,18 @@ function finish(){
 }
 function reset(newPassage){
   if(newPassage) passage = newPassage;
-  typed = ''; started = false; done = false; clearInterval(timer); left = limit;
+  typed = ''; started = false; done = false; pasted = false; clearInterval(timer); left = limit;
   input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%';
   resEl.innerHTML = ''; render(); input.focus();
 }
-input.addEventListener('input', function(){
+// HOOKS (referral-complete §7): pasting is allowed in the typing
+// test (unlike TypeFight), but a pasted test is not a verified one —
+// the paste event and the insertFromPaste input type both set the
+// flag that finish() turns into verified: false on the new result.
+input.addEventListener('paste', function(){ pasted = true; });
+input.addEventListener('input', function(ev){
   if(done) return;
+  if(ev && ev.inputType === 'insertFromPaste'){ pasted = true; }
   typed = input.value;
   if(!started && typed.length > 0){
     started = true; startTime = Date.now(); left = limit;

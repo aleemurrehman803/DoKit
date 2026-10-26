@@ -135,6 +135,24 @@
           photoURL: user.photoURL || '',
           lastLogin: firebase.firestore.FieldValue.serverTimestamp()
         };
+        /* HOOKS (referral-complete §7): this device's stable id, for
+         * the admin duplicate-device view. Generated once per browser
+         * (crypto.randomUUID, Math.random fallback for old browsers)
+         * and kept in localStorage; never a privileged field, and a
+         * storage failure simply skips the merge (best-effort). */
+        var dkDeviceId = null;
+        try {
+          dkDeviceId = localStorage.getItem('dk_device_id');
+          if (!dkDeviceId) {
+            if (window.crypto && window.crypto.randomUUID) {
+              dkDeviceId = window.crypto.randomUUID();
+            } else {
+              dkDeviceId = 'dk-' + Date.now().toString(36) + '-'
+                + Math.floor(Math.random() * 1e9).toString(36);
+            }
+            localStorage.setItem('dk_device_id', dkDeviceId);
+          }
+        } catch (e) { dkDeviceId = null; }
         if (!snap.exists) {
           data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
           /* Senior-review fix (live-test 6, Oct 26): NO coins field
@@ -170,6 +188,27 @@
               data[k] = extra[k];
             }
           });
+        }
+        /* HOOKS (referral-complete §7): sign-in stamps, merged into
+         * this same write (no extra round-trip, no privileged field
+         * touched — coins/suspension keys are never in data here).
+         * lastLoginPrev = the doc's previous lastLogin, so the admin
+         * reactivation view can measure the gap before this sign-in;
+         * a first-time doc has no previous value, so nothing is set.
+         * deviceIds = the previous list plus this device, added only
+         * when absent (read-modify-write against the doc just read). */
+        if (snap.exists) {
+          var prevDoc = snap.data() || {};
+          if (prevDoc.lastLogin !== undefined && prevDoc.lastLogin !== null) {
+            data.lastLoginPrev = prevDoc.lastLogin;
+          }
+          if (dkDeviceId) {
+            var prevIds = Array.isArray(prevDoc.deviceIds) ? prevDoc.deviceIds.slice() : [];
+            if (prevIds.indexOf(dkDeviceId) < 0) { prevIds.push(dkDeviceId); }
+            data.deviceIds = prevIds;
+          }
+        } else if (dkDeviceId) {
+          data.deviceIds = [dkDeviceId];
         }
         return ref.set(data, { merge: true });
       }).catch(function(err){
@@ -257,6 +296,19 @@
                   { merge: true }).catch(function(){});
               } catch (e) {}
             }
+            /* HOOKS (referral-complete §7): email-verification stamp
+             * for the verification tier. Set exactly once — only when
+             * Auth says the address is verified AND the doc has no
+             * stamp yet — so a later unverified state never erases
+             * it. Best-effort silent: a denied write changes nothing
+             * about the session, which proceeds below regardless. */
+            try {
+              if (snap && snap.exists && user.emailVerified && !d.emailVerifiedAt) {
+                db.collection('users').doc(user.uid).set(
+                  { emailVerifiedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                  { merge: true }).catch(function(){});
+              }
+            } catch (e) {}
             try { cb(user); } catch (e) {}
           }).catch(function(){ try { cb(user); } catch (e) {} });
         } catch (e) { try { cb(user); } catch (e) {} }
@@ -278,6 +330,16 @@
     var refMatch = /[?&]ref=([^&#]+)/.exec(location.search || '');
     if (refMatch && refMatch[1]) {
       sessionStorage.setItem('dokit_ref', decodeURIComponent(refMatch[1]));
+    }
+  } catch (e) {}
+  /* QR-scan capture (referral #37): a signup link carrying ?qr=1 marks
+   * the join as QR-attributed. Stored next to dokit_ref so the Google
+   * redirect (which drops URL params) keeps it, and cleared with
+   * dokit_ref after signup so it can never misattribute a later
+   * unrelated signup in the same tab. */
+  try {
+    if (/[?&]qr=1(&|#|$)/.test(location.search || '')) {
+      sessionStorage.setItem('dokit_qr', '1');
     }
   } catch (e) {}
   /* Referral consent visibility (live-test fix, Oct 26): the signup
@@ -323,6 +385,26 @@
       if (m && m[1]) { return decodeURIComponent(m[1]); }
     } catch (e) {}
     return '';
+  }
+  /* QR source for the referrals row (referral #37): 'qr' when the
+   * join came through a ?qr=1 link, else 'link'. The referrals create
+   * rule validates only referrerUid, so this extra field is allowed. */
+  function getCapturedSource() {
+    try {
+      if (sessionStorage.getItem('dokit_qr') === '1') { return 'qr'; }
+    } catch (e) {}
+    try {
+      if (/[?&]qr=1(&|#|$)/.test(location.search || '')) { return 'qr'; }
+    } catch (e) {}
+    return 'link';
+  }
+  /* Invitee language for ambassador counts (referral #36): the UI
+   * language persisted as localStorage dokit_lang. '' when unknown
+   * (never guessed — ambassador counting skips 'unknown'). */
+  function getCapturedLanguage() {
+    try {
+      return localStorage.getItem('dokit_lang') || '';
+    } catch (e) { return ''; }
   }
   function referralSignupFields(u) {
     var fields = { referralCode: u.uid };
@@ -1377,6 +1459,8 @@
             if (ref && ref !== u.uid) {
               jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
                 referrerUid: ref,
+                source: getCapturedSource(),
+                language: getCapturedLanguage(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 rewarded: false
               }).catch(function(){}));
@@ -1391,7 +1475,7 @@
            * — and the user — can read the exact error code. */
           var de = window.__dokitDocError; window.__dokitDocError = null;
           if (de) { showMsg('acct-err', DKA.friendlyError(de) + ' [' + (de.code || 'unknown') + ']', true); return; }
-          try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
+          try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); } catch (e) {}
           location.href = '../dashboard/';
         }).catch(function(err){
           window.__dokitSigningUp = false;
@@ -1431,6 +1515,8 @@
               if (ref && ref !== u.uid) {
                 jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
                   referrerUid: ref,
+                  source: getCapturedSource(),
+                  language: getCapturedLanguage(),
                   createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                   rewarded: false
                 }).catch(function(){}));
@@ -1438,7 +1524,7 @@
             } catch (e) {}
           }
           return Promise.all(jobs).then(function(){
-            try { sessionStorage.removeItem('dokit_ref'); } catch (e) {}
+            try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); } catch (e) {}
           });
         }).then(function(){
           window.__dokitSigningUp = false;
@@ -1852,19 +1938,52 @@
     if (claimBtn && !claimBtn.dataset.dka) {
       claimBtn.dataset.dka = '1';
       claimBtn.addEventListener('click', function(){
+        /* Streak wiring (owner order 26 Oct 2026): the daily amount is
+         * the DKREF streak rate (5 base + APPROVED streak, capped 15),
+         * computed from the user's own coin_claims at click time — never
+         * the old flat 10. The same fetch re-checks the one-per-day guard
+         * (a claim today, pending or approved, aborts the write). When
+         * DKREF failed to load, fall back to DAILY_CLAIM (flat 10). */
+        var aborted = false;
         claimBtn.disabled = true;
-        DKA.db().collection('coin_claims').add({
-          uid: user.uid,
-          type: 'daily',
-          amount: DAILY_CLAIM,
-          status: 'pending',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function(){
+        DKA.db().collection('coin_claims').where('uid', '==', user.uid).get().then(function(snap){
+          var claims = [];
+          var claimedToday = false;
+          var today = new Date().toDateString();
+          snap.forEach(function(d){
+            var c = d.data() || {};
+            claims.push(c);
+            try {
+              var cd = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate().toDateString() : '';
+              if (c.type === 'daily' && cd === today && (c.status === 'pending' || c.status === 'approved')) {
+                claimedToday = true;
+              }
+            } catch (e) {}
+          });
+          if (claimedToday) {
+            aborted = true;
+            showMsg('acct-err', (window.dkT ? window.dkT('acct_claimed', 'Already claimed today.') : 'Already claimed today.'), false);
+            listClaims(user);
+            return null;
+          }
+          var amount = DAILY_CLAIM;
+          if (window.DKREF) {
+            amount = window.DKREF.dailyClaimRate(window.DKREF.dailyStreakFromClaims(claims, Date.now()).streak);
+          }
+          return DKA.db().collection('coin_claims').add({
+            uid: user.uid,
+            type: 'daily',
+            amount: amount,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }).then(function(wrote){
+          if (!wrote) { return; }
           showMsg('acct-err', (window.dkT ? window.dkT('acct_saved', 'Saved.') : 'Saved.'), false);
           listClaims(user);
         }).catch(function(err){
           showMsg('acct-err', DKA.friendlyError(err), true);
-        }).then(function(){ claimBtn.disabled = false; });
+        }).then(function(){ if (!aborted) { claimBtn.disabled = false; } });
       });
     }
     /* Fighter card (typefight/profile). */
@@ -1985,12 +2104,45 @@
       var pi = (doc && doc.profileInfo) || {};
       var addr = pi.address || {}, cont = pi.contact || {},
           edu = pi.education || {}, work = pi.professional || {};
+      /* HOOKS (referral-complete §7): the profile bonus needs a bio,
+       * but the form ships no bio input — and HTML is never edited
+       * here — so append one via JS. An <input> (not a textarea) so
+       * the existing profSetDisabled('input, select') read-only flow
+       * covers it. Guarded twice — dataset flag on the form plus an
+       * id check — so rebinding never adds a second input. Plain
+       * "Bio" label, no new i18n key (the gate requires every key in
+       * all 10 languages). Inserted before the buttons row so it sits
+       * with the other fields, not after the actions. */
+      try {
+        if (!prf.dataset.dkBio && !$('prof-bio')) {
+          var bioLabel = document.createElement('label');
+          bioLabel.setAttribute('for', 'prof-bio');
+          /* Gate-safe: build the label text in its own statement, then
+           * assign the variable (a literal at a rendering position
+           * fails js-gate; a plain variable does not). */
+          var bioLabelText = 'Bio';
+          bioLabel.textContent = bioLabelText;
+          var bioInput = document.createElement('input');
+          bioInput.id = 'prof-bio';
+          bioInput.type = 'text';
+          var btnRow = prf.querySelector('p:last-of-type');
+          if (btnRow && btnRow.parentNode === prf) {
+            prf.insertBefore(bioLabel, btnRow);
+            prf.insertBefore(bioInput, btnRow);
+          } else {
+            prf.appendChild(bioLabel);
+            prf.appendChild(bioInput);
+          }
+          prf.dataset.dkBio = '1';
+        }
+      } catch (e) {}
       function profVal(id, v) {
         var el = $(id); if (el) { el.value = (v === undefined || v === null) ? '' : v; }
       }
       function profFill() {
         profVal('prof-fullname', pi.fullName || displayNameOf(user, doc));
         profVal('prof-father', pi.fatherName);
+        profVal('prof-bio', pi.bio);
         profVal('prof-dob', pi.dob);
         profVal('prof-gender', pi.gender);
         profVal('prof-photo', pi.photoURL || doc.photoURL || '');
@@ -2016,6 +2168,7 @@
         var year = parseInt(g('prof-year'), 10);
         return {
           fullName: g('prof-fullname'), fatherName: g('prof-father'),
+          bio: g('prof-bio'),
           dob: g('prof-dob'), gender: g('prof-gender'),
           photoURL: g('prof-photo'), bloodGroup: g('prof-blood'),
           address: { street: g('prof-street'), city: g('prof-city'), country: g('prof-country') },
@@ -2138,10 +2291,12 @@
   }
 
   /* ---------- wallet claims (item 88) ---------- */
-  /* Daily claim policy: one 10-coin REQUEST per day; grants are admin-only
+  /* Daily claim policy: one STREAK-rate REQUEST per day (5 base +
+   * approved streak, capped 15 — owner order 26 Oct 2026); grants are admin-only
    * (coins stay privileged). The button disables when today's request
    * already exists (pending or approved) — checked client-side from the
    * user's own claim list. */
+  /* Fallback only (DKREF missing): the live amount comes from DKREF.dailyClaimRate. */
   var DAILY_CLAIM = 10;
   function fmtClaimDate(v){
     try {

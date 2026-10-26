@@ -43,6 +43,10 @@
 
   var typed = '', started = false, startTime = 0, left = 60;
   var timer = null, done = false, bots = [];
+  // HOOKS (referral-complete §7): difficulty of the race in progress,
+  // captured at start (the select may change mid-race, so finish()
+  // must not re-read it). Falls back to the page's default, medium.
+  var raceDiff = 'medium';
 
   // Render the passage with per-character feedback (same pattern as
   // the lesson engine, kept local because the battle also runs a
@@ -112,6 +116,29 @@
     // 3. Very few keystrokes but lots of chars (automation).
     if (typed.length > 50 && keyTimes.length < typed.length * 0.5) { flag('automation'); }
   }
+  // HOOKS (referral-complete §7): same lastTestAt stamp as typing.js
+  // (separate page script, so its own small copy — the two pages do
+  // not share a module). Signed-in only, best-effort silent; no
+  // privileged field is touched. No coinsFrozen clear here: the
+  // contract orders the unfreeze on a typing test only.
+  function stampLastTest() {
+    try {
+      var db = null, auth = null;
+      try { if (window.DKA && window.DKA.db) { db = window.DKA.db(); } } catch (e) {}
+      if (!db) { try { if (window.firebase && window.firebase.firestore) { db = window.firebase.firestore(); } } catch (e) {} }
+      try {
+        if (window.DKA && window.DKA.auth) { auth = window.DKA.auth(); }
+        else if (window.firebase && window.firebase.auth) { auth = window.firebase.auth(); }
+      } catch (e) {}
+      var user = auth ? auth.currentUser : null;
+      if (!db || !user || !user.uid) { return; }
+      var ref = db.collection('users').doc(user.uid);
+      var upd = {};
+      try { upd.lastTestAt = window.firebase.firestore.FieldValue.serverTimestamp(); }
+      catch (e) { upd.lastTestAt = Date.now(); }
+      ref.update(upd).catch(function () {});
+    } catch (e) {}
+  }
   function finish() {
     if (done) { return; }
     done = true; clearInterval(timer); inputEl.disabled = true;
@@ -134,6 +161,31 @@
     if (window.DK2) {
       window.DK2.saveResult({ type: 'battle', wpm: st.wpm, acc: st.acc });
     }
+    // HOOKS (referral-complete §7): win log for the TypeFight claim.
+    // This point is only reached when the race is NOT flagged (the
+    // flagged path returns early above), and rank #1 means the
+    // player's chars strictly beat every bot's — a tie leaves the
+    // bot ahead, exactly as the live leaderboard sorts it. Bots must
+    // exist (a race was actually started). Log capped at 200 entries,
+    // oldest dropped; storage failure never breaks the result.
+    try {
+      var top = bots.length > 0;
+      bots.forEach(function (b) { if (b.chars >= typed.length) { top = false; } });
+      if (top) {
+        var wins = [];
+        try {
+          var raw = localStorage.getItem('dk_tf_wins');
+          wins = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(wins)) { wins = []; }
+        } catch (e) { wins = []; }
+        wins.push({ date: new Date().toISOString().slice(0, 10), difficulty: raceDiff, won: true });
+        if (wins.length > 200) { wins = wins.slice(wins.length - 200); }
+        try { localStorage.setItem('dk_tf_wins', JSON.stringify(wins)); } catch (e) {}
+      }
+    } catch (e) {}
+    // HOOKS (referral-complete §7): lastTestAt stamp, same pattern as
+    // typing.js; silent, never breaks the result display.
+    try { stampLastTest(); } catch (e) {}
   }
   // Pasting is blocked during races (anti-cheat, stated on the page).
   inputEl.addEventListener('paste', function (e) {
@@ -162,6 +214,7 @@
     // Fresh race: bots get the chosen difficulty speed, each with a
     // small random variance so no two races play identically.
     var base = DIFFS[diffEl ? diffEl.value : 'medium'] || 45;
+    raceDiff = diffEl ? diffEl.value : 'medium';
     bots = BOT_NAMES.map(function (name) {
       return { name: name, wpm: base * (0.9 + Math.random() * 0.2), chars: 0 };
     });
