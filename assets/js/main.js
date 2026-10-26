@@ -214,126 +214,25 @@ function dokiBlinkTick(){
   }, 150);
 }
 setInterval(dokiBlinkTick, 5000);
-// ---- Doki AI provider (item 93, owner-approved Oct 25 12:21) ----
-// The Gemini key below is the owner-approved DoKit key: API-restricted
-// to Gemini API only, free tier (no billing). It is visible to anyone
-// who views page source — that is inherent to a client-side key, and
-// the API restriction + free tier bound the risk. If it is ever abused,
-// rotate it in AI Studio and replace this one constant.
-// Grounding is strict: dokiGemini picks only FAQ entries whose keywords
-// overlap the question (same matcher as the KB path); with no overlap
-// it returns 'DK_NOT_GROUNDED' WITHOUT calling the API, and the handler
-// falls back to the KB/links path. No invented answers, ever.
-var DK_GEMINI_KEY = 'AQ.Ab8RN6K3TddyU2da9OACwSPMCFvI1v3GEZhzfsewPMzVP6nrYg';
+// ---- Doki answers (KB-only, owner choice Oct 26: Option A) ----
+// No AI provider and no API key: live AI was dropped because every key
+// placed in public client code was disabled by Google within hours/days.
+// Doki answers from the site's own knowledge base (assistant-kb.js) and
+// falls back to navigation links. dokiGemini below is kept as a stub
+// returning DK_NOT_GROUNDED so any old caller degrades gracefully.
 function dokiLoadFaq(){
-  if (window.DKFAQ || document.querySelector('script[data-dk-faq]')) { return; }
-  try {
-    var src = document.querySelector('script[src*="main.js"]');
-    var base = src ? src.getAttribute('src').replace(/main\.js.*$/, '') : 'assets/js/';
-    var s = document.createElement('script');
-    s.setAttribute('data-dk-faq', '1');
-    s.src = base + 'dk-faq.js';
-    s.onload = function(){ if (window.DKFAQ) { window.DKChat.setProvider(dokiGemini); } };
-    document.head.appendChild(s);
-  } catch (e) {}
+  // KB-only (Oct 26): no FAQ/AI provider is loaded. Doki answers from
+  // assistant-kb.js, loaded site-wide by loadSharedScripts.
 }
 function dokiGemini(req){
-  // Returns a Promise<string>: grounded answer, or 'DK_NOT_GROUNDED'.
-  try {
-    dokiProviderError = false;
-    var q = (req.messages[req.messages.length - 1] || {}).text || '';
-    var low = q.toLowerCase();
-    var words = low.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2; });
-    var scored = (window.DKFAQ || []).map(function (entry) {
-      var hay = (entry.q + ' ' + entry.a).toLowerCase(), score = 0;
-      words.forEach(function (w) { if (hay.indexOf(w) !== -1) { score += 2; } });
-      if (hay.indexOf(low) !== -1) { score += 3; }
-      return { entry: entry, score: score };
-    }).filter(function (s) { return s.score >= 2; })
-      .sort(function (a, b) { return b.score - a.score; })
-      .slice(0, 6);
-    if (!scored.length) { return Promise.resolve('DK_NOT_GROUNDED'); }
-    var context = scored.map(function (s) { return 'Q: ' + s.entry.q + '\nA: ' + s.entry.a; }).join('\n\n');
-    var prompt = 'You are Doki, the DoKit website assistant. Answer ONLY from the context below, using the context\'s own facts even when the question words them differently (for example, "built" or "designed" in the context answers "founder"). Reply with exactly: DK_NOT_GROUNDED ONLY when the context has nothing at all on the question\'s topic. Keep the answer short (2-4 sentences), plain language, no invented details.\n\nCONTEXT:\n' + context + '\n\nQUESTION: ' + q + '\nANSWER:';
-    // Model chain (Oct 25, expert fix — measured + researched, not guessed):
-    // v8 proved the old chain hung in the live browser: both attempts
-    // consumed their full timeouts (25s + 60s = ~90s of dots), while the
-    // same calls answer in ~1s from curl. Expert findings (Oct 25):
-    // this is NOT CORS and NOT a key restriction (both fail fast) — it
-    // is a stalled serving path. Two real gaps in the old code: (1) it
-    // never set thinkingConfig, so gemini-3.8-flash ran its default
-    // MEDIUM thinking (slow); (2) it used the moving -latest alias.
-    // Fix: pinned gemini-3.5-flash-lite (MINIMAL thinking) first, then
-    // gemini-3.6-flash (LOW); small capped output (512 tokens);
-    // 15s/20s per-attempt timeouts (35s worst, down from 90s).
-    // gemini-3.8-flash is DELIBERATELY NOT in this chain: measured
-    // Oct 25 it took 32.3s even with LOW thinking (46.3s with default
-    // MEDIUM before that, plus 503s) — it would always abort inside
-    // any reasonable timeout and only lengthen the dots. Retryable
-    // HTTP errors (408/429/5xx) retried once after 1s, timeouts move
-    // straight to the next model, fatal errors (400/401/403/404) fall
-    // back immediately with no retry. A literal DK_NOT_GROUNDED
-    // verdict from a model is final (no retry).
-    var RETRYABLE = { '408': 1, '429': 1, '500': 1, '502': 1, '503': 1, '504': 1 };
-    function sleepMs(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-    function attempt(model, thinking, timeoutMs) {
-      var controller = null, timer = null;
-      try { controller = new AbortController(); } catch (e) {}
-      if (controller) {
-        timer = setTimeout(function () { try { controller.abort(); } catch (e) {} }, timeoutMs);
-      }
-      function clear() { if (timer) { clearTimeout(timer); } }
-      return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + DK_GEMINI_KEY, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 512, thinkingConfig: { thinkingLevel: thinking } } }),
-        signal: controller ? controller.signal : undefined
-      }).then(function (r) {
-        if (!r.ok) { clear(); return { retry: !!RETRYABLE[String(r.status)], fatal: !RETRYABLE[String(r.status)] }; }
-        return r.json().then(function (data) {
-          clear();
-          var t = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-          t = (t || '').trim();
-          return { text: t || null };
-        });
-      }).catch(function () {
-        clear();
-        // Timeout, network failure, or unreadable body: move to the
-        // next model, never burn retries on a stalled pool.
-        return { next: true };
-      });
-    }
-    function runChain(models, i) {
-      // Chain exhausted: every model failed, timed out, or answered
-      // empty — a genuine provider failure, not an ungrounded question.
-      if (i >= models.length) { dokiProviderError = true; return Promise.resolve('DK_NOT_GROUNDED'); }
-      var m = models[i];
-      return attempt(m.name, m.thinking, m.timeout).then(function (res) {
-        if (res.text) { return res.text; }
-        if (res.fatal) { dokiProviderError = true; return 'DK_NOT_GROUNDED'; }
-        if (res.retry) {
-          return sleepMs(1000).then(function () {
-            return attempt(m.name, m.thinking, m.timeout);
-          }).then(function (res2) {
-            if (res2.text) { return res2.text; }
-            if (res2.fatal) { dokiProviderError = true; return 'DK_NOT_GROUNDED'; }
-            return runChain(models, i + 1);
-          });
-        }
-        return runChain(models, i + 1);
-      });
-    }
-    return runChain([
-      { name: 'gemini-3.5-flash-lite', thinking: 'MINIMAL', timeout: 15000 },
-      { name: 'gemini-3.6-flash', thinking: 'LOW', timeout: 20000 }
-    ], 0);
-  } catch (e) { dokiProviderError = true; return Promise.resolve('DK_NOT_GROUNDED'); }
+  // KB-only stub (Oct 26): live AI removed by owner choice. Always
+  // ungrounded so the handler falls back to KB/links, never an error.
+  return Promise.resolve('DK_NOT_GROUNDED');
 }
 // ---- Doki session plumbing (item 93) ----
 // DKChat is the client-side session layer for the Doki panel. `provider`
-// is null until the approved FAQ data (dk-faq.js) loads on first panel
-// open; then setProvider(dokiGemini) wires the grounded Gemini provider
-// in. Its answer renders through the same bot element. History is
+// stays null by design (KB-only, Oct 26): the handler answers from
+// assistant-kb.js or falls back to navigation links. Its answer renders through the same bot element. History is
 // IN-MEMORY ONLY (tab session): a reload starts fresh — nothing is
 // persisted to Firestore or localStorage.
 window.DKChat = window.DKChat || {
@@ -359,7 +258,7 @@ if(form){
     var req = window.DKChat.buildRequest(q);
     window.DKChat.history.push({ role: 'user', text: q });
     var b = document.createElement('div'); b.className = 'msg bot';
-    var low = q.toLowerCase(), reply = dkT('rsv_1021', 'I answer from DoKit\'s own content — live AI answers are already here. ');
+    var low = q.toLowerCase(), reply = dkT('rsv_1021', 'I answer from DoKit\'s own content. ');
     var links = [];
     if(/price|pricing|pro|team|rs |cost/.test(low)) links.push(['Pricing', form.getAttribute('data-pricing')]);
     if(/compress|100kb|50kb|size|shrink/.test(low)) links.push(['Image Compressor', form.getAttribute('data-compressor')]);
