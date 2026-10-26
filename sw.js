@@ -5,7 +5,11 @@
 // style.css replace stale cached files — the Oct 26 profile form click
 // did nothing in browsers holding the v2 cache (old account.js has no
 // Update Profile binding). The activate handler deletes old caches.
-var CACHE = 'dokit-v3';
+// v7 (Oct 26): bumped to dokit-v4 so the referral writer fix (typing
+// page now loads account.js + Firebase) replaces stale cached JS —
+// without the bump, browsers holding v3 keep serving the old files
+// and the activation writer can never fire.
+var CACHE = 'dokit-v4';
 var ORIGIN = self.location.origin;
 var BASE = self.location.pathname.replace(/sw\.js$/, '');
 function u(p) { return ORIGIN + BASE + p; }

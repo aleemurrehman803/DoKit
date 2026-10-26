@@ -334,7 +334,7 @@
      * collection, and only then are those levels rendered. */
     var l2 = opts.levels && opts.levels.l2;
     var l3 = opts.levels && opts.levels.l3;
-    var note = '<p>' + esc(T('ref_note_rules', 'Deeper levels need a Firestore rules update before they can be shown here.')) + '</p>';
+    var note = '<p>' + esc(T('ref_note_rules', 'Deeper team levels need a future update before they can be shown here. Level 1 and admin settlement already work.')) + '</p>';
     var html = '<h3>' + esc(T('ref_tree_title', 'Team tree')) + '</h3>'
       + '<h4>' + esc(T('ref_tree_l1', 'Level 1')) + '</h4>' + levelList(rows, stats, opts.names)
       + '<h4>' + esc(T('ref_tree_l2', 'Level 2')) + '</h4>'
