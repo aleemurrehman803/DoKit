@@ -137,7 +137,16 @@
         };
         if (!snap.exists) {
           data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          data.coins = 0;
+          /* Senior-review fix (live-test 6, Oct 26): NO coins field
+           * here on purpose. The onUser fallback can plant its bare
+           * doc before the server evaluates this set, turning it
+           * into an UPDATE — and coins is a privileged key, so the
+           * whole write is denied and referrerId/consent/photoURL/
+           * lastLogin are all lost with it. Every coins read
+           * tolerates absence (dashboard/header/admin show 0, and
+           * FieldValue.increment treats a missing field as 0), and
+           * the create rule explicitly allows coins absent. */
+
           /* Referral Phase 1: extras (referrerId / referralCode /
            * consent) are applied to a brand-new doc. A returning user
            * signing in again never gets a referrer overwritten by a
