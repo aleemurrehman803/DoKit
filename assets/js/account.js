@@ -128,7 +128,10 @@
     ensureUserDoc: function(user, extra){
       if (!user || !user.uid || !DKA.db()) { return Promise.resolve(); }
       var ref = DKA.userDoc(user.uid);
-      return ref.get().then(function(snap){
+      /* Payload builder, factored so the race retry below reuses the
+       * EXACT exists-branch logic (no createdAt, extras fill-missing
+       * only) instead of duplicating it. */
+      var buildData = function(snap){
         var data = {
           email: user.email || '',
           displayName: user.displayName || '',
@@ -210,7 +213,28 @@
         } else if (dkDeviceId) {
           data.deviceIds = [dkDeviceId];
         }
-        return ref.set(data, { merge: true });
+        return data;
+      };
+      return ref.get().then(function(snap){
+        return ref.set(buildData(snap), { merge: true }).catch(function(err){
+          /* Signup-race fix (Oct 27, 2026): the get() above can see no
+           * doc while the onUser fallback plants its bare doc before
+           * the server evaluates this set — the write then becomes an
+           * UPDATE, and the owner-update allow-list rejects createdAt,
+           * so the whole write is denied although Auth + bare doc
+           * exist. Retry ONCE with a fresh read: the exists-branch
+           * payload carries no createdAt and fills referral extras
+           * only when missing, so every key is owner-allow-listed and
+           * the retry ALLOWs under the current rules. Non-permission
+           * errors are rethrown immediately (never masked); if the
+           * retry also fails, the diagnostic catch below records it
+           * exactly as before. */
+          if (!err || err.code !== 'permission-denied') { throw err; }
+          return ref.get().then(function(snap2){
+            if (!snap2 || !snap2.exists) { throw err; }
+            return ref.set(buildData(snap2), { merge: true });
+          });
+        });
       }).catch(function(err){
         /* Diagnostic (live-test 5, Oct 26): this catch used to swallow
          * every failure silently, which hid three straight live-test
