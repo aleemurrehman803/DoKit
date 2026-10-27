@@ -1064,9 +1064,13 @@
     if (act === 'give') {
       var inp = row ? row.querySelector('input') : null;
       var n = inp ? parseInt(inp.value, 10) : 0;
-      if (!n || n < 1 || !id) { return; }
+      /* Stage 1 (AUD-003, D6): client-side give cap 1000 (UX only —
+       * the rules cap is the boundary) + ledger doc-id. Give has no
+       * source doc, so the id is timestamp+random; it carries no
+       * idempotency claim. admAudit entry kept. */
+      if (!n || n < 1 || n > 1000 || !id) { return; }
       db.collection('users').doc(id).update({coins: firebase.firestore.FieldValue.increment(n)}).then(function () {
-        return db.collection('users').doc(id).collection('coin_ledger').add({uid: id, amount: n, by: currentUser.uid, reason: 'admin grant', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+        return db.collection('users').doc(id).collection('coin_ledger').doc('give-' + Date.now() + '-' + Math.floor(Math.random() * 1e9)).set({uid: id, amount: n, by: currentUser.uid, reason: 'admin grant', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
       }).then(function () { admAudit('give_coins', id, String(n)); done(); }).catch(fail);
     } else if (act === 'suspend' || act === 'unsuspend') {
       if (!id) { return; }
@@ -1132,7 +1136,8 @@
           chain = chain.then(function () {
             return db.collection('users').doc(ctx.d.userId).update({coins: firebase.firestore.FieldValue.increment(ctx.coins)});
           }).then(function () {
-            return db.collection('users').doc(ctx.d.userId).collection('coin_ledger').add({uid: ctx.d.userId, amount: ctx.coins, by: currentUser.uid, reason: 'deposit approval', depositId: id, depositAmount: ctx.d.amount, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+            /* Stage 1 (AUD-003): deposit doc-id (rules enforce it). */
+            return db.collection('users').doc(ctx.d.userId).collection('coin_ledger').doc(id).set({uid: ctx.d.userId, amount: ctx.coins, by: currentUser.uid, reason: 'deposit approval', depositId: id, depositAmount: ctx.d.amount, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
           });
         }
         var granted = ctx.prior ? (ctx.prior.amount || 0) : ctx.coins;
@@ -1149,10 +1154,25 @@
       if (act === 'claim-reject') {
         db.collection('coin_claims').doc(id).update({status: 'rejected'}).then(function () { admAudit(act, id); done(); }).catch(fail);
       } else if (c) {
-        db.collection('coin_claims').doc(id).update({status: 'approved'}).then(function () {
-          return db.collection('users').doc(c.uid).update({coins: firebase.firestore.FieldValue.increment(c.amount)});
-        }).then(function () {
-          return db.collection('users').doc(c.uid).collection('coin_ledger').add({uid: c.uid, amount: c.amount, by: currentUser.uid, reason: 'claim approval', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+        /* Stage 1 (AUD-003): legacy claim gains the deposit path's
+         * discipline, which it lacked entirely (no pre-check, no source
+         * id, flip FIRST). Ledger pre-check first: if an entry for this
+         * claim already exists, pay nothing and just confirm the flip.
+         * Otherwise increment, write the ledger entry by source doc-id
+         * (with the claimId field the old entry lacked), then flip LAST
+         * — the old flip-first order stranded an approved claim with no
+         * coins and no retry on any crash after the flip. */
+        db.collection('users').doc(c.uid).collection('coin_ledger').where('claimId', '==', id).get().then(function (lsnap) {
+          var found = false;
+          lsnap.forEach(function () { found = true; });
+          if (found) {
+            return db.collection('coin_claims').doc(id).update({status: 'approved'});
+          }
+          return db.collection('users').doc(c.uid).update({coins: firebase.firestore.FieldValue.increment(c.amount)}).then(function () {
+            return db.collection('users').doc(c.uid).collection('coin_ledger').doc('legacy-' + id).set({uid: c.uid, amount: c.amount, by: currentUser.uid, reason: 'claim approval', claimId: id, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+          }).then(function () {
+            return db.collection('coin_claims').doc(id).update({status: 'approved'});
+          });
         }).then(function () { admAudit(act, id); done(); }).catch(fail);
       }
     } else if (act === 'ref-export') {

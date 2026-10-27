@@ -743,7 +743,12 @@
                 createdAt: serverTimestamp() };
               if (entry.milestone != null) { rec.milestone = entry.milestone; }
               if (entry.inviteeUid) { rec.inviteeUid = entry.inviteeUid; }
-              return d.collection('users').doc(uid).collection('coin_ledger').add(rec);
+              /* Stage 1 (AUD-003): bonus doc-id — welcome/first/milestone
+               * per referral row, matching the rules' entryId checks. */
+              var bonusDocId = referralId + (entry.milestone != null
+                ? '-milestone-' + entry.milestone
+                : (entry.reason === 'first referral bonus' ? '-first' : '-welcome'));
+              return d.collection('users').doc(uid).collection('coin_ledger').doc(bonusDocId).set(rec);
             }).then(function () { return amount; });
           });
       }
@@ -849,7 +854,9 @@
                   return d.collection('users').doc(leg.uid).update({
                     coins: root.firebase.firestore.FieldValue.increment(legAmount)
                   }).then(function () {
-                    return d.collection('users').doc(leg.uid).collection('coin_ledger').add({
+                    /* Stage 1 (AUD-003): leg doc-id — one entry per
+                     * referral row per level (rules enforce the same). */
+                    return d.collection('users').doc(leg.uid).collection('coin_ledger').doc(referralId + '-L' + leg.level).set({
                       uid: leg.uid, amount: legAmount, by: adminUid,
                       reason: 'referral reward', level: leg.level,
                       inviteeUid: referralId, referralId: referralId,
@@ -1340,15 +1347,23 @@
       });
   }
   function payUser(d, adminUid, uid, amount, entry) {
-    /* Increment first, ledger entry second, both carrying the source
-     * id in entry. The caller flips the source doc last, so a crash
-     * between ledger-add and flip is resume-safe (ledger check). */
+    /* Stage 1 (AUD-003): ledger entry written by SOURCE doc-id
+     * (entry.docId, set by every caller below) with create-only rules,
+     * so a duplicate grant collides instead of minting twice. docId is
+     * stripped from the stored record (it is the doc id, not a field).
+     * Increment-first is KEPT deliberately: a balance-cap denial must
+     * leave no false ledger record, and every caller flips the source
+     * doc LAST, so ledger-before-flip holds. Crash between increment
+     * and ledger still leaves unrecorded coins on a hard crash (Spark
+     * has no atomic multi-write — plan §C.2 residual, stated plainly). */
+    var docId = entry ? entry.docId : null;
+    if (!docId) { return Promise.reject(coreErr('Missing ledger doc id.')); }
     return d.collection('users').doc(uid).update({
       coins: root.firebase.firestore.FieldValue.increment(amount)
     }).then(function () {
       var rec = { uid: uid, amount: amount, by: adminUid, createdAt: serverTimestamp() };
-      Object.keys(entry || {}).forEach(function (k) { rec[k] = entry[k]; });
-      return d.collection('users').doc(uid).collection('coin_ledger').add(rec);
+      Object.keys(entry || {}).forEach(function (k) { if (k !== 'docId') { rec[k] = entry[k]; } });
+      return d.collection('users').doc(uid).collection('coin_ledger').doc(docId).set(rec);
     });
   }
   function setPlan(d, uid, plan) {
@@ -1427,13 +1442,13 @@
         if (!flags[0]) {
           seq = seq.then(function () {
             return payUser(d, adminUid, claim.uid, Number(claim.amount) || 0,
-              { reason: 'claim settlement', kind: claim.kind, claimId: claimId });
+              { reason: 'claim settlement', kind: claim.kind, claimId: claimId, docId: claimId });
           }).then(function () { paid += Number(claim.amount) || 0; });
         }
         if (isAppeal && !flags[1]) {
           seq = seq.then(function () {
             return payUser(d, adminUid, claim.uid, RATES.APPEAL_APOLOGY,
-              { reason: 'claim apology', kind: claim.kind, claimId: claimId });
+              { reason: 'claim apology', kind: claim.kind, claimId: claimId, docId: claimId + '-apology' });
           }).then(function () { paid += RATES.APPEAL_APOLOGY; });
         }
         return seq.then(function () {
@@ -1580,7 +1595,7 @@
           var seq = Promise.resolve();
           if (!alreadyPaid) {
             seq = seq.then(function () {
-              return payUser(d, adminUid, p.uid, -price, { reason: 'plan purchase', kind: p.kind, purchaseId: purchaseId });
+              return payUser(d, adminUid, p.uid, -price, { reason: 'plan purchase', kind: p.kind, purchaseId: purchaseId, docId: purchaseId });
             }).then(function () { paid = price; });
           }
           return seq.then(function () {
@@ -1708,7 +1723,9 @@
           var pool = (psnap && psnap.exists) ? (psnap.data() || {}) : {};
           return d.collection('pools').doc(c.poolId).update({ balance: (Number(pool.balance) || 0) + Number(c.coins) });
         }).then(function () {
-          return d.collection('users').doc(c.uid).collection('coin_ledger').add({ uid: c.uid, amount: -Number(c.coins), by: adminUid, reason: 'pool contribution', contributionId: contributionId, poolId: c.poolId, createdAt: serverTimestamp() });
+          /* Stage 1 (AUD-003): contribution doc-id. Order UNCHANGED
+           * by decision (Q3 exception) — see the comment above. */
+          return d.collection('users').doc(c.uid).collection('coin_ledger').doc(contributionId).set({ uid: c.uid, amount: -Number(c.coins), by: adminUid, reason: 'pool contribution', contributionId: contributionId, poolId: c.poolId, createdAt: serverTimestamp() });
         }).then(function () {
           return ref.update({ status: 'approved', reviewedBy: adminUid, reviewedAt: serverTimestamp() });
         }).then(function () { return Number(c.coins); });
@@ -2832,7 +2849,7 @@
            * retried pay skips them instead of double-paying. */
           return ledgerHasFiltered(d, w.uid, 'monthKey', mk, 'contest prize').then(function (already) {
             if (already) { return false; }
-            return payUser(d, adminUid, w.uid, amount, { reason: 'contest prize', monthKey: mk, rank: i + 1 }).then(function () { return true; });
+            return payUser(d, adminUid, w.uid, amount, { reason: 'contest prize', monthKey: mk, rank: i + 1, docId: 'contest-' + mk }).then(function () { return true; });
           }).then(function (paidIt) {
             /* Only a fresh payment counts toward the reported total:
              * a skipped (already-paid) winner must not inflate it, or
@@ -2921,7 +2938,7 @@
           seq = seq.then(function () {
             return ledgerHasFiltered(d, uid, 'goalId', goalId, 'community goal').then(function (already) {
               if (already) { return false; }
-              return payUser(d, adminUid, uid, RATES.COMMUNITY_GOAL_REWARD, { reason: 'community goal', goalId: goalId }).then(function () { return true; });
+              return payUser(d, adminUid, uid, RATES.COMMUNITY_GOAL_REWARD, { reason: 'community goal', goalId: goalId, docId: 'goal-' + goalId }).then(function () { return true; });
             }).then(function (paidIt) {
               if (paidIt) { total += RATES.COMMUNITY_GOAL_REWARD; paidUids.push(uid); }
             });
@@ -3036,7 +3053,7 @@
     return ledgerHasFiltered(d, uid, 'featuredId', featuredId, null).then(function (already) {
       var dupMsg = 'This featured piece was already paid.';
       if (already) { throw coreErr(dupMsg); }
-      return payUser(d, adminUid, uid, RATES.FEATURED_REWARD, { reason: 'featured', featuredId: featuredId });
+      return payUser(d, adminUid, uid, RATES.FEATURED_REWARD, { reason: 'featured', featuredId: featuredId, docId: 'featured-' + featuredId });
     }).then(function () {
       /* Item #35: the homepage slot reads ONLY the public board,
        * so featuring must also publish the board doc — same doc
@@ -3069,7 +3086,7 @@
         var dupMsg = 'Reactivation bonus already paid this month.';
         if (already) { throw coreErr(dupMsg); }
         return payUser(d, adminUid, referrerUid, RATES.REACTIVATION_BONUS,
-          { reason: 'reactivation bonus', inviteeUid: inviteeUid, monthKey: mk });
+          { reason: 'reactivation bonus', inviteeUid: inviteeUid, monthKey: mk, docId: inviteeUid + '-' + mk });
       }).then(function () { return RATES.REACTIVATION_BONUS; });
   }
 
@@ -3142,7 +3159,7 @@
           seq = seq.then(function () {
             return ledgerHasFiltered(d, mid, 'weekKey', wk, 'battle prize').then(function (already) {
               if (already) { return false; }
-              return payUser(d, adminUid, mid, share, { reason: 'battle prize', weekKey: wk }).then(function () { return true; });
+              return payUser(d, adminUid, mid, share, { reason: 'battle prize', weekKey: wk, docId: 'battle-' + wk }).then(function () { return true; });
             }).then(function (paidIt) {
               if (paidIt) { total += share; paidUids.push(mid); }
             });
@@ -3176,7 +3193,7 @@
         if (already) {
           return ref.update({ status: 'paid' }).then(function () { return { alreadyPaid: true, paid: 0 }; });
         }
-        return payUser(d, adminUid, doc.uid, RATES.SHOUTOUT_PRIZE, { reason: 'shoutout', monthKey: mk }).then(function () {
+        return payUser(d, adminUid, doc.uid, RATES.SHOUTOUT_PRIZE, { reason: 'shoutout', monthKey: mk, docId: 'shoutout-' + mk }).then(function () {
           return ref.update({ status: 'paid' });
         }).then(function () { return { alreadyPaid: false, paid: RATES.SHOUTOUT_PRIZE }; });
       });
