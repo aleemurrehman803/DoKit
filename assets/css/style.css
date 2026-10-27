@@ -109,6 +109,11 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 /* ---- Phase 2b additions (one place — shared by all rebuilt pages) ---- */
 /* Admin tabs: buttons in a wrapping row; panels hidden until opened. */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+/* P4-1 (Oct 27): admin.js toggles .open on [data-apanel] panels, but no
+   panel rule existed, so the inert `hidden` class hid nothing and all
+   panels rendered stacked. These two rules are the whole fix. */
+.tab-panel{display:none}
+.tab-panel.open{display:block}
 /* On-screen keyboard (Urdu page): rows of tappable letter keys. */
 .kb{margin:14px 0}
 .kb-row{display:flex;gap:6px;flex-wrap:wrap;margin:5px 0}

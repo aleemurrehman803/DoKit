@@ -512,6 +512,27 @@
     return row;
   }
 
+  /* P4-3 (AUD-070 code part, Oct 27): get-first referral-row create.
+   * The old code did .set(rowFields) unconditionally; on an EXISTING
+   * doc a set evaluates as an update, which the rules reserve to
+   * admin (referrals update/delete: isAdmin only), so a re-run was
+   * DENIED and the .catch swallowed it silently. Now: get first, set
+   * ONLY when the doc is missing. Returns true when the row was
+   * created, false when it already existed (skipped cleanly - no
+   * write attempted, so no deny can occur) or when the get/set
+   * itself failed (signup must never fail because a referral row
+   * could not be written; the row is best-effort). Missing-doc
+   * semantics are unchanged: same fields, same serverTimestamp
+   * createdAt, same Promise.all job slot. */
+  function createReferralRowIfMissing(uid, rowFields) {
+    rowFields.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    return DKA.db().collection('referrals').doc(uid).get().then(function (snap) {
+      if (snap && snap.exists) { return false; }
+      return DKA.db().collection('referrals').doc(uid).set(rowFields).then(function () { return true; });
+    }).catch(function () { return false; });
+  }
+  DKA.createReferralRowIfMissing = createReferralRowIfMissing;
+
   /* ---------- small DOM helpers ---------- */
   function $(id){ return document.getElementById(id); }
   function setText(id, text){
@@ -1043,6 +1064,10 @@
       }).catch(function (err) { showMsg('adm-msg', friendlyError(err), true); });
     });
     function addForm(id, coll, fields, makeDoc, listId, renderAgain){
+      /* P4-2 (AUD-067): allow-list assertion — a future call site must
+       * not silently address an unintended collection. Live call sites:
+       * competitors, tickets, changelog, experiments only. */
+      if (['competitors', 'tickets', 'changelog', 'experiments'].indexOf(coll) === -1) { var addFormErr = 'addForm: collection not allowed: ' + coll; throw new Error(addFormErr); }
       build(id, '<form class="toolbox">' + fields + '<p><button class="btn" type="submit">Add</button></p></form>', function (ev) {
         ev.preventDefault();
         var f = ev.target;
@@ -1280,6 +1305,9 @@
     } catch (e) { /* fail open */ }
   }
   function moneyList(elId, coll, user, rowFn){
+    /* P4-2 (AUD-067): allow-list assertion. Live call sites use
+     * deposits/withdrawals only (pre-existing owner-history lists). */
+    if (['deposits', 'withdrawals'].indexOf(coll) === -1) { var moneyListErr = 'moneyList: collection not allowed: ' + coll; throw new Error(moneyListErr); }
     // Owner history query (rules allow owner list via userId == uid).
     var el = $(elId);
     if (!el || !DKA.db()) { return; }
@@ -1604,8 +1632,8 @@
           try {
             var rowFields = signupReferralRow(u.uid);
             if (rowFields) {
-              rowFields.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-              jobs.push(DKA.db().collection('referrals').doc(u.uid).set(rowFields).catch(function(){}));
+              /* P4-3: get-first create - an existing row is skipped, never overwritten. */
+              jobs.push(createReferralRowIfMissing(u.uid, rowFields));
             }
           } catch (e) {}
           return Promise.all(jobs);
@@ -1658,8 +1686,8 @@
             try {
               var rowFields = signupReferralRow(u.uid);
               if (rowFields) {
-                rowFields.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                jobs.push(DKA.db().collection('referrals').doc(u.uid).set(rowFields).catch(function(){}));
+                /* P4-3: get-first create - an existing row is skipped, never overwritten. */
+                jobs.push(createReferralRowIfMissing(u.uid, rowFields));
               }
             } catch (e) {}
           }

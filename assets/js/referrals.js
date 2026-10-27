@@ -1866,8 +1866,9 @@
   /* ================= CORE-1: lazy loads + renders ========================
    * WHY lazy: the referrals page must not pay for four extra queries
    * on every dashboard visit. Each load below is called only by its
-   * own section, and each turns a permission-denied (the new
-   * collections have no published rules yet) into an honest empty
+   * own section, and each turns a permission-denied (the collections
+   * are covered by the published Oct 27 rules; a denial is a genuine
+   * rules denial, not a missing publish) into an honest empty
    * result plus a rulesPending flag — never a crash, never a fake
    * success. Renders create their own container under #ref-main
    * (never an HTML edit) and attach their own dataset-guarded
@@ -2555,11 +2556,16 @@
   function battleTeams(rows, wk) {
     return sortCounts(countActivations(rows, wk, weekKey), 'referrerUid', 'score');
   }
-  function boardEntries(optedUids, rows, wk) {
+  function boardEntries(optedUids, rows, wk, usersByUid) {
     /* Opt-in ONLY: a referrer counts only when their users doc has
      * leaderboardOptIn === true. Non-opted-in referrers are excluded
      * here, at publish-compute time — the published board can never
-     * leak them, because they never enter its entries. */
+     * leak them, because they never enter its entries.
+     * Privacy (AUD-023): when usersByUid is supplied (adminComputeBoard
+     * passes the opted users docs), referralPrivate members are
+     * excluded too, and every label is resolved through boardLabelFor
+     * (opted-in name, else 'Private member') — a raw uid is never the
+     * label. Without the map the safe default is 'Private member'. */
     var opted = {};
     (optedUids || []).forEach(function (u) { opted[u] = true; });
     var counts = {};
@@ -2571,7 +2577,9 @@
     });
     var out = [];
     Object.keys(counts).forEach(function (uid) {
-      out.push({ uid: uid, label: uid, count: counts[uid] });
+      var udoc = (usersByUid || {})[uid];
+      if (usersByUid && udoc && udoc.referralPrivate) { return; }
+      out.push({ uid: uid, label: boardLabelFor(udoc || {}), count: counts[uid] });
     });
     out.sort(function (a, b) {
       if (b.count !== a.count) { return b.count - a.count; }
@@ -2718,6 +2726,9 @@
 
   /* ---------- CORE-2 loads ---------- */
   function loadPublicDoc(collection, id) {
+    /* P4-2 (AUD-067): allow-list assertion. Live call sites use the
+     * five public board collections only. */
+    if (['contest_winners', 'leaderboard_boards', 'community_goals', 'battles', 'shoutouts'].indexOf(collection) === -1) { var pubDocErr = 'loadPublicDoc: collection not allowed: ' + collection; throw new Error(pubDocErr); }
     var d = coreDb();
     if (!d || !collection || !id) { return Promise.resolve({ doc: null, rulesPending: false }); }
     return d.collection(collection).doc(id).get().then(function (snap) {
@@ -2813,16 +2824,35 @@
      * pool is a top-prize top-up, never spread across ranks). A
      * caller-supplied prize is kept, so a corrected re-publish is
      * possible without changing this function. */
-    var mapped = (winners || []).map(function (w, i) {
-      var prize = (w.prize != null) ? Number(w.prize) : 0;
-      if (w.prize == null) {
-        if (i < 3) { prize = RATES.CONTEST_PRIZES[i] + (i === 0 ? pool : 0); }
-      }
-      return { uid: w.uid, count: Number(w.count) || 0, prize: prize };
+    /* Privacy (AUD-023): resolve every winner label through
+     * boardLabelFor and drop referralPrivate winners BEFORE prize
+     * assignment, so the published board never lists them and prizes
+     * stay consistent with the published ranks. Admin reads of user
+     * docs are allowed by rules; a missing/denied doc degrades to
+     * 'Private member' rather than failing the publish. The uid is
+     * kept because adminPayContest pays from this doc. */
+    var winnerUids = [];
+    (winners || []).forEach(function (w) { if (w && w.uid && winnerUids.indexOf(w.uid) === -1) { winnerUids.push(w.uid); } });
+    var userFetches = winnerUids.map(function (uid) {
+      return readUserDoc(d, uid).catch(function () { return {}; });
     });
-    return d.collection('contest_winners').doc(mk).set({
-      winners: mapped, bonusPool: pool, status: 'published', publishedAt: serverTimestamp()
-    }).then(function () { return { monthKey: mk, winners: mapped, bonusPool: pool }; });
+    return Promise.all(userFetches).then(function (udocs) {
+      var usersByUid = {};
+      winnerUids.forEach(function (uid, i) { usersByUid[uid] = udocs[i] || {}; });
+      var publicWinners = (winners || []).filter(function (w) {
+        return !(w && usersByUid[w.uid] && usersByUid[w.uid].referralPrivate);
+      });
+      var mapped = publicWinners.map(function (w, i) {
+        var prize = (w.prize != null) ? Number(w.prize) : 0;
+        if (w.prize == null) {
+          if (i < 3) { prize = RATES.CONTEST_PRIZES[i] + (i === 0 ? pool : 0); }
+        }
+        return { uid: w.uid, label: boardLabelFor(usersByUid[w.uid] || {}), count: Number(w.count) || 0, prize: prize };
+      });
+      return d.collection('contest_winners').doc(mk).set({
+        winners: mapped, bonusPool: pool, status: 'published', publishedAt: serverTimestamp()
+      }).then(function () { return { monthKey: mk, winners: mapped, bonusPool: pool }; });
+    });
   }
   function adminPayContest(adminUid, mk) {
     var d = coreDb();
@@ -2871,8 +2901,13 @@
       d.collection('users').where('leaderboardOptIn', '==', true).get().then(snapshotRows),
       d.collection('referrals').get().then(snapshotRows)
     ]).then(function (parts) {
-      var opted = parts[0].map(function (u) { return u._id; });
-      return boardEntries(opted, parts[1], wk);
+      /* Privacy (AUD-023): referralPrivate members are excluded from
+       * the board even though they opted into the leaderboard, and
+       * labels resolve through boardLabelFor (see boardEntries). */
+      var usersByUid = {};
+      parts[0].forEach(function (u) { if (u && u._id) { usersByUid[u._id] = u; } });
+      var opted = parts[0].filter(function (u) { return !(u && u.referralPrivate); }).map(function (u) { return u._id; });
+      return boardEntries(opted, parts[1], wk, usersByUid);
     });
   }
   function adminPublishBoard(adminUid, wk, entries) {
@@ -2880,10 +2915,16 @@
     var missingMsg = 'Missing leaderboard publish input.';
     if (!d || !adminUid || !wk) { return Promise.reject(coreErr(missingMsg)); }
     /* Stored shape matches the design exactly: label + count only.
-     * The uid is the label here (no display names are invented for
-     * a public board), so nothing is lost by the mapping. */
+     * Labels arrive already resolved through boardLabelFor at
+     * compute time (adminComputeBoard), so no raw uid enters the
+     * published doc on the real path. FAIL-CLOSED (Phase 4
+     * follow-up, CEO order): a labelless entry must NEVER fall
+     * back to its uid as the label — a missing label publishes as
+     * 'Private member'. The render-side label || uid fallbacks
+     * elsewhere are INTENTIONAL compat for OLD docs only and are
+     * untouched by this change. */
     var mapped = (entries || []).map(function (e) {
-      return { label: e.label || e.uid || '', count: Number(e.count) || 0 };
+      return { label: e.label || 'Private member', count: Number(e.count) || 0 };
     });
     return d.collection('leaderboard_boards').doc(wk).set({
       entries: mapped, publishedAt: serverTimestamp()
@@ -3103,24 +3144,56 @@
     var d = coreDb();
     var missingMsg = 'Missing battle publish input.';
     if (!d || !adminUid || !wk || !winnerUid) { return Promise.reject(coreErr(missingMsg)); }
-    var mapped = (teams || []).map(function (t) {
-      return { referrerUid: t.referrerUid, score: Number(t.score) || 0 };
+    /* Privacy (AUD-023): drop referralPrivate teams from the
+     * published board and resolve team labels through boardLabelFor.
+     * If the passed winner team was dropped, the first surviving team
+     * becomes the winner; if no public team remains the publish is
+     * rejected rather than publishing a private member. Stored teams
+     * carry {label, score} only — adminPayBattle pays from winnerUid
+     * + the referrals collection, never from team referrerUids. The
+     * winnerUid itself is kept because adminPayBattle needs it. */
+    var teamUids = [];
+    (teams || []).forEach(function (t) { if (t && t.referrerUid && teamUids.indexOf(t.referrerUid) === -1) { teamUids.push(t.referrerUid); } });
+    var teamFetches = teamUids.map(function (uid) {
+      return readUserDoc(d, uid).catch(function () { return {}; });
     });
-    return d.collection('battles').doc(wk).set({
-      teams: mapped, winnerUid: winnerUid, pool: RATES.BATTLE_POOL, status: 'published', publishedAt: serverTimestamp()
+    /* The badge block below runs after the set, so it reads the
+     * published winner through this variable, not the raw param. */
+    var publishedWinnerUid = winnerUid;
+    return Promise.all(teamFetches).then(function (udocs) {
+      var usersByUid = {};
+      teamUids.forEach(function (uid, i) { usersByUid[uid] = udocs[i] || {}; });
+      var publicTeams = (teams || []).filter(function (t) {
+        return !(t && usersByUid[t.referrerUid] && usersByUid[t.referrerUid].referralPrivate);
+      });
+      var noTeamsMsg = 'No public battle teams to publish.';
+      if (!publicTeams.length) { throw coreErr(noTeamsMsg); }
+      var finalWinnerUid = winnerUid;
+      if (!publicTeams.some(function (t) { return t.referrerUid === winnerUid; })) {
+        finalWinnerUid = publicTeams[0].referrerUid;
+      }
+      publishedWinnerUid = finalWinnerUid;
+      var mapped = publicTeams.map(function (t) {
+        return { label: boardLabelFor(usersByUid[t.referrerUid] || {}), score: Number(t.score) || 0 };
+      });
+      return d.collection('battles').doc(wk).set({
+        teams: mapped, winnerUid: finalWinnerUid, winnerLabel: boardLabelFor(usersByUid[finalWinnerUid] || {}), pool: RATES.BATTLE_POOL, status: 'published', publishedAt: serverTimestamp()
+      });
     }).then(function () {
       /* Item #52: winning-team badge. The team is identified by its
-       * captain (winnerUid), so the captain earns 'battle-champion'
-       * once, append-only like every other badge — a re-publish never
-       * duplicates it, and a badge failure never fails the publish
-       * (the board is the source of truth; members are paid separately
-       * at pay time). */
-      return d.collection('users').doc(winnerUid).get().then(function (snap) {
+       * captain (the PUBLISHED winner — publishedWinnerUid, which
+       * differs from the param only when the passed winner team was
+       * referralPrivate and dropped), so the captain earns
+       * 'battle-champion' once, append-only like every other badge —
+       * a re-publish never duplicates it, and a badge failure never
+       * fails the publish (the board is the source of truth; members
+       * are paid separately at pay time). */
+      return d.collection('users').doc(publishedWinnerUid).get().then(function (snap) {
         var udoc = (snap && snap.exists) ? (snap.data() || {}) : {};
         var badges = Array.isArray(udoc.badges) ? udoc.badges.slice() : [];
         if (badges.indexOf('battle-champion') !== -1) { return true; }
         badges.push('battle-champion');
-        return d.collection('users').doc(winnerUid).update({ badges: badges }).then(function () { return true; });
+        return d.collection('users').doc(publishedWinnerUid).update({ badges: badges }).then(function () { return true; });
       }).catch(function () { return true; });
     });
   }
@@ -3175,8 +3248,16 @@
     var d = coreDb();
     var missingMsg = 'Missing shoutout publish input.';
     if (!d || !adminUid || !mk || !uid) { return Promise.reject(coreErr(missingMsg)); }
-    return d.collection('shoutouts').doc(mk).set({
-      uid: uid, story: story || '', prize: RATES.SHOUTOUT_PRIZE, status: 'published', publishedAt: serverTimestamp()
+    /* Privacy (AUD-023): a referralPrivate member is never published
+     * to the public shoutout board; everyone else gets a label
+     * resolved through boardLabelFor. The uid is kept because
+     * adminPayShoutout pays from this doc. */
+    return readUserDoc(d, uid).catch(function () { return {}; }).then(function (udoc) {
+      var privateMsg = 'This member is private and cannot be published.';
+      if (udoc && udoc.referralPrivate) { throw coreErr(privateMsg); }
+      return d.collection('shoutouts').doc(mk).set({
+        uid: uid, label: boardLabelFor(udoc || {}), story: story || '', prize: RATES.SHOUTOUT_PRIZE, status: 'published', publishedAt: serverTimestamp()
+      });
     }).then(function () { return true; });
   }
   function adminPayShoutout(adminUid, mk) {
@@ -3243,7 +3324,9 @@
         else {
           html.push('<ul>');
           winners.forEach(function (w, i) {
-            html.push('<li>' + esc(String(i + 1)) + ' · ' + esc(w.uid || '') + ' · ' + esc(countText) + ': ' + esc(String(w.count || 0)) + ' · ' + esc(prizeText) + ': ' + esc(String(w.prize || 0)) + '</li>');
+            /* Privacy (AUD-023): new publishes carry label; the uid
+             * fallback renders old docs that predate labels. */
+            html.push('<li>' + esc(String(i + 1)) + ' · ' + esc(w.label || w.uid || '') + ' · ' + esc(countText) + ': ' + esc(String(w.count || 0)) + ' · ' + esc(prizeText) + ': ' + esc(String(w.prize || 0)) + '</li>');
           });
           html.push('</ul>');
         }
@@ -3284,7 +3367,7 @@
             /* Top-3 crown markers are plain text, never an emoji —
              * an emoji font gap must never turn a crown into a box. */
             var crown = (i < 3) ? (esc(crownText) + ' · ') : '';
-            html.push('<li>' + crown + esc(e.label || '') + ' · ' + esc(String(e.count || 0)) + '</li>');
+            html.push('<li>' + crown + esc(e.label || e.uid || '') + ' · ' + esc(String(e.count || 0)) + '</li>');
           });
           html.push('</ul>');
         }
@@ -3626,13 +3709,15 @@
       if (res.rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
       else if (!res.doc) { html.push('<p>' + esc(emptyText) + '</p>'); }
       else {
-        html.push('<p>' + esc(winnerText) + ': ' + esc(res.doc.winnerUid || '') + ' · ' + esc(poolText) + ': ' + esc(String(res.doc.pool || 0)) + ' · ' + esc(res.doc.status || '') + '</p>');
+        /* Privacy (AUD-023): new publishes carry winnerLabel + team
+         * labels; the uid fallbacks render old docs that predate them. */
+        html.push('<p>' + esc(winnerText) + ': ' + esc(res.doc.winnerLabel || res.doc.winnerUid || '') + ' · ' + esc(poolText) + ': ' + esc(String(res.doc.pool || 0)) + ' · ' + esc(res.doc.status || '') + '</p>');
         var teams = res.doc.teams || [];
         if (!teams.length) { html.push('<p>' + esc(emptyText) + '</p>'); }
         else {
           html.push('<ul>');
           teams.forEach(function (t) {
-            html.push('<li>' + esc(t.referrerUid || '') + ' · ' + esc(String(t.score || 0)) + '</li>');
+            html.push('<li>' + esc(t.label || t.referrerUid || '') + ' · ' + esc(String(t.score || 0)) + '</li>');
           });
           html.push('</ul>');
         }
@@ -3645,7 +3730,9 @@
     /* Shared star card (item #55): the referrals-page shoutout and the
      * homepage slot render the SAME markup from the SAME public doc —
      * never a second copy that can drift. */
-    return '<p>' + esc('Star') + ': ' + esc(doc.uid || '') + ' · ' + esc('Prize') + ': ' + esc(String(doc.prize || 0)) + '</p>'
+    /* Privacy (AUD-023): new publishes carry label; the uid fallback
+     * renders old docs that predate labels. */
+    return '<p>' + esc('Star') + ': ' + esc(doc.label || doc.uid || '') + ' · ' + esc('Prize') + ': ' + esc(String(doc.prize || 0)) + '</p>'
       + '<p>' + esc(doc.story || '') + '</p>';
   }
   function renderHomepageShoutout(attempt) {

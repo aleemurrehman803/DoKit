@@ -17,7 +17,8 @@
  * (historical typefight-pdf.js layout, current /DoKit/ verify URL), and a
  * ?id= single-certificate view (issued document by id, or device record
  * by serial). The PDF button hides when jsPDF did not load (historical
- * rule) instead of pretending to generate a PDF.
+ * rule) instead of pretending to generate a PDF. Typing sheet: genuine
+ * A4 PDF via jsPDF too (Phase 2, P2-2b), under the same hide rule.
  * NOT restored, deliberately: the historical global serial counter
  * (Firestore transaction on config/cert_counter) and the SHA256 signature
  * scheme — the counter needs a production collection + rules change
@@ -38,6 +39,7 @@
   // Historical registration alphabet (no I/O/0/1 lookalikes).
   var REG_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   var VERIFY_BASE = 'https://aleemurrehman803.github.io/DoKit/typing/verify/?reg=';
+  var VERIFY_PAGE = 'aleemurrehman803.github.io/DoKit/typing/verify/';
   var QR_API = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=';
   // TypeFight (Task 4): current verify route + single-view QR size.
   var TF_VERIFY_BASE = 'https://aleemurrehman803.github.io/DoKit/typefight/verify/?id=';
@@ -108,6 +110,48 @@
   function set(id, val) {
     var el = document.getElementById(id);
     if (el) { el.textContent = val; }
+  }
+  // --- Sheet QR load failure (Phase 2, P2-1) ---------------------------
+  // The sheet QR is an external image: when it fails to load, the sheet
+  // must say so visibly instead of showing a broken/blank QR. The note
+  // element is created once and reused across re-renders; it sits after
+  // the QR paragraph so the verification link stays visible below it.
+  function qrFailText() {
+    return (window.dkT ? window.dkT('cert_qr_fail', 'QR code could not load. Use the verification link below to verify this certificate.') : 'QR code could not load. Use the verification link below to verify this certificate.');
+  }
+  function showQrFail(img) {
+    if (!img || !img.parentNode || !img.parentNode.parentNode) { return; }
+    var note = document.getElementById('cert-qr-note');
+    if (!note) {
+      note = document.createElement('p');
+      note.id = 'cert-qr-note';
+      note.className = 'note';
+      img.parentNode.parentNode.insertBefore(note, img.parentNode.nextSibling);
+    }
+    note.textContent = qrFailText();
+    note.hidden = false;
+  }
+  function hideQrFail() {
+    var note = document.getElementById('cert-qr-note');
+    if (note) { note.hidden = true; }
+  }
+  function setSheetQr(img, url) {
+    if (!img) { return; }
+    hideQrFail();
+    img.onerror = function () { showQrFail(img); };
+    img.onload = function () { hideQrFail(); };
+    img.src = url;
+  }
+  // PDF-side QR omission note (Phase 2, P2-1): drawn into the PDF where
+  // the QR would have been, so a PDF never silently ships without one.
+  // Returns the y position below the note.
+  function drawQrMissingNote(doc, cx, y, muted) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(muted[0], muted[1], muted[2]);
+    doc.text(qrFailText(), cx, y, { align: 'center' });
+    try { window.DKUI && DKUI.toast && DKUI.toast(qrFailText()); } catch (e) {}
+    return y + 8;
   }
   function rand6() {
     var out = '', i;
@@ -250,7 +294,7 @@
       if (qrImg) {
         try { doc.addImage(qrImg, 'PNG', cx - 22, y, 44, 44); } catch (e) { qrImg = null; }
       }
-      if (qrImg) { y += 50; }
+      if (qrImg) { y += 50; } else { y = drawQrMissingNote(doc, cx, y, muted); }
       doc.setFontSize(10);
       doc.setTextColor(muted[0], muted[1], muted[2]);
       doc.text('Scan to verify, or enter the registration number at:', cx, y, { align: 'center' });
@@ -272,6 +316,108 @@
     });
   }
   if (kind === 'battle') { window.TFPdf = { generate: tfGenerate }; }
+  // --- Typing A4 PDF (Phase 2, P2-2b) ----------------------------------
+  // Genuine jsPDF certificate for the typing sheet, mirroring the battle
+  // PDF layout above: one actual best test, never a composite; gross /
+  // duration / language only when the stored result carries them (an
+  // em-dash otherwise, exactly as the sheet shows). Rejects when jsPDF
+  // did not load; the caller hides the button then, so the button can
+  // never fall back to a print dialog under a PDF label.
+  // cert: { username, wpm, accuracy, gross, durationSec, language,
+  // grade, date, regNo }; certId: registration number.
+  function typingGenerate(cert, certId) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      var libErr = 'PDF library not loaded';
+      return Promise.reject(new Error(libErr));
+    }
+    var verifyUrl = VERIFY_BASE + certId;
+    return tfQrDataUrl(verifyUrl).then(function (qrImg) {
+      var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      var W = 210, H = 297;
+      var brand = [108, 76, 241]; // DoKit purple #6C4CF1
+      var ink = [30, 30, 40];
+      var muted = [110, 110, 125];
+      doc.setDrawColor(brand[0], brand[1], brand[2]);
+      doc.setLineWidth(1.6);
+      doc.rect(8, 8, W - 16, H - 16);
+      doc.setLineWidth(0.5);
+      doc.rect(12, 12, W - 24, H - 24);
+      var cx = W / 2;
+      var y = 34;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text('DoKit  •  Typing Test', cx, y, { align: 'center' });
+      y += 14;
+      doc.setFontSize(28);
+      doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text('Certificate of Typing Proficiency', cx, y, { align: 'center' });
+      y += 10;
+      doc.setDrawColor(brand[0], brand[1], brand[2]);
+      doc.setLineWidth(0.8);
+      doc.line(cx - 45, y, cx + 45, y);
+      y += 14;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(muted[0], muted[1], muted[2]);
+      doc.text('This certificate is proudly presented to', cx, y, { align: 'center' });
+      y += 13;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(26);
+      doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text(String(cert.username).slice(0, 30), cx, y, { align: 'center' });
+      y += 13;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text(cert.wpm + ' WPM', cx - 32, y, { align: 'center' });
+      doc.text(cert.accuracy + '% accuracy', cx + 32, y, { align: 'center' });
+      y += 12;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(muted[0], muted[1], muted[2]);
+      doc.text('Grade: ' + cert.grade, cx, y, { align: 'center' });
+      y += 10;
+      var grossText = (typeof cert.gross === 'number') ? cert.gross + ' WPM' : '—';
+      var durText = (typeof cert.durationSec === 'number') ? cert.durationSec + ' seconds' : '—';
+      var langText = cert.language ? ({ en: 'English' }[cert.language] || String(cert.language)) : '—';
+      doc.setFontSize(11);
+      doc.text('Gross: ' + grossText + '  ·  Duration: ' + durText + '  ·  Language: ' + langText, cx, y, { align: 'center' });
+      y += 12;
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text('Reg. No: ' + cert.regNo, cx, y, { align: 'center' });
+      y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(muted[0], muted[1], muted[2]);
+      doc.text('Issue date: ' + cert.date, cx, y, { align: 'center' });
+      y += 18;
+      if (qrImg) {
+        try { doc.addImage(qrImg, 'PNG', cx - 22, y, 44, 44); } catch (e) { qrImg = null; }
+      }
+      if (qrImg) { y += 50; } else { y = drawQrMissingNote(doc, cx, y, muted); }
+      doc.setFontSize(10);
+      doc.setTextColor(muted[0], muted[1], muted[2]);
+      doc.text('Scan to verify, or enter the registration number at:', cx, y, { align: 'center' });
+      y += 6;
+      doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text(VERIFY_PAGE, cx, y, { align: 'center' });
+      y += 20;
+      doc.setDrawColor(ink[0], ink[1], ink[2]);
+      doc.setLineWidth(0.4);
+      doc.line(cx - 40, y, cx + 40, y);
+      y += 6;
+      doc.setFontSize(10);
+      doc.setTextColor(muted[0], muted[1], muted[2]);
+      doc.text('DoKit Typing Test', cx, y, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('Virtual achievement — no cash value.', cx, H - 20, { align: 'center' });
+      var safeName = String(cert.username).replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 24) || 'typist';
+      doc.save('DoKit-Typing-Certificate-' + cert.regNo + '-' + safeName + '.pdf');
+    });
+  }
   // --- TypeFight ?id= single view (Task 4) ------------------------------
   // Issued documents are addressed by document id; device records are
   // addressed by their serial. Firestore-first, device fallback — the
@@ -388,7 +534,7 @@
       set('cert-photo', bname.charAt(0).toUpperCase());
       var tfVerifyUrl = 'https://aleemurrehman803.github.io/DoKit/typefight/verify/?serial=' + rec.serial;
       var tfQr = document.getElementById('cert-qr');
-      if (tfQr) { tfQr.src = TF_QR_API + encodeURIComponent(tfVerifyUrl); }
+      setSheetQr(tfQr, TF_QR_API + encodeURIComponent(tfVerifyUrl));
       var tfVl = document.getElementById('cert-verify-link');
       if (tfVl) { tfVl.href = tfVerifyUrl; tfVl.textContent = tfVerifyUrl; }
       // Genuine PDF only when jsPDF loaded (historical rule); otherwise
@@ -440,9 +586,13 @@
     set('cert-grade', gradeFor(t.wpm, t.acc));
     var verifyUrl = VERIFY_BASE + rec2.regNo;
     var qr = document.getElementById('cert-qr');
-    if (qr) { qr.src = QR_API + encodeURIComponent(verifyUrl); }
+    setSheetQr(qr, QR_API + encodeURIComponent(verifyUrl));
     var vl = document.getElementById('cert-verify-link');
     if (vl) { vl.href = verifyUrl; vl.textContent = verifyUrl; }
+    // Genuine PDF only when jsPDF loaded (same historical rule as the
+    // battle sheet, Phase 2 P2-2b); otherwise the button hides instead
+    // of opening a print dialog under a PDF label.
+    if (pdfBtn) { pdfBtn.hidden = !window.jspdf; }
   }
   if (nameInput) { nameInput.addEventListener('input', render); }
   if (printBtn) { printBtn.addEventListener('click', function () { window.print(); }); }
@@ -457,9 +607,23 @@
           rec.serial).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) {} });
       });
     } else {
-      pdfBtn.addEventListener('click', function () { window.print(); });
+      // Typing-sheet PDF (Phase 2, P2-2b): genuine A4 PDF from the
+      // current best test + frozen registration; never a print dialog.
+      pdfBtn.addEventListener('click', function () {
+        var rec = loadRecord();
+        var t = bestTest();
+        if (!rec || !rec.regNo || !t || !window.jspdf) { return; }
+        typingGenerate(
+          { username: rec.name, wpm: t.wpm, accuracy: t.acc, gross: t.gross, durationSec: t.durationSec, language: t.language, grade: gradeFor(t.wpm, t.acc), date: new Date(rec.issuedAt).toLocaleDateString(), regNo: rec.regNo },
+          rec.regNo).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) {} });
+      });
     }
   }
+  // Typing page, jsPDF-absent at load: hide the PDF button on every
+  // render path (the render() typing branch also hides it once the
+  // sheet is shown); the button must never sit visible without a PDF
+  // engine behind it.
+  if (kind !== 'battle' && pdfBtn && !window.jspdf) { pdfBtn.hidden = true; }
   // Single view (?id=) replaces the practice sheet on battle pages.
   if (kind === 'battle') {
     var single = document.getElementById('tf-single');

@@ -82,7 +82,17 @@
         ft2: ['Square foot', 0.09290304] } },
       volume: { base: 'L', units: {
         L: ['Litre', 1], mL: ['Millilitre', 0.001], m3: ['Cubic metre', 1000],
-        gal: ['Gallon (US)', 3.785411784], cup: ['Cup (US)', 0.2365882365] } }
+        gal: ['Gallon (US)', 3.785411784], cup: ['Cup (US)', 0.2365882365] } },
+      // Speed (base m/s) + time (base s): the #uc-cat options already
+      // offered these categories, but CATS had no entry, so fillUnits()
+      // threw on selection. Same factor pattern as the other categories.
+      speed: { base: 'mps', units: {
+        mps: ['Metre per second', 1], kmh: ['Kilometre per hour', 1000 / 3600],
+        mph: ['Mile per hour', 0.44704], kn: ['Knot', 0.514444],
+        fps: ['Foot per second', 0.3048] } },
+      time: { base: 's', units: {
+        ms: ['Millisecond', 0.001], s: ['Second', 1], min: ['Minute', 60],
+        h: ['Hour', 3600], day: ['Day', 86400] } }
     };
     var ucCat = document.getElementById('uc-cat');
     var ucFrom = document.getElementById('uc-from');
