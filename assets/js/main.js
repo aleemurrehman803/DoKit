@@ -1208,6 +1208,54 @@ function dokiMicStop(){
   } catch (e) {}
 })();
 
+
+/* Homepage featured slot (item #35): mirrors the #55 shoutout loader
+ * EXACTLY (same homepage-only path check, same loads-referrals.js-once
+ * guards, same render-on-load) — with one ordering rule: the featured
+ * slot goes AFTER the shoutout section when it exists, else right
+ * after the hero, so #55 is never displaced. No generator or
+ * homepage-HTML edit, so the frozen hero is untouched. */
+(function loadHomepageFeatured(){
+  try {
+    var p = location.pathname || '';
+    if (p.charAt(p.length - 1) !== '/') { return; }
+    var root = p.replace(/\/+$/, '');
+    if (root !== '' && root !== '/DoKit') { return; }
+    if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); return; }
+    if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
+    var main = document.getElementById('main');
+    if (!main) { return; }
+    var hero = main.querySelector('section.hero');
+    if (!hero || !hero.parentNode) { return; }
+    var slot = document.getElementById('home-featured');
+    if (!slot) {
+      var section = document.createElement('section');
+      section.className = 'block';
+      slot = document.createElement('div');
+      slot.id = 'home-featured';
+      section.appendChild(slot);
+      var shout = document.getElementById('home-shoutout');
+      if (shout && shout.parentNode && shout.parentNode.parentNode === hero.parentNode) {
+        hero.parentNode.insertBefore(section, shout.parentNode.nextSibling);
+      } else {
+        hero.parentNode.insertBefore(section, hero.nextSibling);
+      }
+    }
+    var src = '';
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    var marker = 'assets/js/main.js';
+    var at = src ? src.indexOf(marker) : -1;
+    if (at < 0) { return; }
+    var s = document.createElement('script');
+    s.src = src.slice(0, at) + 'assets/js/referrals.js';
+    s.defer = true;
+    s.onload = function () {
+      try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
+    };
+    document.head.appendChild(s);
+  } catch (e) {}
+})();
+
 /* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
  * EVENTS (only these two shapes, nothing else is ever collected):
  *   pageview  {type, page, lang, ts} and tool_used {type, page, tool, action, ts}.

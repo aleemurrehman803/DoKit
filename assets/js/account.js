@@ -342,6 +342,20 @@
       sessionStorage.setItem('dokit_qr', '1');
     }
   } catch (e) {}
+  /* Class-link capture (item #9): a signup link carrying ?class=CODE
+   * marks the join as a class join, stored next to dokit_ref so the
+   * Google redirect (which drops URL params) keeps it, and cleared
+   * with dokit_ref after signup so it can never misattribute a later
+   * unrelated signup in the same tab. The code is stored RAW here;
+   * validation/normalization happens at read time
+   * (getCapturedClassCode), so a malformed code can never be
+   * stored as a valid one. */
+  try {
+    var classMatch = /[?&]class=([^&#]+)/.exec(location.search || '');
+    if (classMatch && classMatch[1]) {
+      sessionStorage.setItem('dokit_class', decodeURIComponent(classMatch[1]));
+    }
+  } catch (e) {}
   /* Referral consent visibility (live-test fix, Oct 26): the signup
    * checkbox wrap ships hidden, and until now NOTHING ever unhid it —
    * so consent could never be given and the activation writer always
@@ -398,6 +412,27 @@
     } catch (e) {}
     return 'link';
   }
+  /* Class code for the referrals row (item #9): the ?class= value
+   * (sessionStorage primary, URL re-read at submit time — same
+   * fallback as ?ref=), normalized to UPPERCASE and accepted only
+   * when it matches the class-code rule (mirror of
+   * DKREF.classCodeValid in referrals.js — keep both in sync).
+   * '' when absent or malformed: a bad code is never recorded
+   * as a join. */
+  function getCapturedClassCode() {
+    var raw = '';
+    try { raw = sessionStorage.getItem('dokit_class') || ''; } catch (e) {}
+    if (!raw) {
+      try {
+        var m = /[?&]class=([^&#]+)/.exec(location.search || '');
+        if (m && m[1]) { raw = decodeURIComponent(m[1]); }
+      } catch (e) {}
+    }
+    if (!raw) { return ''; }
+    var code = String(raw).trim().toUpperCase();
+    if (!/^[A-Z0-9-]{4,12}$/.test(code)) { return ''; }
+    return code;
+  }
   /* Invitee language for ambassador counts (referral #36): the UI
    * language persisted as localStorage dokit_lang. '' when unknown
    * (never guessed — ambassador counting skips 'unknown'). */
@@ -411,6 +446,10 @@
     try {
       var ref = getCapturedRef();
       if (ref && ref !== u.uid) { fields.referrerId = ref; }
+    } catch (e) {}
+    try {
+      var cc = getCapturedClassCode();
+      if (cc) { fields.classCode = cc; }
     } catch (e) {}
     try {
       var consentEl = document.getElementById('ref-consent');
@@ -1465,13 +1504,15 @@
           try {
             var ref = getCapturedRef();
             if (ref && ref !== u.uid) {
-              jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
+              var refDoc = {
                 referrerUid: ref,
                 source: getCapturedSource(),
                 language: getCapturedLanguage(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 rewarded: false
-              }).catch(function(){}));
+              };
+              try { var cc2 = getCapturedClassCode(); if (cc2) { refDoc.classCode = cc2; } } catch (e) {}
+              jobs.push(DKA.db().collection('referrals').doc(u.uid).set(refDoc).catch(function(){}));
             }
           } catch (e) {}
           return Promise.all(jobs);
@@ -1483,7 +1524,7 @@
            * — and the user — can read the exact error code. */
           var de = window.__dokitDocError; window.__dokitDocError = null;
           if (de) { showMsg('acct-err', DKA.friendlyError(de) + ' [' + (de.code || 'unknown') + ']', true); return; }
-          try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); } catch (e) {}
+          try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) {}
           location.href = '../dashboard/';
         }).catch(function(err){
           window.__dokitSigningUp = false;
@@ -1521,18 +1562,20 @@
             try {
               var ref = getCapturedRef();
               if (ref && ref !== u.uid) {
-                jobs.push(DKA.db().collection('referrals').doc(u.uid).set({
+                var refDoc = {
                   referrerUid: ref,
                   source: getCapturedSource(),
                   language: getCapturedLanguage(),
                   createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                   rewarded: false
-                }).catch(function(){}));
+                };
+                try { var cc2 = getCapturedClassCode(); if (cc2) { refDoc.classCode = cc2; } } catch (e) {}
+                jobs.push(DKA.db().collection('referrals').doc(u.uid).set(refDoc).catch(function(){}));
               }
             } catch (e) {}
           }
           return Promise.all(jobs).then(function(){
-            try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); } catch (e) {}
+            try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) {}
           });
         }).then(function(){
           window.__dokitSigningUp = false;

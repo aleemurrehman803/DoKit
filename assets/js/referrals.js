@@ -551,6 +551,8 @@
       renderCoachForecast(pageUid);
       renderGlobe(pageUid);
       renderRateAnnouncement();
+      renderClassDashboard(pageUid);
+      renderContributorsWall(pageUid);
     }
   }
   function fillDashboard(summary) {
@@ -3035,7 +3037,18 @@
       var dupMsg = 'This featured piece was already paid.';
       if (already) { throw coreErr(dupMsg); }
       return payUser(d, adminUid, uid, RATES.FEATURED_REWARD, { reason: 'featured', featuredId: featuredId });
-    }).then(function () { return RATES.FEATURED_REWARD; });
+    }).then(function () {
+      /* Item #35: the homepage slot reads ONLY the public board,
+       * so featuring must also publish the board doc — same doc
+       * id as the payment's featuredId, so a re-feature overwrites
+       * instead of duplicating. Board failure never fails the
+       * payment (the pay already happened; the board is display). */
+      return readUserDoc(d, uid).catch(function () { return {}; }).then(function (udoc) {
+        return d.collection('showcase_boards').doc('feat-' + featuredId).set({
+          kind: 'featured', label: boardLabelFor(udoc), note: featuredId, sourceId: featuredId, publishedAt: serverTimestamp()
+        }).catch(function () { return true; });
+      }).then(function () { return RATES.FEATURED_REWARD; });
+    });
   }
   function adminGrantReactivation(adminUid, inviteeUid, referrerUid) {
     var d = coreDb();
@@ -3664,6 +3677,372 @@
       return true;
     }).catch(function () { return false; });
   }
+
+  /* ---------- deferred items #9 / #18 / #35 (local build, Oct 27) -----
+   * WHY one section: all three were DEFERRED in the gaps pass for the
+   * same reason — each needs a public surface or a rules amendment —
+   * and all three now share ONE new public collection (showcase_boards)
+   * plus the existing admin-settle path. Nothing here is live until
+   * the parent pushes these files AND publishes the draft rules in
+   * deferred-rules-draft.txt (local text only, NOT published here).
+   * Strings follow the html-array pattern (plain literals in
+   * own-statement variables, pushed into html[], assigned via
+   * join('')), so the js-gate needs no new dict keys. */
+
+  /* Item #9 — class link codes. A code is teacher-chosen, 4-12 chars,
+   * A-Z/0-9/hyphen, stored UPPERCASE so 'grade10-a' and 'GRADE10-A'
+   * are the same class. No class names are invented here: the teacher
+   * supplies the name at request time, and the registry is data (the
+   * classes collection), never a hardcoded list. */
+  function classCodeNormalize(code) {
+    if (code == null) { return ''; }
+    return String(code).trim().toUpperCase();
+  }
+  function classCodeValid(code) {
+    var c = classCodeNormalize(code);
+    return /^[A-Z0-9-]{4,12}$/.test(c);
+  }
+  function classJoinCount(rows, code) {
+    /* Counts a teacher's OWN referral rows carrying this class code.
+     * The rows already come filtered by referrerUid
+     * (loadMyReferralSummary), so no new query and no rules change
+     * is needed for counting. */
+    var want = classCodeNormalize(code);
+    var n = 0;
+    (rows || []).forEach(function (r) {
+      if (r && want && classCodeNormalize(r.classCode) === want) { n++; }
+    });
+    return n;
+  }
+  function classClaimable(count, claims, ledger, code) {
+    /* Threshold met AND no live claim or settled payment for this
+     * code. Mirrors renderClaims' alreadyClaimed: a rejected claim
+     * frees the code again, a live one blocks it. */
+    var want = classCodeNormalize(code);
+    if (!want || !(count >= RATES.CLASS_BONUS.students)) { return false; }
+    var blocked = false;
+    (claims || []).forEach(function (c) {
+      if (c.kind === 'class' && c.status !== 'rejected' && c.detail && classCodeNormalize(c.detail.classCode) === want) { blocked = true; }
+    });
+    if (!blocked) {
+      (ledger || []).forEach(function (e) {
+        if (e.reason === 'claim settlement' && e.kind === 'class' && e.detail && classCodeNormalize(e.detail.classCode) === want) { blocked = true; }
+      });
+    }
+    return !blocked;
+  }
+  function classClaimPayload(code) {
+    /* The badge rides the existing settle append (adminSettleClaim
+     * appends detail.badge once, dup-guarded), so NO settle change
+     * is needed for the Classroom Leader badge. */
+    var c = classCodeNormalize(code);
+    return { kind: 'class', amount: RATES.CLASS_BONUS.coins, detail: { classCode: c, badge: RATES.CLASS_BONUS.badge } };
+  }
+  function requestClassCode(uid, code, name) {
+    var d = coreDb();
+    var missingMsg = 'Missing class code input.';
+    if (!d || !uid || !classCodeValid(code)) { return Promise.reject(coreErr(missingMsg)); }
+    var c = classCodeNormalize(code);
+    /* Duplicate codes are rejected, not overwritten: a code is a
+     * teacher's link identity, and silently reassigning it would
+     * misattribute an entire class. */
+    return d.collection('classes').where('code', '==', c).get().then(snapshotRows).then(function (rows) {
+      if (rows && rows.length) { throw coreErr('This class code is already taken.'); }
+      return d.collection('classes').doc(c).set({
+        code: c, teacherUid: uid, name: String(name || ''), status: 'pending', createdAt: serverTimestamp()
+      });
+    }).then(function () { return { code: c, status: 'pending' }; });
+  }
+  function adminApproveClass(adminUid, code) {
+    var d = coreDb();
+    var missingMsg = 'Missing class approval input.';
+    if (!d || !adminUid || !classCodeValid(code)) { return Promise.reject(coreErr(missingMsg)); }
+    var c = classCodeNormalize(code);
+    var ref = d.collection('classes').doc(c);
+    return ref.get().then(function (snap) {
+      var doc = (snap && snap.exists) ? (snap.data() || {}) : null;
+      var notFoundMsg = 'Class code not found.';
+      if (!doc) { throw coreErr(notFoundMsg); }
+      if (doc.status === 'active') { return { code: c, status: 'active', alreadyActive: true }; }
+      return ref.update({ status: 'active' }).then(function () { return { code: c, status: 'active', alreadyActive: false }; });
+    });
+  }
+  function loadMyClasses(uid) {
+    var d = coreDb();
+    if (!d || !uid) { return Promise.resolve({ classes: [], rulesPending: false }); }
+    return d.collection('classes').where('teacherUid', '==', uid).get()
+      .then(function (snap) { return { classes: snapshotRows(snap), rulesPending: false }; })
+      .catch(function (err) { return { classes: [], rulesPending: isPermDenied(err) }; });
+  }
+  function loadPendingClasses() {
+    var d = coreDb();
+    if (!d) { return Promise.resolve({ classes: [], rulesPending: false }); }
+    return d.collection('classes').where('status', '==', 'pending').get()
+      .then(function (snap) { return { classes: snapshotRows(snap), rulesPending: false }; })
+      .catch(function (err) { return { classes: [], rulesPending: isPermDenied(err) }; });
+  }
+  function isViewerAdmin(uid) {
+    /* Mirrors DKA.isAdmin (account.js): an admins/{uid} doc means
+     * admin. A denied/missing doc means NOT admin — never an exception. */
+    var d = coreDb();
+    if (!d || !uid) { return Promise.resolve(false); }
+    return d.collection('admins').doc(uid).get().then(function (snap) {
+      return !!(snap && snap.exists);
+    }).catch(function () { return false; });
+  }
+  function renderClassDashboard(uid) {
+    var container = refxContainer('refx-class');
+    if (!container || !uid) { return Promise.resolve(false); }
+    var titleText = 'My classes';
+    var pendingText = 'Admin approval pending for this feature.';
+    var emptyText = 'No classes yet. Request a class code to bring your class.';
+    var codeLabelText = 'Class code';
+    var nameLabelText = 'Class name';
+    var requestText = 'Request class code';
+    var claimText = 'Claim class bonus';
+    var approveText = 'Approve class';
+    var sentText = 'Request sent. Admin approval pending.';
+    var needText = 'students needed for the class bonus';
+    var claimedText = 'Class bonus claimed.';
+    var invalidText = 'Please enter a valid class code (4-12 letters, numbers, hyphens).';
+    return Promise.all([
+      loadMyClasses(uid),
+      loadMyReferralSummary(uid).catch(function () { return { referrals: [], stats: computeStats([], []) }; }),
+      loadMyClaims(uid),
+      loadMyLedgerFull(uid).catch(function () { return { entries: [] }; }),
+      isViewerAdmin(uid)
+    ]).then(function (parts) {
+      var myClasses = parts[0].classes;
+      var rows = (parts[1] && parts[1].referrals) || [];
+      var claims = parts[2].claims || [];
+      var ledger = (parts[3] && parts[3].entries) || [];
+      var admin = parts[4];
+      var html = ['<h3>' + esc(titleText) + '</h3><p><span data-refx-note></span></p>'];
+      if (parts[0].rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
+      html.push('<p>' + esc(codeLabelText) + ' <input type="text" data-refx-class-code> '
+        + esc(nameLabelText) + ' <input type="text" data-refx-class-name> '
+        + '<button class="btn ghost" type="button" data-refx-action="class-request">' + esc(requestText) + '</button></p>');
+      if (!myClasses.length) { html.push('<p>' + esc(emptyText) + '</p>'); }
+      else {
+        html.push('<ul>');
+        myClasses.forEach(function (cl) {
+          var count = classJoinCount(rows, cl.code);
+          var claimable = cl.status === 'active' && classClaimable(count, claims, ledger, cl.code);
+          html.push('<li>' + esc(cl.code || '') + ' · ' + esc(cl.name || '') + ' · ' + esc(String(count)) + ' / ' + esc(String(RATES.CLASS_BONUS.students)) + ' · ' + esc(cl.status || ''));
+          if (cl.status !== 'active') { html.push(' · ' + esc(sentText)); }
+          else if (count < RATES.CLASS_BONUS.students) { html.push(' · ' + esc(String(RATES.CLASS_BONUS.students - count)) + ' ' + esc(needText)); }
+          else if (claimable) {
+            html.push(' <button class="btn ghost" type="button" data-refx-action="class-claim" data-refx-code="' + esc(cl.code || '') + '">' + esc(claimText) + '</button>');
+          } else { html.push(' · ' + esc(claimedText)); }
+          html.push('</li>');
+        });
+        html.push('</ul>');
+      }
+      /* Admin branch: pending class approvals live here (not in the
+       * admin queue) so the queue function stays untouched. */
+      if (admin) { html.push('<div data-refx-class-admin></div>'); }
+      container.innerHTML = html.join('');
+      var noteEl = container.querySelector('[data-refx-note]');
+      function note(msg) { if (noteEl) { noteEl.textContent = msg; } }
+      var btns = container.querySelectorAll('button[data-refx-action]');
+      for (var i = 0; i < btns.length; i++) {
+        (function (btn) {
+          btn.addEventListener('click', function () {
+            var action = btn.getAttribute('data-refx-action');
+            if (action === 'class-request') {
+              var codeEl = container.querySelector('[data-refx-class-code]');
+              var nameEl = container.querySelector('[data-refx-class-name]');
+              var code = codeEl ? codeEl.value : '';
+              var nm = nameEl ? nameEl.value : '';
+              if (!classCodeValid(code)) { note(invalidText); return; }
+              requestClassCode(uid, code, nm).then(function () { note(sentText); renderClassDashboard(uid); }).catch(function (e) { note(e && e.message ? e.message : 'Request failed.'); });
+            } else if (action === 'class-claim') {
+              var code2 = btn.getAttribute('data-refx-code') || '';
+              var p = classClaimPayload(code2);
+              createClaim(uid, p.kind, p.amount, p.detail).then(function () { note(sentText); renderClassDashboard(uid); }).catch(function (e) { note(e && e.message ? e.message : 'Claim failed.'); });
+            }
+          });
+        })(btns[i]);
+      }
+      if (admin) {
+        loadPendingClasses().then(function (res) {
+          var box = container.querySelector('[data-refx-class-admin]');
+          if (!box) { return; }
+          var ahtml = ['<h4>' + esc('Pending classes') + '</h4>'];
+          if (!res.classes.length) { ahtml.push('<p>' + esc('No pending classes.') + '</p>'); }
+          else {
+            ahtml.push('<ul>');
+            res.classes.forEach(function (cl) {
+              ahtml.push('<li>' + esc(cl.code || '') + ' · ' + esc(cl.name || '') + ' <button class="btn ghost" type="button" data-refx-action="class-approve" data-refx-code="' + esc(cl.code || '') + '">' + esc(approveText) + '</button></li>');
+            });
+            ahtml.push('</ul>');
+          }
+          box.innerHTML = ahtml.join('');
+          var abtns = box.querySelectorAll('button[data-refx-action]');
+          for (var j = 0; j < abtns.length; j++) {
+            (function (btn) {
+              btn.addEventListener('click', function () {
+                var code3 = btn.getAttribute('data-refx-code') || '';
+                adminApproveClass(uid, code3).then(function () { renderClassDashboard(uid); }).catch(function (e) { note(e && e.message ? e.message : 'Approval failed.'); });
+              });
+            })(abtns[j]);
+          }
+        });
+      }
+      return true;
+    }).catch(function () { return false; });
+  }
+
+  /* Item #18 — contributors wall. Board docs live in ONE public
+   * collection (showcase_boards) and are written ONLY by admins from
+   * settled contributions — private ledger rows are never read for
+   * the wall. A board doc carries NO uid and NO email: only the
+   * display label, the note, and the source id (a claim id, never
+   * rendered). */
+  function boardLabelFor(udoc) {
+    /* Privacy-first: masked UNLESS the contributor's own record shows
+     * an explicit public-board choice. The only such choice that
+     * exists today is the leaderboard opt-in (leaderboardOptIn) — a
+     * display name alone is NOT consent to publish it. referralPrivate
+     * always wins (opt-out beats everything). A future dedicated
+     * showcase opt-in toggle would slot in here as one more OR leg. */
+    if (!udoc || udoc.referralPrivate) { return 'Private member'; }
+    if (udoc.leaderboardOptIn && (udoc.displayName || udoc.name)) { return udoc.displayName || udoc.name; }
+    return 'Private member';
+  }
+  function loadShowcaseBoards(kind) {
+    var d = coreDb();
+    if (!d || !kind) { return Promise.resolve({ boards: [], rulesPending: false }); }
+    return d.collection('showcase_boards').where('kind', '==', kind).get()
+      .then(function (snap) {
+        var rows = snapshotRows(snap);
+        /* Client-side newest-first: a where+orderBy query would need
+         * a composite index, so the sort happens here instead. */
+        rows.sort(function (a, b) { return toMs(b.publishedAt) - toMs(a.publishedAt); });
+        return { boards: rows, rulesPending: false };
+      })
+      .catch(function (err) { return { boards: [], rulesPending: isPermDenied(err) }; });
+  }
+  function showcaseCardHtml(doc) {
+    /* ONE shared wall/slot card (DRY): label + note ONLY. The doc
+     * carries no uid and no email by construction, and the source id
+     * is never rendered — so no identifier can leak through the wall. */
+    return '<li>' + esc(doc.label || 'Private member') + ' · ' + esc(doc.note || '') + '</li>';
+  }
+  function adminPublishContributor(adminUid, claimId) {
+    var d = coreDb();
+    var missingMsg = 'Missing contributor publish input.';
+    if (!d || !adminUid || !claimId) { return Promise.reject(coreErr(missingMsg)); }
+    var ref = d.collection('reward_claims').doc(claimId);
+    return ref.get().then(function (snap) {
+      var claim = (snap && snap.exists) ? (snap.data() || {}) : null;
+      var notFoundMsg = 'Contribution claim not found.';
+      if (!claim) { throw coreErr(notFoundMsg); }
+      /* ONLY settled contributions reach the wall: a pending claim
+       * is not a contribution yet, and a rejected one never is. */
+      var stateMsg = 'Only approved bug contributions can be published.';
+      if (claim.kind !== 'bug' || claim.status !== 'approved') { throw coreErr(stateMsg); }
+      return claim;
+    }).then(function (claim) {
+      return readUserDoc(d, claim.uid).catch(function () { return {}; }).then(function (udoc) {
+        var label = boardLabelFor(udoc);
+        var note = (claim.detail && claim.detail.description) || '';
+        /* Doc id is the claim id: re-publishing overwrites the same
+         * doc instead of duplicating the wall entry. */
+        return d.collection('showcase_boards').doc('contrib-' + claimId).set({
+          kind: 'contributor', label: label, note: String(note), sourceId: claimId, publishedAt: serverTimestamp()
+        }).then(function () { return { boardId: 'contrib-' + claimId, label: label }; });
+      });
+    });
+  }
+  function renderContributorsWall(uid) {
+    var container = refxContainer('refx-contributors');
+    if (!container || !uid) { return Promise.resolve(false); }
+    var titleText = 'Contributors';
+    var pendingText = 'Admin approval pending for this feature.';
+    var emptyText = 'No contributors published yet.';
+    var publishText = 'Publish to wall';
+    return Promise.all([
+      loadShowcaseBoards('contributor'),
+      isViewerAdmin(uid)
+    ]).then(function (parts) {
+      var boards = parts[0].boards;
+      var admin = parts[1];
+      var html = ['<h3>' + esc(titleText) + '</h3><p><span data-refx-note></span></p>'];
+      if (parts[0].rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
+      if (!boards.length) { html.push('<p>' + esc(emptyText) + '</p>'); }
+      else {
+        html.push('<ul>');
+        boards.forEach(function (b) { html.push(showcaseCardHtml(b)); });
+        html.push('</ul>');
+      }
+      if (admin) { html.push('<div data-refx-wall-admin></div>'); }
+      container.innerHTML = html.join('');
+      var noteEl = container.querySelector('[data-refx-note]');
+      function note(msg) { if (noteEl) { noteEl.textContent = msg; } }
+      if (admin) {
+        adminListClaims('approved').then(function (rows) {
+          var box = container.querySelector('[data-refx-wall-admin]');
+          if (!box) { return; }
+          var settled = (rows || []).filter(function (c) { return c && c.kind === 'bug'; });
+          var ahtml = ['<h4>' + esc('Approved bug contributions') + '</h4>'];
+          if (!settled.length) { ahtml.push('<p>' + esc('No approved bug contributions.') + '</p>'); }
+          else {
+            ahtml.push('<ul>');
+            settled.forEach(function (c) {
+              ahtml.push('<li>' + esc((c.detail && c.detail.description) || '') + ' <button class="btn ghost" type="button" data-refx-action="wall-publish" data-refx-id="' + esc(c._id || '') + '">' + esc(publishText) + '</button></li>');
+            });
+            ahtml.push('</ul>');
+          }
+          box.innerHTML = ahtml.join('');
+          var btns = box.querySelectorAll('button[data-refx-action]');
+          for (var i = 0; i < btns.length; i++) {
+            (function (btn) {
+              btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-refx-id') || '';
+                adminPublishContributor(uid, id).then(function () { note('Published to wall.'); renderContributorsWall(uid); }).catch(function (e) { note(e && e.message ? e.message : 'Publish failed.'); });
+              });
+            })(btns[i]);
+          }
+        }).catch(function () {});
+      }
+      return true;
+    }).catch(function () { return false; });
+  }
+
+  /* Item #35 — featured homepage slot. Mirrors renderHomepageShoutout
+   * EXACTLY (same retry-while-SDK-arrives, same honest empty/pending
+   * states, same never-fabricated rule) — but reads ONLY the public
+   * showcase_boards collection (kind 'featured'), never private
+   * ledger rows. The referrals-page featured list is untouched. */
+  function renderHomepageFeatured(attempt) {
+    if (typeof document === 'undefined') { return Promise.resolve(false); }
+    var container = document.getElementById('home-featured');
+    if (!container) { return Promise.resolve(false); }
+    if (!coreDb()) {
+      var n = (typeof attempt === 'number') ? attempt : 0;
+      if (n >= 4) { return Promise.resolve(false); }
+      return new Promise(function (resolve) {
+        setTimeout(function () { renderHomepageFeatured(n + 1).then(resolve); }, 1000);
+      });
+    }
+    var titleText = 'Featured';
+    var pendingText = 'Admin approval pending for this feature.';
+    var emptyText = 'No featured pieces published yet.';
+    return loadShowcaseBoards('featured').then(function (res) {
+      var html = ['<h3>' + esc(titleText) + '</h3>'];
+      if (res.rulesPending) { html.push('<p>' + esc(pendingText) + '</p>'); }
+      else if (!res.boards.length) { html.push('<p>' + esc(emptyText) + '</p>'); }
+      else {
+        html.push('<ul>');
+        res.boards.slice(0, 3).forEach(function (b) { html.push(showcaseCardHtml(b)); });
+        html.push('</ul>');
+      }
+      container.innerHTML = html.join('');
+      return true;
+    }).catch(function () { return false; });
+  }
+
   function renderPosters(uid) {
     var container = refxContainer('refx-posters');
     if (!container || !uid) { return Promise.resolve(false); }
@@ -4452,7 +4831,9 @@
     renderBattles: renderBattles, renderShoutout: renderShoutout, renderHomepageShoutout: renderHomepageShoutout, shoutoutCardHtml: shoutoutCardHtml,
     renderPosters: renderPosters, renderSeason: renderSeason,
     renderTreasury: renderTreasury, renderCoachForecast: renderCoachForecast, rateGraceLeft: rateGraceLeft, renderRateAnnouncement: renderRateAnnouncement,
-    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText, bugFormPayload: bugFormPayload, appealableClaims: appealableClaims, appealFormPayload: appealFormPayload
+    renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText, bugFormPayload: bugFormPayload, appealableClaims: appealableClaims, appealFormPayload: appealFormPayload,
+    classCodeValid: classCodeValid, classCodeNormalize: classCodeNormalize, classJoinCount: classJoinCount, classClaimable: classClaimable, classClaimPayload: classClaimPayload, requestClassCode: requestClassCode, adminApproveClass: adminApproveClass, loadMyClasses: loadMyClasses, loadPendingClasses: loadPendingClasses, renderClassDashboard: renderClassDashboard, isViewerAdmin: isViewerAdmin,
+    boardLabelFor: boardLabelFor, loadShowcaseBoards: loadShowcaseBoards, showcaseCardHtml: showcaseCardHtml, adminPublishContributor: adminPublishContributor, renderContributorsWall: renderContributorsWall, renderHomepageFeatured: renderHomepageFeatured
   };
   root.DKREF = DKREF;
   if (typeof module !== 'undefined' && module.exports) { module.exports = DKREF; }
