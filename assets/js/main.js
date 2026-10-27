@@ -1210,19 +1210,25 @@ function dokiMicStop(){
 
 
 /* Homepage featured slot (item #35): mirrors the #55 shoutout loader
- * EXACTLY (same homepage-only path check, same loads-referrals.js-once
- * guards, same render-on-load) — with one ordering rule: the featured
- * slot goes AFTER the shoutout section when it exists, else right
- * after the hero, so #55 is never displaced. No generator or
- * homepage-HTML edit, so the frozen hero is untouched. */
+ * (same homepage-only path check, same render-on-load) — with one
+ * ordering rule: the featured slot goes AFTER the shoutout section
+ * when it exists, else right after the hero, so #55 is never
+ * displaced. No generator or homepage-HTML edit, so the frozen hero
+ * is untouched.
+ * FIX4 (Oct 27): the slot is created BEFORE the DKREF/script guards.
+ * Previously the guards ran first, and because loadHomepageShoutout
+ * (just above in this file) had already injected the referrals.js
+ * script tag, this loader hit the script-exists guard and returned
+ * without creating #home-featured and without hooking render to the
+ * script load — while the shoutout onload renders only the shoutout.
+ * So renderHomepageFeatured was never invoked on the homepage (and
+ * would have no-op'd on the missing container anyway). */
 (function loadHomepageFeatured(){
   try {
     var p = location.pathname || '';
     if (p.charAt(p.length - 1) !== '/') { return; }
     var root = p.replace(/\/+$/, '');
     if (root !== '' && root !== '/DoKit') { return; }
-    if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); return; }
-    if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
     var main = document.getElementById('main');
     if (!main) { return; }
     var hero = main.querySelector('section.hero');
@@ -1240,6 +1246,18 @@ function dokiMicStop(){
       } else {
         hero.parentNode.insertBefore(section, hero.nextSibling);
       }
+    }
+    if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); return; }
+    var existing = document.querySelector('script[src$="assets/js/referrals.js"]');
+    if (existing) {
+      /* The script is already loading (injected by the shoutout
+       * loader just above) — hook render to its load instead of
+       * returning silently. If it had already finished, DKREF would
+       * be present and the branch above would have run. */
+      try { existing.addEventListener('load', function () {
+        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
+      }); } catch (e) {}
+      return;
     }
     var src = '';
     try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}

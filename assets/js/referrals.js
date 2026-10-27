@@ -3706,13 +3706,50 @@
     /* Counts a teacher's OWN referral rows carrying this class code.
      * The rows already come filtered by referrerUid
      * (loadMyReferralSummary), so no new query and no rules change
-     * is needed for counting. */
+     * is needed for counting.
+     * FIX4 (Oct 27): class-only rows are NOT in that query (a
+     * class-only row has no referrerUid), so renderClassDashboard
+     * merges loadClassJoinRows(code) — see below. */
     var want = classCodeNormalize(code);
     var n = 0;
     (rows || []).forEach(function (r) {
       if (r && want && classCodeNormalize(r.classCode) === want) { n++; }
     });
     return n;
+  }
+  function loadClassJoinRows(code) {
+    /* FIX4 (Oct 27): class joins as the teacher counts them. The
+     * teacher's own referrals query (referrerUid == uid) can never
+     * return a class-only join (that row has no referrerUid — there
+     * is no referrer), so the class dashboard also reads rows by
+     * classCode. Under the currently published rules this query is
+     * denied (the list rule can only prove referrerUid == caller),
+     * so it resolves to [] until the companion list rule ships —
+     * never an exception, never a partial count. */
+    var d = coreDb();
+    var c = classCodeNormalize(code);
+    if (!d || !c) { return Promise.resolve([]); }
+    return d.collection('referrals').where('classCode', '==', c).get()
+      .then(snapshotRows).catch(function () { return []; });
+  }
+  function mergeReferralRows(a, b) {
+    /* FIX4 (Oct 27): union of two referral-row lists, deduped by doc
+     * id. A combined ?ref=&class= join appears in BOTH the teacher's
+     * referrerUid query and the classCode query — without dedupe it
+     * would count twice. Rows without an id are appended as-is
+     * (they cannot be proven duplicates). */
+    var seen = {};
+    var out = [];
+    (a || []).concat(b || []).forEach(function (r) {
+      if (!r) { return; }
+      var id = r._id;
+      if (id) {
+        if (seen[id]) { return; }
+        seen[id] = true;
+      }
+      out.push(r);
+    });
+    return out;
   }
   function classClaimable(count, claims, ledger, code) {
     /* Threshold met AND no live claim or settled payment for this
@@ -3808,15 +3845,29 @@
     var needText = 'students needed for the class bonus';
     var claimedText = 'Class bonus claimed.';
     var invalidText = 'Please enter a valid class code (4-12 letters, numbers, hyphens).';
-    return Promise.all([
-      loadMyClasses(uid),
-      loadMyReferralSummary(uid).catch(function () { return { referrals: [], stats: computeStats([], []) }; }),
-      loadMyClaims(uid),
-      loadMyLedgerFull(uid).catch(function () { return { entries: [] }; }),
-      isViewerAdmin(uid)
-    ]).then(function (parts) {
+    /* FIX4 (Oct 27): class rows are loaded in two stages — the class
+     * codes come from loadMyClasses, then one classCode query per
+     * code (loadClassJoinRows) so class-only joins (rows without a
+     * referrerUid) are counted too. Merged with the teacher's own
+     * referrals rows and deduped by doc id (a combined join is in
+     * both lists). parts[0..4] keep their old indices. */
+    return loadMyClasses(uid).then(function (clsRes) {
+      var codes = (clsRes.classes || []).map(function (c) { return c.code; });
+      return Promise.all([
+        Promise.resolve(clsRes),
+        loadMyReferralSummary(uid).catch(function () { return { referrals: [], stats: computeStats([], []) }; }),
+        loadMyClaims(uid),
+        loadMyLedgerFull(uid).catch(function () { return { entries: [] }; }),
+        isViewerAdmin(uid),
+        Promise.all(codes.map(function (code) { return loadClassJoinRows(code); })).then(function (perCode) {
+          var merged = [];
+          perCode.forEach(function (rs) { merged = mergeReferralRows(merged, rs); });
+          return merged;
+        })
+      ]);
+    }).then(function (parts) {
       var myClasses = parts[0].classes;
-      var rows = (parts[1] && parts[1].referrals) || [];
+      var rows = mergeReferralRows((parts[1] && parts[1].referrals) || [], parts[5] || []);
       var claims = parts[2].claims || [];
       var ledger = (parts[3] && parts[3].entries) || [];
       var admin = parts[4];
@@ -4852,7 +4903,7 @@
     renderPosters: renderPosters, renderSeason: renderSeason,
     renderTreasury: renderTreasury, renderCoachForecast: renderCoachForecast, rateGraceLeft: rateGraceLeft, renderRateAnnouncement: renderRateAnnouncement,
     renderGlobe: renderGlobe, renderAdminQueue: renderAdminQueue, appealSlaText: appealSlaText, bugFormPayload: bugFormPayload, appealableClaims: appealableClaims, appealFormPayload: appealFormPayload,
-    classCodeValid: classCodeValid, classCodeNormalize: classCodeNormalize, classJoinCount: classJoinCount, classClaimable: classClaimable, classClaimPayload: classClaimPayload, requestClassCode: requestClassCode, adminApproveClass: adminApproveClass, loadMyClasses: loadMyClasses, loadPendingClasses: loadPendingClasses, renderClassDashboard: renderClassDashboard, isViewerAdmin: isViewerAdmin,
+    classCodeValid: classCodeValid, classCodeNormalize: classCodeNormalize, classJoinCount: classJoinCount, loadClassJoinRows: loadClassJoinRows, mergeReferralRows: mergeReferralRows, classClaimable: classClaimable, classClaimPayload: classClaimPayload, requestClassCode: requestClassCode, adminApproveClass: adminApproveClass, loadMyClasses: loadMyClasses, loadPendingClasses: loadPendingClasses, renderClassDashboard: renderClassDashboard, isViewerAdmin: isViewerAdmin,
     boardLabelFor: boardLabelFor, loadShowcaseBoards: loadShowcaseBoards, showcaseCardHtml: showcaseCardHtml, adminPublishContributor: adminPublishContributor, renderContributorsWall: renderContributorsWall, renderHomepageFeatured: renderHomepageFeatured
   };
   root.DKREF = DKREF;

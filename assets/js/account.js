@@ -460,6 +460,33 @@
     } catch (e) {}
     return fields;
   }
+  /* FIX4 (Oct 27) — referrals row for signup (BOTH flows, DRY):
+   * builds the row a new user gets in the referrals collection.
+   * Previously both flows gated the row on a captured ?ref=, so a
+   * class-only signup (?class= without ?ref=) wrote NO row and the
+   * teacher's class count — which reads referrals rows filtered by
+   * classCode — stayed 0 even after 10 class joins. Now the row is
+   * built whenever a ref OR a class code was captured. A class-only
+   * row carries classCode and NO referrerUid: inventing one would
+   * misattribute the join (and no referrer exists to pay). createdAt
+   * is added by the caller (serverTimestamp lives on firebase).
+   * Returns null when neither was captured (no row, as before). */
+  function signupReferralRow(uid) {
+    var ref = '';
+    var cc = '';
+    try { ref = getCapturedRef(); } catch (e) {}
+    try { cc = getCapturedClassCode(); } catch (e) {}
+    var hasRef = !!(ref && ref !== uid);
+    if (!hasRef && !cc) { return null; }
+    var row = {
+      source: getCapturedSource(),
+      language: getCapturedLanguage(),
+      rewarded: false
+    };
+    if (hasRef) { row.referrerUid = ref; }
+    if (cc) { row.classCode = cc; }
+    return row;
+  }
 
   /* ---------- small DOM helpers ---------- */
   function $(id){ return document.getElementById(id); }
@@ -1523,20 +1550,18 @@
            * ensureUserDoc fills missing referral fields, so this is
            * safe even if the fallback doc already exists. */
           jobs.push(DKA.ensureUserDoc(u, referralSignupFields(u)));
-          /* Referral: doc id = new uid, only when a ?ref= was captured
-           * and it is not the user's own uid (rules enforce the same). */
+          /* FIX4 (Oct 27): the referrals row used to be gated on a
+           * captured ?ref=, so a class-only signup wrote NO row and
+           * the teacher's class count stayed 0/10. signupReferralRow
+           * builds the row whenever a ref OR a class code was
+           * captured; a class-only row carries classCode and NO
+           * referrerUid. Combined ?ref=&class= signups produce
+           * exactly the old fields. */
           try {
-            var ref = getCapturedRef();
-            if (ref && ref !== u.uid) {
-              var refDoc = {
-                referrerUid: ref,
-                source: getCapturedSource(),
-                language: getCapturedLanguage(),
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                rewarded: false
-              };
-              try { var cc2 = getCapturedClassCode(); if (cc2) { refDoc.classCode = cc2; } } catch (e) {}
-              jobs.push(DKA.db().collection('referrals').doc(u.uid).set(refDoc).catch(function(){}));
+            var rowFields = signupReferralRow(u.uid);
+            if (rowFields) {
+              rowFields.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+              jobs.push(DKA.db().collection('referrals').doc(u.uid).set(rowFields).catch(function(){}));
             }
           } catch (e) {}
           return Promise.all(jobs);
@@ -1583,18 +1608,14 @@
           var isNew = cred.additionalUserInfo && cred.additionalUserInfo.isNewUser;
           var jobs = [DKA.ensureUserDoc(u, referralSignupFields(u))];
           if (isNew) {
+            /* FIX4 (Oct 27): same class-only gap as email signup —
+             * see the email flow note. signupReferralRow covers both
+             * flows so they stay identical. */
             try {
-              var ref = getCapturedRef();
-              if (ref && ref !== u.uid) {
-                var refDoc = {
-                  referrerUid: ref,
-                  source: getCapturedSource(),
-                  language: getCapturedLanguage(),
-                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                  rewarded: false
-                };
-                try { var cc2 = getCapturedClassCode(); if (cc2) { refDoc.classCode = cc2; } } catch (e) {}
-                jobs.push(DKA.db().collection('referrals').doc(u.uid).set(refDoc).catch(function(){}));
+              var rowFields = signupReferralRow(u.uid);
+              if (rowFields) {
+                rowFields.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                jobs.push(DKA.db().collection('referrals').doc(u.uid).set(rowFields).catch(function(){}));
               }
             } catch (e) {}
           }
