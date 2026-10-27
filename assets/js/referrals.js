@@ -3745,9 +3745,12 @@
     var c = classCodeNormalize(code);
     /* Duplicate codes are rejected, not overwritten: a code is a
      * teacher's link identity, and silently reassigning it would
-     * misattribute an entire class. */
-    return d.collection('classes').where('code', '==', c).get().then(snapshotRows).then(function (rows) {
-      if (rows && rows.length) { throw coreErr('This class code is already taken.'); }
+     * misattribute an entire class. The check is a direct doc get,
+     * not a code-only list query: the list rule can only prove
+     * ownership for the teacher's own rows, so a code-only query by
+     * a non-admin teacher is denied before the create ever runs. */
+    return d.collection('classes').doc(c).get().then(function (snap) {
+      if (snap && snap.exists) { throw coreErr('This class code is already taken.'); }
       return d.collection('classes').doc(c).set({
         code: c, teacherUid: uid, name: String(name || ''), status: 'pending', createdAt: serverTimestamp()
       });
@@ -4616,6 +4619,16 @@
         + esc(shoutStoryLabel) + ': <input type="text" id="refx-q-shout-story"> '
         + '<button class="btn ghost" type="button" data-refx-action="q-publish-shoutout">' + esc(publishShoutoutText) + '</button> '
         + '<button class="btn ghost" type="button" data-refx-action="q-pay-shoutout">' + esc(payShoutoutText) + '</button></p>');
+      /* Fix (Oct 27): adminFeatureContent had zero callers, so #35
+       * could never be published from the UI. Mirrors the shoutout
+       * input pattern exactly: two inputs + one button, dispatched
+       * below through the existing q-* mechanism. */
+      var featuredUidLabel = 'Featured user id';
+      var featuredIdLabel = 'Featured piece id';
+      var publishFeaturedText = 'Publish featured';
+      html.push('<p>' + esc(featuredUidLabel) + ': <input type="text" id="refx-q-featured-uid"> '
+        + esc(featuredIdLabel) + ': <input type="text" id="refx-q-featured-id"> '
+        + '<button class="btn ghost" type="button" data-refx-action="q-publish-featured">' + esc(publishFeaturedText) + '</button></p>');
       var goalTargetLabel = 'Goal target';
       var goalMonthLabel = 'Goal month';
       html.push('<p>' + esc(goalTargetLabel) + ': <input type="number" id="refx-q-goal-target"> '
@@ -4690,6 +4703,13 @@
           adminPublishShoutout(adminUid, month, su, ss).then(refresh).catch(fail);
         } else if (action === 'q-pay-shoutout') {
           adminPayShoutout(adminUid, month).then(function (res) { paidNote('Shoutout paid', res.paid); refresh(); }).catch(fail);
+        } else if (action === 'q-publish-featured') {
+          var fuEl = document.getElementById('refx-q-featured-uid');
+          var fidEl = document.getElementById('refx-q-featured-id');
+          var fu = fuEl ? fuEl.value.trim() : '';
+          var fid = fidEl ? fidEl.value.trim() : '';
+          if (!fu || !fid) { btn.disabled = false; return; }
+          adminFeatureContent(adminUid, fu, fid).then(function (paid) { paidNote('Featured paid', paid); refresh(); }).catch(fail);
         } else if (action === 'q-set-goal') {
           var gtEl = document.getElementById('refx-q-goal-target');
           var gmEl = document.getElementById('refx-q-goal-month');

@@ -672,7 +672,11 @@
     var kind = (sheet && sheet.getAttribute('data-kind') === 'battle') ? 'battle' : 'typing';
     var name = ($('cert-name-out') ? $('cert-name-out').textContent : '').trim();
     var acc = parseCertNum($('cert-acc') ? $('cert-acc').textContent : '');
-    var dateStr = ($('cert-date') ? $('cert-date').textContent : '').trim();
+    /* WHY (Oct 27 fix): the sheet date is the frozen device-record
+     * date (observed 10/26 on a 10/27 issuance), not the issuance
+     * date. The issued doc must carry today's date, so the sheet and
+     * the Verify page show the true issuance date. */
+    var dateStr = new Date().toLocaleDateString();
     var ref = makeCertRef();
     // Full result fields when the sheet carries them (typing only;
     // battle sheets have no gross/duration/language elements, so the
@@ -690,7 +694,27 @@
     if (langTxt && langTxt !== '\u2014') { doc.language = (langTxt === 'English') ? 'en' : langTxt; }
     DKA.db().collection('certificates').doc(ref).set(doc).then(function () {
       var refEl = $('cert-ref');
+      /* Capture the device-record ref BEFORE overwriting: the QR and
+       * verify link were built from it by certificate.js, and after
+       * issuance they must point at the issued ref, or a printed copy
+       * verifies the wrong (device-only) record. Refs are [A-Z0-9-]
+       * only, so the encoded QR data contains the raw old ref
+       * verbatim and a plain string replace is exact. (Battle sheets
+       * link by serial, not by ref, so the replace is a harmless
+       * no-op there.) */
+      var oldRef = refEl ? refEl.textContent : '';
       if (refEl) { refEl.textContent = ref; }
+      if (oldRef && oldRef !== '\u2014') {
+        var vl = $('cert-verify-link');
+        if (vl) {
+          if (vl.href) { vl.href = vl.href.split(oldRef).join(ref); }
+          if (vl.textContent) { vl.textContent = vl.textContent.split(oldRef).join(ref); }
+        }
+        var qr = $('cert-qr');
+        if (qr && qr.src) { qr.src = qr.src.split(oldRef).join(ref); }
+      }
+      var dateEl = $('cert-date');
+      if (dateEl) { dateEl.textContent = dateStr; }
       // The practice note carries .cert-practice (the authority line is
       // the first <p>, not the practice note); replace it so a printed
       // copy no longer claims to be unverified.
