@@ -262,6 +262,14 @@
     },
 
     signOut: function(){
+      // WPM-159 isolation: signing out switches the local-store resolver
+      // back to guest (and drops the uid marker) — it NEVER erases any
+      // store. Per-account stores stay under their own keys; the guest
+      // store stays under 'dk2'. The onUser(null) path repeats this.
+      try {
+        if (window.DK2 && window.DK2.setAccountUid) { window.DK2.setAccountUid(null); }
+        window.localStorage.removeItem('dokit_uid');
+      } catch (e) {}
       var a = DKA.auth();
       return a ? a.signOut() : Promise.resolve();
     },
@@ -607,6 +615,19 @@
 
   /* ---------- auth state: header + page bindings ---------- */
   var currentUser = null, currentDoc = null;
+  /* WPM-159 account isolation (Oct 27, 2026, local fix): apply the signed-in
+   * account to the local-store resolver BEFORE any page binding reads
+   * local history, and re-render the certificate sheet (which first paints
+   * before auth resolves) from the account's own store. Signed-out (null)
+   * clears the resolver + uid marker — never any store. */
+  function applyAccountIsolation(user){
+    try {
+      if (window.DK2 && window.DK2.setAccountUid) { window.DK2.setAccountUid(user ? user.uid : null); }
+      if (user && user.uid) { window.localStorage.setItem('dokit_uid', user.uid); }
+      else { window.localStorage.removeItem('dokit_uid'); }
+    } catch (e) {}
+    try { if (user && window.DKCertRefresh) { window.DKCertRefresh(); } } catch (e) {}
+  }
   function boot(){
     ensureSdk().then(function(ok){
       if (!ok) {
@@ -626,6 +647,7 @@
       DKA.onUser(function(user){
         currentUser = user;
         if (!user) {
+          applyAccountIsolation(null);
           currentDoc = null;
           syncHeader(null, null);
           bindGuestPages();
@@ -1336,11 +1358,20 @@
       function vfNorm(s) {
         return String(s || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
       }
+      /* WPM-159 isolation: the device-record fallback matches ONLY the
+       * current account's own certificate key — signed in: exactly
+       * 'dk_cert_<kind>:<uid>'; signed out: exactly the legacy guest key.
+       * It NEVER enumerates or matches another account's records, and
+       * legacy guest records are NEVER shown as a signed-in user's own.
+       * (Firestore-first lookup above is unchanged and stays primary.) */
       function vfLocal(id, kind) {
         try {
-          for (var i = 0; i < window.localStorage.length; i++) {
-            var k = window.localStorage.key(i);
-            if (k && k.indexOf('dk_cert_') === 0) {
+          var vfUid = (window.DK2 && window.DK2.accountUid) ? window.DK2.accountUid() : (currentUser ? currentUser.uid : null);
+          var vfBase = 'dk_cert_' + (kind === 'battle' ? 'battle' : 'Test');
+          var vfKeys = vfUid ? [vfBase + ':' + vfUid] : [vfBase];
+          for (var vi = 0; vi < vfKeys.length; vi++) {
+            var k = vfKeys[vi];
+            {
               var rec = JSON.parse(window.localStorage.getItem(k));
               // Device records carry either a typing registration (regNo) or a
       // TypeFight serial (serial). No Firestore serial-field query is
@@ -1731,6 +1762,15 @@
 
   /* ---------- dashboard + profile (signed-in only) ---------- */
   function bindAuthedPages(user, doc){
+    applyAccountIsolation(user);
+    /* WPM-159 isolation: every local-history read in this function goes
+     * through DK2 (keyed by applyAccountIsolation above) — never a raw
+     * localStorage.getItem('dk2'). DK2 absent (pages without dk2.js) =>
+     * empty list, never the guest store. */
+    function dk2Results(){
+      try { return (window.DK2 && window.DK2.getResults) ? (window.DK2.getResults() || []) : []; }
+      catch (e) { return []; }
+    }
     var depF = $('dep-form');
     if (depF) {
       depF.hidden = false;
@@ -2088,10 +2128,14 @@
         });
       });
     }
-    /* Auto-sync once per session on sync pages (typing profile). */
+    /* Auto-sync once per session on sync pages (typing profile).
+     * WPM-159 isolation: the marker is per-account, so Account B's first
+     * sync-page visit in a session is never skipped because Account A
+     * already auto-synced in this session (and vice versa). */
     try {
-      if (syncBtn && !sessionStorage.getItem('dk2_autosync_done')) {
-        sessionStorage.setItem('dk2_autosync_done', '1');
+      var autosyncKey = (window.DK2 && window.DK2.autosyncKey) ? window.DK2.autosyncKey() : ('dk2_autosync_done:' + user.uid);
+      if (syncBtn && !sessionStorage.getItem(autosyncKey)) {
+        sessionStorage.setItem(autosyncKey, '1');
         syncNow(user).then(function(){});
       }
     } catch (e) {}
@@ -2166,8 +2210,7 @@
     var tfStats = $('tf-stats');
     if (tfStats) {
       try {
-        var store = JSON.parse(localStorage.getItem('dk2') || '{}');
-        var battles = (store.results || []).filter(function(r){ return r && r.type === 'battle'; });
+        var battles = dk2Results().filter(function(r){ return r && r.type === 'battle'; });
         var bbest = 0;
         battles.forEach(function(r){ if (r.wpm > bbest) { bbest = r.wpm; } });
         if (battles.length) {
@@ -2194,8 +2237,7 @@
     var tyEl = $('dash-typing');
     if (tyEl) {
       try {
-        var store = JSON.parse(localStorage.getItem('dk2') || '{}');
-        var results = store.results || [];
+        var results = dk2Results();
         var best = 0;
         results.forEach(function(r){ if (r && r.wpm > best) { best = r.wpm; } });
         tyEl.textContent = results.length
@@ -2416,8 +2458,20 @@
    * limit, because result lists grow unboundedly. Returns a status word
    * for honest UI feedback (never a fake "synced" on failure). */
   var DK2_SYNC_MAX = 900000;
-  function localDk2(){
-    try { return JSON.parse(localStorage.getItem('dk2') || '{}'); }
+  /* WPM-159 isolation: the sync path reads/writes ONLY the signed-in
+   * account's keyed store (via DK2, resolver set by applyAccountIsolation
+   * + syncNow below). The legacy guest store is NEVER uploaded into a
+   * signed-in account's cloud doc, and a cloud payload is NEVER written
+   * into the guest store or another account's store. Cloud doc schema is
+   * unchanged: users/{uid}/cloud/dk2 {payload, updatedAt}. */
+  function localDk2(uid){
+    try {
+      if (window.DK2 && window.DK2.getStore) { return window.DK2.getStore(); }
+    } catch (e) {}
+    // DK2-absent fallback (sync pages always load dk2.js, so this is
+    // defensive only): still keyed by uid — NEVER the guest store for a
+    // signed-in user, so guest data can never be uploaded as theirs.
+    try { return JSON.parse(localStorage.getItem(uid ? ('dk2:' + uid) : 'dk2') || '{}'); }
     catch (e) { return {}; }
   }
   function syncMessage(status){
@@ -2433,18 +2487,25 @@
   }
   function syncNow(user){
     if (!DKA.db()) { return Promise.resolve('failed'); }
+    // WPM-159 isolation: pin the resolver to THIS user before any store
+    // access, so a stale resolver can never mix accounts mid-sync.
+    applyAccountIsolation(user);
     var ref = DKA.db().collection('users').doc(user.uid).collection('cloud').doc('dk2');
-    var local = localDk2();
+    var local = localDk2(user.uid);
     var localEmpty = !(local.results && local.results.length) && !(local.lessons && local.lessons.length);
+    var syncStampKey = (window.DK2 && window.DK2.syncStampKey) ? window.DK2.syncStampKey() : ('dk2_sync_at:' + user.uid);
     return ref.get().then(function(snap){
       var cloud = (snap && snap.exists) ? (snap.data() || {}) : null;
       var lastSync = 0;
-      try { lastSync = Number(localStorage.getItem('dk2_sync_at') || 0); } catch (e) {}
+      try { lastSync = Number(localStorage.getItem(syncStampKey) || 0); } catch (e) {}
       if (cloud && cloud.payload && (localEmpty || (cloud.updatedAt && cloud.updatedAt > lastSync))) {
         try {
           var data = JSON.parse(cloud.payload);
-          localStorage.setItem('dk2', JSON.stringify(data));
-          localStorage.setItem('dk2_sync_at', String(Date.now()));
+          // Download lands ONLY in this account's keyed store (via DK2),
+          // never in the guest store and never in another account's store.
+          if (window.DK2 && window.DK2.saveStore) { window.DK2.saveStore(data); }
+          else { localStorage.setItem('dk2:' + user.uid, JSON.stringify(data)); }
+          localStorage.setItem(syncStampKey, String(Date.now()));
           return 'downloaded';
         } catch (e) { return 'failed'; }
       }
@@ -2452,7 +2513,7 @@
       var payload = JSON.stringify(local);
       if (payload.length > DK2_SYNC_MAX) { return 'too-big'; }
       return ref.set({ payload: payload, updatedAt: Date.now() }).then(function(){
-        try { localStorage.setItem('dk2_sync_at', String(Date.now())); } catch (e) {}
+        try { localStorage.setItem(syncStampKey, String(Date.now())); } catch (e) {}
         return 'uploaded';
       });
     }).catch(function(){ return 'failed'; });

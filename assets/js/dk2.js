@@ -2,14 +2,67 @@
  * One namespace (dk2) for typing results and lesson completions.
  * This is device-local only: no account, no upload, no sync.
  * Results saved here are what the Results / Progress / Dashboard
- * pages display. Nothing is ever invented — empty means empty. */
+ * pages display. Nothing is ever invented — empty means empty.
+ * WPM-159 account isolation (Oct 27, 2026, local fix): the store is
+ * keyed per signed-in account — 'dk2:<uid>' — resolved by DK2.storeKey()
+ * on EVERY read/write, so Account B can never read Account A's store.
+ * Signed-out (guest) use keeps the legacy 'dk2' key exactly as before:
+ * legacy data is NEVER merged, adopted, discarded, archived or deleted
+ * by this fix; it simply stays the guest store. Signing out never erases
+ * any store — it only switches the resolver back to the guest key, and
+ * the per-account stores remain under their own keys. */
 (function () {
   'use strict';
-  var KEY = 'dk2'; // single storage key for the whole Phase 2b build
+  var KEY = 'dk2'; // legacy guest key — kept exactly as before for signed-out use
+  // WPM-159 isolation: ONE key-resolution helper, used by every read/write
+  // in this file (load/save) and by account.js + certificate.js via the
+  // DK2.storeKey/certKey/syncStampKey/autosyncKey exports below.
+  // Resolution order (first hit wins):
+  //   1. explicitly set uid (account.js sets it on every auth change, and
+  //      clears it on sign-out — this is the authoritative source when the
+  //      Firebase SDK is loaded on the page);
+  //   2. Firebase Auth currentUser, when the SDK is already loaded;
+  //   3. the 'dokit_uid' marker account.js writes on sign-in and removes
+  //      on sign-out (covers typing pages that load dk2.js without
+  //      account.js, e.g. typing/progress/ — the marker only selects
+  //      WHICH local store to display; it never grants Firestore access,
+  //      which the rules still gate on the real Auth token).
+  // Signed-out (no uid from any source) => legacy guest key 'dk2'.
+  var accountUid = null;
+  function currentUid() {
+    if (accountUid) { return accountUid; }
+    try {
+      var fb = (typeof window !== 'undefined') ? window.firebase : null;
+      var cu = (fb && fb.auth) ? fb.auth().currentUser : null;
+      if (cu && cu.uid) { return cu.uid; }
+    } catch (e) { /* SDK absent or not ready — fall through */ }
+    try {
+      var m = window.localStorage.getItem('dokit_uid');
+      if (m) { return m; }
+    } catch (e) { /* storage unavailable — guest */ }
+    return null;
+  }
+  function storeKey() {
+    var uid = currentUid();
+    return uid ? (KEY + ':' + uid) : KEY;
+  }
+  function certKeyFor(kind) {
+    var base = 'dk_cert_' + (kind === 'battle' ? 'battle' : 'Test');
+    var uid = currentUid();
+    return uid ? (base + ':' + uid) : base;
+  }
+  function syncStampKey() {
+    var uid = currentUid();
+    return uid ? ('dk2_sync_at:' + uid) : 'dk2_sync_at';
+  }
+  function autosyncKey() {
+    var uid = currentUid();
+    return uid ? ('dk2_autosync_done:' + uid) : 'dk2_autosync_done';
+  }
   // Read the stored object; return a clean empty shape on any failure.
   function load() {
     try {
-      var raw = window.localStorage.getItem(KEY);
+      var raw = window.localStorage.getItem(storeKey());
       var data = raw ? JSON.parse(raw) : null;
       if (data && Array.isArray(data.results) && Array.isArray(data.lessons)) {
         return data;
@@ -19,7 +72,7 @@
   }
   // Persist the object; failures are swallowed (page must keep working).
   function save(data) {
-    try { window.localStorage.setItem(KEY, JSON.stringify(data)); }
+    try { window.localStorage.setItem(storeKey(), JSON.stringify(data)); }
     catch (e) { /* ignore — progress just won't persist */ }
   }
 
@@ -33,6 +86,25 @@
     return data.xp;
   }
   window.DK2 = {
+    // WPM-159 isolation exports (account.js + certificate.js use these;
+    // every other consumer keeps using saveResult/getResults/etc., which
+    // already route through load()/save() and are therefore keyed).
+    // Set by account.js on auth change (uid string, or null on sign-out).
+    setAccountUid: function (uid) { accountUid = uid || null; },
+    // Currently resolved uid (explicit > Firebase currentUser > marker).
+    accountUid: function () { return currentUid(); },
+    // Current store key ('dk2:<uid>' signed in, 'dk2' guest).
+    storeKey: function () { return storeKey(); },
+    // Current certificate-record key for a kind ('Test' | 'battle').
+    certKey: function (kind) { return certKeyFor(kind); },
+    // Per-account sync stamp + autosync session-marker keys.
+    syncStampKey: function () { return syncStampKey(); },
+    autosyncKey: function () { return autosyncKey(); },
+    // Whole-store read/write for the sync path (account.js syncNow):
+    // reads/writes ONLY the currently resolved store, never the guest
+    // store while signed in and never another account's store.
+    getStore: function () { return load(); },
+    saveStore: function (data) { save(data); },
     // Add one result (newest first, capped so storage never grows wild).
     saveResult: function (r) {
       var data = load();
@@ -51,6 +123,9 @@
     getLessons: function () { return load().lessons; },
     // Wipe local history (used by the Results page "clear" button).
     // The XP section goes too: the historical reset wiped everything.
+    // WPM-159 isolation: clears ONLY the currently resolved store (this
+    // account's key, or the guest key when signed out) — never another
+    // account's store, and never the legacy guest store while signed in.
     clearAll: function () { save({ results: [], lessons: [], xp: { total: 0, badges: [], streak: { count: 0, last: '' }, awarded: {} } }); },
     // -- Gamification (Task 5, historical gamification.js) ----------------
     // XP, badges and streak live in this SAME dk2 object — no second

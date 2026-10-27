@@ -166,6 +166,16 @@
     return out;
   }
   function recordKey() {
+    // WPM-159 isolation (Oct 27, 2026, local fix): certificate records are
+    // keyed per signed-in account via DK2 ('dk_cert_<kind>:<uid>'); guests
+    // keep the legacy 'dk_cert_<kind>' key. Existing device records are
+    // NEVER migrated or deleted by this fix — a signed-in account simply
+    // reads/writes only its own key from now on, and the verify fallback
+    // in account.js only ever matches the current account's own key.
+    // The device-wide serial COUNTER (nextTfSerial) is deliberately
+    // untouched: it stays device-wide, only the RECORD holding the serial
+    // is keyed. No Firestore certificate rule/document changes here.
+    if (window.DK2 && window.DK2.certKey) { return window.DK2.certKey(kind); }
     return 'dk_cert_' + (kind === 'battle' ? 'battle' : 'Test');
   }
   function loadRecord() {
@@ -654,4 +664,11 @@
     }
   }
   render();
+  // WPM-159 isolation refresh hook (Oct 27, 2026, local fix): certificate.js
+  // runs (and first paints) BEFORE account.js resolves auth, so the first
+  // paint uses the guest store. account.js calls this hook once auth
+  // resolves, re-rendering the sheet from the signed-in account's own
+  // store/records. render() adds no listeners itself (all listeners are
+  // bound once at scope above), so re-rendering is idempotent.
+  try { window.DKCertRefresh = render; } catch (e) {}
 })();
