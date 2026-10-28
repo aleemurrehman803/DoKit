@@ -2830,7 +2830,7 @@
      * stay consistent with the published ranks. Admin reads of user
      * docs are allowed by rules; a missing/denied doc degrades to
      * 'Private member' rather than failing the publish. The uid is
-     * kept because adminPayContest pays from this doc. */
+     * kept ONLY in the payout doc (Option 1); adminPayContest reads it from there. */
     var winnerUids = [];
     (winners || []).forEach(function (w) { if (w && w.uid && winnerUids.indexOf(w.uid) === -1) { winnerUids.push(w.uid); } });
     var userFetches = winnerUids.map(function (uid) {
@@ -2849,8 +2849,21 @@
         }
         return { uid: w.uid, label: boardLabelFor(usersByUid[w.uid] || {}), count: Number(w.count) || 0, prize: prize };
       });
-      return d.collection('contest_winners').doc(mk).set({
-        winners: mapped, bonusPool: pool, status: 'published', publishedAt: serverTimestamp()
+      /* Option 1 (board payouts): the payout doc is written AND verified
+       * by read-back BEFORE the public doc, so pay never needs a uid
+       * from a public doc. The public doc carries labels/counts/prizes
+       * for rendering only. */
+      var publicWinners = mapped.map(function (w) { return { label: w.label, count: w.count, prize: w.prize }; });
+      var payoutWinners = mapped.map(function (w) { return { uid: w.uid, prize: w.prize }; });
+      return d.collection('board_payouts').doc('contest-' + mk).set({
+        winners: payoutWinners, monthKey: mk
+      }).then(function () {
+        return d.collection('board_payouts').doc('contest-' + mk).get();
+      }).then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout verification failed: payout doc missing after write.'); }
+        return d.collection('contest_winners').doc(mk).set({
+          winners: publicWinners, bonusPool: pool, status: 'published', publishedAt: serverTimestamp()
+        });
       }).then(function () { return { monthKey: mk, winners: mapped, bonusPool: pool }; });
     });
   }
@@ -2864,33 +2877,46 @@
       var notFoundMsg = 'Contest not found.';
       if (!doc) { throw coreErr(notFoundMsg); }
       if (doc.status === 'paid') { return { alreadyPaid: true, paid: 0, winnersPaid: [] }; }
-      var winners = doc.winners || [];
-      var pool = Number(doc.bonusPool) || 0;
-      var seq = Promise.resolve();
-      var total = 0;
-      var paidUids = [];
-      winners.forEach(function (w, i) {
-        seq = seq.then(function () {
-          var amount = (w.prize != null) ? Number(w.prize) : 0;
-          if (w.prize == null && i < 3) { amount = RATES.CONTEST_PRIZES[i] + (i === 0 ? pool : 0); }
-          if (!(amount > 0) || !w.uid) { return; }
-          /* Ledger-first idempotency: ANY 'contest prize' entry for
-           * this monthKey means this winner already paid, so a
-           * retried pay skips them instead of double-paying. */
-          return ledgerHasFiltered(d, w.uid, 'monthKey', mk, 'contest prize').then(function (already) {
-            if (already) { return false; }
-            return payUser(d, adminUid, w.uid, amount, { reason: 'contest prize', monthKey: mk, rank: i + 1, docId: 'contest-' + mk }).then(function () { return true; });
-          }).then(function (paidIt) {
-            /* Only a fresh payment counts toward the reported total:
-             * a skipped (already-paid) winner must not inflate it, or
-             * a resumed pay would report coins it never moved. */
-            if (paidIt) { total += amount; paidUids.push(w.uid); }
+      /* Option 1: ALL payment inputs come from the admin-only payout
+       * doc. A missing payout doc THROWS (status stays 'published',
+       * retryable) — pay NEVER falls back to public-doc uids, so a
+       * legacy board cannot be paid until its payout record exists
+       * (Option 2 sequencing). Prizes were fully resolved at publish,
+       * so no recompute from bonusPool happens here. */
+      return d.collection('board_payouts').doc('contest-' + mk).get().then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout record missing — refusing to mark paid. Legacy board: create its payout record first (Option 2 sequencing).'); }
+        var winners = ((psnap.data() || {}).winners || []);
+        var seq = Promise.resolve();
+        var total = 0;
+        var paidUids = [];
+        var skipped = [];
+        winners.forEach(function (w, i) {
+          seq = seq.then(function () {
+            var amount = Number(w.prize) || 0;
+            /* Missing uid or non-positive amount -> SKIP + REPORT and
+             * BLOCK the paid flip below (never silent-skip + flip). */
+            if (!(amount > 0) || !w.uid) { skipped.push({ index: i, uid: w.uid || null, reason: !w.uid ? 'missing-uid' : 'non-positive-amount' }); return; }
+            /* Ledger-first idempotency: ANY 'contest prize' entry for
+             * this monthKey means this winner already paid, so a
+             * retried pay skips them instead of double-paying. */
+            return ledgerHasFiltered(d, w.uid, 'monthKey', mk, 'contest prize').then(function (already) {
+              if (already) { return false; }
+              return payUser(d, adminUid, w.uid, amount, { reason: 'contest prize', monthKey: mk, rank: i + 1, docId: 'contest-' + mk }).then(function () { return true; });
+            }).then(function (paidIt) {
+              /* Only a fresh payment counts toward the reported total:
+               * a skipped (already-paid) winner must not inflate it, or
+               * a resumed pay would report coins it never moved. */
+              if (paidIt) { total += amount; paidUids.push(w.uid); }
+            });
           });
         });
+        return seq.then(function () {
+          if (skipped.length > 0) {
+            return { alreadyPaid: false, paid: total, winnersPaid: paidUids, skipped: skipped, statusKept: 'published' };
+          }
+          return ref.update({ status: 'paid' }).then(function () { return { alreadyPaid: false, paid: total, winnersPaid: paidUids, skipped: [] }; });
+        });
       });
-      return seq.then(function () {
-        return ref.update({ status: 'paid' });
-      }).then(function () { return { alreadyPaid: false, paid: total, winnersPaid: paidUids }; });
     });
   }
   function adminComputeBoard(wk) {
@@ -3151,7 +3177,7 @@
      * rejected rather than publishing a private member. Stored teams
      * carry {label, score} only — adminPayBattle pays from winnerUid
      * + the referrals collection, never from team referrerUids. The
-     * winnerUid itself is kept because adminPayBattle needs it. */
+     * winnerUid now lives in the payout doc (Option 1); adminPayBattle reads it from there. */
     var teamUids = [];
     (teams || []).forEach(function (t) { if (t && t.referrerUid && teamUids.indexOf(t.referrerUid) === -1) { teamUids.push(t.referrerUid); } });
     var teamFetches = teamUids.map(function (uid) {
@@ -3176,8 +3202,18 @@
       var mapped = publicTeams.map(function (t) {
         return { label: boardLabelFor(usersByUid[t.referrerUid] || {}), score: Number(t.score) || 0 };
       });
-      return d.collection('battles').doc(wk).set({
-        teams: mapped, winnerUid: finalWinnerUid, winnerLabel: boardLabelFor(usersByUid[finalWinnerUid] || {}), pool: RATES.BATTLE_POOL, status: 'published', publishedAt: serverTimestamp()
+      /* Option 1: payout doc first + verified, then the public doc
+       * WITHOUT winnerUid (pay reads winnerUid + pool from the payout
+       * doc). The badge block below still uses publishedWinnerUid. */
+      return d.collection('board_payouts').doc('battle-' + wk).set({
+        winnerUid: finalWinnerUid, weekKey: wk, pool: RATES.BATTLE_POOL
+      }).then(function () {
+        return d.collection('board_payouts').doc('battle-' + wk).get();
+      }).then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout verification failed: payout doc missing after write.'); }
+        return d.collection('battles').doc(wk).set({
+          teams: mapped, winnerLabel: boardLabelFor(usersByUid[finalWinnerUid] || {}), pool: RATES.BATTLE_POOL, status: 'published', publishedAt: serverTimestamp()
+        });
       });
     }).then(function () {
       /* Item #52: winning-team badge. The team is identified by its
@@ -3209,38 +3245,46 @@
       if (doc.status === 'paid') {
         return { alreadyPaid: true, paid: 0, share: 0, members: [], remainder: Number(doc.pool) || RATES.BATTLE_POOL };
       }
-      var winnerUid = doc.winnerUid;
-      var pool = Number(doc.pool) || RATES.BATTLE_POOL;
-      return d.collection('referrals').get().then(function (rsnap) {
-        var seen = {};
-        var members = [];
-        snapshotRows(rsnap).forEach(function (r) {
-          if (!r || r.referrerUid !== winnerUid || normalizeStatus(r) !== 'active') { return; }
-          var mid = r._id || r.inviteeUid;
-          if (mid && !seen[mid]) { seen[mid] = true; members.push(mid); }
-        });
-        var noMembersMsg = 'The winning team has no active members to pay.';
-        if (!members.length) { throw coreErr(noMembersMsg); }
-        /* Floor share each; the remainder is NOT kept silently — it
-         * is returned and stored on the doc as unallocated. */
-        var share = Math.floor(pool / members.length);
-        var remainder = pool - share * members.length;
-        var seq = Promise.resolve();
-        var paidUids = [];
-        var total = 0;
-        members.forEach(function (mid) {
-          seq = seq.then(function () {
-            return ledgerHasFiltered(d, mid, 'weekKey', wk, 'battle prize').then(function (already) {
-              if (already) { return false; }
-              return payUser(d, adminUid, mid, share, { reason: 'battle prize', weekKey: wk, docId: 'battle-' + wk }).then(function () { return true; });
-            }).then(function (paidIt) {
-              if (paidIt) { total += share; paidUids.push(mid); }
+      /* Option 1: winnerUid + pool come from the payout doc, never
+       * from the public doc. Missing payout or winnerUid THROWS with
+       * status unchanged (legacy boards need their payout record). */
+      return d.collection('board_payouts').doc('battle-' + wk).get().then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout record missing — refusing to mark paid. Legacy board: create its payout record first (Option 2 sequencing).'); }
+        var payout = psnap.data() || {};
+        var winnerUid = payout.winnerUid;
+        if (!winnerUid) { throw coreErr('Payout record has no winnerUid — refusing to mark paid.'); }
+        var pool = Number(payout.pool) || RATES.BATTLE_POOL;
+        return d.collection('referrals').get().then(function (rsnap) {
+          var seen = {};
+          var members = [];
+          snapshotRows(rsnap).forEach(function (r) {
+            if (!r || r.referrerUid !== winnerUid || normalizeStatus(r) !== 'active') { return; }
+            var mid = r._id || r.inviteeUid;
+            if (mid && !seen[mid]) { seen[mid] = true; members.push(mid); }
+          });
+          var noMembersMsg = 'The winning team has no active members to pay.';
+          if (!members.length) { throw coreErr(noMembersMsg); }
+          /* Floor share each; the remainder is NOT kept silently — it
+           * is returned and stored on the doc as unallocated. */
+          var share = Math.floor(pool / members.length);
+          var remainder = pool - share * members.length;
+          var seq = Promise.resolve();
+          var paidUids = [];
+          var total = 0;
+          members.forEach(function (mid) {
+            seq = seq.then(function () {
+              return ledgerHasFiltered(d, mid, 'weekKey', wk, 'battle prize').then(function (already) {
+                if (already) { return false; }
+                return payUser(d, adminUid, mid, share, { reason: 'battle prize', weekKey: wk, docId: 'battle-' + wk }).then(function () { return true; });
+              }).then(function (paidIt) {
+                if (paidIt) { total += share; paidUids.push(mid); }
+              });
             });
           });
+          return seq.then(function () {
+            return ref.update({ status: 'paid', share: share, remainder: remainder });
+          }).then(function () { return { alreadyPaid: false, paid: total, share: share, members: paidUids, remainder: remainder }; });
         });
-        return seq.then(function () {
-          return ref.update({ status: 'paid', share: share, remainder: remainder });
-        }).then(function () { return { alreadyPaid: false, paid: total, share: share, members: paidUids, remainder: remainder }; });
       });
     });
   }
@@ -3251,12 +3295,21 @@
     /* Privacy (AUD-023): a referralPrivate member is never published
      * to the public shoutout board; everyone else gets a label
      * resolved through boardLabelFor. The uid is kept because
-     * adminPayShoutout pays from this doc. */
+     * adminPayShoutout reads it from the payout doc (Option 1). */
     return readUserDoc(d, uid).catch(function () { return {}; }).then(function (udoc) {
       var privateMsg = 'This member is private and cannot be published.';
       if (udoc && udoc.referralPrivate) { throw coreErr(privateMsg); }
-      return d.collection('shoutouts').doc(mk).set({
-        uid: uid, label: boardLabelFor(udoc || {}), story: story || '', prize: RATES.SHOUTOUT_PRIZE, status: 'published', publishedAt: serverTimestamp()
+      /* Option 1: payout doc first + verified, then the public doc
+       * WITHOUT uid (pay reads uid + prize from the payout doc). */
+      return d.collection('board_payouts').doc('shoutout-' + mk).set({
+        uid: uid, monthKey: mk, prize: RATES.SHOUTOUT_PRIZE
+      }).then(function () {
+        return d.collection('board_payouts').doc('shoutout-' + mk).get();
+      }).then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout verification failed: payout doc missing after write.'); }
+        return d.collection('shoutouts').doc(mk).set({
+          label: boardLabelFor(udoc || {}), story: story || '', prize: RATES.SHOUTOUT_PRIZE, status: 'published', publishedAt: serverTimestamp()
+        });
       });
     }).then(function () { return true; });
   }
@@ -3270,13 +3323,24 @@
       var notFoundMsg = 'Shoutout not found.';
       if (!doc) { throw coreErr(notFoundMsg); }
       if (doc.status === 'paid') { return { alreadyPaid: true, paid: 0 }; }
-      return ledgerHasFiltered(d, doc.uid, 'monthKey', mk, 'shoutout').then(function (already) {
-        if (already) {
-          return ref.update({ status: 'paid' }).then(function () { return { alreadyPaid: true, paid: 0 }; });
-        }
-        return payUser(d, adminUid, doc.uid, RATES.SHOUTOUT_PRIZE, { reason: 'shoutout', monthKey: mk, docId: 'shoutout-' + mk }).then(function () {
-          return ref.update({ status: 'paid' });
-        }).then(function () { return { alreadyPaid: false, paid: RATES.SHOUTOUT_PRIZE }; });
+      /* Option 1: uid + prize come from the payout doc, never from
+       * the public doc. Missing payout, uid, or positive prize
+       * THROWS before any flip (status unchanged, retryable). */
+      return d.collection('board_payouts').doc('shoutout-' + mk).get().then(function (psnap) {
+        if (!psnap || !psnap.exists) { throw coreErr('Payout record missing — refusing to mark paid. Legacy board: create its payout record first (Option 2 sequencing).'); }
+        var payout = psnap.data() || {};
+        var payUid = payout.uid;
+        var payPrize = Number(payout.prize) || 0;
+        if (!payUid) { throw coreErr('Payout record has no uid — refusing to mark paid.'); }
+        if (!(payPrize > 0)) { throw coreErr('Payout record has no positive prize — refusing to mark paid.'); }
+        return ledgerHasFiltered(d, payUid, 'monthKey', mk, 'shoutout').then(function (already) {
+          if (already) {
+            return ref.update({ status: 'paid' }).then(function () { return { alreadyPaid: true, paid: 0 }; });
+          }
+          return payUser(d, adminUid, payUid, payPrize, { reason: 'shoutout', monthKey: mk, docId: 'shoutout-' + mk }).then(function () {
+            return ref.update({ status: 'paid' });
+          }).then(function () { return { alreadyPaid: false, paid: payPrize }; });
+        });
       });
     });
   }
@@ -4833,7 +4897,11 @@
             });
           }).then(refresh).catch(fail);
         } else if (action === 'q-pay-contest') {
-          adminPayContest(adminUid, month).then(function (res) { paidNote('Contest paid', res.paid); refresh(); }).catch(fail);
+          adminPayContest(adminUid, month).then(function (res) {
+            if (res.skipped && res.skipped.length) { refxNote(queueEl, 'Contest partially paid: ' + res.paid + ' coins, ' + res.skipped.length + ' skipped — status stays published. Fix the payout record and pay again.'); }
+            else { paidNote('Contest paid', res.paid); }
+            refresh();
+          }).catch(fail);
         } else if (action === 'q-publish-board') {
           adminComputeBoard(week).then(function (entries) {
             return adminPublishBoard(adminUid, week, entries);
