@@ -871,6 +871,15 @@
     var el = $(id);
     if (el) { el.innerHTML = html; }
   }
+  function admLoadError(id){
+    // AUD-026: a failed admin list read must not leave the section
+    // silently empty. Show the file's generic error wording (the same
+    // string as the acct_err_unknown fallback), in the same <p> shape
+    // as admRender's 'No entries.' empty state. No retry button: the
+    // admin re-loads the section by revisiting the panel (open
+    // question: per-section retry — see the task report).
+    admSetHtml(id, '<p>Something went wrong. Please try again.</p>');
+  }
   function admRender(id, snap, rowFn){
     // One innerHTML assignment per section; row literals live in the
     // built strings, not at this render position (js-gate rule).
@@ -884,7 +893,7 @@
     if (g) { g.hidden = true; }
     if (!DKA.db()) { return; }
     var db = DKA.db();
-    // Counts (admin list reads; failures leave the section blank).
+    // Counts (admin list reads; a failure shows the generic error note in the section).
     Promise.all([
       db.collection('users').get(),
       db.collection('deposits').where('status', '==', 'pending').get(),
@@ -900,7 +909,7 @@
         + '<button class="btn ghost" type="button" data-adm="export-csv">Export deposits (CSV)</button></p>'
        ;
       admSetHtml('adm-counts', html);
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-counts'); });
     db.collection('users').get().then(function (snap) {
       admRender('adm-users', snap, function (id, d) {
         var susp = d.suspended ? 'suspended' : 'active';
@@ -910,7 +919,7 @@
           + '<button class="btn ghost" type="button" data-adm="give">Give coins</button> '
           + '<button class="btn ghost" type="button" data-adm="' + (d.suspended ? 'unsuspend' : 'suspend') + '">' + (d.suspended ? 'Unsuspend' : 'Suspend') + '</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-users'); });
     db.collection('deposits').where('status', '==', 'pending').get().then(function (snap) {
       admRender('adm-deposits', snap, function (id, d) {
         // Item 79: show the grant the admin is about to approve (live
@@ -923,14 +932,14 @@
           + ' <button class="btn ghost" type="button" data-adm="dep-approve">Approve</button> '
           + '<button class="btn ghost" type="button" data-adm="dep-reject">Reject</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-deposits'); });
     db.collection('withdrawals').where('status', '==', 'pending').get().then(function (snap) {
       admRender('adm-withdrawals', snap, function (id, d) {
         return '<div class="adm-row" data-id="' + escHtml(id) + '">Withdrawal ' + escHtml(d.amount) + ' · ' + escHtml(d.method || '') + ' · ' + escHtml(d.account || '') + ' · ' + escHtml(d.userId || '')
           + ' <button class="btn ghost" type="button" data-adm="wd-approve">Approve</button> '
           + '<button class="btn ghost" type="button" data-adm="wd-reject">Reject</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-withdrawals'); });
     db.collection('coin_claims').where('status', '==', 'pending').get().then(function (snap) {
       admData.claims = {};
       admRender('adm-claims', snap, function (id, d) {
@@ -939,30 +948,30 @@
           + ' <button class="btn ghost" type="button" data-adm="claim-approve">Approve + grant</button> '
           + '<button class="btn ghost" type="button" data-adm="claim-reject">Reject</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-claims'); });
     db.collection('certificates').get().then(function (snap) {
       admRender('adm-certs', snap, function (id, d) {
         return '<div class="adm-row"><b>' + escHtml(id) + '</b> ' + escHtml(d.kind || '') + ' · ' + escHtml(d.name || '') + ' · ' + escHtml(d.wpm || 0) + ' WPM</div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-certs'); });
     db.collection('contact_messages').get().then(function (snap) {
       admRender('adm-inbox', snap, function (id, d) {
         return '<div class="adm-row" data-id="' + escHtml(id) + '"><b>' + escHtml(d.subject || '') + '</b> from ' + escHtml(d.email || '') + ' · ' + escHtml(d.name || '') + '<p>' + escHtml(d.message || '') + '</p>'
           + ' <button class="btn ghost" type="button" data-adm="inbox-del">Delete</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-inbox'); });
     db.collection('testimonials').where('approved', '==', false).get().then(function (snap) {
       admRender('adm-wall', snap, function (id, d) {
         return '<div class="adm-row" data-id="' + escHtml(id) + '"><b>' + escHtml(d.name || '') + '</b> ' + escHtml(d.rating || '') + ' stars<p>' + escHtml(d.message || '') + '</p>'
           + ' <button class="btn ghost" type="button" data-adm="wall-approve">Approve</button> '
           + '<button class="btn ghost" type="button" data-adm="wall-reject">Delete</button></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-wall'); });
     db.collection('admin_audit').get().then(function (snap) {
       admRender('adm-audit', snap, function (id, d) {
         return '<div class="adm-row">' + escHtml(d.action || '') + ' · ' + escHtml(d.target || '') + ' · ' + escHtml(d.by || '') + '</div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-audit'); });
     /* Referral Phase 1 admin view: the full tree, not just a count.
      * Admins read the whole referrals collection plus user docs for
      * display names (admin list reads are allowed by the rules), so
@@ -978,7 +987,7 @@
           admRender('adm-referrals', snap, function (id, d) {
             return '<div class="adm-row">Referrer ' + escHtml(d.referrerUid || '') + ' · Joined ' + escHtml(id) + ' · Rewarded: ' + (d.rewarded ? 'yes' : 'no') + '</div>';
           });
-        }).catch(function () {});
+        }).catch(function () { admLoadError('adm-referrals'); });
         return;
       }
       Promise.all([
@@ -1029,28 +1038,28 @@
           admData.referralNames = names;
           window.DKREF.renderAdminList('adm-referrals', rows, names);
         });
-      }).catch(function () {});
+      }).catch(function () { admLoadError('adm-referrals'); });
     })();
     db.collection('competitors').get().then(function (snap) {
       admRender('adm-competitors', snap, function (id, d) {
         return '<div class="adm-row"><b>' + escHtml(d.name || '') + '</b> ' + escHtml(d.note || '') + '</div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-competitors'); });
     db.collection('tickets').get().then(function (snap) {
       admRender('adm-tickets', snap, function (id, d) {
         return '<div class="adm-row"><b>' + escHtml(d.title || '') + '</b> ' + escHtml(d.status || '') + '</div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-tickets'); });
     db.collection('changelog').where('published', '==', true).get().then(function (snap) {
       admRender('adm-changelog', snap, function (id, d) {
         return '<div class="adm-row">' + escHtml(d.text || '') + ' · Published: ' + (d.published ? 'yes' : 'no') + '</div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-changelog'); });
     db.collection('experiments').get().then(function (snap) {
       admRender('adm-exp', snap, function (id, d) {
         return '<div class="adm-row"><b>' + escHtml(d.name || '') + '</b></div>';
       });
-    }).catch(function () {});
+    }).catch(function () { admLoadError('adm-exp'); });
     admForms();
   }
   function admForms(){

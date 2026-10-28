@@ -11,6 +11,10 @@ var PASSAGES = {
   pangram: 'Pack my box with five dozen liquor jugs and watch how fast the quick brown fox can jump over the lazy dog near the river bank today.'
 };
 var passage = PASSAGES.home, typed = '', started = false, startTime = 0, timer = null, limit = 60, left = 60, done = false;
+// WPM0 FIX (28 Oct 2026, local only): minimum elapsed time for a
+// finish to count as a scored test. This is a REJECTION gate, never
+// a scoring floor/divisor — see the guard inside finish().
+var MIN_ELAPSED_MS = 1000;
 // HOOKS (referral-complete §7): true once a paste lands during this
 // test (paste event or insertFromPaste input). Decides the verified
 // flag on the saved result; reset() clears it for the next test.
@@ -96,6 +100,23 @@ function recordChallengeDone(){
 function finish(){
   if(done) return;
   done = true; clearInterval(timer);
+  // WPM0 FIX (28 Oct 2026, local only): reject sub-second finishes
+  // instead of scoring them. A same-event start+finish has elapsed 0,
+  // and the old stats() guard turned that into a saved 0 WPM; flooring
+  // elapsed at 1s instead would turn a paste into ~1,764 WPM. So
+  // MIN_ELAPSED_MS is a REJECTION gate, never a scoring divisor: a run
+  // finishing below it is not saved, not scored, and earns no XP,
+  // referral activation, lastTestAt stamp, or challenge marker. The
+  // user can press Restart and take the test genuinely. Runs at or
+  // above the gate are scored exactly as before (stats() untouched).
+  var elapsedMs = started ? (Date.now() - startTime) : 0;
+  if(elapsedMs < MIN_ELAPSED_MS){
+    resEl.innerHTML = '';
+    var np = document.createElement('p');
+    np.textContent = 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.';
+    resEl.appendChild(np);
+    return;
+  }
   var st = stats();
   resEl.innerHTML = '';
   var p = document.createElement('p');

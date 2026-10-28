@@ -147,6 +147,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 #chat-fab img, #chat-fab .doki-svg{display:block;border-radius:50%;object-fit:cover}
 /* Light theme: same tokens, light values (dark stays the default). */
 [data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470}
+[data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: #7a5f00; }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
 [data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
 /* PWA install banner + site announcement banner (both hidden unless set). */

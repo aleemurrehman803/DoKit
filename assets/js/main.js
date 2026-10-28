@@ -179,6 +179,12 @@ if(fab && panel){ fab.addEventListener('click', function(){
   // FAB instance stays idle (it is always idle).
   if(opened){ dokiHeadGreet(); dokiSleepArm(); } else { dokiSleepClear(); }
 }); }
+// AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
+// (bindNavDrop): close on Escape and return focus to the launcher
+// (here the FAB). The panel is non-modal; this only adds the close.
+if(fab && panel){ document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && panel.classList.contains('open')){ panel.classList.remove('open'); fab.focus(); }
+}); }
 if(panel){ panel.addEventListener('click', dokiWake); panel.addEventListener('input', dokiWake); }
 // ---- Doki idle blink (photo pass, Oct 25) ----
 // WHY a JS swap, not CSS: a photo cannot blink by itself. The closed
