@@ -1406,11 +1406,19 @@
           ? 'Status: Valid \u2014 issued certificate on file.'
           : 'Status: Device record \u2014 this browser only, not independently verified.';
         var extraTxt = '';
-        if (d.gross) { extraTxt += ' \u00b7 ' + d.gross + ' WPM gross'; }
-        if (d.durationSec) { extraTxt += ' \u00b7 ' + d.durationSec + ' seconds'; }
-        if (d.language) { extraTxt += ' \u00b7 ' + (d.language === 'en' ? 'English' : d.language); }
-        var html = '<b>' + nm + ':</b> ' + (d.name || '')
-          + '<br>' + (d.wpm || 0) + ' WPM \u00b7 ' + (d.acc || 0) + '% \u00b7 ' + when + extraTxt
+        // AUD-027 (local, 28 Oct 2026): vfRender shows a certificate document
+        // that anyone can open via a verify link, so every document field
+        // is untrusted input here and must go through escHtml (the file's
+        // existing helper, already used by every other renderer). Before
+        // this change d.name/d.gross/d.durationSec/d.language/when were
+        // interpolated raw into innerHTML (stored-XSS vector via a
+        // crafted certificate name). Static strings (nm, statusTxt)
+        // are untouched.
+        if (d.gross) { extraTxt += ' \u00b7 ' + escHtml(d.gross) + ' WPM gross'; }
+        if (d.durationSec) { extraTxt += ' \u00b7 ' + escHtml(d.durationSec) + ' seconds'; }
+        if (d.language) { extraTxt += ' \u00b7 ' + (d.language === 'en' ? 'English' : escHtml(d.language)); }
+        var html = '<b>' + nm + ':</b> ' + escHtml(d.name || '')
+          + '<br>' + escHtml(d.wpm || 0) + ' WPM \u00b7 ' + escHtml(d.acc || 0) + '% \u00b7 ' + escHtml(when) + extraTxt
           + '<br>' + statusTxt;
         if (resEl) { resEl.innerHTML = html; resEl.hidden = false; }
         showMsg('vf-err', '', false);

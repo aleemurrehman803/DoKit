@@ -449,7 +449,10 @@
     set('tf-single-id', id);
     var url = TF_VERIFY_BASE + id;
     var qr = document.getElementById('tf-single-qr');
-    if (qr) { qr.src = TF_QR_API + encodeURIComponent(url); }
+    // OBS-04 (local, 28 Oct 2026): single-QR uses the established sheet-QR
+    // failure pattern (setSheetQr -> visible note + cert_qr_fail key),
+    // instead of a bare .src assignment with no onerror handler.
+    if (qr) { setSheetQr(qr, TF_QR_API + encodeURIComponent(url)); }
     var lk = document.getElementById('tf-single-link');
     if (lk) { lk.href = url; lk.textContent = url; }
     singleShown = { id: id, username: nm, wpm: c.wpm || 0, accuracy: c.acc || 0, date: dt, kind: c.kind || 'battle', serial: sr };
