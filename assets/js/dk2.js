@@ -126,7 +126,17 @@
     // WPM-159 isolation: clears ONLY the currently resolved store (this
     // account's key, or the guest key when signed out) — never another
     // account's store, and never the legacy guest store while signed in.
-    clearAll: function () { save({ results: [], lessons: [], xp: { total: 0, badges: [], streak: { count: 0, last: '' }, awarded: {} } }); },
+    // G5 fix (6 Nov 2026): a clear must also reset THIS store's sync
+    // markers — the once-per-session auto-sync marker (sessionStorage)
+    // and the sync stamp — or the next typing/profile/ visit in the
+    // same tab session skips auto-sync and the cloud copy is never
+    // restored until the user presses "Sync now" by hand. Only the
+    // current store's markers are touched, never another account's.
+    clearAll: function () {
+      save({ results: [], lessons: [], xp: { total: 0, badges: [], streak: { count: 0, last: '' }, awarded: {} } });
+      try { window.sessionStorage.removeItem(autosyncKey()); } catch (e) {}
+      try { window.localStorage.removeItem(syncStampKey()); } catch (e) {}
+    },
     // -- Gamification (Task 5, historical gamification.js) ----------------
     // XP, badges and streak live in this SAME dk2 object — no second
     // store, no second source of truth. XP_LESSON 50, XP_TEST 30,

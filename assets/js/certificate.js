@@ -674,4 +674,22 @@
   // store/records. render() adds no listeners itself (all listeners are
   // bound once at scope above), so re-rendering is idempotent.
   try { window.DKCertRefresh = render; } catch (e) {}
+  // G5 fix (6 Nov 2026): after issuance, the issued ref must replace
+  // the device-only preview ref in the local record. The sheet, its QR
+  // and verify link, and the PDF are all rebuilt from this record on
+  // every render — without this, the next render reverts the sheet to
+  // the preview ref and the PDF prints the preview ref, so a printed
+  // copy verifies nothing (no Firestore doc exists under the preview
+  // ref). The issue flow (account.js issueCert) calls this with the
+  // Firestore document id; the stored issue date becomes the issuance
+  // date so the sheet date stays true after a re-render too.
+  try {
+    window.DKCertSetIssuedRef = function (ref) {
+      var rec = loadRecord();
+      if (!rec || !rec.regNo) { return; }
+      rec.regNo = ref;
+      rec.issuedAt = Date.now();
+      saveRecord(rec);
+    };
+  } catch (e) {}
 })();

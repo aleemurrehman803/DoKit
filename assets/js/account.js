@@ -818,6 +818,13 @@
       }
       showMsg('cert-issue-msg',
         (window.dkT ? window.dkT('acct_cert_issued', 'Certificate issued. Copy this reference \u2014 anyone can verify it: ') : 'Certificate issued. Copy this reference \u2014 anyone can verify it: ') + ref, false);
+      /* G5 fix (6 Nov 2026): persist the issued ref into the device
+       * record (certificate.js) — the sheet, its QR/verify link and
+       * the PDF are all rebuilt from that record on the next render, so
+       * without this the PDF keeps printing the device-only preview ref
+       * and a printed copy fails verification. Typing sheets only;
+       * battle sheets link by serial, not by ref. */
+      try { if (kind === 'typing' && window.DKCertSetIssuedRef) { window.DKCertSetIssuedRef(ref); } } catch (e) {}
     }).catch(function (err) {
       showMsg('cert-issue-msg', friendlyError(err), true);
     });
@@ -2135,6 +2142,22 @@
     if (tpMain2) { tpMain2.hidden = false; }
     if (typeof doc.coins === 'number') { setText('tp-coins', String(doc.coins)); }
     var syncBtn = $('tp-sync-btn');
+    /* G5 fix (6 Nov 2026): the profile stats banner (#pf-stats) is
+     * rendered once at page load by progress.js; a sync download lands
+     * AFTER that paint, so without a re-render the banner keeps showing
+     * the pre-sync numbers until the next navigation. Re-render it from
+     * the fresh store after any download (auto or manual); uploads and
+     * no-ops change nothing locally, so they skip it. Same markup and
+     * dkT keys as progress.js (rsv_1069 / rsv_1066) — no new strings. */
+    function refreshProfileStats() {
+      var pf = $('pf-stats');
+      if (!pf || !window.DK2) { return; }
+      var rs = window.DK2.getResults();
+      var best = 0;
+      for (var i = 0; i < rs.length; i++) { if (rs[i].wpm > best) { best = rs[i].wpm; } }
+      pf.innerHTML =
+        '<p><span class="statnum">' + rs.length + '</span>' + (window.dkT ? window.dkT('rsv_1069', ' sessions on this device ') : ' sessions on this device ') + '&nbsp; <span class="statnum">' + best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '</p>';
+    }
     if (syncBtn && !syncBtn.dataset.dka) {
       syncBtn.dataset.dka = '1';
       syncBtn.addEventListener('click', function(){
@@ -2142,6 +2165,7 @@
         syncNow(user).then(function(status){
           syncBtn.disabled = false;
           showMsg('tp-sync-msg', syncMessage(status), false);
+          if (status === 'downloaded') { refreshProfileStats(); }
         });
       });
     }
@@ -2153,7 +2177,7 @@
       var autosyncKey = (window.DK2 && window.DK2.autosyncKey) ? window.DK2.autosyncKey() : ('dk2_autosync_done:' + user.uid);
       if (syncBtn && !sessionStorage.getItem(autosyncKey)) {
         sessionStorage.setItem(autosyncKey, '1');
-        syncNow(user).then(function(){});
+        syncNow(user).then(function(status){ if (status === 'downloaded') { refreshProfileStats(); } });
       }
     } catch (e) {}
     /* Wallet card (typefight/wallet). */
