@@ -399,6 +399,12 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .dkf-sticky-action[hidden]{display:none}
 .dkf-sticky-action .btn{inline-size:100%;max-inline-size:28rem;min-height:48px}
 @media (min-width:769px){.dkf-sticky-action{display:none}}
+/* T050 (P5-DES-26): hide the sticky action bar (z-index 210) while
+ * the guided tour is open, so it can never paint over the tour card
+ * (z-index 96) or its buttons. The tour adds/removes .dk-tour-open
+ * on <body> (main.js tour()); the bar's own show/hide logic is
+ * untouched and resumes when the tour closes. */
+body.dk-tour-open .dkf-sticky-action{display:none}
 body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 /* P5-VIS-02: same FAB lift while the home sticky-CTA bar is shown, so the
  * FAB never covers the bar (or its dismiss button) on mobile. */

@@ -1058,6 +1058,7 @@ function dokiMicStop(){
         document.body.appendChild(back); document.body.appendChild(card);
       }
       back.classList.add('open');
+      document.body.classList.add('dk-tour-open'); // T050: hide the sticky bar while the tour is open.
       card.innerHTML = '';
       var h = document.createElement('h3'); h.textContent = steps[i][0]; card.appendChild(h);
       var p = document.createElement('p'); p.textContent = steps[i][1]; card.appendChild(p);
@@ -1074,7 +1075,7 @@ function dokiMicStop(){
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
     }
-    function close() { if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
+    function close() { document.body.classList.remove('dk-tour-open'); if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
     btn.addEventListener('click', show);
   })();
   // Dismissible tip banner on the home page (dismissal remembered).
