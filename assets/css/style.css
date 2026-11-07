@@ -116,7 +116,7 @@ h3{font-size:21px;margin:22px 0 8px}
 .mw-100{max-width:100%}
 .toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:var(--pad-roomy)}
 label{font-weight:700;display:block;margin:14px 0 6px}
-input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
+input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
 /* T090 (P5-VIS-15): equal-height guide cards — the guides grid rows sized
@@ -266,7 +266,7 @@ html.dk-paused *{animation-play-state:paused!important}
 [data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470;--gold-text:#7a5f00;--violet2:#6C4CF1;--good:#1E7A4C;--bad:#D92D20}
 [data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: var(--gold-text); }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
-[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:var(--surface)}
+[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] input[type=url],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:var(--surface)}
 /* T045 (P5-DES-20): selects use the site's input styling, not the native
  * OS chevron. appearance:none keeps the native <select> behaviour
  * (keyboard + screen reader untouched) and swaps the arrow for a
@@ -501,9 +501,9 @@ body.dkf-has-sticky #chat-panel,body.has-sticky-cta #chat-panel{bottom:calc(4.5r
 /* F2 [106] shared hover transition: the existing .15s pattern, extended
    to every hoverable that snapped at 0s. .btn/.card/.reveal already
    have their own transitions and are deliberately NOT listed here. */
-.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.prof-menu button.prof-row,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
+.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.prof-menu button.prof-row,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
 /* F3 [107] form-field hover (focus behaviour untouched). */
-input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[type=password]:hover,select:hover,textarea:hover{border-color:var(--amber)}
+input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[type=password]:hover,input[type=url]:hover,select:hover,textarea:hover{border-color:var(--amber)}
 /* F4 [108] active nav-link hover: the violet ring on violet was
    invisible — an amber ring is visible on violet. Rows inside a
    dropdown keep the menu look even when the active-marker lands on
