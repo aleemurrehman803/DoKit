@@ -88,9 +88,22 @@ if(s){
     });
   });
 }
+// T046 (P5-DES-22): pause infinite animations while the tab is hidden.
+// visibilitychange toggles .dk-paused on <html>; the CSS rule freezes
+// every animation with play-state:paused (not none), so each one
+// resumes from exactly where it stopped — no jump.
+document.addEventListener('visibilitychange', function(){
+  document.documentElement.classList.toggle('dk-paused', document.visibilityState === 'hidden');
+});
+if(document.visibilityState === 'hidden'){ document.documentElement.classList.add('dk-paused'); }
 // hero particles
 var cv = document.getElementById('hero-canvas');
 var paused = false;
+// T046: the hero-canvas loop's own hidden flag (separate from the
+// user's manual `paused` above) + a guard so at most one frame is
+// ever scheduled (the visible-kick and the Pause button both re-kick).
+var tabHidden = document.visibilityState === 'hidden';
+var framePending = false;
 if(cv){
   var ctx = cv.getContext('2d'), W, H, parts = [];
   function size(){ var r = cv.parentElement.getBoundingClientRect(); W = cv.width = r.width; H = cv.height = r.height; }
@@ -103,15 +116,20 @@ if(cv){
       if(p.x < 0 || p.x > W) p.vx *= -1; if(p.y < 0 || p.y > H) p.vy *= -1;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(' + p.c + ',.8)'; ctx.fill();
     });
-    if(!paused && !reduced){ requestAnimationFrame(draw); }
+    framePending = false;
+    if(!paused && !reduced && !tabHidden){ framePending = true; requestAnimationFrame(draw); }
   }
   size(); mk(); draw();
   window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); } });
   var pb = document.getElementById('pause-motion');
   if(pb){ pb.addEventListener('click', function(){
     paused = !paused; pb.textContent = paused ? dkT('rsv_1003', 'Resume motion') : dkT('rsv_0433', 'Pause motion');
-    if(!paused && !reduced){ draw(); }
+    if(!paused && !reduced && !framePending){ draw(); }
   }); }
+  document.addEventListener('visibilitychange', function(){
+    tabHidden = document.visibilityState === 'hidden';
+    if(!tabHidden && !paused && !reduced && !framePending){ framePending = true; requestAnimationFrame(draw); }
+  });
   if(reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); }
 }
 // WHY (i18n): JS-rendered strings (rotator words, chat link labels)

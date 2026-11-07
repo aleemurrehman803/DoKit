@@ -182,6 +182,11 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * (9vw: 32px at 360px, 35px at 390px, capped at 40px above ~444px). */
 @media(max-width:600px){body{font-size:16px}.grid{grid-template-columns:1fr}.hero{padding:48px 0 36px}.hero p.lead{font-size:17px}.row>*{min-width:100%}.hero h1{font-size:clamp(32px,9vw,40px)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+/* T046 (P5-DES-22): pause infinite animations while the tab is hidden.
+ * .dk-paused is toggled on <html> by the visibilitychange listener in
+ * main.js. play-state:paused (not none) freezes each animation where
+ * it is, so it resumes from the same spot — no jump. */
+html.dk-paused *{animation-play-state:paused!important}
 
 
 /* ---- Phase 2b additions (one place — shared by all rebuilt pages) ---- */
