@@ -67,6 +67,19 @@ h3{font-size:21px;margin:22px 0 8px}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--amber);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
+/* DES-10: utilities replacing repeated inline styles (224 sites). .lede
+ * is the muted paragraph (hero subs, intro lines, footer tagline);
+ * .muted is the muted inline note — it also resets font-weight to 400
+ * for the Doki "(preview)" label inside the bold chat header. .mt-sm /
+ * .ml-sm / .row-flex / .mw-100 cover the other repeated values. One-offs
+ * (display:none toggles, face-guide overlay, single margins) keep their
+ * inline styles, per the issue. */
+.lede{color:var(--muted)}
+.muted{font-weight:400;color:var(--muted)}
+.mt-sm{margin-top:.4rem}
+.ml-sm{margin-left:8px}
+.row-flex{display:flex;gap:8px;flex-wrap:wrap}
+.mw-100{max-width:100%}
 .toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
 label{font-weight:700;display:block;margin:14px 0 6px}
 input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{width:100%;background:#12101F;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
