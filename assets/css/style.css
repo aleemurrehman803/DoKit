@@ -204,7 +204,13 @@ body.has-sticky-cta{padding-bottom:84px}
 /* Certificates: print only the certificate, never the chrome. */
 @media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
 /* Typing certificate premium sheet (restored historical design; sheet-scoped only). */
-.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid #6C4CF1;outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:#17142E}
+/* DES-06: certificate typography — the premium sheet inherits the body's
+ * system-ui stack, so it reads as a plain page. Serif stack (Georgia on
+ * Windows/Mac, Liberation/DejaVu/Noto Serif on Linux, Times elsewhere)
+ * for the formal certificate voice; no webfont dependency (the site
+ * loads zero webfonts, and self-hosting the historical Playfair/Great
+ * Vibes/Cormorant needs an owner decision). Print inherits this rule. */
+.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid #6C4CF1;outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:#17142E;font-family:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif}
 .cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6C4CF1}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
 @media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
@@ -215,7 +221,15 @@ body.has-sticky-cta{padding-bottom:84px}
 .cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:#17142E}
 .cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:#6b5a1e}
 .cert-sheet.cert-premium .cert-statement{font-size:14px;line-height:1.6;max-width:560px;margin:12px auto;color:#3a3558}
-.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:#17142E}
+/* DES-06: the candidate name is the signature-style text — a script
+ * stack (Segoe Script on Windows, Brush Script on Mac) where the
+ * platform has one; elsewhere it falls back to the platform's cursive
+ * default (Noto Sans on this Linux VM — verified via fc-match). */
+.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:#17142E;font-family:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive}
+/* DES-06: the battle sheet has no .cert-name wrapper — its name output
+ * (#cert-name-out) gets the same script stack without the typing
+ * sheet's 30px sizing, so both sheets' names render as signatures. */
+.cert-sheet.cert-premium #cert-name-out{font-family:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive}
 .cert-sheet.cert-premium .cert-net{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0 0;color:#17142E}
 .cert-sheet.cert-premium .cert-net-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6C4CF1;margin:0 0 14px}
 .cert-sheet.cert-premium .cert-stats{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:center;margin:16px 0}
