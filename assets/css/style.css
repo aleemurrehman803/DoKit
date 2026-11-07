@@ -211,10 +211,24 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .dk-avatarbtn__inner{display:flex}
 #chat-fab img, #chat-fab .doki-svg{display:block;border-radius:50%;object-fit:cover}
 /* Light theme: same tokens, light values (dark stays the default). */
-[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470;--gold-text:#7a5f00}
+[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470;--gold-text:#7a5f00;--violet2:#6C4CF1;--good:#1E7A4C;--bad:#D92D20}
 [data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: var(--gold-text); }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
 [data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:var(--surface)}
+/* T033 (P5-DES-03): light theme had dark leftovers + unreadable
+ * accent text. Sticky bar mirrors the light header bg; glows soften
+ * to the amber glow's level (.28); the hero gradient's amber end
+ * becomes --gold (3.25:1, fine for a 68px display heading); persistent
+ * amber text (rotator, logo "Kit", falling game word, selected
+ * language, sample badge) becomes --gold-text (6.06:1 on white).
+ * Hover-only amber text is left alone (transient feedback, and every
+ * hover also changes background/border). --amber itself is NOT
+ * overridden: .btn.amber keeps its amber fill + ink text (11.30:1). */
+[data-theme="light"] .dkf-sticky-action{background:rgba(246,244,255,.94)}
+[data-theme="light"] .glow{opacity:.28}
+[data-theme="light"] .hero h1 .grad{background:linear-gradient(90deg,var(--violet),var(--gold));-webkit-background-clip:text;background-clip:text}
+[data-theme="light"] #type-rotator,[data-theme="light"] .logo span em,[data-theme="light"] .fall-word,[data-theme="light"] .lang-menu li[aria-selected="true"]{color:var(--gold-text)}
+[data-theme="light"] .sample-badge{color:var(--gold-text);border-color:var(--gold-text)}
 /* PWA install banner + site announcement banner (both hidden unless set). */
 .install-banner,.site-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;flex-wrap:wrap}
 /* Sticky CTA (home page only) + dismissible tip banner on the home page.
