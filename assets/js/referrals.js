@@ -55,6 +55,12 @@
   var root = (typeof window !== 'undefined') ? window
     : (typeof global !== 'undefined' ? global : {});
 
+  /* T035 (P5-DES-07): canvas font stack — mirrors the body stack
+   * in style.css. Canvas cannot use CSS var(), so the stack lives
+   * here once; both canvas painters (referral QR card +
+   * poster) build their font strings from it. */
+  var FONT_STACK = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+
   /* ---------- helpers (internal; DOM-free where possible) ---------- */
   function T(key, fallback) {
     try {
@@ -3676,8 +3682,8 @@
           if (ctx) {
             var bgColor = '#ffffff';
             var inkColor = '#111111';
-            var fontBig = 'bold 26px sans-serif';
-            var fontSmall = '16px sans-serif';
+            var fontBig = 'bold 26px ' + FONT_STACK;
+            var fontSmall = '16px ' + FONT_STACK;
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, 360, 280);
             ctx.fillStyle = inkColor;
@@ -4323,16 +4329,16 @@
             ctx.fillRect(0, 0, 1080, 1350);
             var ink = '#ffffff';
             ctx.fillStyle = ink;
-            ctx.font = 'bold 72px sans-serif';
+            ctx.font = 'bold 72px ' + FONT_STACK;
             ctx.fillText(name, 60, 200);
-            ctx.font = '44px sans-serif';
+            ctx.font = '44px ' + FONT_STACK;
             var rankLine = 'Rank: ' + stats.rank;
             var teamLine = 'Team: ' + stats.active + ' active friends';
             var coinsLine = 'Coins: ' + coins;
             ctx.fillText(rankLine, 60, 300);
             ctx.fillText(teamLine, 60, 370);
             ctx.fillText(coinsLine, 60, 440);
-            ctx.font = '32px sans-serif';
+            ctx.font = '32px ' + FONT_STACK;
             var linkText = link;
             var y = 540;
             var chunk = 38;
