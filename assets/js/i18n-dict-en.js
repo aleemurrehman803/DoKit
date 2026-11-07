@@ -23,6 +23,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1395": "Terms (Urdu)",
     "rsv_1396": "Choose a new password",
     "rsv_1397": "Choose a password",
+    "rsv_1398": "Earn coins via referrals",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",

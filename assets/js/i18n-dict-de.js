@@ -23,6 +23,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1395": "Bedingungen (Urdu)",
     "rsv_1396": "Wählen Sie ein neues Passwort",
     "rsv_1397": "Wählen Sie ein Passwort",
+    "rsv_1398": "Münzen über Empfehlungen verdienen",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",
