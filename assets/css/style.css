@@ -104,6 +104,13 @@ input[type=text],input[type=number],input[type=email],input[type=password],selec
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
 input[type=range]{width:100%}
+/* T042 (P5-DES-17): range/checkbox/radio inputs match the site palette.
+ * accent-color tints the native checked box / slider thumb violet;
+ * the range gets the same bordered-box + amber-hover treatment as the
+ * text inputs (style.css:438) so the hover border has something to change. */
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--violet)}
+input[type=range]{border:1px solid var(--line);border-radius:99px;transition:border-color .15s}
+input[type=range]:hover{border-color:var(--amber)}
 .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:200px}
 .note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:var(--pad-compact) var(--pad-card);color:var(--muted)}
 .note b{color:var(--text)}
