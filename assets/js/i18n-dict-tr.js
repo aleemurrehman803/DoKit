@@ -18,6 +18,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1390": "Girdi biçimini korumak için «Orijinali koru» seçeneğini seçin. Şeffaflık veya kayıpsız kalite için PNG, fotoğraflar için JPEG ve en küçük modern dosyalar için WebP seçin.",
     "rsv_1391": "Görsellerim herhangi bir yere yükleniyor mu?",
     "rsv_1392": "Hayır — her şey tarayıcınızda gerçekleşir. Görselleriniz cihazınızda yeniden boyutlandırılır ve asla bir sunucuya yüklenmez.",
+    "rsv_1393": "Para yatırma, çekme ve Stripe ödemeleri sahip kararıyla kapatılmıştır.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

@@ -18,6 +18,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1390": "Choisissez « Conserver l’original » pour préserver le format d’entrée. Choisissez PNG pour la transparence ou la qualité sans perte, JPEG pour les photos et WebP pour les fichiers modernes les plus petits.",
     "rsv_1391": "Mes images sont-elles téléversées quelque part ?",
     "rsv_1392": "Non — tout se passe dans votre navigateur. Vos images sont redimensionnées sur votre appareil et ne sont jamais téléversées vers un serveur.",
+    "rsv_1393": "Les dépôts, les retraits et les paiements Stripe sont fermés par décision du propriétaire.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Couleur unie",
     "rsv_1372": "Pivoter",

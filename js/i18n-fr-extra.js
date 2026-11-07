@@ -130,7 +130,7 @@
     "acct_sub_upgrade": "⬆️ Mettre à niveau",
     "acct_sub_upgrade_note": "Pro (6 $/mois) et Équipe (29 $/mois) ne sont pas encore en vente. À leur lancement, vous pourrez payer en USDT ou en PKR (Easypaisa / JazzCash).",
     "acct_sub_wallet": "🪙 Portefeuille de pièces",
-    "acct_sub_wallet_d": "1 pièce = 1 Rs. Déposez et retirez de l'argent réel.",
+    "acct_sub_wallet_d": "1 pièce = 1 Rs.", "acct_payments_closed": "Les dépôts, les retraits et les paiements Stripe sont fermés par décision du propriétaire.",
     "acct_wd_acct": "Votre numéro de compte / adresse de portefeuille",
     "acct_wd_balance": "Solde",
     "acct_wd_h1": "💸 Retirer",

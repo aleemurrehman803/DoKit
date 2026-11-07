@@ -18,6 +18,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1390": "Escolha «Manter original» para preservar o formato de entrada. Escolha PNG para transparência ou qualidade sem perda, JPEG para fotos e WebP para os arquivos modernos menores.",
     "rsv_1391": "Minhas imagens são enviadas para algum lugar?",
     "rsv_1392": "Não — tudo acontece no seu navegador. Suas imagens são redimensionadas no seu dispositivo e nunca são enviadas para nenhum servidor.",
+    "rsv_1393": "Depósitos, saques e pagamentos Stripe estão encerrados por decisão do proprietário.",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",

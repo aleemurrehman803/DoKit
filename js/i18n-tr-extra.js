@@ -130,7 +130,7 @@
     "acct_sub_upgrade": "⬆️ Yükselt",
     "acct_sub_upgrade_note": "Pro (aylık $6) ve Team (aylık $29) henüz satışta değil. Yayına girdiğinde USDT veya PKR (Easypaisa / JazzCash) ile ödeyebileceksiniz.",
     "acct_sub_wallet": "🪙 Coin cüzdanı",
-    "acct_sub_wallet_d": "1 coin = 1 Rs. Gerçek para yatırın ve çekin.",
+    "acct_sub_wallet_d": "1 coin = 1 Rs.", "acct_payments_closed": "Para yatırma, çekme ve Stripe ödemeleri sahip kararıyla kapatılmıştır.",
     "acct_wd_acct": "Hesap numaranız / cüzdan adresiniz",
     "acct_wd_balance": "Bakiye",
     "acct_wd_h1": "💸 Para Çek",

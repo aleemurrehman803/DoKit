@@ -18,6 +18,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1390": "Keep original to preserve the input format. Choose PNG for transparency or lossless quality, JPEG for photos, and WebP for the smallest modern files.",
     "rsv_1391": "Are my images uploaded anywhere?",
     "rsv_1392": "No — everything happens in your browser. Your images are resized on your device and never uploaded to any server.",
+    "rsv_1393": "Deposits, withdrawals and Stripe payments are closed by owner decision.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",
