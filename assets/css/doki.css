@@ -34,10 +34,10 @@
 .doki-zzz,
 .doki-micring { display: none; }
 .doki-thinkdots { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); gap: 4px; }
-.doki-thinkdots i { width: 7px; height: 7px; border-radius: 50%; background: #6C4CF1; display: inline-block; }
-.doki-zzz { position: absolute; top: 0; right: 2px; font-weight: 800; font-size: 14px; color: #6C4CF1; letter-spacing: 1px; }
+.doki-thinkdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--violet); display: inline-block; }
+.doki-zzz { position: absolute; top: 0; right: 2px; font-weight: 800; font-size: 14px; color: var(--violet); letter-spacing: 1px; }
 .doki-zzz span { display: inline-block; }
-.doki-micring { position: absolute; inset: -5px; border: 3px solid #6C4CF1; border-radius: 50%; }
+.doki-micring { position: absolute; inset: -5px; border: 3px solid var(--violet); border-radius: 50%; }
 
 /* ---- idle (default): gentle breathing ---- */
 /* Header: the photo bobs against the panel surface (natural backdrop). */
