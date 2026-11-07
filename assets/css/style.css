@@ -537,8 +537,6 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 .footbase:hover::before{width:220px}
 .footbase a{display:inline-block;padding:2px 4px;border-radius:6px;transition:color .18s,transform .18s}
 .footbase a:hover{color:var(--amber);text-decoration:underline;transform:translateY(-1px)}
-.footbase span{transition:color .18s}
-.footbase span:hover{color:var(--text)}
 /* ---- Referral Phase 1 (Oct 26): page-scoped .ref-* styles ONLY ----
 WHY page-scoped: these classes exist only on account/referrals/ and
 the dashboard card, so they cannot restyle any other page. WHY these
