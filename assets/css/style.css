@@ -1,5 +1,10 @@
 
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B}
+/* DES-01 tokens: --gold/--gold2 (certificate gold), --blue (keyboard +
+ * trend-chart blue), --captcha (captcha stripe indigo). Light theme
+ * inherits them from :root (no override), so one :root edit recolours
+ * them in both themes; --gold-text is the separate light-theme gold
+ * for eyebrow/tag text (contrast on light backgrounds). */
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6;font-size:17px}
@@ -148,8 +153,8 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .dk-avatarbtn__inner{display:flex}
 #chat-fab img, #chat-fab .doki-svg{display:block;border-radius:50%;object-fit:cover}
 /* Light theme: same tokens, light values (dark stays the default). */
-[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470}
-[data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: #7a5f00; }
+[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470;--gold-text:#7a5f00}
+[data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: var(--gold-text); }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
 [data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
 /* PWA install banner + site announcement banner (both hidden unless set). */
@@ -185,7 +190,7 @@ body.has-sticky-cta{padding-bottom:84px}
 .pick.sel{background:var(--violet);color:#fff;border-color:var(--violet)}
 /* Captcha box on login/signup (client-side code, never a real gate). */
 .captcha-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.captcha-code{font-size:24px;font-weight:800;letter-spacing:6px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 10px,#2e2a5e 10px,#2e2a5e 20px);border:1px solid var(--line);border-radius:10px;padding:8px 16px;user-select:none}
+.captcha-code{font-size:24px;font-weight:800;letter-spacing:6px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 10px,var(--captcha) 10px,var(--captcha) 20px);border:1px solid var(--line);border-radius:10px;padding:8px 16px;user-select:none}
 /* Typing finger keyboard: zones tint the key's bottom edge; the
    active key (current character) gets the amber fill. */
 /* Progress charts + timeline (device-local data only). */
@@ -194,13 +199,13 @@ body.has-sticky-cta{padding-bottom:84px}
 /* Certificates: print only the certificate, never the chrome. */
 @media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
 /* Typing certificate premium sheet (restored historical design; sheet-scoped only). */
-.cert-sheet.cert-premium{position:relative;border:4px double #b8860b;outline:2px solid #6C4CF1;outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:#17142E}
+.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid #6C4CF1;outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:#17142E}
 .cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6C4CF1}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
 @media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
-.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid #b8860b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:#b8860b;transform:rotate(-12deg);text-align:center}
-.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid #b8860b;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#6C4CF1;background:#f0ebff}
-.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,#b8860b,#daa520);color:#fff;padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
+.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#6C4CF1;background:#f0ebff}
+.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
 .cert-issued{margin-top:18px;font-size:13px;text-align:center}
 .cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:#17142E}
 .cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:#6b5a1e}
@@ -220,8 +225,8 @@ body.has-sticky-cta{padding-bottom:84px}
 .cert-sheet.cert-premium .cert-sig{text-align:center;width:200px}
 .cert-sheet.cert-premium .cert-sig-line{border-top:2px solid #1a1a2e;min-height:28px}
 .cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px}
-.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:#b8860b;font-weight:600}
-@media print{.cert-sheet.cert-premium{border:4px double #b8860b;outline:none;border-radius:4px;background:#fff;color:#000}}
+.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:var(--gold);font-weight:600}
+@media print{.cert-sheet.cert-premium{border:4px double var(--gold);outline:none;border-radius:4px;background:#fff;color:#000}}
 @media print{@page{size:A4 landscape;margin:12mm}.cert-sheet.cert-premium{max-width:250mm;margin-left:auto;margin-right:auto}}
 /* Urdu pages: right-aligned inputs under RTL. */
 [dir="rtl"] input[type=text],[dir="rtl"] textarea{text-align:right}
@@ -246,8 +251,6 @@ body.has-sticky-cta{padding-bottom:84px}
 /* Finger zones: left hand cool, right hand warm — a learning aid only. */
 .kb .key.f-lpinky, .kb .key.f-lring, .kb .key.f-lmiddle, .kb .key.f-lindex { background: #eef2ff; }
 .kb .key.f-rindex, .kb .key.f-rmiddle, .kb .key.f-rring, .kb .key.f-rpinky { background: #fff7ed; }
-.kb .key.next { outline: 2px solid #1a56db; outline-offset: 1px; font-weight: 700; }
-.kb .key.pressed { background: #1a56db; color: #fff; }
 
 /* How-to steps panels (restored old saas-steps pattern, new design tokens). */
 .saas-steps{display:flex;gap:12px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:20px;position:relative;flex-wrap:wrap}
@@ -307,6 +310,13 @@ body.has-sticky-cta #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 .kb .key{background:var(--surface2);border-color:var(--line);color:var(--text)}
 .kb .key.f-lpinky,.kb .key.f-lring,.kb .key.f-lmiddle,.kb .key.f-lindex{background:var(--surface)}
 .kb .key.f-rindex,.kb .key.f-rmiddle,.kb .key.f-rring,.kb .key.f-rpinky{background:var(--surface2)}
+/* DES-01: keyboard state highlights — kept AFTER the F1 finger fills on
+ * purpose. Same specificity (0,3,0) as the finger rules, so source order
+ * decides: here .pressed wins its background (before this move the F1
+ * rules overrode it and the press flash never showed). .next keeps its
+ * --blue outline. */
+.kb .key.next { outline: 2px solid var(--blue); outline-offset: 1px; font-weight: 700; }
+.kb .key.pressed { background: var(--blue); color: #fff; }
 /* F2 [106] shared hover transition: the existing .15s pattern, extended
    to every hoverable that snapped at 0s. .btn/.card/.reveal already
    have their own transitions and are deliberately NOT listed here. */

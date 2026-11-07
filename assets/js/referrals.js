@@ -4308,9 +4308,14 @@
           if (ctx) {
             var grad = ctx.createLinearGradient(0, 0, 0, 1350);
             var idx = wkNum % 3;
-            var firstColor = '#7c3aed';
-            var secondColor = '#db2777';
-            if (idx === 1) { firstColor = '#f59e0b'; secondColor = '#ef4444'; }
+            /* DES-01: poster gradient palette — JS-side constants
+             * (canvas cannot use CSS var()). The violet mirrors the
+             * --violet brand family; amber/red/pink are the poster's
+             * own template colours. Values unchanged. */
+            var POSTER_COLORS = { violet: '#7c3aed', pink: '#db2777', amber: '#f59e0b', red: '#ef4444' };
+            var firstColor = POSTER_COLORS.violet;
+            var secondColor = POSTER_COLORS.pink;
+            if (idx === 1) { firstColor = POSTER_COLORS.amber; secondColor = POSTER_COLORS.red; }
             if (idx === 2) { firstColor = '#111827'; secondColor = '#374151'; }
             grad.addColorStop(0, firstColor);
             grad.addColorStop(1, secondColor);

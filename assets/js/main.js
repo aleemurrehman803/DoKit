@@ -1128,9 +1128,15 @@ function dokiMicStop(){
  * text: fills the editable textarea with the translated sample text. */
 (function sampleButtons() {
   function sampleImage() {
+    /* DES-01: sample-image gradient — JS-side constants mirroring the
+     * brand tokens (canvas cannot use CSS var()): violet mirrors
+     * --violet (#6C4CF1), orange is the gradient accent (#FF8A5C).
+     * Values unchanged. */
+    var GRAD_VIOLET = '#6C4CF1';
+    var GRAD_ORANGE = '#FF8A5C';
     var c = document.createElement('canvas'); c.width = 800; c.height = 600;
     var x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 800, 600);
-    g.addColorStop(0, '#6C4CF1'); g.addColorStop(1, '#FF8A5C');
+    g.addColorStop(0, GRAD_VIOLET); g.addColorStop(1, GRAD_ORANGE);
     x.fillStyle = g; x.fillRect(0, 0, 800, 600);
     x.fillStyle = 'rgba(255,255,255,.92)'; x.textAlign = 'center';
     x.font = 'bold 72px sans-serif'; x.fillText('Sample', 400, 290);

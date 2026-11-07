@@ -364,6 +364,12 @@
    * arrives late (async dict) or changes: otherwise the empty message
    * and canvas legend stay in the load-time language. */
   function renderTrend() {
+  /* DES-01: trend-chart colours — JS-side constants mirroring the CSS
+   * tokens (canvas cannot use var()): CHART_BLUE mirrors --blue
+   * (#1a56db, WPM line + legend), CHART_VIOLET is the accuracy-line
+   * violet (#7c3aed). Values unchanged; only the literals are named once. */
+  var CHART_BLUE = '#1a56db';
+  var CHART_VIOLET = '#7c3aed';
   var trendCanvas = $('ta-trend');
   if (trendCanvas) {
     var results = getResults().slice().reverse(); /* chronological */
@@ -413,15 +419,15 @@
           ctx.beginPath(); ctx.arc(xPos(i), mapY(v), 3.5, 0, 7); ctx.fill();
         });
       }
-      drawLine(wpms, function (v) { return 18 + 208 * (1 - v / maxW); }, '#1a56db');
-      drawLine(accs, function (v) { return 18 + 208 * (1 - v / 100); }, '#7c3aed');
+      drawLine(wpms, function (v) { return 18 + 208 * (1 - v / maxW); }, CHART_BLUE);
+      drawLine(accs, function (v) { return 18 + 208 * (1 - v / 100); }, CHART_VIOLET);
       ctx.fillStyle = '#64748b';
       var shown = n <= 6 ? results.map(function (_, i) { return i; })
         : [0, Math.floor(n / 2), n - 1];
       shown.forEach(function (i) { ctx.fillText(labels[i], xPos(i) - 14, 248); });
-      ctx.fillStyle = '#1a56db'; ctx.fillRect(44, 4, 14, 4);
+      ctx.fillStyle = CHART_BLUE; ctx.fillRect(44, 4, 14, 4);
       ctx.fillStyle = '#64748b'; ctx.fillText((window.dkT ? window.dkT('rsv_1328', 'WPM') : 'WPM'), 62, 10);
-      ctx.fillStyle = '#7c3aed'; ctx.fillRect(114, 4, 14, 4);
+      ctx.fillStyle = CHART_VIOLET; ctx.fillRect(114, 4, 14, 4);
       ctx.fillStyle = '#64748b'; ctx.fillText((window.dkT ? window.dkT('rsv_1329', 'Accuracy %') : 'Accuracy %'), 132, 10);
     }
   }
