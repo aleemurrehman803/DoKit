@@ -51,7 +51,13 @@ function closeAllMenus(exceptMenuId){
     if (exceptEl && el && el.contains(exceptEl)) { return; } // ancestor: keep open
     try { entry.close(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   });
-  if (exceptMenuId !== 'nav-links') { dkCloseNavLinks(); }
+  // T039 (P5-DES-13): #nav-links is an ancestor of the nav dropdowns,
+  // so the ancestor rule above applies here too — closing the mobile
+  // nav would hide the dropdown being opened (<=900px hamburger band).
+  if (exceptMenuId !== 'nav-links') {
+    var navLinks = document.getElementById('nav-links');
+    if (!(exceptEl && navLinks && navLinks.contains(exceptEl))) { dkCloseNavLinks(); }
+  }
 }
 window.dkRegisterMenu = dkRegisterMenu;
 window.dkCloseAllMenus = closeAllMenus;
