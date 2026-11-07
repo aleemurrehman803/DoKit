@@ -173,7 +173,15 @@ function dokiWake(){
   dokiSleepArm();
 }
 if(fab && panel){ fab.addEventListener('click', function(){
-  var opened = panel.classList.toggle('open');
+  // DES-21: close fades out (dkAnimateClose) instead of snapping; a
+  // click on a panel that is mid-close re-opens it.
+  var opened;
+  if (panel.classList.contains('open')) {
+    if (panel.classList.contains('closing')) { dkCancelClose(panel); opened = true; }
+    else { dkAnimateClose(panel, function(){ panel.classList.remove('open'); }); opened = false; }
+  } else {
+    dkCancelClose(panel); panel.classList.add('open'); opened = true;
+  }
   dokiLoadFaq();
   // Panel open: greeting briefly, then idle. Panel closed: sleep off,
   // FAB instance stays idle (it is always idle).
@@ -182,8 +190,13 @@ if(fab && panel){ fab.addEventListener('click', function(){
 // AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
 // (bindNavDrop): close on Escape and return focus to the launcher
 // (here the FAB). The panel is non-modal; this only adds the close.
+// DES-21: focus returns immediately while the panel fades — the
+// keyboard user is never left waiting on (or trapped by) the close.
 if(fab && panel){ document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape' && panel.classList.contains('open')){ panel.classList.remove('open'); fab.focus(); }
+  if(e.key === 'Escape' && panel.classList.contains('open')){
+    dkAnimateClose(panel, function(){ panel.classList.remove('open'); });
+    fab.focus();
+  }
 }); }
 if(panel){ panel.addEventListener('click', dokiWake); panel.addEventListener('input', dokiWake); }
 // ---- Doki idle blink (photo pass, Oct 25) ----
@@ -621,6 +634,38 @@ function dokiMicStop(){
       }
     } catch (e) {}
   })();
+  // DES-21: animated close-out for menus/panels (shared helper).
+  // Opening animates (dkmenuin .15s) but the hidden-toggle mechanism
+  // hid instantly. The close path adds .closing (dkmenuout .15s, the
+  // exact reverse), waits DK_CLOSE_MS, then hides. Timeout-only — no
+  // animationend listener: a listener would misfire on the NEXT open
+  // animation if a close was cancelled mid-flight. Re-open cancels
+  // the pending timer first (dkCancelClose), so a fast close->reopen
+  // can never hide a freshly opened menu. Reduced-motion users get
+  // the instant close (unchanged behaviour); the global CSS rule
+  // would also kill the animation, which is why the load-time
+  // `reduced` flag — not animationend — decides the path. Exposed on
+  // window so i18n.js (loaded later, dynamically) can use it too.
+  var DK_CLOSE_MS = 150;
+  function dkCancelClose(el){
+    if(!el) return;
+    if(el._dkCloseTimer){ clearTimeout(el._dkCloseTimer); el._dkCloseTimer = null; }
+    el.classList.remove('closing');
+  }
+  function dkAnimateClose(el, doHide){
+    if(!el) return;
+    if(el.classList.contains('closing')) return; // already closing; the pending timer hides it
+    if(el._dkCloseTimer){ clearTimeout(el._dkCloseTimer); el._dkCloseTimer = null; } // defensive: timer without the class
+    if(reduced){ doHide(); return; }
+    el.classList.add('closing');
+    el._dkCloseTimer = setTimeout(function(){
+      el._dkCloseTimer = null;
+      el.classList.remove('closing');
+      doHide();
+    }, DK_CLOSE_MS);
+  }
+  window.dkAnimateClose = dkAnimateClose;
+  window.dkCancelClose = dkCancelClose;
   // Small dropdown helper (used by language + profile menus): toggle
   // on button click, close on outside click or Escape. returnFocus
   // (launcher only): on Escape, return focus to the button — never
@@ -630,15 +675,24 @@ function dokiMicStop(){
     if (!btn || !menu) { return; }
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      var open = menu.hidden; menu.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
+      // Re-open a menu that is mid-close instead of letting it vanish.
+      if (menu.classList.contains('closing')) {
+        dkCancelClose(menu); menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true'); return;
+      }
+      var willOpen = menu.hidden;
+      if (willOpen) { dkCancelClose(menu); menu.hidden = false; }
+      else { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      btn.setAttribute('aria-expanded', String(willOpen));
     });
     document.addEventListener('click', function () {
-      menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+      if (!menu.hidden) { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      btn.setAttribute('aria-expanded', 'false');
     });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !menu.hidden) {
-        menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+        dkAnimateClose(menu, function(){ menu.hidden = true; });
+        btn.setAttribute('aria-expanded', 'false');
         if (returnFocus) { btn.focus(); }
       }
     });
@@ -697,8 +751,13 @@ function dokiMicStop(){
         menu = document.getElementById(menuId);
     if (!drop || !caret || !menu) { return; }
     var pinned = false;
-    function open(){ menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
-    function close(){ menu.hidden = true; caret.setAttribute('aria-expanded', 'false'); pinned = false; }
+    function open(){ dkCancelClose(menu); menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
+    function close(){
+      // DES-21: only the visual hide is delayed (150ms fade); the state
+      // (aria-expanded, pinned) changes immediately, as before.
+      if(!menu.hidden){ dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      caret.setAttribute('aria-expanded', 'false'); pinned = false;
+    }
     // WHY the three-way click: a real mouse click always hovers
     // first, so hover-open runs before the click handler. A plain
     // toggle would therefore shut the menu the hover just opened
@@ -709,6 +768,9 @@ function dokiMicStop(){
     caret.addEventListener('click', function (e) {
       e.stopPropagation();
       if (menu.hidden) { pinned = true; open(); }
+      // DES-21: a caret click on a menu that is mid-close re-opens it
+      // instead of pinning a menu that is about to vanish.
+      else if (menu.classList.contains('closing')) { pinned = true; open(); }
       else if (pinned) { close(); }
       else { pinned = true; }
     });

@@ -263,11 +263,21 @@
     btn.dataset.i18nBound = '1';
 
     function close() {
-      menu.hidden = true;
+      // DES-21: same animated close as bindMenu (main.js exposes the
+      // helper on window; it loads before this file, but the typeof
+      // guard keeps the instant close if it ever does not).
+      if (!menu.hidden && typeof window.dkAnimateClose === 'function') {
+        window.dkAnimateClose(menu, function(){ menu.hidden = true; });
+      } else { menu.hidden = true; }
       btn.setAttribute('aria-expanded', 'false');
     }
     btn.addEventListener('click', function (ev) {
       ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
+      // DES-21: a click on a menu that is mid-close re-opens it.
+      if (menu.classList.contains('closing') && typeof window.dkCancelClose === 'function') {
+        window.dkCancelClose(menu); menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true'); return;
+      }
       var willOpen = menu.hidden;
       menu.hidden = !willOpen;
       btn.setAttribute('aria-expanded', String(willOpen));

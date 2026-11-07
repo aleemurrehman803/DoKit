@@ -377,13 +377,26 @@ input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[ty
 .saas-steps-x:hover{color:var(--amber)}
 .pick:not(.sel):hover{border-color:var(--amber);color:var(--amber)}
 /* F9 [113] open-motion: menus/panels animate in on open (the animation
-   runs when hidden is removed, so no JS change was needed). Close
-   stays instant: the shared hidden-toggle mechanism cannot animate
-   out without rewriting verified bindMenu/chat/tab toggles — see the
-   parent report for that gap. Theme switch fades via body transition. */
+   runs when hidden is removed, so no JS change was needed). DES-21:
+   close now animates too — JS adds .closing (dkmenuout, the exact
+   reverse, same .15s) and hides the element 150ms later; re-open
+   cancels the pending hide. Reduced-motion users never get .closing
+   (main.js skips the animated path), and the global reduced-motion
+   rule kills the animation anyway. Theme switch fades via body transition. */
 @keyframes dkmenuin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .lang-menu,.prof-menu,.app-panel,.nav-drop-menu{animation:dkmenuin .15s ease-out}
 #chat-panel.open{animation:dkmenuin .15s ease-out}
+@keyframes dkmenuout{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
+/* .closing must come after the dkmenuin rules: #chat-panel.closing ties
+   #chat-panel.open on specificity, so source order decides; the menu
+   selectors win on specificity (two classes vs one). pointer-events
+   stops clicks on a fading menu. */
+.lang-menu.closing,.prof-menu.closing,.app-panel.closing,.nav-drop-menu.closing,#chat-panel.closing{animation:dkmenuout .15s ease-out;pointer-events:none}
+/* DES-21 (admin tabs): the incoming panel fades in so a switch feels
+   smooth. No fade-out: the outgoing panel cannot fade without delaying
+   every switch by 150ms (panels are in normal flow, so a crossfade
+   would need a layout restructure). */
+.tab-panel.open{animation:dkmenuin .15s ease-out}
 body{transition:background-color .15s,color .15s}
 /* F10 [114] entrance animation for non-home pages: main.js adds
    .dk-enter to <main> on pages without the home hero canvas.
