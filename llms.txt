@@ -1,10 +1,10 @@
 # DoKit
 
-> DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words, and practise typing.
+> DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words.
 
 ## Tools
 
-- [DoKit Tools – All Free Online Tools](https://aleemurrehman803.github.io/DoKit/tools/): Every DoKit tool runs in your browser — image resizer, compressor, converter, word counter, case converter, board photo, password generator, unit converter, QR generator and typing test. No signup, no uploads, no watermark.
+- [DoKit Tools – All Free Online Tools](https://aleemurrehman803.github.io/DoKit/tools/): All DoKit tools run in your browser — image resizer, compressor, converter, word counter, case converter, board photo and password generator. Free and private.
 - [Image Resizer – Resize JPG, PNG & WebP Free](https://aleemurrehman803.github.io/DoKit/tools/image-resizer/): Resize any image to exact pixels or a percentage, right in your browser. Your photos never leave your device — no signup, no watermark.
 - [Compress Image to 100KB or Any Size Free](https://aleemurrehman803.github.io/DoKit/tools/image-compressor/): Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.
 - [Image Converter – PNG, JPG & WebP Converter](https://aleemurrehman803.github.io/DoKit/tools/image-converter/): Convert images between PNG, JPG, WebP and more in your browser. No uploads, no account, batch conversion included.
@@ -36,8 +36,8 @@
 
 - [TypeFight – Typing Battles](https://aleemurrehman803.github.io/DoKit/typefight/): TypeFight turns typing into a sport: enter a room, race the same text, fastest and most accurate wins.
 - [TypeFight Battle – 60 Second Race](https://aleemurrehman803.github.io/DoKit/typefight/battle/): Race the same text for 60 seconds against bots. Live leaderboard, WPM and accuracy.
-- [TypeFight Wallet](https://aleemurrehman803.github.io/DoKit/typefight/wallet/): Your DoKit coin balance and history.
-- [Fighter Profile](https://aleemurrehman803.github.io/DoKit/typefight/profile/): Your TypeFight battle identity.
+- [TypeFight Wallet](https://aleemurrehman803.github.io/DoKit/typefight/wallet/): Your real coin balance, synced from your account — coins earned from typing, battles and referrals, with your full history. Check your balance any time.
+- [Fighter Profile](https://aleemurrehman803.github.io/DoKit/typefight/profile/): Your TypeFight battle identity, saved to your account — fighter name, battle stats, wins and certificates. Set up your profile before your next race.
 - [Battle Certificates](https://aleemurrehman803.github.io/DoKit/typefight/certificate/): TypeFight battle certificates. Battle results show as practice certificates.
 - [Verify Battle Certificate](https://aleemurrehman803.github.io/DoKit/typefight/verify/): Check a TypeFight certificate against issued records.
 
@@ -61,7 +61,7 @@
 - [شرائط و ضوابط](https://aleemurrehman803.github.io/DoKit/terms-ur/): DoKit کی شرائط و ضوابط پڑھیں: آپ ہم سے کیا توقع رکھ سکتے ہیں، ہم آپ سے کیا توقع رکھتے ہیں، پلانز اور سکے، اور تنازعات کا حل۔
 - [Coming Soon](https://aleemurrehman803.github.io/DoKit/coming-soon/): New DoKit tools and features are announced here first. No invented launch dates.
 - [Wall of Love](https://aleemurrehman803.github.io/DoKit/wall-of-love/): What people say about DoKit. Share your own story — submissions are reviewed before they appear.
-- [Changelog](https://aleemurrehman803.github.io/DoKit/changelog/): What changed in DoKit, newest first.
+- [Changelog](https://aleemurrehman803.github.io/DoKit/changelog/): What changed in DoKit, newest first — new tools, fixes and improvements, with dates. Follow the changelog to see what is new in each release.
 - [System Status](https://aleemurrehman803.github.io/DoKit/status/): Is DoKit working? Current status of the site, tools and upcoming services.
 - [API Documentation](https://aleemurrehman803.github.io/DoKit/api/): The planned DoKit API: endpoints, authentication and rate limits. Live access is Firestore-direct on the free Spark plan.
 - [Design System](https://aleemurrehman803.github.io/DoKit/design-system/): DoKit's design tokens and components: colours, type and the building blocks every page shares.
