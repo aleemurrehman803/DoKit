@@ -550,6 +550,16 @@
   function showMsg(id, text, isErr){
     var el = $(id);
     if (!el) { return; }
+    /* T017 (P5-UX-03): make every message a polite live region so screen
+     * readers announce errors and confirmations when they appear. The
+     * static targets already carry aria-live="polite" in the HTML (a live
+     * region must exist BEFORE its text changes, or the announcement can
+     * be missed); this is the backstop for targets created by JS or on
+     * pages the HTML pass did not cover (e.g. the closed deposit /
+     * withdraw pages). Deliberately aria-live="polite" only — role="alert"
+     * is implicitly assertive and this issue's own risk note forbids
+     * assertive ("polite is correct"); visual output is unchanged. */
+    if (!el.getAttribute('aria-live')) { el.setAttribute('aria-live', 'polite'); }
     el.textContent = text;
     el.className = isErr ? 'err' : 'note';
     el.hidden = !text;
