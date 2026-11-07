@@ -210,7 +210,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .nav-actions{display:flex;gap:8px;align-items:center}
 .lang-drop,.prof-drop{position:relative}
 .lang-btn,.theme-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer}
-.lang-btn:hover,.theme-btn:hover{border-color:var(--amber);color:var(--amber)}
+.lang-btn:hover,.theme-btn:hover,.navtoggle:hover{border-color:var(--amber);color:var(--amber)}
 .lang-menu,.prof-menu,.app-panel{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
 .lang-menu li{padding:8px 10px;border-radius:8px;cursor:pointer}
 .lang-menu li:hover{background:var(--surface2);color:var(--amber)}
