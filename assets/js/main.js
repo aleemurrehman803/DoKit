@@ -1127,6 +1127,46 @@ function dokiMicStop(){
   } catch (e) {}
 })();
 
+/* Home sticky CTA pill (P5-VIS-02).
+ * The pill (#stickyCta, home page only) used to be an unconditional sticky
+ * bar that covered page text at every scroll position on every viewport.
+ * It is now mobile-only (<=768px), appears only after 600px of scroll, and
+ * can be dismissed for the rest of the session. Mirrors the (never-loaded)
+ * home.js gate; body.has-sticky-cta reserves bottom padding (style.css)
+ * so the shown bar never covers page content. No-ops on every other page. */
+(function initStickyCta() {
+  var bar = document.getElementById('stickyCta');
+  if (!bar) { return; }
+  var KEY = 'dokit_sticky_cta_dismissed';
+  var dismissed = false;
+  try { dismissed = window.sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+  var mq = window.matchMedia ? window.matchMedia('(max-width: 768px)') : null;
+  function upd() {
+    var show = !dismissed && (window.scrollY || window.pageYOffset) > 600 && (!mq || mq.matches);
+    bar.classList.toggle('on', show);
+    /* Next frame: animate in. */
+    requestAnimationFrame(function () { bar.classList.toggle('show', show); });
+    document.body.classList.toggle('has-sticky-cta', show);
+    bar.hidden = !show;
+  }
+  var closeBtn = bar.querySelector('.sticky-cta__close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      dismissed = true;
+      try { window.sessionStorage.setItem(KEY, '1'); } catch (e) {}
+      upd();
+    });
+  }
+  var tick = false;
+  window.addEventListener('scroll', function () {
+    if (tick) { return; } tick = true;
+    requestAnimationFrame(function () { tick = false; upd(); });
+  }, { passive: true });
+  window.addEventListener('resize', upd);
+  if (mq && mq.addEventListener) { mq.addEventListener('change', upd); }
+  upd();
+})();
+
   /* Phase 4: load the account backend module (account.js) on pages that
    * do not already include it — it bootstraps Firebase, syncs the header
    * (avatar + coin badge) and enforces maintenance mode. Guarded so a
