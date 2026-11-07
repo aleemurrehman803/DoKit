@@ -409,6 +409,10 @@ body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 /* P5-VIS-02: same FAB lift while the home sticky-CTA bar is shown, so the
  * FAB never covers the bar (or its dismiss button) on mobile. */
 body.has-sticky-cta #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
+/* T051 (P5-DES-27): the FAB lifts to bottom 72px under both classes
+ * above, so lift the panel with it — 144px = 72px FAB bottom +
+ * 60px FAB height + 12px gap (the normal 92px = 80px + 12px). */
+body.dkf-has-sticky #chat-panel,body.has-sticky-cta #chat-panel{bottom:calc(4.5rem + 72px + env(safe-area-inset-bottom))}
 
 
 /* ---- Header items 99/103: profile menu rows + app launcher ---- */
