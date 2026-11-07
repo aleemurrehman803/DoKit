@@ -1146,11 +1146,11 @@
       '<label for="adm-tname">Title</label><input id="adm-tname" name="tname" type="text" required>',
       function (f) { return {title: f.tname.value.trim(), status: 'open'}; },
       'adm-tickets', function () { admLoad(currentUser); });
-    addForm('adm-changelog', 'changelog',
+    addForm('adm-changelog-form', 'changelog',
       '<label for="adm-xtext">Entry</label><input id="adm-xtext" name="xtext" type="text" required>',
       function (f) { return {text: f.xtext.value.trim(), published: true}; },
       'adm-changelog', function () { admLoad(currentUser); });
-    addForm('adm-exp', 'experiments',
+    addForm('adm-exp-form', 'experiments',
       '<label for="adm-ename">Name</label><input id="adm-ename" name="ename" type="text" required>',
       function (f) { return {name: f.ename.value.trim()}; },
       'adm-exp', function () { admLoad(currentUser); });
