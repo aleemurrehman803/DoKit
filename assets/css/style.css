@@ -236,6 +236,15 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 [data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: var(--gold-text); }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
 [data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:var(--surface)}
+/* T045 (P5-DES-20): selects use the site's input styling, not the native
+ * OS chevron. appearance:none keeps the native <select> behaviour
+ * (keyboard + screen reader untouched) and swaps the arrow for a
+ * muted chevron drawn as a background SVG; the light-theme rule
+ * re-states it with the light --muted stroke, because the light
+ * background shorthand above would otherwise wipe the image. The
+ * border/radius/padding come from the base input rule (style.css:103). */
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23B9B3E0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+[data-theme="light"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235A5470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
 /* T033 (P5-DES-03): light theme had dark leftovers + unreadable
  * accent text. Sticky bar mirrors the light header bg; glows soften
  * to the amber glow's level (.28); the hero gradient's amber end
