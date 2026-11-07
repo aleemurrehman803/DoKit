@@ -54,6 +54,11 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px}
 .stats b{font-size:22px;display:block}.stats span{color:var(--muted);font-size:14px}
 section.block{padding:44px 0}
+/* DES-05: base h1 rule — non-hero page titles. 36px sits above h2 (32px)
+ * and below the hero h1 floor (40px); the Excel's suggested 32px would
+ * have equalled h2, so the value is adjusted per its own allowance.
+ * .hero h1 keeps its clamp (higher specificity). */
+h1{font-size:36px;line-height:1.15;margin:0 0 12px}
 h2{font-size:32px;line-height:1.2;margin:0 0 14px}
 h3{font-size:21px;margin:22px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
