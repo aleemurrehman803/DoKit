@@ -119,6 +119,16 @@ label{font-weight:700;display:block;margin:14px 0 6px}
 input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
+/* T090 (P5-VIS-15): equal-height guide cards — the guides grid rows sized
+ * independently (225px row 1 vs 198px row 2). grid-auto-rows:1fr makes every
+ * implicit row the same height (verified live in the T090 probe). Scoped to
+ * .guides-grid only; the shared .grid is untouched. */
+.guides-grid{grid-auto-rows:1fr}
+.guides-grid .card{height:100%}
+/* T090 (P5-VIS-15): the native file-input button renders white in Chromium's
+ * dark mode — the only white control on the dark tool pages (the "empty white
+ * box" on the resizer). Style it like the site's ghost buttons. */
+input[type=file]::file-selector-button,input[type=file]::-webkit-file-upload-button{background:transparent;border:1.5px solid var(--line);color:var(--text);border-radius:8px;padding:8px 14px;margin-right:10px;font:inherit;cursor:pointer}
 input[type=range]{width:100%}
 /* T042 (P5-DES-17): range/checkbox/radio inputs match the site palette.
  * accent-color tints the native checked box / slider thumb violet;

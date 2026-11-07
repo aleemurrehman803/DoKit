@@ -44,8 +44,8 @@
 ## Guides
 
 - [DoKit Guides – How to Resize, Compress & More](https://aleemurrehman803.github.io/DoKit/guides/): Practical how-tos for everyday image work: resize without losing quality, and compress to an exact KB target.
-- [How to Resize an Image Without Losing Quality](https://aleemurrehman803.github.io/DoKit/guides/how-to-resize-image-without-losing-quality/): Keep the aspect ratio locked, resize from the original, and pick the right format — JPG for photos, PNG for graphics, WebP for the web.
-- [How to Compress an Image to 100KB](https://aleemurrehman803.github.io/DoKit/guides/how-to-compress-image-to-100kb/): Forms and portals reject oversized photos. Learn how to hit an exact KB target without ruining quality — then do it free in your browser.
+- [How to resize an image without losing quality](https://aleemurrehman803.github.io/DoKit/guides/how-to-resize-image-without-losing-quality/): Keep the aspect ratio locked, resize from the original, and pick the right format — JPG for photos, PNG for graphics, WebP for the web.
+- [How to compress an image to 100KB](https://aleemurrehman803.github.io/DoKit/guides/how-to-compress-image-to-100kb/): Forms and portals reject oversized photos. Learn how to hit an exact KB target without ruining quality — then do it free in your browser.
 - [How to convert text case](https://aleemurrehman803.github.io/DoKit/guides/convert-case/): Fix ALL-CAPS headings, lowercase SHOUTING, and format titles perfectly — six case styles, one click each.
 - [How to convert image formats](https://aleemurrehman803.github.io/DoKit/guides/convert-images/): Switch any image between JPG, PNG and WebP in seconds — smaller files, wider compatibility, zero uploads.
 - [How to count words](https://aleemurrehman803.github.io/DoKit/guides/count-words/): Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.
