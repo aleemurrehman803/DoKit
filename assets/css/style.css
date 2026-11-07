@@ -126,6 +126,10 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .passage{font-size:19px;line-height:2;background:#12101F;border:1px solid var(--line);border-radius:12px;padding:18px}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
 .statnum{font-size:26px;font-weight:800}
+/* T027 (P5-VIS-04) — progress stats row: flex with a real gap between the
+ * four stats; each .pg-stat keeps its number glued to its label. */
+.pg-stats-row{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}
+.pg-stat{white-space:nowrap}
 @media(max-width:900px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
 @media(max-width:600px){body{font-size:16px}.grid{grid-template-columns:1fr}.hero{padding:48px 0 36px}.hero p.lead{font-size:17px}.row>*{min-width:100%}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}

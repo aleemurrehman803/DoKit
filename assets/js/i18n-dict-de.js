@@ -894,7 +894,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_0365": "Länge",
     "rsv_0366": "Länge, Gewicht, Temperatur, Volumen und mehr, sofort.",
     "rsv_0367": "Lektionen",
-    "rsv_0368": "Abgeschlossene Lektionen",
+    "rsv_0368": "Alle Lektionen",
     "rsv_0372": "Live-Rangliste",
     "rsv_0373": "Live-Statistiken",
     "rsv_0374": "Live-Statistiken zu Wörtern, Zeichen, Sätzen und Lesezeit während der Eingabe.",

@@ -894,7 +894,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_0365": "Uzunluk",
     "rsv_0366": "Uzunluk, ağırlık, sıcaklık, hacim ve daha fazlası, anında.",
     "rsv_0367": "Dersler",
-    "rsv_0368": "Tamamlanan dersler",
+    "rsv_0368": "Tüm dersler",
     "rsv_0372": "Canlı liderlik tablosu",
     "rsv_0373": "Canlı istatistikler",
     "rsv_0374": "Yazarken canlı kelime, karakter, cümle ve okuma süresi istatistikleri.",

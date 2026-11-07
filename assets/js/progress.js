@@ -53,15 +53,19 @@
   var agg = aggregates();
 
   // -- Progress page (typing/progress/) ------------------------------------
+  // T027 (P5-VIS-04): each stat is wrapped in .pg-stat inside a flex
+  // .pg-stats-row (style.css) so the number stays glued to its label while
+  // the four stats spread with a real gap — the old run-on line was cramped.
   var pg = document.getElementById('pg-stats');
   if (pg) {
     var total = (window.LESSONS ? window.LESSONS.length : 0);
     pg.innerHTML =
-      '<p><span class="statnum">' + agg.sessions + '</span>' + (window.dkT ? window.dkT('rsv_1065', ' sessions ') : ' sessions ') + '&nbsp; '
-      + '<span class="statnum">' + agg.best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '&nbsp; '
-      + '<span class="statnum">' + agg.avgAcc + '%</span>' + (window.dkT ? window.dkT('rsv_1067', ' average accuracy ') : ' average accuracy ') + '&nbsp; '
-      + '<span class="statnum">' + agg.lessonsDone + ' / ' + total
-      + '</span>' + (window.dkT ? window.dkT('rsv_1068', ' lessons completed') : ' lessons completed') + '</p>';
+      '<p class="pg-stats-row">'
+      + '<span class="pg-stat"><span class="statnum">' + agg.sessions + '</span>' + (window.dkT ? window.dkT('rsv_1065', ' sessions ') : ' sessions ') + '</span>'
+      + '<span class="pg-stat"><span class="statnum">' + agg.best + '</span>' + (window.dkT ? window.dkT('rsv_1066', ' best WPM ') : ' best WPM ') + '</span>'
+      + '<span class="pg-stat"><span class="statnum">' + agg.avgAcc + '%</span>' + (window.dkT ? window.dkT('rsv_1067', ' average accuracy ') : ' average accuracy ') + '</span>'
+      + '<span class="pg-stat"><span class="statnum">' + agg.lessonsDone + ' / ' + total
+      + '</span>' + (window.dkT ? window.dkT('rsv_1068', ' lessons completed') : ' lessons completed') + '</span></p>';
     var list = document.getElementById('pg-lessons');
     if (list && window.LESSONS) {
       var done = window.DK2.getLessons();
@@ -94,7 +98,10 @@
       if (info) {
         var chip = document.createElement('span');
         chip.className = 'chip';
-        if (!earned) { chip.style.opacity = '0.45'; }
+        // T027 (P5-VIS-04): unearned badges stay visibly dimmed, but 0.45
+        // made their text unreadably faint (looked disabled); 0.7 keeps the
+        // earned/locked distinction while the label stays readable.
+        if (!earned) { chip.style.opacity = '0.7'; }
         var chipTxt = info.icon + ' ' + info.name + ' — ' + info.desc;
         chip.textContent = chipTxt;
         grid.appendChild(chip);
