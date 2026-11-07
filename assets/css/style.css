@@ -8,7 +8,7 @@
  * end (was literal #4B2FD6); --on-accent is white text on solid
  * violet/good/blue surfaces, white in both themes (light --text
  * is dark ink, so it cannot be used for button text). */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e;--violet-deep:#4B2FD6;--on-accent:#fff}
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -35,7 +35,7 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .navlinks a.active{background:var(--violet);color:var(--on-accent)}
 .navtoggle{display:none;margin-left:auto;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
 .btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:var(--on-accent)!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(108,76,241,.45);color:var(--on-accent)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(var(--violet-rgb),.45);color:var(--on-accent)}
 .btn.amber{background:var(--amber);color:var(--ink)!important}
 .btn.amber:hover{box-shadow:0 10px 24px rgba(255,197,49,.4)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)!important}
@@ -73,7 +73,7 @@ h2{font-size:32px;line-height:1.2;margin:0 0 14px}
 h3{font-size:21px;margin:22px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;transition:transform .15s,border-color .15s,box-shadow .15s}
-.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(108,76,241,.25)}
+.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--amber);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
@@ -114,7 +114,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
 .faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:10px 0}
 .faq summary{font-weight:700;cursor:pointer}
-#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(108,76,241,.5)}
+#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5)}
 #chat-fab:hover{transform:translateY(-2px)}
 /* T031 (P5-VIS-08): panel widened 340 -> 380px (desktop) so the chat
  * input gets a readable share; max-width keeps small screens fitting. */
@@ -490,7 +490,7 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 @keyframes appTileIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 .app-tile{border:1px solid transparent}
 .app-tile svg{transition:transform .18s ease}
-.app-tile:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.app-tile:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .app-tile:hover svg{transform:scale(1.18)}
 /* ---- Oct 26 footer base: centered + entrance animation + hover ---- */
 .footbase{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);position:relative;animation:footBaseIn .6s ease-out}
@@ -521,18 +521,18 @@ transition:none!important}`), so these animations are covered. */
 .ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
 .ref-grid .ref-stat:nth-child(4){animation-delay:.14s}
-.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-stat b{color:var(--amber);font-size:1.25em}
 @keyframes refFadeIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .ref-card{animation:refFadeIn .4s ease-out backwards}
-.ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
 .ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
 .ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;animation:refFadeIn .4s ease-out backwards}
 .ref-level:nth-of-type(1){animation-delay:.05s}
 .ref-level:nth-of-type(2){animation-delay:.10s}
 .ref-level:nth-of-type(3){animation-delay:.15s}
-.ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-legend{color:var(--muted)}
 
 /* P5-UX-15 (T021): surface the language switcher outside the profile menu.
