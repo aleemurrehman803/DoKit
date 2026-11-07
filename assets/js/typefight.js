@@ -44,8 +44,8 @@
   var typed = '', started = false, startTime = 0, left = 60;
   var timer = null, done = false, bots = [];
   // HOOKS (referral-complete §7): difficulty of the race in progress,
-  // captured at start (the select may change mid-race, so finish()
-  // must not re-read it). Falls back to the page's default, medium.
+  // captured at start (the select is locked during the race — T079 —
+  // so finish() must not re-read it). Falls back to the page's default, medium.
   var raceDiff = 'medium';
 
   // Render the passage with per-character feedback (same pattern as
@@ -142,6 +142,10 @@
   function finish() {
     if (done) { return; }
     done = true; clearInterval(timer); inputEl.disabled = true;
+    /* T079 (P5-UX-19): the race is over — unlock the difficulty select so
+     * the next race can pick a new speed. Placed here, before the flagged
+     * early-return below, so BOTH finish paths re-enable it. */
+    if (diffEl) { diffEl.disabled = false; }
     var st = stats();
     renderBoard();
     runCheatChecks();
@@ -215,6 +219,10 @@
     // small random variance so no two races play identically.
     var base = DIFFS[diffEl ? diffEl.value : 'medium'] || 45;
     raceDiff = diffEl ? diffEl.value : 'medium';
+    /* T079 (P5-UX-19): lock the difficulty while the race runs — the bot
+     * speed is captured here at Start, so a live select mid-race did
+     * nothing and misled the player. finish() re-enables it. */
+    if (diffEl) { diffEl.disabled = true; }
     bots = BOT_NAMES.map(function (name) {
       return { name: name, wpm: base * (0.9 + Math.random() * 0.2), chars: 0 };
     });
