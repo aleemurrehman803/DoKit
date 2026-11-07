@@ -33,7 +33,7 @@
 <h3 data-i18n="nav_profile">Profile</h3>
 <form class="auth-form toolbox" id="set-name-form">
 <label for="set-name" data-i18n="rsv_0210">Display name</label>
-<input id="set-name" type="text" maxlength="60" data-i18n-ph="rsv_0210" aria-label="Display name" data-i18n-aria="rsv_0210">
+<input id="set-name" type="text" required autocomplete="name" maxlength="60" data-i18n-ph="rsv_0210" aria-label="Display name" data-i18n-aria="rsv_0210">
 <p><button class="btn" type="submit" data-i18n="acct_save">Save</button></p>
 <p class="msg" id="set-name-msg" role="status"></p>
 </form>
@@ -61,7 +61,7 @@
 <h3 data-i18n="app_account">Account</h3>
 <form class="auth-form toolbox" id="set-pass-form">
 <label for="set-new-pass" data-i18n="acct_new_pass">New password</label>
-<input id="set-new-pass" type="password" data-i18n-ph="acct_new_pass" aria-label="New password" data-i18n-aria="acct_new_pass">
+<input id="set-new-pass" type="password" required autocomplete="new-password" minlength="6" data-i18n-ph="acct_new_pass" aria-label="New password" data-i18n-aria="acct_new_pass">
 <p><button class="btn" type="submit" data-i18n="acct_change_pass">Change password</button></p>
 <p class="msg" id="set-pass-msg" role="status"></p>
 </form>
