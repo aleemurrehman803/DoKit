@@ -53,7 +53,7 @@
         var r = results[i];
         if (kind === 'battle' ? r.type === 'battle' : r.kind === 'Test') { return r; }
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return null;
   }
   function bests() {
@@ -74,7 +74,7 @@
         }
       }
       return any ? { wpm: bw, acc: ba } : null;
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return null;
   }
   function bestTest() {
@@ -97,7 +97,7 @@
             || (rw === bw && ra === ba && (r.date || '') > (best.date || ''))) { best = r; }
       }
       return best;
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return null;
   }
   function gradeFor(wpm, acc) {
@@ -150,7 +150,7 @@
     doc.setFontSize(10);
     doc.setTextColor(muted[0], muted[1], muted[2]);
     doc.text(qrFailText(), cx, y, { align: 'center' });
-    try { window.DKUI && DKUI.toast && DKUI.toast(qrFailText()); } catch (e) {}
+    try { window.DKUI && DKUI.toast && DKUI.toast(qrFailText()); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return y + 8;
   }
   function rand6() {
@@ -185,7 +185,7 @@
     } catch (e) { return null; }
   }
   function saveRecord(rec) {
-    try { window.localStorage.setItem(recordKey(), JSON.stringify(rec)); } catch (e) {}
+    try { window.localStorage.setItem(recordKey(), JSON.stringify(rec)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
   }
   // --- TypeFight serials (Task 4) -------------------------------------
   // Historical format DK-YYYY-NNNNNN, sequential. The historical global
@@ -197,9 +197,9 @@
     var year = new Date().getFullYear();
     var key = 'dk_tf_serial_seq_' + year;
     var seq = 0;
-    try { seq = parseInt(window.localStorage.getItem(key) || '0', 10) || 0; } catch (e) {}
+    try { seq = parseInt(window.localStorage.getItem(key) || '0', 10) || 0; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     seq += 1;
-    try { window.localStorage.setItem(key, String(seq)); } catch (e) {}
+    try { window.localStorage.setItem(key, String(seq)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return 'DK-' + year + '-' + String(seq).padStart(6, '0');
   }
   // Historical kind labels (typefight-cert.js page labels).
@@ -472,7 +472,7 @@
   function runSingleLookup(qid) {
     if (singleDone) { return; }
     var db = null;
-    try { db = (window.DKA && DKA.db) ? DKA.db() : null; } catch (e) {}
+    try { db = (window.DKA && DKA.db) ? DKA.db() : null; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     function fromLocal() {
       var loc = loadRecord();
       if (loc && loc.serial && loc.serial === qid.toUpperCase()) { showSingleCert(loc, loc.serial); return true; }
@@ -617,7 +617,7 @@
         if (!rec || !window.TFPdf) { return; }
         window.TFPdf.generate(
           { username: rec.name, wpm: rec.wpm, accuracy: rec.acc, date: new Date(rec.issuedAt).toLocaleDateString(), kind: rec.kind, serial: rec.serial },
-          rec.serial).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) {} });
+          rec.serial).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); } });
       });
     } else {
       // Typing-sheet PDF (Phase 2, P2-2b): genuine A4 PDF from the
@@ -628,7 +628,7 @@
         if (!rec || !rec.regNo || !t || !window.jspdf) { return; }
         typingGenerate(
           { username: rec.name, wpm: t.wpm, accuracy: t.acc, gross: t.gross, durationSec: t.durationSec, language: t.language, grade: gradeFor(t.wpm, t.acc), date: new Date(rec.issuedAt).toLocaleDateString(), regNo: rec.regNo },
-          rec.regNo).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) {} });
+          rec.regNo).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); } });
       });
     }
   }
@@ -641,7 +641,7 @@
   if (kind === 'battle') {
     var single = document.getElementById('tf-single');
     var qid = null;
-    try { qid = new URLSearchParams(window.location.search).get('id'); } catch (e) {}
+    try { qid = new URLSearchParams(window.location.search).get('id'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     if (qid && single) {
       var practice = document.getElementById('cert-practice');
       if (practice) { practice.hidden = true; }
@@ -654,7 +654,7 @@
       if (sPdf) {
         sPdf.hidden = true; // unhidden by showSingleCert only if jsPDF loaded
         sPdf.addEventListener('click', function () {
-          if (singleShown && window.TFPdf) { window.TFPdf.generate(singleShown, singleShown.id).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) {} }); }
+          if (singleShown && window.TFPdf) { window.TFPdf.generate(singleShown, singleShown.id).catch(function () { try { window.DKUI && DKUI.toast && DKUI.toast('PDF failed — try Print instead'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); } }); }
         });
       }
       var tries = 0;
@@ -673,7 +673,7 @@
   // resolves, re-rendering the sheet from the signed-in account's own
   // store/records. render() adds no listeners itself (all listeners are
   // bound once at scope above), so re-rendering is idempotent.
-  try { window.DKCertRefresh = render; } catch (e) {}
+  try { window.DKCertRefresh = render; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
   // G5 fix (6 Nov 2026): after issuance, the issued ref must replace
   // the device-only preview ref in the local record. The sheet, its QR
   // and verify link, and the PDF are all rebuilt from this record on
@@ -691,5 +691,5 @@
       rec.issuedAt = Date.now();
       saveRecord(rec);
     };
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
 })();

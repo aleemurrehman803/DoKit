@@ -82,7 +82,7 @@
                 true /* auto-refresh tokens */
               );
             }
-          } catch (e) { /* App Check optional */ }
+          } catch (e) { /* App Check optional */ window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           return true;
         } catch (e) { return false; }
       });
@@ -242,12 +242,12 @@
          * console so the next test can report the real reason
          * (rules denial, network, or otherwise). Behaviour is
          * unchanged: the signup still proceeds to the dashboard. */
-        try { console.warn('[DKA] ensureUserDoc failed:', err && err.code, err && err.message); } catch (e) {}
+        try { console.warn('[DKA] ensureUserDoc failed:', err && err.code, err && err.message); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
         /* Exact-diagnosis (live-test 6, Oct 26): the automated browser
          * cannot open DevTools, so a console warning alone never
          * reaches the test. Remember the failure where the signup
          * handler can see it and show it on the page instead. */
-        try { window.__dokitDocError = err; } catch (e) {}
+        try { window.__dokitDocError = err; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
       });
     },
 
@@ -269,7 +269,7 @@
       try {
         if (window.DK2 && window.DK2.setAccountUid) { window.DK2.setAccountUid(null); }
         window.localStorage.removeItem('dokit_uid');
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
       var a = DKA.auth();
       return a ? a.signOut() : Promise.resolve();
     },
@@ -280,11 +280,11 @@
      * fails open (the user still gets their session). */
     onUser: function(cb){
       var a = DKA.auth();
-      if (!a) { try { cb(null); } catch (e) {} return function(){}; }
+      if (!a) { try { cb(null); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } return function(){}; }
       return a.onAuthStateChanged(function(user){
-        if (!user || !user.uid) { try { cb(null); } catch (e) {} return; }
+        if (!user || !user.uid) { try { cb(null); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } return; }
         var db = DKA.db();
-        if (!db) { try { cb(user); } catch (e) {} return; }
+        if (!db) { try { cb(user); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } return; }
         try {
           db.collection('users').doc(user.uid).get().then(function(snap){
             var d = (snap && snap.exists) ? (snap.data() || {}) : {};
@@ -300,8 +300,8 @@
                    * may attribute a referrer, never a later sign-in. */
                   referralCode: user.uid,
                   createdAt: Date.now()
-                }, { merge: true }).catch(function(){});
-              } catch (e) {}
+                }, { merge: true }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+              } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
             }
             var until = Number(d.suspendUntil) || 0;
             var suspended = !!d.suspended && (!until || until > Date.now());
@@ -310,9 +310,9 @@
                 sessionStorage.setItem('dokit_suspended', JSON.stringify({
                   reason: String(d.suspendReason || ''), until: until
                 }));
-              } catch (e) {}
+              } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
               var done = function(){
-                try { cb(null); } catch (e) {}
+                try { cb(null); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
                 if (!/suspended\/$/.test(location.pathname)) {
                   var root = /^\/DoKit(\/|$)/.test(location.pathname) ? '/DoKit/' : '/';
                   location.href = root + 'suspended/';
@@ -325,8 +325,8 @@
               try {
                 db.collection('users').doc(user.uid).set(
                   { suspended: false, suspendReason: '', suspendUntil: 0 },
-                  { merge: true }).catch(function(){});
-              } catch (e) {}
+                  { merge: true }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+              } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
             }
             /* HOOKS (referral-complete §7): email-verification stamp
              * for the verification tier. Set exactly once — only when
@@ -338,12 +338,12 @@
               if (snap && snap.exists && user.emailVerified && !d.emailVerifiedAt) {
                 db.collection('users').doc(user.uid).set(
                   { emailVerifiedAt: firebase.firestore.FieldValue.serverTimestamp() },
-                  { merge: true }).catch(function(){});
+                  { merge: true }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
               }
-            } catch (e) {}
-            try { cb(user); } catch (e) {}
-          }).catch(function(){ try { cb(user); } catch (e) {} });
-        } catch (e) { try { cb(user); } catch (e) {} }
+            } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+            try { cb(user); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+          }).catch(function(){ try { cb(user); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } });
+        } catch (e) { try { cb(user); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } }
       });
     }
   };
@@ -363,7 +363,7 @@
     if (refMatch && refMatch[1]) {
       sessionStorage.setItem('dokit_ref', decodeURIComponent(refMatch[1]));
     }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   /* QR-scan capture (referral #37): a signup link carrying ?qr=1 marks
    * the join as QR-attributed. Stored next to dokit_ref so the Google
    * redirect (which drops URL params) keeps it, and cleared with
@@ -373,7 +373,7 @@
     if (/[?&]qr=1(&|#|$)/.test(location.search || '')) {
       sessionStorage.setItem('dokit_qr', '1');
     }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   /* Class-link capture (item #9): a signup link carrying ?class=CODE
    * marks the join as a class join, stored next to dokit_ref so the
    * Google redirect (which drops URL params) keeps it, and cleared
@@ -387,7 +387,7 @@
     if (classMatch && classMatch[1]) {
       sessionStorage.setItem('dokit_class', decodeURIComponent(classMatch[1]));
     }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   /* Referral consent visibility (live-test fix, Oct 26): the signup
    * checkbox wrap ships hidden, and until now NOTHING ever unhid it —
    * so consent could never be given and the activation writer always
@@ -399,7 +399,7 @@
     var capturedRef = sessionStorage.getItem('dokit_ref') || '';
     var consentWrap = document.getElementById('ref-consent-wrap');
     if (capturedRef && consentWrap) { consentWrap.hidden = false; }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   /* Referral Phase 1 — signup fields for a NEW user doc (used by BOTH
    * signup flows below, so email and Google signups behave identically):
    * referralCode is always the user's own uid (the referral link IS
@@ -425,11 +425,11 @@
     try {
       var s = sessionStorage.getItem('dokit_ref') || '';
       if (s) { return s; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     try {
       var m = /[?&]ref=([^&#]+)/.exec(location.search || '');
       if (m && m[1]) { return decodeURIComponent(m[1]); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     return '';
   }
   /* QR source for the referrals row (referral #37): 'qr' when the
@@ -438,10 +438,10 @@
   function getCapturedSource() {
     try {
       if (sessionStorage.getItem('dokit_qr') === '1') { return 'qr'; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     try {
       if (/[?&]qr=1(&|#|$)/.test(location.search || '')) { return 'qr'; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     return 'link';
   }
   /* Class code for the referrals row (item #9): the ?class= value
@@ -453,12 +453,12 @@
    * as a join. */
   function getCapturedClassCode() {
     var raw = '';
-    try { raw = sessionStorage.getItem('dokit_class') || ''; } catch (e) {}
+    try { raw = sessionStorage.getItem('dokit_class') || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     if (!raw) {
       try {
         var m = /[?&]class=([^&#]+)/.exec(location.search || '');
         if (m && m[1]) { raw = decodeURIComponent(m[1]); }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     }
     if (!raw) { return ''; }
     var code = String(raw).trim().toUpperCase();
@@ -478,18 +478,18 @@
     try {
       var ref = getCapturedRef();
       if (ref && ref !== u.uid) { fields.referrerId = ref; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     try {
       var cc = getCapturedClassCode();
       if (cc) { fields.classCode = cc; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     try {
       var consentEl = document.getElementById('ref-consent');
       if (consentEl && consentEl.checked) {
         fields.referralActivationConsent = true;
         fields.referralConsentAt = Date.now();
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     return fields;
   }
   /* FIX4 (Oct 27) — referrals row for signup (BOTH flows, DRY):
@@ -506,8 +506,8 @@
   function signupReferralRow(uid) {
     var ref = '';
     var cc = '';
-    try { ref = getCapturedRef(); } catch (e) {}
-    try { cc = getCapturedClassCode(); } catch (e) {}
+    try { ref = getCapturedRef(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+    try { cc = getCapturedClassCode(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     var hasRef = !!(ref && ref !== uid);
     if (!hasRef && !cc) { return null; }
     var row = {
@@ -592,7 +592,7 @@
     try {
       if (user) { localStorage.setItem('dokit_authed', '1'); }
       else { localStorage.removeItem('dokit_authed'); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     if (typeof window.dkApplyHeaderAuth === 'function') {
       window.dkApplyHeaderAuth(!!user);
     }
@@ -635,8 +635,8 @@
       if (window.DK2 && window.DK2.setAccountUid) { window.DK2.setAccountUid(user ? user.uid : null); }
       if (user && user.uid) { window.localStorage.setItem('dokit_uid', user.uid); }
       else { window.localStorage.removeItem('dokit_uid'); }
-    } catch (e) {}
-    try { if (user && window.DKCertRefresh) { window.DKCertRefresh(); } } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+    try { if (user && window.DKCertRefresh) { window.DKCertRefresh(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   }
   function boot(){
     ensureSdk().then(function(ok){
@@ -834,7 +834,7 @@
        * without this the PDF keeps printing the device-only preview ref
        * and a printed copy fails verification. Typing sheets only;
        * battle sheets link by serial, not by ref. */
-      try { if (kind === 'typing' && window.DKCertSetIssuedRef) { window.DKCertSetIssuedRef(ref); } } catch (e) {}
+      try { if (kind === 'typing' && window.DKCertSetIssuedRef) { window.DKCertSetIssuedRef(ref); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     }).catch(function (err) {
       showMsg('cert-issue-msg', friendlyError(err), true);
     });
@@ -881,8 +881,8 @@
         by: (currentUser && currentUser.uid) || '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()};
       if (extra) { d.note = extra; }
-      DKA.db().collection('admin_audit').add(d).catch(function () {});
-    } catch (e) {}
+      DKA.db().collection('admin_audit').add(d).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   }
   function admSetHtml(id, html){
     var el = $(id);
@@ -1048,7 +1048,7 @@
                   if (r._id === e.inviteeUid) { r._coins = (r._coins || 0) + (Number(e.amount) || 0); }
                 });
               });
-            }).catch(function () {});
+            }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
         });
         return Promise.all(ledgerJobs).then(function () {
           admData.referrals = rows;
@@ -1088,7 +1088,7 @@
        * silently — a missing admin container used to hide a broken Add
        * form with no error anywhere. Diagnostic only; no user-visible
        * behaviour change. */
-      if (!el) { try { console.warn('admin build: missing container #' + id); } catch (e) {} return; }
+      if (!el) { try { console.warn('admin build: missing container #' + id); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } return; }
       if (el.dataset.dka) { return; }
       el.dataset.dka = '1';
       el.innerHTML = inner;
@@ -1358,8 +1358,8 @@
         if (snap && snap.exists && snap.data() && snap.data().enabled === true) {
           location.href = siteRoot() + 'maintenance/';
         }
-      }).catch(function () { /* fail open */ });
-    } catch (e) { /* fail open */ }
+      }).catch(function (e) { /* fail open */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+    } catch (e) { /* fail open */ window.dkSwallow && window.dkSwallow(e, 'account.js'); }
   }
   function moneyList(elId, coll, user, rowFn){
     /* P4-2 (AUD-067): allow-list assertion. Live call sites use
@@ -1374,7 +1374,7 @@
         snap.forEach(function (doc) { rows.push(rowFn(doc.data() || {})); });
         if (rows.length > 50) { rows.length = 50; }
         el.innerHTML = rows.length ? rows.join('') : '<p>No requests yet.</p>';
-      }).catch(function () { /* list stays empty on failure -- no fake rows */ });
+      }).catch(function (e) { /* list stays empty on failure -- no fake rows */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
   }
   function moneyRow(d, extra){
     return '<div class="adm-row">' + escHtml(d.amount) + ' · ' + escHtml(d.method || '')
@@ -1420,7 +1420,7 @@
               }
             }
           }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
         return null;
       }
       function vfClearResult() {
@@ -1520,7 +1520,7 @@
             setTimeout(function () { vfLookup(nq); }, 2000);
           }
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     }
   }
   function bindStaticForms(){
@@ -1541,7 +1541,7 @@
         } else {
           pi.textContent = (window.dkT ? window.dkT('acct_money_paynone', 'Payment details are not configured yet.') : 'Payment details are not configured yet.');
         }
-      }).catch(function () {});
+      }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
     }
     // Announcement banner (display half of the admin Announcement save):
     // renders only when the admin saved text and the visitor has not
@@ -1559,15 +1559,15 @@
           dis.className = 'btn ghost';
           dis.textContent = (window.dkT ? window.dkT('saas.dismiss', 'Dismiss') : 'Dismiss');
           dis.addEventListener('click', function () {
-            try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) {}
+            try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
             bar.remove();
           });
           bar.appendChild(sp); bar.appendChild(dis);
           var main = document.getElementById('main');
           if (main) { main.parentNode.insertBefore(bar, main); } else { document.body.appendChild(bar); }
-        }).catch(function () {});
+        }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     // Contact form (public): save to the admin inbox. No SDK (offline) --
     // return without preventDefault so the native mailto submit proceeds.
     // On save failure, fall back to mailto too, so the message is never
@@ -1621,7 +1621,7 @@
           // One assignment; the literals live in the built string, not
           // at this render position (js-gate rule, as with verify).
           wl.innerHTML = cards.join('');
-        }).catch(function () { /* wall stays static on failure -- no fake rows */ });
+        }).catch(function (e) { /* wall stays static on failure -- no fake rows */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
     }
     var wf = $('wall-form');
     if (wf && !wf.dataset.dka) {
@@ -1690,7 +1690,7 @@
         a.createUserWithEmailAndPassword(email.trim(), pass).then(function(cred){
           var u = cred.user;
           var jobs = [];
-          if (name.trim()) { jobs.push(u.updateProfile({ displayName: name.trim() }).catch(function(){})); }
+          if (name.trim()) { jobs.push(u.updateProfile({ displayName: name.trim() }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); })); }
           /* Referral Phase 1: new doc gets referralCode (= own uid) +
            * referrerId (if captured) + consent (if the box was checked).
            * ensureUserDoc fills missing referral fields, so this is
@@ -1709,7 +1709,7 @@
               /* P4-3: get-first create - an existing row is skipped, never overwritten. */
               jobs.push(createReferralRowIfMissing(u.uid, rowFields));
             }
-          } catch (e) {}
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           return Promise.all(jobs);
         }).then(function(){
           window.__dokitSigningUp = false;
@@ -1719,7 +1719,7 @@
            * — and the user — can read the exact error code. */
           var de = window.__dokitDocError; window.__dokitDocError = null;
           if (de) { showMsg('acct-err', DKA.friendlyError(de) + ' [' + (de.code || 'unknown') + ']', true); return; }
-          try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) {}
+          try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           location.href = '../dashboard/';
         }).catch(function(err){
           window.__dokitSigningUp = false;
@@ -1763,10 +1763,10 @@
                 /* P4-3: get-first create - an existing row is skipped, never overwritten. */
                 jobs.push(createReferralRowIfMissing(u.uid, rowFields));
               }
-            } catch (e) {}
+            } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           }
           return Promise.all(jobs).then(function(){
-            try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) {}
+            try { sessionStorage.removeItem('dokit_ref'); sessionStorage.removeItem('dokit_qr'); sessionStorage.removeItem('dokit_class'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           });
         }).then(function(){
           window.__dokitSigningUp = false;
@@ -2019,9 +2019,9 @@
                   if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(s).then(function () {
                       showMsg('ak-err', (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'), false);
-                    }).catch(function () {});
+                    }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
                   }
-                } catch (e) {}
+                } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
               });
             }
             var doneBtn = $('ak-done');
@@ -2147,8 +2147,8 @@
             profBtn.addEventListener('click', function () { location.href = refPageUrl; });
           }
         }
-      }).catch(function () { /* referral sections are best-effort;
-        * coins, profile and dashboard keep working without them. */ });
+      }).catch(function (e) { /* referral sections are best-effort;
+        * coins, profile and dashboard keep working without them. */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
     })();
     /* Referral card on non-dashboard pages (subscription): hidden by
      * default, revealed only when signed in. */
@@ -2198,7 +2198,7 @@
         sessionStorage.setItem(autosyncKey, '1');
         syncNow(user).then(function(status){ if (status === 'downloaded') { refreshProfileStats(); } });
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     /* Wallet card (typefight/wallet). */
     var wfMain2 = $('wf-main');
     if (wfMain2) { wfMain2.hidden = false; }
@@ -2230,7 +2230,7 @@
               if (c.type === 'daily' && cd === today && (c.status === 'pending' || c.status === 'approved')) {
                 claimedToday = true;
               }
-            } catch (e) {}
+            } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           });
           if (claimedToday) {
             aborted = true;
@@ -2276,7 +2276,7 @@
         if (battles.length) {
           tfStats.textContent = String(battles.length) + ' ' + (window.dkT ? window.dkT('acct_battle_sum', 'battles · best WPM') : 'battles · best WPM') + ' ' + String(bbest);
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     }
     var tfForm = $('tf-profile-form');
     if (tfForm && !tfForm.dataset.dka) {
@@ -2405,7 +2405,7 @@
           }
           prf.dataset.dkBio = '1';
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
       function profVal(id, v) {
         var el = $(id); if (el) { el.value = (v === undefined || v === null) ? '' : v; }
       }
@@ -2527,7 +2527,7 @@
   function localDk2(uid){
     try {
       if (window.DK2 && window.DK2.getStore) { return window.DK2.getStore(); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     // DK2-absent fallback (sync pages always load dk2.js, so this is
     // defensive only): still keyed by uid — NEVER the guest store for a
     // signed-in user, so guest data can never be uploaded as theirs.
@@ -2557,7 +2557,7 @@
     return ref.get().then(function(snap){
       var cloud = (snap && snap.exists) ? (snap.data() || {}) : null;
       var lastSync = 0;
-      try { lastSync = Number(localStorage.getItem(syncStampKey) || 0); } catch (e) {}
+      try { lastSync = Number(localStorage.getItem(syncStampKey) || 0); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
       if (cloud && cloud.payload && (localEmpty || (cloud.updatedAt && cloud.updatedAt > lastSync))) {
         try {
           var data = JSON.parse(cloud.payload);
@@ -2573,7 +2573,7 @@
       var payload = JSON.stringify(local);
       if (payload.length > DK2_SYNC_MAX) { return 'too-big'; }
       return ref.set({ payload: payload, updatedAt: Date.now() }).then(function(){
-        try { localStorage.setItem(syncStampKey, String(Date.now())); } catch (e) {}
+        try { localStorage.setItem(syncStampKey, String(Date.now())); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
         return 'uploaded';
       });
     }).catch(function(){ return 'failed'; });
@@ -2592,7 +2592,7 @@
       if (v && typeof v.toDate === 'function') { return v.toDate().toLocaleDateString(); }
       if (typeof v === 'number') { return new Date(v).toLocaleDateString(); }
       if (typeof v === 'string') { return v.slice(0, 10); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
     return '';
   }
   function listClaims(user){
@@ -2611,7 +2611,7 @@
           if (c.type === 'daily' && cd === today && (c.status === 'pending' || c.status === 'approved')) {
             claimedToday = true;
           }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
       });
       box.textContent = rows.length ? rows.join(' | ') : '';
       var btn = $('wf-claim-btn');
@@ -2621,7 +2621,7 @@
           showMsg('acct-err', (window.dkT ? window.dkT('acct_claimed', 'Already claimed today.') : 'Already claimed today.'), false);
         }
       }
-    }).catch(function(){ /* claims list is best-effort; balance still shows */ });
+    }).catch(function(e){ /* claims list is best-effort; balance still shows */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
   }
 
   /* Run after DOM is ready (the main.js loader injects this async). */

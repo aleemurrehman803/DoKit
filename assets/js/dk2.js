@@ -35,11 +35,11 @@
       var fb = (typeof window !== 'undefined') ? window.firebase : null;
       var cu = (fb && fb.auth) ? fb.auth().currentUser : null;
       if (cu && cu.uid) { return cu.uid; }
-    } catch (e) { /* SDK absent or not ready — fall through */ }
+    } catch (e) { /* SDK absent or not ready — fall through */ window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
     try {
       var m = window.localStorage.getItem('dokit_uid');
       if (m) { return m; }
-    } catch (e) { /* storage unavailable — guest */ }
+    } catch (e) { /* storage unavailable — guest */ window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
     return null;
   }
   function storeKey() {
@@ -67,13 +67,13 @@
       if (data && Array.isArray(data.results) && Array.isArray(data.lessons)) {
         return data;
       }
-    } catch (e) { /* storage unavailable — fall through to empty */ }
+    } catch (e) { /* storage unavailable — fall through to empty */ window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
     return { results: [], lessons: [] };
   }
   // Persist the object; failures are swallowed (page must keep working).
   function save(data) {
     try { window.localStorage.setItem(storeKey(), JSON.stringify(data)); }
-    catch (e) { /* ignore — progress just won't persist */ }
+    catch (e) { /* ignore — progress just won't persist */ window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
   }
 
   // Ensure the XP section exists on a stored object. Objects saved before
@@ -134,8 +134,8 @@
     // current store's markers are touched, never another account's.
     clearAll: function () {
       save({ results: [], lessons: [], xp: { total: 0, badges: [], streak: { count: 0, last: '' }, awarded: {} } });
-      try { window.sessionStorage.removeItem(autosyncKey()); } catch (e) {}
-      try { window.localStorage.removeItem(syncStampKey()); } catch (e) {}
+      try { window.sessionStorage.removeItem(autosyncKey()); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
+      try { window.localStorage.removeItem(syncStampKey()); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'dk2.js'); }
     },
     // -- Gamification (Task 5, historical gamification.js) ----------------
     // XP, badges and streak live in this SAME dk2 object — no second

@@ -30,7 +30,7 @@
    * machine-readable `code` from the API error body (see /api/).
    */
   // WHY (i18n): SDK error strings surface in the API docs demo output, so they translate like any UI text. T() reads the page dict when i18n.js has loaded and returns the English fallback otherwise (the SDK also runs without main.js).
-function T(k, fb){ try { if (typeof window !== 'undefined' && window.dkT) return window.dkT(k, fb); } catch (e) {} return fb; }
+function T(k, fb){ try { if (typeof window !== 'undefined' && window.dkT) return window.dkT(k, fb); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'dokit-sdk.js'); } return fb; }
 function DoKitError(message, status, code, retryAfter) {
     var e = new Error(message);
     e.name = "DoKitError";

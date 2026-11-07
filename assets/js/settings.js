@@ -22,7 +22,7 @@
     catch (e) { return fallback; }
   }
   function setLS(key, value) {
-    try { window.localStorage.setItem(key, value); } catch (e) {}
+    try { window.localStorage.setItem(key, value); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
   }
   function getJSON(key, fallback) {
     try {
@@ -59,7 +59,7 @@
     var tries = 0;
     (function tick() {
       var ready = false;
-      try { ready = !!(window.DKA && window.DKA.ready()); } catch (e) {}
+      try { ready = !!(window.DKA && window.DKA.ready()); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
       if (ready || tries >= 50) { cb(ready); return; }
       tries++;
       setTimeout(tick, 300);
@@ -76,7 +76,7 @@
       if (window.DKA && typeof window.DKA.friendlyError === 'function') {
         return window.DKA.friendlyError(err);
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
     return dkT('acct_err_net', 'Network error. Check your connection and try again.');
   }
 
@@ -103,7 +103,7 @@
     btn.setAttribute('aria-label', label);
   }
   function applyTheme(t, save) {
-    try { document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    try { document.documentElement.setAttribute('data-theme', t); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
     if (save) { setLS('dokit_theme', t); }
     var darkBtn = $('set-theme-dark');
     var lightBtn = $('set-theme-light');
@@ -140,7 +140,7 @@
         if (window.DK_I18N && typeof window.DK_I18N.current === 'function') {
           return window.DK_I18N.current();
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
       return getLS('dokit_lang', 'en');
     }
     if (langSel) {
@@ -152,14 +152,14 @@
             window.DK_I18N.setLang(code);
             return;
           }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         setLS('dokit_lang', code);
-        try { window.location.reload(); } catch (e) {}
+        try { window.location.reload(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
       });
       document.addEventListener('dokit:langchange', function (ev) {
         try {
           if (ev && ev.detail && ev.detail.lang) { langSel.value = ev.detail.lang; }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
       });
     }
 
@@ -219,18 +219,18 @@
         var name = (nameInput ? nameInput.value : '').trim();
         if (!name) { return; } /* empty submit clears nothing: no-op */
         var jobs = [];
-        try { jobs.push(user.updateProfile({ displayName: name }).catch(function () {})); } catch (e) {}
+        try { jobs.push(user.updateProfile({ displayName: name }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); })); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         try {
           var db = (window.DKA && window.DKA.db()) || null;
           if (db) { jobs.push(db.collection('users').doc(user.uid).set({ displayName: name }, { merge: true })); }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         Promise.all(jobs).then(function () {
           setMsg(nameMsg, dkT('acct_saved', 'Saved.'));
           /* Mirror account.js syncHeader: refresh the header avatar initial. */
           try {
             var inner = document.querySelector('#dkProfBtn .dk-avatarbtn__inner');
             if (inner) { inner.textContent = name.charAt(0).toUpperCase(); }
-          } catch (e) {}
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         }).catch(function (err) {
           setMsg(nameMsg, friendly(err));
         });
@@ -251,7 +251,7 @@
          * honest re-sign-in message (never a silent failure). */
         user.updatePassword(np).then(function () {
           setMsg(passMsg, dkT('acct_saved', 'Saved.'));
-          try { passForm.reset(); } catch (e) {}
+          try { passForm.reset(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         }).catch(function (err) {
           if (err && err.code === 'auth/requires-recent-login') {
             setMsg(passMsg, dkT('acct_relogin', 'Please sign in again to change your password.'));
@@ -270,7 +270,7 @@
       if (v && typeof v.toDate === 'function') { return v.toDate().getTime(); }
       if (typeof v === 'number') { return v; }
       if (typeof v === 'string' && v) { var n = Date.parse(v); return isNaN(n) ? 0 : n; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
     return 0;
   }
   function initNotifications() {
@@ -384,7 +384,7 @@
       if (mainBox) { mainBox.hidden = false; }
       showStatus('ntf_loading', 'Loading…');
       var db = null;
-      try { db = (window.DKA && window.DKA.db()) || null; } catch (e) {}
+      try { db = (window.DKA && window.DKA.db()) || null; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
       if (!db) {
         showStatus('acct_err_net', 'Network error. Check your connection and try again.');
         return;
@@ -443,7 +443,7 @@
               });
             }
           }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         if (!anyOk) {
           showStatus('acct_err_net', 'Network error. Check your connection and try again.');
           return;

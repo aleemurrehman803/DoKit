@@ -1,5 +1,24 @@
 
 (function(){
+/* P5-UX-23 (T023): one silent-error counter for the codebase's empty catch
+ * sites. Every empty catch calls window.dkSwallow(err, where): it always
+ * counts in memory (invisible to users) and console.warns only when the
+ * debug flag is on (?dkdebug=1, or window.DK_DEBUG = true in the console).
+ * Behaviour is untouched — this only observes, and the observer itself can
+ * never throw. Inspect with window.DKDiag.count / .last (last 50 entries). */
+window.DKDiag = { count: 0, last: [] };
+window.dkSwallow = function (err, where) {
+  try {
+    window.DKDiag.count++;
+    var entry = { where: where || '?', message: (err && err.message) ? String(err.message) : String(err), at: Date.now() };
+    window.DKDiag.last.push(entry);
+    if (window.DKDiag.last.length > 50) window.DKDiag.last.shift();
+    if (window.DK_DEBUG) { console.warn('[DoKit] swallowed error:', entry.where, entry.message); }
+  } catch (e) { /* the observer must never throw, even if diagnostics break */ }
+};
+try {
+  if (new URLSearchParams(window.location.search).get('dkdebug') === '1') { window.DK_DEBUG = true; }
+} catch (e) { /* URL parsing must never break boot */ }
 var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // mobile nav
 var t = document.getElementById('nav-toggle'), l = document.getElementById('nav-links');
@@ -11,7 +30,7 @@ try{
     var p = new URL(a.href, window.location.href).pathname.replace(/\/index\.html$/, '/');
     if(p === here){ a.classList.add('active'); }
   });
-}catch(e){}
+}catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 // reveal on scroll
 if('IntersectionObserver' in window && !reduced){
   var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold: .12});
@@ -66,7 +85,7 @@ function dkT(key, fallback){
       var v = eng.t(key);
       if(v) return v;
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   return fallback;
 }
 window.dkT = dkT;
@@ -291,7 +310,7 @@ window.DKChat = window.DKChat || {
   setProvider: function (fn) { this.provider = (typeof fn === 'function') ? fn : null; },
   buildRequest: function (q) {
     var lang = 'en';
-    try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+    try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     return { messages: this.history.concat([{ role: 'user', text: q }]), personality: 'helpful', lang: lang };
   },
   clear: function () { this.history = []; }
@@ -361,7 +380,7 @@ if(form){
       var kb = window.DKASSIST_KB;
       if (kb) {
         var kbLang = 'en';
-        try { kbLang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+        try { kbLang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         var entries = kb[kbLang] || kb.en || [];
         var words = low.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2; });
         var best = null, bestScore = 0;
@@ -376,7 +395,7 @@ if(form){
         });
         if (best && bestScore >= 2) { kbHit = best; }
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     // Shared fallback renderer: the sync links path and the AI path's
     // ungrounded/error fallback render exactly the same chips.
     function appendChatLinks(el){
@@ -486,7 +505,7 @@ function dokiMicStop(){
   var form = document.getElementById('chat-form');
   if(!btn || !form) return;
   btn.addEventListener('click', function(){
-    if(dokiListening && dokiRec){ try { dokiRec.stop(); } catch (e) {} return; }
+    if(dokiListening && dokiRec){ try { dokiRec.stop(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } return; }
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR){ dokiMicNote('doki_mic_nosupport', 'Voice input is not supported in this browser.'); return; }
     var inp = document.getElementById('chat-input');
@@ -503,7 +522,7 @@ function dokiMicStop(){
         }
         if(inp) inp.value = (final || interim);
         if(final && final.trim()){
-          try { dokiRec.stop(); } catch (e) {}
+          try { dokiRec.stop(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
           form.dispatchEvent(new Event('submit', { cancelable: true }));
         }
       };
@@ -552,7 +571,7 @@ function dokiMicStop(){
     bar.appendChild(mode);
     bar.appendChild(fresh);
     panel.insertBefore(bar, chatForm);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
   // Phase 2b: shell forms (login, signup, verify, wall) — submitting
   // only reveals the honest Phase 3 note. Nothing is sent anywhere.
@@ -597,11 +616,11 @@ function dokiMicStop(){
         try {
           var q = new URLSearchParams(window.location.search).get('lang');
           if (q && isLang(q)) { return q; }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         try {
           var stored = window.localStorage.getItem('dokit_lang');
           if (stored && isLang(stored)) { return stored; }
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         return 'en';
       }
       var lang = activeLang();
@@ -632,7 +651,7 @@ function dokiMicStop(){
           load('i18n-dict-' + lang + '.js', loadEngine);
         });
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
   // DES-21: animated close-out for menus/panels (shared helper).
   // Opening animates (dkmenuin .15s) but the hidden-toggle mechanism
@@ -731,10 +750,10 @@ function dokiMicStop(){
         }
         head.hidden = !anyVisible;
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   }
   window.dkApplyHeaderAuth = applyHeaderAuth;
-  try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) {}
+  try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // App launcher (item 103): same dropdown behaviour as the profile
   // menu, plus focus return on Escape (keyboard users land back on
   // the launcher button instead of losing their place).
@@ -777,7 +796,7 @@ function dokiMicStop(){
     drop.addEventListener('mouseenter', function () {
       try {
         if (window.matchMedia('(hover:hover)').matches) { open(); }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     });
     drop.addEventListener('mouseleave', function () { if (!pinned) { close(); } });
     document.addEventListener('click', function (e) {
@@ -796,7 +815,7 @@ function dokiMicStop(){
   try {
     var mn = document.querySelector('main');
     if (mn && !document.getElementById('hero-canvas')) { mn.classList.add('dk-enter'); }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // Dark/light theme: data-theme on <html>, saved as dokit_theme.
   // Default is dark (the approved design); the button shows the
   // opposite icon, i.e. what clicking will switch to.
@@ -825,7 +844,7 @@ function dokiMicStop(){
       // not shut the menu the moment the theme is switched.
       if (e) { e.stopPropagation(); }
       var next = (current() === 'dark') ? 'light' : 'dark';
-      try { localStorage.setItem('dokit_theme', next); } catch (e) {}
+      try { localStorage.setItem('dokit_theme', next); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       apply(next);
     });
   })();
@@ -837,13 +856,13 @@ function dokiMicStop(){
       var cur = document.currentScript;
       if (!cur || !cur.src) { return; }
       var swUrl = cur.src.replace(/assets\/js\/main\.js.*$/, 'sw.js');
-      navigator.serviceWorker.register(swUrl).catch(function () {});
-    } catch (e) {}
+      navigator.serviceWorker.register(swUrl).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); });
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
   // PWA install banner: shown once per browser until dismissed.
   (function installBanner(){
     var dismissed = false;
-    try { dismissed = localStorage.getItem('dokit_pwa_dismissed') === '1'; } catch (e) {}
+    try { dismissed = localStorage.getItem('dokit_pwa_dismissed') === '1'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     if (dismissed) { return; }
     var deferred = null;
     window.addEventListener('beforeinstallprompt', function (e) {
@@ -859,7 +878,7 @@ function dokiMicStop(){
       });
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
       dis.addEventListener('click', function () {
-        try { localStorage.setItem('dokit_pwa_dismissed', '1'); } catch (err) {}
+        try { localStorage.setItem('dokit_pwa_dismissed', '1'); } catch (err) { window.dkSwallow && window.dkSwallow(err, 'main.js'); }
         bar.remove();
       });
       bar.appendChild(inst); bar.appendChild(dis);
@@ -880,13 +899,13 @@ function dokiMicStop(){
       bar.querySelector('span').textContent = msg;
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
       dis.addEventListener('click', function () {
-        try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) {}
+        try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         bar.remove();
       });
       bar.appendChild(dis);
       var main = document.getElementById('main');
       if (main) { main.parentNode.insertBefore(bar, main); } else { document.body.appendChild(bar); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
   // Home: live word-counter demo (counts only, nothing is sent).
   (function demo(){
@@ -907,7 +926,7 @@ function dokiMicStop(){
       try { return JSON.parse(localStorage.getItem('dokit_favs') || '[]'); } catch (e) { return []; }
     }
     function set(list) {
-      try { localStorage.setItem('dokit_favs', JSON.stringify(list)); } catch (e) {}
+      try { localStorage.setItem('dokit_favs', JSON.stringify(list)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     }
     document.querySelectorAll('.tool-card').forEach(function (card) {
       var link = card.querySelector('a.cardlink'); if (!link) { return; }
@@ -982,11 +1001,11 @@ function dokiMicStop(){
   // Dismissible tip banner on the home page (dismissal remembered).
   (function tip(){
     var tip = document.getElementById('dk-hint'); if (!tip) { return; }
-    try { if (localStorage.getItem('dokit_hint_dismissed') === '1') { tip.remove(); return; } } catch (e) {}
+    try { if (localStorage.getItem('dokit_hint_dismissed') === '1') { tip.remove(); return; } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var close = tip.querySelector('[data-hint-close]');
     if (close) {
       close.addEventListener('click', function () {
-        try { localStorage.setItem('dokit_hint_dismissed', '1'); } catch (e) {}
+        try { localStorage.setItem('dokit_hint_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         tip.remove();
       });
     }
@@ -1047,7 +1066,7 @@ function dokiMicStop(){
         try {
           var u = new SpeechSynthesisUtterance(code.split('').join(' '));
           speechSynthesis.speak(u);
-        } catch (e) {}
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       });
     }
     var formEl = box.closest('form');
@@ -1111,7 +1130,7 @@ function dokiMicStop(){
     }
     function sync() {
       var lang = 'en';
-      try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+      try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       if (lang === 'en') {
         if (h1.innerHTML !== orig) { h1.innerHTML = orig; }
         return;
@@ -1121,12 +1140,12 @@ function dokiMicStop(){
         if (window.DK_I18N && typeof window.DK_I18N.t === 'function') {
           text = window.DK_I18N.t('tools.h1');
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       if (!text || text === 'tools.h1') {
         try {
           var dict = window.DK_I18N_DICT || {};
           text = (dict[lang] && dict[lang]['tools.h1']) || (dict.en && dict.en['tools.h1']);
-        } catch (e2) {}
+        } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
       }
       if (text) { h1.innerHTML = '<span class="grad">' + esc(text) + '</span>'; }
     }
@@ -1162,8 +1181,8 @@ function dokiMicStop(){
 (function saasSteps() {
   document.querySelectorAll('[data-saas-steps]').forEach(function (box) {
     var x = box.querySelector('.saas-steps-x');
-    try { if (localStorage.getItem('dk_steps_seen')) { box.hidden = true; return; } } catch (e) {}
-    if (x) { x.addEventListener('click', function () { box.hidden = true; try { localStorage.setItem('dk_steps_seen', '1'); } catch (e) {} }); }
+    try { if (localStorage.getItem('dk_steps_seen')) { box.hidden = true; return; } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    if (x) { x.addEventListener('click', function () { box.hidden = true; try { localStorage.setItem('dk_steps_seen', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } }); }
     var steps = box.querySelectorAll('.saas-step');
     function done(n) { if (steps[n]) { steps[n].classList.add('done'); } }
     document.addEventListener('change', function (e) {
@@ -1217,7 +1236,7 @@ function dokiMicStop(){
         try {
           var dt = new DataTransfer(); dt.items.add(f); input.files = dt.files;
           input.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (err) { /* older browsers */ }
+        } catch (err) { /* older browsers */ window.dkSwallow && window.dkSwallow(err, 'main.js'); }
         b.disabled = false;
       });
     } else if (kind === 'text') {
@@ -1269,7 +1288,7 @@ function dokiMicStop(){
   try {
     new MutationObserver(function () { syncLabel(); upd(); })
       .observe(btn, { attributes: true, childList: true, subtree: true, characterData: true });
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 /* Home sticky CTA pill (P5-VIS-02).
@@ -1284,7 +1303,7 @@ function dokiMicStop(){
   if (!bar) { return; }
   var KEY = 'dokit_sticky_cta_dismissed';
   var dismissed = false;
-  try { dismissed = window.sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+  try { dismissed = window.sessionStorage.getItem(KEY) === '1'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   var mq = window.matchMedia ? window.matchMedia('(max-width: 768px)') : null;
   function upd() {
     var show = !dismissed && (window.scrollY || window.pageYOffset) > 600 && (!mq || mq.matches);
@@ -1298,7 +1317,7 @@ function dokiMicStop(){
   if (closeBtn) {
     closeBtn.addEventListener('click', function () {
       dismissed = true;
-      try { window.sessionStorage.setItem(KEY, '1'); } catch (e) {}
+      try { window.sessionStorage.setItem(KEY, '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       upd();
     });
   }
@@ -1321,7 +1340,7 @@ function dokiMicStop(){
       if (window.__dkaLoaded) { return; }
       if (document.querySelector('script[src$="assets/js/account.js"]')) { window.__dkaLoaded = true; return; }
       var src = '';
-      try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+      try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       var marker = 'assets/js/main.js';
       var at = src ? src.indexOf(marker) : -1;
       if (at < 0) { return; }
@@ -1330,7 +1349,7 @@ function dokiMicStop(){
       s.src = src.slice(0, at) + 'assets/js/account.js';
       s.defer = true;
       document.head.appendChild(s);
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
 
 /* Referral module loader: the wallet daily-claim button (wf-claim-btn)
@@ -1345,7 +1364,7 @@ function dokiMicStop(){
     if (!document.getElementById('wf-claim-btn')) { return; }
     if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1353,7 +1372,7 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 /* Homepage shoutout slot (item #55): the homepage does not list
@@ -1385,7 +1404,7 @@ function dokiMicStop(){
       hero.parentNode.insertBefore(section, hero.nextSibling);
     }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1393,10 +1412,10 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     s.onload = function () {
-      try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) {}
+      try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     };
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 
@@ -1446,12 +1465,12 @@ function dokiMicStop(){
        * returning silently. If it had already finished, DKREF would
        * be present and the branch above would have run. */
       try { existing.addEventListener('load', function () {
-        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
-      }); } catch (e) {}
+        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      }); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       return;
     }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1459,10 +1478,10 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     s.onload = function () {
-      try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
+      try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     };
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 /* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
@@ -1521,15 +1540,15 @@ function dokiMicStop(){
       try {
         var r = document.referrer ? new URL(document.referrer).hostname : '';
         if (r && r !== window.location.hostname) { e.ref = r.slice(0, 80); }
-      } catch (e2) {}
+      } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
       QUEUE.push(e);
       if (QUEUE.length >= MAX_BATCH) { flush(); }
-    } catch (e3) {}
+    } catch (e3) { window.dkSwallow && window.dkSwallow(e3, 'main.js'); }
   }
   function flush() {
     if (flushing || !QUEUE.length) { return; }
     var db = null;
-    try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e) {}
+    try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     if (!db) { QUEUE.length = 0; return; }
     flushing = true;
     var batch = QUEUE.splice(0, MAX_BATCH);
@@ -1559,10 +1578,10 @@ function dokiMicStop(){
             if (!b) { return; }
             var label = (b.textContent || b.value || '').trim().slice(0, 40);
             enqueue('tool_used', { tool: slug, action: label });
-          } catch (e) {}
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         }, { passive: true });
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   }
   window.DKAnalytics = {
     track: function (type, extra) { enqueue(String(type).slice(0, 30), extra || {}); },

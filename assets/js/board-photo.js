@@ -410,7 +410,7 @@
   }
   function savePresets(list) {
     try { window.localStorage.setItem('bp_presets', JSON.stringify(list.slice(0, 12))); }
-    catch (e) { /* storage unavailable: presets just won't persist */ }
+    catch (e) { /* storage unavailable: presets just won't persist */ window.dkSwallow && window.dkSwallow(e, 'board-photo.js'); }
   }
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {

@@ -48,12 +48,12 @@ function stats(){
 function stampLastTest(){
   try{
     var db = null, auth = null;
-    try{ if(window.DKA && window.DKA.db){ db = window.DKA.db(); } }catch(e){}
-    if(!db){ try{ if(window.firebase && window.firebase.firestore){ db = window.firebase.firestore(); } }catch(e){} }
+    try{ if(window.DKA && window.DKA.db){ db = window.DKA.db(); } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+    if(!db){ try{ if(window.firebase && window.firebase.firestore){ db = window.firebase.firestore(); } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); } }
     try{
       if(window.DKA && window.DKA.auth){ auth = window.DKA.auth(); }
       else if(window.firebase && window.firebase.auth){ auth = window.firebase.auth(); }
-    }catch(e){}
+    }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
     var user = auth ? auth.currentUser : null;
     if(!db || !user || !user.uid){ return; }
     var ref = db.collection('users').doc(user.uid);
@@ -64,9 +64,9 @@ function stampLastTest(){
       try{ upd.lastTestAt = window.firebase.firestore.FieldValue.serverTimestamp(); }
       catch(e){ upd.lastTestAt = Date.now(); }
       if(d.coinsFrozen){ upd.coinsFrozen = false; }
-      ref.update(upd).catch(function(){});
-    }).catch(function(){});
-  }catch(e){}
+      ref.update(upd).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); });
+    }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); });
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
 // HOOKS (referral-complete §7): when a challenge marker is pending in
 // localStorage, record the local completion marker the challenge
@@ -92,10 +92,10 @@ function recordChallengeDone(){
       if(window.DKA && window.DKA.auth){ auth2 = window.DKA.auth(); }
       else if(window.firebase && window.firebase.auth){ auth2 = window.firebase.auth(); }
       uid = auth2 ? auth2.currentUser.uid : null;
-    }catch(e){}
+    }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
     if(pendingUid && uid && pendingUid !== uid){ return; }
     localStorage.setItem('dk_challenge_done', JSON.stringify({ challengeId: challengeId, at: Date.now() }));
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
 /* P5-RTE-03: referrals.js (263 KB) is NOT loaded with the typing page —
  * only the activation writer is needed here, and only after a test
@@ -171,7 +171,7 @@ function finish(){
       // milestone check, which counts verified-only results).
       window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,verified:!pasted});
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Referral activation (silent): first consented test only; never breaks typing.
   // P5-RTE-03: referrals.js loads lazily — only after a test finishes
   // (263 KB saved up front). Already loaded (e.g. a previous test this
@@ -181,14 +181,14 @@ function finish(){
       window.DKREF.recordActivation(st.wpm, st.acc, typed.length);
     } else {
       ensureReferrals().then(function(){
-        try { if (window.DKREF && window.DKREF.recordActivation) { window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } } catch (e) {}
+        try { if (window.DKREF && window.DKREF.recordActivation) { window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
       });
     }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // HOOKS (referral-complete §7): lastTestAt (+ unfreeze) and the
   // local challenge-done marker; both silent, neither breaks typing.
-  try{ stampLastTest(); }catch(e){}
-  try{ recordChallengeDone(); }catch(e){}
+  try{ stampLastTest(); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+  try{ recordChallengeDone(); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Gamification (Task 5, historical rules): test XP + badges, once per
   // identical result per day; never breaks typing. wpm here is already
   // net-style (correct chars / 5 / minutes), i.e. historical nwpm.
@@ -198,7 +198,7 @@ function finish(){
       var testKey = 'test:' + day + ':' + Math.round(st.wpm) + ':' + Math.round(st.acc);
       window.DK2.afterActivity('test', { nwpm: Math.round(st.wpm), dur: limit, acc: Math.round(st.acc) }, { testKey: testKey });
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
 function reset(newPassage){
   if(newPassage) passage = newPassage;

@@ -14,7 +14,7 @@
   }
   function bestSet(key, value) {
     try { window.localStorage.setItem(key, String(value)); }
-    catch (e) { /* ignore — game still plays */ }
+    catch (e) { /* ignore — game still plays */ window.dkSwallow && window.dkSwallow(e, 'games.js'); }
   }
   function pickWord() { return WORDS[Math.floor(Math.random() * WORDS.length)]; }
 

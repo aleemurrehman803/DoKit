@@ -91,14 +91,14 @@
     try {
       var q = new URLSearchParams(window.location.search).get('lang');
       if (q && isLang(q)) {
-        try { window.localStorage.setItem(STORAGE_KEY, q); } catch (e) { /* private mode: ignore */ }
+        try { window.localStorage.setItem(STORAGE_KEY, q); } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
         return q;
       }
-    } catch (e) { /* old browsers without URLSearchParams: fall through */ }
+    } catch (e) { /* old browsers without URLSearchParams: fall through */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
     try {
       var stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored && isLang(stored)) return stored;
-    } catch (e) { /* private mode: ignore */ }
+    } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
     return 'en';
   }
 
@@ -220,7 +220,7 @@
   try {
     var selfScript = document.currentScript;
     if (selfScript && selfScript.src) { DICT_BASE = selfScript.src.replace(/i18n\.js.*$/, ''); }
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
   function dictBase(){
     if (DICT_BASE) return DICT_BASE;
     if (window.__dkJsBase) return window.__dkJsBase;
@@ -239,7 +239,7 @@
   function dispatchLangChange(code){
     try {
       document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: code } }));
-    } catch (e) { /* very old browsers: translation already applied above */ }
+    } catch (e) { /* very old browsers: translation already applied above */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
   }
 
   /* Switch language: persist, re-apply, and tell the page. WHY dispatch a
@@ -253,7 +253,7 @@
      * run) — the restore target if the new dict fails to load. */
     var prev = document.documentElement.lang || current();
     if (!isLang(prev)) prev = 'en';
-    try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ }
+    try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
     if (code === 'en' || (window.DK_I18N_DICT && window.DK_I18N_DICT[code])) {
       apply(code);
       dispatchLangChange(code);
@@ -263,7 +263,7 @@
       apply(code);
       dispatchLangChange(code);
     }, function(){
-      try { window.localStorage.setItem(STORAGE_KEY, prev); } catch (e) {}
+      try { window.localStorage.setItem(STORAGE_KEY, prev); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
       apply(prev);
       dispatchLangChange(prev);
     });

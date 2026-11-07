@@ -40,7 +40,7 @@
   }
   function saveJSON(key, value) {
     try { window.localStorage.setItem(key, JSON.stringify(value)); }
-    catch (e) { /* storage unavailable: feature degrades, page survives */ }
+    catch (e) { /* storage unavailable: feature degrades, page survives */ window.dkSwallow && window.dkSwallow(e, 'typing-additions.js'); }
   }
   /* Results, normalised: newest first (DK2 order), with type, wpm, acc
    * and a parseable date. Rows missing wpm/acc are kept but treated
@@ -644,7 +644,7 @@
          * textarea + execCommand last, for old browsers. */
         if (navigator.share) {
           navigator.share({ text: shareText }).then(function () { done(true); })
-            .catch(function () { /* user dismissed: not an error */ });
+            .catch(function (e) { /* user dismissed: not an error */ window.dkSwallow && window.dkSwallow(e, 'typing-additions.js'); });
         } else if (navigator.clipboard) {
           navigator.clipboard.writeText(shareText).then(function () { done(true); })
             .catch(function () { done(false); });

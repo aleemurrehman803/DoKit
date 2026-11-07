@@ -80,8 +80,8 @@ if(cc){
   var cpy = $('cc-copy');
   if(cpy){ cpy.addEventListener('click', function(){
     var v = ccOut.value; if(!v) return;
-    if(navigator.clipboard){ navigator.clipboard.writeText(v).catch(function(){}); }
-    else { ccOut.select(); try{ document.execCommand('copy'); }catch(e){} }
+    if(navigator.clipboard){ navigator.clipboard.writeText(v).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'tools.js'); }); }
+    else { ccOut.select(); try{ document.execCommand('copy'); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'tools.js'); } }
   }); }
 }
 /* ---------- Resizer parked fixes: stored-ZIP writer + color-based
