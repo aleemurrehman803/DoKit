@@ -1074,7 +1074,12 @@
     // needed; labels are plain owner-tool text in built strings.
     function build(id, inner, onSubmit){
       var el = $(id);
-      if (!el || el.dataset.dka) { return; }
+      /* P5-UX-05: log the missing-container case instead of failing
+       * silently — a missing admin container used to hide a broken Add
+       * form with no error anywhere. Diagnostic only; no user-visible
+       * behaviour change. */
+      if (!el) { try { console.warn('admin build: missing container #' + id); } catch (e) {} return; }
+      if (el.dataset.dka) { return; }
       el.dataset.dka = '1';
       el.innerHTML = inner;
       var f = el.querySelector('form');
