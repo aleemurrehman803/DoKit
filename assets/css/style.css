@@ -54,6 +54,10 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .btn.amber:hover{box-shadow:0 10px 24px rgba(255,197,49,.4)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)!important}
 .btn.ghost:hover{border-color:var(--violet);color:var(--amber)!important;box-shadow:none}
+/* T078 (P5-UX-18): a disabled button-link (aria-disabled, no href) — visibly
+ * dimmed, unclickable, and it must not lift on hover like an enabled .btn. */
+.btn[aria-disabled="true"]{opacity:.45;pointer-events:none;cursor:not-allowed}
+.btn[aria-disabled="true"]:hover{transform:none;box-shadow:none}
 /* T001 (P5-VIS-01): login/signup form buttons span the full form width, matching the inputs */
 #acct-login-form .btn,#acct-signup-form .btn{display:block;width:100%;margin:0 0 10px}
 .hero{position:relative;overflow:hidden;padding:72px 0 56px}

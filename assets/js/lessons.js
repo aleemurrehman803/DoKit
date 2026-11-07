@@ -91,10 +91,15 @@
     var completeBtn = document.getElementById('ls-complete');
     if (titleEl) { titleEl.textContent = lesson.title; }
     if (keysEl) { keysEl.textContent = (window.dkT ? window.dkT('rsv_0981', 'Keys: ') : 'Keys: ') + lesson.keys; }
-    if (prevEl) { prevEl.href = n > 1 ? '?n=' + (n - 1) : '?n=1'; }
+    if (prevEl) {
+      /* T078 (P5-UX-18): at the first lesson Prev is disabled, not a self-link. */
+      if (n > 1) { prevEl.href = '?n=' + (n - 1); prevEl.removeAttribute('aria-disabled'); }
+      else { prevEl.removeAttribute('href'); prevEl.setAttribute('aria-disabled', 'true'); }
+    }
     if (nextEl) {
-      nextEl.href = n < window.LESSONS.length ? '?n=' + (n + 1)
-        : '?n=' + window.LESSONS.length;
+      /* T078 (P5-UX-18): at the last lesson Next is disabled, not a self-link. */
+      if (n < window.LESSONS.length) { nextEl.href = '?n=' + (n + 1); nextEl.removeAttribute('aria-disabled'); }
+      else { nextEl.removeAttribute('href'); nextEl.setAttribute('aria-disabled', 'true'); }
     }
     if (selectEl) {
       window.LESSONS.forEach(function (ls, i) {
