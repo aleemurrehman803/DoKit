@@ -112,8 +112,17 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .faq summary{font-weight:700;cursor:pointer}
 #chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),#4B2FD6);border:0;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(108,76,241,.5)}
 #chat-fab:hover{transform:translateY(-2px)}
-#chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:340px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
+/* T031 (P5-VIS-08): panel widened 340 -> 380px (desktop) so the chat
+ * input gets a readable share; max-width keeps small screens fitting. */
+#chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:380px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
 #chat-panel.open{display:block}
+/* T031: the mode bar (built by dokiSessionUI in main.js) had NO CSS — its
+ * label sat flush against the panel edge with no gap to the New chat
+ * button. Flex row with panel padding; the label takes the free space and
+ * ellipsises instead of ever running under the button. */
+.chat-mode{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line)}
+.chat-mode span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:14px}
+.chat-mode .btn{flex:none;padding:10px 14px}
 .dk-thinking{display:inline-flex;gap:4px;align-items:center}
 .dk-thinking i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:dkthink 1s infinite}
 .dk-thinking i:nth-child(2){animation-delay:.15s}
@@ -123,8 +132,17 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 #chat-log{padding:14px 18px;max-height:280px;overflow:auto}
 .msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:#12101F}
 .msg.bot{border-left:3px solid var(--violet)}
-#chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-#chat-form input{flex:1}
+#chat-form{display:flex;gap:4px;padding:12px 10px;border-top:1px solid var(--line)}
+#chat-form input{flex:1;min-width:0;padding:12px 8px}
+/* T031: the Send button used the global .btn padding (12px 22px, ~137px
+ * wide for "Send message"), leaving the input ~123px in a 340px panel so
+ * the placeholder was cut off ("Type your qu…"). Smaller button here only
+ * — scoped to the submit button so the mic keeps its own sizing — plus a
+ * slightly narrower input padding and form padding, so the full
+ * placeholder fits even in the 350px-wide panel at 390px. The shared
+ * form_send label is untouched. */
+#chat-form button[type="submit"]{flex:none;padding:8px 10px;font-size:13px}
+#chat-form .doki-mic-btn{padding:7px 8px}
 .chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px}
 .chip:hover{border-color:var(--amber);color:var(--amber)}
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
