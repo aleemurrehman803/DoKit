@@ -6,7 +6,13 @@
  * for eyebrow/tag text (contrast on light backgrounds). */
 :root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+/* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
+ * the sticky header instead of under it. 90px = header (~68px at every
+ * viewport) + ~22px margin — the same offset the terms page previously
+ * carried per-section (terms.css), now provided once, globally. It only
+ * affects scroll-to positions (anchors, scrollIntoView); normal scrolling
+ * is untouched. */
+html{scroll-behavior:smooth;scroll-padding-top:90px}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6;font-size:17px}
 a{color:var(--violet2)}
 a:hover{color:var(--amber)}
