@@ -135,7 +135,9 @@ th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
 th{background:var(--surface2)}
 .tablewrap{overflow-x:auto}
 footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
-.footgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:24px}
+.footgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:24px}
+/* T070 (P5-RTE-20): a fourth "More" footer column — the <=900px rule below
+ * already collapses the grid to a single column, so mobile is unaffected. */
 .footgrid a{color:var(--muted);text-decoration:none;display:block;padding:3px 0}
 .footgrid a:hover{color:var(--amber);text-decoration:underline}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
