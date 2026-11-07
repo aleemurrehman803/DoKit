@@ -325,7 +325,6 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid var(--violet);outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:var(--ink);font-family:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif}
 .cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet)}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
-@media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
 .cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
 .cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:#f0ebff}
 .cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on-accent);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
@@ -352,6 +351,18 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .cert-sheet.cert-premium .cert-scale{font-size:12px;color:#666;margin-top:12px}
 .cert-sheet.cert-premium .cert-qr img{width:120px;height:120px;border:1px solid #ddd;border-radius:6px}
 .cert-sheet.cert-premium .cert-verify a{color:var(--violet);word-break:break-all}
+@media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
+/* T052 (P5-DES-28): 521-768px intermediate breakpoint, extended to
+ * the whole <=768px band. Below 521px the 520px rule already made the
+ * QR static, but its title/net/name declarations never applied (the
+ * block sat before those base rules, so they won the tie) and the
+ * seal was never addressed — at 390px the title clipped off the
+ * sheet and the seal overlapped the authority. Both blocks now sit
+ * at the end of the premium section so they win: the 520px block
+ * keeps its smaller fonts, and this block makes BOTH corner elements
+ * static (in flow, centred) with 0 side margins, so the title and
+ * authority can never collide with QR/seal at any width <=768px. */
+@media (max-width:768px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-seal{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px}}
 .cert-sheet.cert-premium .cert-signatures{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid #e0d9c8}
 .cert-sheet.cert-premium .cert-sig{text-align:center;width:200px}
 .cert-sheet.cert-premium .cert-sig-line{border-top:2px solid #1a1a2e;min-height:28px}
