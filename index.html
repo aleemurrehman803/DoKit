@@ -18,6 +18,10 @@
 <meta property="og:site_name" content="DoKit">
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/doki.css">
+<!-- T048 (P5-DES-24): without JS, main.js never adds .in to .reveal,
+     so the three home cards would stay invisible (opacity:0). Show
+     them when JS is off; the normal reveal flow is untouched. -->
+<noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
 </head>
 <body>
 <a class="skip" href="#main" data-i18n="skip_link">Skip to content</a>
