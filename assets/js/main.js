@@ -226,9 +226,40 @@ setInterval(dokiBlinkTick, 5000);
 // Doki answers from the site's own knowledge base (assistant-kb.js) and
 // falls back to navigation links. dokiGemini below is kept as a stub
 // returning DK_NOT_GROUNDED so any old caller degrades gracefully.
+/* P5-RTE-01: lazy-load the Doki knowledge base on first chat-panel open
+ * instead of on every page load (71 KB saved until the user chats).
+ * Idempotent: one shared promise for the panel-open call and the submit
+ * handler's wait. Resolves even on load failure (after a 3s safety
+ * timeout) so chat never hangs — the answer then falls back to links,
+ * exactly as it does when no KB is present. */
+var __dkKbPromise = null;
+function ensureKb(){
+  if (window.DKASSIST_KB) { return Promise.resolve(true); }
+  if (__dkKbPromise) { return __dkKbPromise; }
+  __dkKbPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){ if (!done) { done = true; resolve(ok); } }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/main.js"]');
+        base = m ? m.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'assistant-kb.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkKbPromise;
+}
 function dokiLoadFaq(){
   // KB-only (Oct 26): no FAQ/AI provider is loaded. Doki answers from
-  // assistant-kb.js, loaded site-wide by loadSharedScripts.
+  // assistant-kb.js, lazy-loaded on first panel open (P5-RTE-01).
+  ensureKb();
 }
 function dokiGemini(req){
   // KB-only stub (Oct 26): live AI removed by owner choice. Always
@@ -257,6 +288,22 @@ if(form){
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var inp = document.getElementById('chat-input'); var q = (inp.value || '').trim(); if(!q) return;
+    /* P5-RTE-01: the KB is lazy-loaded (first panel open). If it has not
+     * arrived yet, show thinking dots and answer once it lands (or after
+     * the load fails/times out — the links fallback then applies, as
+     * before). The common path (KB already present) runs synchronously,
+     * exactly as before. */
+    if (window.DKASSIST_KB) { runChatSubmit(); return; }
+    var log = document.getElementById('chat-log');
+    var b = document.createElement('div'); b.className = 'msg bot';
+    var dots = document.createElement('span'); dots.className = 'dk-thinking';
+    for (var di = 0; di < 3; di++) { dots.appendChild(document.createElement('i')); }
+    b.appendChild(dots); log.appendChild(b); log.scrollTop = log.scrollHeight;
+    ensureKb().then(function(){
+      if (b.parentNode) { b.parentNode.removeChild(b); }
+      runChatSubmit();
+    });
+    function runChatSubmit(){
     var log = document.getElementById('chat-log');
     var u = document.createElement('div'); u.className = 'msg'; u.textContent = q; log.appendChild(u);
     // Session record: user turn + the request a future provider would get.
@@ -384,6 +431,7 @@ if(form){
     log.appendChild(b); inp.value = ''; log.scrollTop = log.scrollHeight;
     // Session record: bot turn (rendered answer text, chips included).
     window.DKChat.history.push({ role: 'bot', text: b.textContent });
+    } /* end runChatSubmit (P5-RTE-01: KB-wait wrapper) */
   });
 }
 // ---- Doki voice input (photo pass, Oct 25): real Web Speech ----
@@ -516,17 +564,39 @@ function dokiMicStop(){
       var cur = document.currentScript;
       if (!cur || !cur.src) { return; }
       var base = cur.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/');
+      /* P5-RTE-01: remember the JS base for lazy loads (KB on first chat
+       * open; extra i18n dicts on language switch). document.currentScript
+       * is only set while this script evaluates. */
+      window.__dkJsBase = base;
       function load(f, next) {
         var s = document.createElement('script'); s.src = base + f;
         if (next) { s.onload = next; s.onerror = next; }
         document.head.appendChild(s);
       }
-      load('assistant-kb.js');
+      /* P5-RTE-01: load only the active language dict (+ English fallback)
+       * instead of the 1.25 MB ten-language monolith. Language resolution
+       * mirrors i18n.js current(): ?lang= wins, then stored dokit_lang,
+       * then English. (assistant-kb.js is no longer loaded here — it loads
+       * on first chat-panel open; see ensureKb/dokiLoadFaq.) */
+      var LANGS = ['en','ur','ar','hi','es','fr','pt','de','tr','ru'];
+      function isLang(c){ return LANGS.indexOf(c) !== -1; }
+      function activeLang(){
+        try {
+          var q = new URLSearchParams(window.location.search).get('lang');
+          if (q && isLang(q)) { return q; }
+        } catch (e) {}
+        try {
+          var stored = window.localStorage.getItem('dokit_lang');
+          if (stored && isLang(stored)) { return stored; }
+        } catch (e) {}
+        return 'en';
+      }
+      var lang = activeLang();
       // Dictionary first, engine second: the engine reads the dict
       // on init, so order matters (chained, not parallel). Once the
       // engine arrives, re-sync the hero H1 (it loads async, after
       // main.js has already run).
-      load('i18n-dict.js', function () {
+      function loadEngine(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
           if (typeof window.syncKeyboards === 'function') { window.syncKeyboards(); }
@@ -541,7 +611,14 @@ function dokiMicStop(){
           if (typeof window.syncShareMsg === 'function') { window.syncShareMsg(); }
           if (typeof window.syncRzBg === 'function') { window.syncRzBg(); }
         });
-      });
+      }
+      if (lang === 'en') {
+        load('i18n-dict-en.js', loadEngine);
+      } else {
+        load('i18n-dict-en.js', function () {
+          load('i18n-dict-' + lang + '.js', loadEngine);
+        });
+      }
     } catch (e) {}
   })();
   // Small dropdown helper (used by language + profile menus): toggle

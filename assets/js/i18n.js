@@ -18,15 +18,21 @@
  *      with "beta" tags on ar/hi/de/ru. The new header is static HTML from
  *      the generator, so this engine self-wires the static selector markup
  *      (see bindSelector below) and carries no beta tags: the chrome keys in
- *      i18n-dict.js are fully translated in all 10 languages except the four
- *      newer tool names, which fall back to English (see README.md).
+ *      the per-language dict files are fully translated in all 10 languages
+ *      except the four newer tool names, which fall back to English (see
+ *      README.md). (P5-RTE-01: the ten-language monolith i18n-dict.js was
+ *      split into i18n-dict-<lang>.js; only the active language + English
+ *      are loaded at boot, and setLang() fetches any other language's dict
+ *      on demand.)
  *   4. Global name is window.DK_I18N. window.DKI18N is kept as an alias so
  *      any old snippet calling DKI18N.t()/setLang() keeps working.
  *
  * CONTRACTS THE PARENT MUST KEEP (see README.md for the full list)
- *   - Load i18n-dict.js BEFORE this file (both with defer, in that order).
- *     The engine still reads window.DK_I18N_DICT live on every lookup, so a
- *     swapped order degrades gracefully instead of breaking.
+ *   - Load the per-language dict files BEFORE this file (in order:
+ *     i18n-dict-en.js, then i18n-dict-<active>.js when the active language
+ *     is not English, then this engine). main.js loadSharedScripts owns
+ *     that order. The engine still reads window.DK_I18N_DICT live on every
+ *     lookup, so a swapped order degrades gracefully instead of breaking.
  *   - Put data-i18n ONLY on leaf elements (elements whose whole text content
  *     is the string). Applying textContent to a wrapper would wipe its child
  *     links/buttons — that is why the footer base line must be split into
@@ -184,6 +190,39 @@
     }
   }
 
+  /* P5-RTE-01: only the active language dict (+ English) is loaded at boot
+   * (main.js loadSharedScripts). Switching to a language whose dict is not
+   * loaded yet fetches its per-language file first, then applies. The base
+   * is this engine file's own URL (captured at load; document.currentScript
+   * is only set while this script evaluates), falling back to the base
+   * main.js recorded. On load failure the previous language is restored,
+   * so the page never sits half-translated with a mismatched selector. */
+  var DICT_BASE = null;
+  try {
+    var selfScript = document.currentScript;
+    if (selfScript && selfScript.src) { DICT_BASE = selfScript.src.replace(/i18n\.js.*$/, ''); }
+  } catch (e) {}
+  function dictBase(){
+    if (DICT_BASE) return DICT_BASE;
+    if (window.__dkJsBase) return window.__dkJsBase;
+    return '';
+  }
+  function loadDict(code, ok, fail){
+    try {
+      var base = dictBase();
+      if (!base) { fail(); return; }
+      var s = document.createElement('script');
+      s.src = base + 'i18n-dict-' + code + '.js';
+      s.onload = ok; s.onerror = fail;
+      document.head.appendChild(s);
+    } catch (e) { fail(); }
+  }
+  function dispatchLangChange(code){
+    try {
+      document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: code } }));
+    } catch (e) { /* very old browsers: translation already applied above */ }
+  }
+
   /* Switch language: persist, re-apply, and tell the page. WHY dispatch a
    * custom event (old contract "dokit:langchange"): static [data-i18n] nodes
    * update automatically, but JS-rendered text (tool results, dynamic cards)
@@ -191,11 +230,24 @@
    * engine having to know about every widget. */
   function setLang(code) {
     if (!isLang(code)) code = 'en';
+    /* Previously applied language (<html lang> is set by apply() on every
+     * run) — the restore target if the new dict fails to load. */
+    var prev = document.documentElement.lang || current();
+    if (!isLang(prev)) prev = 'en';
     try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ }
-    apply(code);
-    try {
-      document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: code } }));
-    } catch (e) { /* very old browsers: translation already applied above */ }
+    if (code === 'en' || (window.DK_I18N_DICT && window.DK_I18N_DICT[code])) {
+      apply(code);
+      dispatchLangChange(code);
+      return;
+    }
+    loadDict(code, function(){
+      apply(code);
+      dispatchLangChange(code);
+    }, function(){
+      try { window.localStorage.setItem(STORAGE_KEY, prev); } catch (e) {}
+      apply(prev);
+      dispatchLangChange(prev);
+    });
   }
 
   /* Wire the static header selector (header-selector.html). WHY self-wire
