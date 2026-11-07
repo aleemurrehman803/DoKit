@@ -1149,7 +1149,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_0086": "Hesaplar, roller ve askıya almalar.",
     "rsv_0088": "İleri Düzey Dersler",
     "rsv_0089": "Uyarılar",
-    "rsv_0090": "10 temel aracın tümü",
+    "rsv_0090": "9 aracın tümü",
     "rsv_0091": "44 adım adım dersin tümü.",
     "rsv_0092": "Tüm araçlar tarayıcınızda çalışır.",
     "rsv_0093": "Tüm araçlar, tek merkez",

@@ -1149,7 +1149,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_0086": "Konten, Rollen und Sperrungen.",
     "rsv_0088": "Fortgeschrittenen-Lektionen",
     "rsv_0089": "Warnmeldungen",
-    "rsv_0090": "Alle 10 Basistools",
+    "rsv_0090": "Alle 9 Tools",
     "rsv_0091": "Alle 44 Schritt-für-Schritt-Lektionen.",
     "rsv_0092": "Alle Tools laufen in Ihrem Browser.",
     "rsv_0093": "Alle Tools, ein Hub",

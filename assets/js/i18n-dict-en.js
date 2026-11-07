@@ -1142,7 +1142,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_0086": "Accounts, roles and suspensions.",
     "rsv_0088": "Advanced lessons",
     "rsv_0089": "Alerts",
-    "rsv_0090": "All 10 basic tools",
+    "rsv_0090": "All 9 tools",
     "rsv_0091": "All 44 step-by-step lessons.",
     "rsv_0092": "All tools run in your browser.",
     "rsv_0093": "All tools, one hub",
