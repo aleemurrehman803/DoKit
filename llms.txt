@@ -5,11 +5,11 @@
 ## Tools
 
 - [DoKit Tools – All Free Online Tools](https://aleemurrehman803.github.io/DoKit/tools/): Every DoKit tool runs in your browser — image resizer, compressor, converter, word counter, case converter, board photo, password generator, unit converter, QR generator and typing test. No signup, no uploads, no watermark.
-- [Image Resizer Online Free – Resize JPG, PNG & WebP Without Losing Quality](https://aleemurrehman803.github.io/DoKit/tools/image-resizer/): Resize any image to exact pixels or a percentage, right in your browser. Your photos never leave your device — no signup, no watermark.
-- [Compress Image to 100KB, 50KB or Any Size Online Free](https://aleemurrehman803.github.io/DoKit/tools/image-compressor/): Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.
-- [Image Converter Online Free – PNG to JPG, WebP to JPG, JPG to WebP](https://aleemurrehman803.github.io/DoKit/tools/image-converter/): Convert images between PNG, JPG, WebP and more in your browser. No uploads, no account, batch conversion included.
-- [Word Counter Online – Count Words, Characters & Reading Time](https://aleemurrehman803.github.io/DoKit/tools/word-counter/): Paste any text and instantly count words, characters, sentences and reading time. Free, private, no signup.
-- [Case Converter Online – Uppercase, Lowercase, Title Case, camelCase & snake_case](https://aleemurrehman803.github.io/DoKit/tools/case-converter/): Convert text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, snake_case and more in one click.
+- [Image Resizer – Resize JPG, PNG & WebP Free](https://aleemurrehman803.github.io/DoKit/tools/image-resizer/): Resize any image to exact pixels or a percentage, right in your browser. Your photos never leave your device — no signup, no watermark.
+- [Compress Image to 100KB or Any Size Free](https://aleemurrehman803.github.io/DoKit/tools/image-compressor/): Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.
+- [Image Converter – PNG, JPG & WebP Converter](https://aleemurrehman803.github.io/DoKit/tools/image-converter/): Convert images between PNG, JPG, WebP and more in your browser. No uploads, no account, batch conversion included.
+- [Word Counter – Words, Characters & Reading Time](https://aleemurrehman803.github.io/DoKit/tools/word-counter/): Paste any text and instantly count words, characters, sentences and reading time. Free, private, no signup.
+- [Case Converter – Uppercase, Lowercase & Title Case](https://aleemurrehman803.github.io/DoKit/tools/case-converter/): Convert text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, snake_case and more in one click.
 - [Board Photo – Exam Photo Maker](https://aleemurrehman803.github.io/DoKit/tools/board-photo/): Make a board or university admission photo in the exact size and file size your board requires. Free, private, in your browser.
 - [Password Generator](https://aleemurrehman803.github.io/DoKit/tools/password-generator/): Generate strong passwords in your browser. Uses your device's secure random generator — nothing leaves this page.
 - [Unit Converter](https://aleemurrehman803.github.io/DoKit/tools/unit-converter/): Convert length, weight, temperature, volume and more between units. Pure maths, instant, in your browser.
@@ -17,7 +17,7 @@
 
 ## Typing
 
-- [Free Typing Test – Check Your WPM & Accuracy, Plus Urdu Typing Lessons](https://aleemurrehman803.github.io/DoKit/typing/): Take a free typing test, check your WPM and accuracy, follow 44 step-by-step lessons — including Urdu typing with a phonetic keyboard.
+- [Free Typing Test – WPM, Accuracy & Urdu Lessons](https://aleemurrehman803.github.io/DoKit/typing/): Take a free typing test, check your WPM and accuracy, follow 44 step-by-step lessons — including Urdu typing with a phonetic keyboard.
 - [Typing Lessons – 44 Step-by-Step Lessons](https://aleemurrehman803.github.io/DoKit/typing/lessons/): All typing lessons from beginner keys to stories: practice each one in your browser, free.
 - [Typing Lesson – Practice](https://aleemurrehman803.github.io/DoKit/typing/lesson/): Practise a typing lesson with live feedback, WPM and accuracy. Progress saves on this device.
 - [Typing Practice – Free Practice Texts](https://aleemurrehman803.github.io/DoKit/typing/practice/): Practise typing with ready passages or your own text. Live WPM and accuracy; results save on this device.
@@ -44,8 +44,8 @@
 ## Guides
 
 - [DoKit Guides – How to Resize, Compress & More](https://aleemurrehman803.github.io/DoKit/guides/): Practical how-tos for everyday image work: resize without losing quality, and compress to an exact KB target.
-- [How to Resize an Image Without Losing Quality (2026 Guide)](https://aleemurrehman803.github.io/DoKit/guides/how-to-resize-image-without-losing-quality/): Keep the aspect ratio locked, resize from the original, and pick the right format — JPG for photos, PNG for graphics, WebP for the web.
-- [How to Compress an Image to 100KB for Forms & Portals](https://aleemurrehman803.github.io/DoKit/guides/how-to-compress-image-to-100kb/): Forms and portals reject oversized photos. Learn how to hit an exact KB target without ruining quality — then do it free in your browser.
+- [How to Resize an Image Without Losing Quality](https://aleemurrehman803.github.io/DoKit/guides/how-to-resize-image-without-losing-quality/): Keep the aspect ratio locked, resize from the original, and pick the right format — JPG for photos, PNG for graphics, WebP for the web.
+- [How to Compress an Image to 100KB](https://aleemurrehman803.github.io/DoKit/guides/how-to-compress-image-to-100kb/): Forms and portals reject oversized photos. Learn how to hit an exact KB target without ruining quality — then do it free in your browser.
 - [How to convert text case](https://aleemurrehman803.github.io/DoKit/guides/convert-case/): Fix ALL-CAPS headings, lowercase SHOUTING, and format titles perfectly — six case styles, one click each.
 - [How to convert image formats](https://aleemurrehman803.github.io/DoKit/guides/convert-images/): Switch any image between JPG, PNG and WebP in seconds — smaller files, wider compatibility, zero uploads.
 - [How to count words](https://aleemurrehman803.github.io/DoKit/guides/count-words/): Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.
