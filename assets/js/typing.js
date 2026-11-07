@@ -97,6 +97,44 @@ function recordChallengeDone(){
     localStorage.setItem('dk_challenge_done', JSON.stringify({ challengeId: challengeId, at: Date.now() }));
   }catch(e){}
 }
+/* P5-RTE-03: referrals.js (263 KB) is NOT loaded with the typing page —
+ * only the activation writer is needed here, and only after a test
+ * finishes. Idempotent shared promise, mirroring main.js ensureKb:
+ * resolves true when window.DKREF lands, false on load error / 3s
+ * timeout, so the finish flow never hangs and never throws. One
+ * deliberate difference from ensureKb: a failed load clears the shared
+ * promise so the next finished test retries (a transient failure must
+ * not lose the user's referral activation for the whole session). */
+var __dkRefPromise = null;
+function ensureReferrals(){
+  if (window.DKREF && window.DKREF.recordActivation) { return Promise.resolve(true); }
+  if (__dkRefPromise) { return __dkRefPromise; }
+  __dkRefPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){
+      if (!done) {
+        done = true;
+        if (!ok) { __dkRefPromise = null; }
+        resolve(ok);
+      }
+    }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/typing.js"]');
+        base = m ? m.src.replace(/assets\/js\/typing\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'referrals.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkRefPromise;
+}
 function finish(){
   if(done) return;
   done = true; clearInterval(timer);
@@ -135,7 +173,18 @@ function finish(){
     }
   }catch(e){}
   // Referral activation (silent): first consented test only; never breaks typing.
-  try{ if(window.DKREF && window.DKREF.recordActivation){ window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } }catch(e){}
+  // P5-RTE-03: referrals.js loads lazily — only after a test finishes
+  // (263 KB saved up front). Already loaded (e.g. a previous test this
+  // session): the writer runs synchronously, exactly as before.
+  try {
+    if (window.DKREF && window.DKREF.recordActivation) {
+      window.DKREF.recordActivation(st.wpm, st.acc, typed.length);
+    } else {
+      ensureReferrals().then(function(){
+        try { if (window.DKREF && window.DKREF.recordActivation) { window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } } catch (e) {}
+      });
+    }
+  } catch (e) {}
   // HOOKS (referral-complete §7): lastTestAt (+ unfreeze) and the
   // local challenge-done marker; both silent, neither breaks typing.
   try{ stampLastTest(); }catch(e){}
