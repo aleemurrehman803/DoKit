@@ -459,11 +459,11 @@ if(form){
     // ungrounded/error fallback render exactly the same chips.
     function appendChatLinks(el){
       // WHY (i18n): chat link labels translate through the same dict
-      // keys as the footer/cards. Only labels with a verified key are
-      // mapped; the rest (Lessons, Practice, Games, TypeFight Battle,
-      // Changelog, API Docs, Design System, Progress) have no old
-      // translation and stay English, honestly, until one is supplied.
-      var CHAT_LABEL_KEY = {'Pricing':'nav_pricing','Image Compressor':'tool_compressor_name','Image Resizer':'tool_resizer_name','Image Converter':'tool_converter_name','Word Counter':'tool_counter_name','Case Converter':'tool_case_name','Typing Test':'test_title','Board Photo':'bp.title','Password Generator':'cs2_t','Unit Converter':'cs4_t','QR Generator':'cs1_t','Wall of Love':'wol.title','System Status':'status.title','Certificate':'cert_word','Results':'resizer.results_title','Dashboard':'acct_dash_h1','Contact':'nav_contact','FAQ':'nav_faq','All Tools':'nav_all_tools'};
+      // keys as the footer/cards. T083 (P5-UX-30): the last eight labels
+      // (Lessons, Practice, Games, TypeFight Battle, Changelog, API Docs,
+      // Design System, Progress) now map to their existing keys too, so
+      // every chip renders in the active language.
+      var CHAT_LABEL_KEY = {'Pricing':'nav_pricing','Image Compressor':'tool_compressor_name','Image Resizer':'tool_resizer_name','Image Converter':'tool_converter_name','Word Counter':'tool_counter_name','Case Converter':'tool_case_name','Typing Test':'test_title','Board Photo':'bp.title','Password Generator':'cs2_t','Unit Converter':'cs4_t','QR Generator':'cs1_t','Wall of Love':'wol.title','System Status':'status.title','Certificate':'cert_word','Results':'resizer.results_title','Dashboard':'acct_dash_h1','Contact':'nav_contact','FAQ':'nav_faq','All Tools':'nav_all_tools','Lessons':'rsv_0367','Practice':'rsv_0453','Games':'rsv_0280','TypeFight Battle':'tool_typefight_name','Changelog':'rsv_0144','API Docs':'rsv_0214','Design System':'rsv_0208','Progress':'rsv_0469'};
       links.forEach(function(lk){
         if(!lk[1]){ return; }
         var a = document.createElement('a'); a.className = 'chip'; a.href = lk[1];
