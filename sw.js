@@ -1,17 +1,10 @@
 /* DoKit service worker (restore).
  * Precache the core shell so the site opens offline; navigations fall
  * back to the offline page when the network is gone. */
-// v6 (Oct 26): bumped from dokit-v2 so the Oct 26 account.js / main.js /
-// style.css replace stale cached files — the Oct 26 profile form click
-// did nothing in browsers holding the v2 cache (old account.js has no
-// Update Profile binding). The activate handler deletes old caches.
-// v7 (Oct 26): bumped to dokit-v4 so the referral writer fix (typing
-// page now loads account.js + Firebase) replaces stale cached JS —
-// without the bump, browsers holding v3 keep serving the old files
-// and the activation writer can never fire.
-// v8 (Oct 26): dokit-v5 — referral capture fallback needs fresh account.js.
-// v9 (Oct 26): dokit-v6 — signup race fix needs fresh account.js.
-// v10 (Oct 26): dokit-v7 — JS/CSS network-reload-first.
+// Current cache: dokit-v7. To invalidate every cached file, bump this string
+// (e.g. dokit-v8) — the activate handler deletes all other caches.
+// History: Oct 26, 2026 bumps took the cache from dokit-v2 to dokit-v7
+// (profile-form fix, referral writer, signup race, JS/CSS network-reload-first).
 var CACHE = 'dokit-v7';
 var ORIGIN = self.location.origin;
 var BASE = self.location.pathname.replace(/sw\.js$/, '');
