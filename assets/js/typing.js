@@ -31,11 +31,19 @@ function render(){
 function stats(){
   var correct = 0; for(var i = 0; i < typed.length; i++){ if(typed[i] === passage[i]) correct++; }
   var mins = (Date.now() - startTime) / 60000;
-  var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
+  /* T085 (P5-VIS-10): WPM is 0 until a full second has elapsed — with
+   * elapsed near 0 the division would flash an absurd WPM (thousands) on
+   * the live display. This is a DISPLAY clamp only, not a scoring floor:
+   * finish() rejects sub-second runs before it ever calls stats(), and the
+   * 1s interval's first tick is at >= 1s, so scoring is exactly as before
+   * (see the WPM0 FIX comment in finish()). Accuracy needs no clamp: it
+   * is exact from the first keystroke. */
+  var elapsedOk = mins >= 1 / 60;
+  var wpm = elapsedOk && mins > 0 ? Math.round((correct / 5) / mins) : 0;
   // Net WPM counts correct characters only; gross WPM counts every typed
   // character. Both use the same elapsed time, so the certificate can
   // show them side by side without inventing either value.
-  var gross = mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
+  var gross = elapsedOk && mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
   var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
   wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct, gross: gross};
 }
@@ -224,6 +232,12 @@ input.addEventListener('input', function(ev){
     }, 1000);
   }
   if(typed.length >= passage.length){ finish(); input.disabled = true; }
+  /* T085 (P5-VIS-10): update the visible stats on every keystroke, not
+   * only on the 1s interval — a wrong character left accuracy showing the
+   * previous value (100%) for up to a second. stats() itself clamps WPM
+   * to 0 in the first second, so no spike; the interval still drives the
+   * countdown. */
+  if(started) stats();
   render();
 });
 var sel = document.getElementById('ty-time-sel');
