@@ -318,7 +318,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1091": "bu işlem 3. Aşamada kendi sunucunuzda barındırılan arka uçla bağlantı kurar. Hiçbir şey gönderilmedi veya kaydedilmedi.",
     "rsv_1070": "İpucu: basın",
     "rsv_1071": "araç aramasına gitmek için herhangi bir yerde. Sonuçlarınız ve favorileriniz yalnızca bu cihazda kaydedilir.",
-    "rsv_1072": "Merhaba! Ben Doki. DoKit'in araçları, yazma ve fiyatları hakkında sorun — sitenin kendi bilgilerinden yanıt veririm. Canlı yapay zekâ yanıtları zaten mevcut. Aşağıda herhangi bir sayfaya tıklayın veya bir soru yazın.",
+    "rsv_1072": "Merhaba! Ben Doki. DoKit'in araçları, yazma ve fiyatları hakkında sorun — sitenin kendi bilgilerinden yanıt veririm. Aşağıda herhangi bir sayfaya tıklayın veya bir soru yazın.",
     "rsv_1073": "Sorunuzu yazın…",
     "rsv_1074": "Sohbet robotu sorusu",
     "rsv_1075": "Doki sohbet robotu önizlemesi",

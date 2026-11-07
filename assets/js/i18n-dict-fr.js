@@ -318,7 +318,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1091": "cette action se connecte au backend auto-hébergé à la Phase 3. Rien n'a été envoyé ni enregistré.",
     "rsv_1070": "Astuce : appuyez sur",
     "rsv_1071": "n'importe où pour aller à la recherche d'outils. Vos résultats et favoris sont enregistrés uniquement sur cet appareil.",
-    "rsv_1072": "Bonjour ! Je suis Doki. Posez-moi des questions sur les outils, la frappe et les tarifs de DoKit — je réponds à partir des informations du site lui-même. Les réponses IA en direct sont déjà disponibles. Cliquez sur une page ci-dessous ou tapez une question.",
+    "rsv_1072": "Bonjour ! Je suis Doki. Posez-moi des questions sur les outils, la frappe et les tarifs de DoKit — je réponds à partir des informations du site lui-même. Cliquez sur une page ci-dessous ou tapez une question.",
     "rsv_1073": "Tapez votre question…",
     "rsv_1074": "Question au chatbot",
     "rsv_1075": "Aperçu du chatbot Doki",

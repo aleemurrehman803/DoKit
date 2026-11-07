@@ -50,7 +50,7 @@ window.DKFAQ = [
  },
  {
   "q": "Who is Doki?",
-  "a": "Doki is the DoKit Assistant. It answers from the site's own information about DoKit's tools, typing, and pricing. The current chat widget text says live AI answers are already here."
+  "a": "Doki is the DoKit Assistant. It answers from the site's own information about DoKit's tools, typing, and pricing."
  },
  {
   "q": "What tools does DoKit offer?",

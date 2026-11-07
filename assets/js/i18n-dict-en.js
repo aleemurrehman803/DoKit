@@ -318,7 +318,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1091": "this action connects with the self-hosted backend in Phase 3. Nothing was sent or saved.",
     "rsv_1070": "Tip: press",
     "rsv_1071": "anywhere to jump to tool search. Your results and favorites save only on this device.",
-    "rsv_1072": "Hello! I'm Doki. Ask me about DoKit's tools, typing and pricing — I answer from the site's own information. Live AI answers are already here. Click any page below or type a question.",
+    "rsv_1072": "Hello! I'm Doki. Ask me about DoKit's tools, typing and pricing — I answer from the site's own information. Click any page below or type a question.",
     "rsv_1073": "Type your question…",
     "rsv_1074": "Chatbot question",
     "rsv_1075": "Doki chatbot preview",
