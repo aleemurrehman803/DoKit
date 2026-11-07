@@ -24,6 +24,11 @@ html{scroll-behavior:smooth;scroll-padding-top:90px}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6;font-size:17px}
 a{color:var(--violet2)}
 a:hover{color:var(--amber)}
+/* T069 (P5-RTE-19 / P5-UX-07): a button that looks like a text link (the
+ * "Forgot password?" reset action on the login page is a button now, not
+ * an href="#" anchor). Mirrors the base a / a:hover colours. */
+button.linklike{background:none;border:0;padding:0;font:inherit;color:var(--violet2);text-decoration:underline;cursor:pointer}
+button.linklike:hover{color:var(--amber)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
 /* WHY clip instead of left:-9999px: the -9999px offset breaks paint on RTL pages in Chromium (blank frame) and can explode the scroll area; the clip pattern hides the link identically for sighted users while keeping it keyboard-focusable. */
 .skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:var(--ink);padding:8px 12px;z-index:100}
@@ -235,8 +240,8 @@ html.dk-paused *{animation-play-state:paused!important}
 .lang-menu li{padding:8px 10px;border-radius:8px;cursor:pointer}
 .lang-menu li:hover{background:var(--surface2);color:var(--amber)}
 .lang-menu li[aria-selected="true"]{color:var(--amber);font-weight:700}
-.prof-menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
-.prof-menu a:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
+.prof-menu a,.prof-menu button.prof-row{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.prof-menu a:hover,.prof-menu button.prof-row:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
 .dk-avatarbtn,.app-btn{background:var(--surface2);border:1px solid var(--line);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer}
 .dk-avatarbtn:hover,.app-btn:hover{border-color:var(--amber);color:var(--amber)}
 .dk-avatarbtn__inner{display:flex}
@@ -443,8 +448,11 @@ body.dkf-has-sticky #chat-panel,body.has-sticky-cta #chat-panel{bottom:calc(4.5r
 .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
 .app-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;text-align:center;line-height:1.3}
 .app-tile svg{flex:0 0 auto}
-.prof-menu a.prof-row{display:flex;align-items:center;gap:10px}
-.prof-menu a.prof-row svg{flex:0 0 auto}
+.prof-menu a.prof-row,.prof-menu button.prof-row{display:flex;align-items:center;gap:10px}
+.prof-menu a.prof-row svg,.prof-menu button.prof-row svg{flex:0 0 auto}
+/* T069 (P5-RTE-19 / P5-UX-07): the Sign out row is a <button> now — strip
+ * the UA button chrome so it renders exactly like the anchor rows. */
+.prof-menu button.prof-row{background:transparent;border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
 .prof-menu a[hidden],.app-tile[hidden]{display:none}
 /* Oct 26: hidden must actually hide — .btn sets display:inline-block,
    which beats the UA [hidden] rule, so .btn[hidden] elements (e.g. the
@@ -477,7 +485,7 @@ body.dkf-has-sticky #chat-panel,body.has-sticky-cta #chat-panel{bottom:calc(4.5r
 /* F2 [106] shared hover transition: the existing .15s pattern, extended
    to every hoverable that snapped at 0s. .btn/.card/.reveal already
    have their own transitions and are deliberately NOT listed here. */
-.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
+.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.prof-menu button.prof-row,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
 /* F3 [107] form-field hover (focus behaviour untouched). */
 input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[type=password]:hover,select:hover,textarea:hover{border-color:var(--amber)}
 /* F4 [108] active nav-link hover: the violet ring on violet was
