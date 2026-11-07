@@ -1121,48 +1121,6 @@ function dokiMicStop(){
       });
     });
   })();
-  // Captcha on login/signup shells: client-side visual code only
-  // (never a real security gate — the pages are Phase 3 shells).
-  // A wrong code blocks the submit and refreshes; a right code lets
-  // the shell's Phase 3 note show as usual.
-  (function captcha(){
-    var box = document.getElementById('cap-code'); if (!box) { return; }
-    var input = document.getElementById('cap-input');
-    var refresh = document.getElementById('cap-refresh');
-    var audio = document.getElementById('cap-audio');
-    var err = document.getElementById('cap-err');
-    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    var code = '';
-    function gen() {
-      code = '';
-      for (var i = 0; i < 5; i++) { code += chars[Math.floor(Math.random() * chars.length)]; }
-      box.textContent = code;
-    }
-    gen();
-    if (refresh) { refresh.addEventListener('click', function () { gen(); if (err) { err.textContent = ''; } }); }
-    if (audio) {
-      audio.addEventListener('click', function () {
-        try {
-          var u = new SpeechSynthesisUtterance(code.split('').join(' '));
-          speechSynthesis.speak(u);
-        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-      });
-    }
-    var formEl = box.closest('form');
-    if (formEl && input) {
-      formEl.addEventListener('submit', function (e) {
-        if ((input.value || '').trim().toUpperCase() !== code) {
-          // Block the submit (and hide any Phase 3 note another
-          // handler just showed) until the code matches.
-          e.preventDefault();
-          var note = formEl.querySelector('.phase3-note');
-          if (note) { note.hidden = true; }
-          if (err) { err.textContent = dkT('rsv_1007', 'That code does not match — try the new one.'); }
-          gen();
-        }
-      });
-    }
-  })();
   // Rules copy helper (admin tool, restored from the old site):
   // fetch the legacy rules from the public repo and copy them.
   // If automatic copy is blocked, show the text for manual copy.

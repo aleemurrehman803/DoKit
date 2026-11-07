@@ -89,7 +89,6 @@
 .doki--glow { filter: drop-shadow(0 0 14px rgba(var(--violet-rgb), 0.55)) drop-shadow(0 0 34px rgba(var(--violet-rgb), 0.30)); }
 
 /* ---- size helpers (parent wires these to #chat-fab / .chead) ---- */
-.doki-fab { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex: none; }
 .doki-head { width: 64px; height: 64px; flex: none; }
 
 /* ---- mic button inside the chat form ---- */
