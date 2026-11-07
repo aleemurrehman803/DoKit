@@ -24,6 +24,10 @@ a:hover{color:var(--amber)}
 /* WHY clip instead of left:-9999px: the -9999px offset breaks paint on RTL pages in Chromium (blank frame) and can explode the scroll area; the clip pattern hides the link identically for sighted users while keeping it keyboard-focusable. */
 .skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:var(--ink);padding:8px 12px;z-index:100}
 .container{max-width:1120px;margin:0 auto;padding:0 20px}
+/* T037 (P5-DES-11): narrow container for auth/form/settings pages —
+ * forms read as forms, not stretched lines. Used on the main
+ * container only (header nav + footer keep the full 1120px). */
+.container--narrow{max-width:720px}
 header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px}
