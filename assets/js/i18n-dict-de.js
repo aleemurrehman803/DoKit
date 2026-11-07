@@ -19,6 +19,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1391": "Werden meine Bilder irgendwo hochgeladen?",
     "rsv_1392": "Nein — alles geschieht in Ihrem Browser. Ihre Bilder werden auf Ihrem Gerät skaliert und niemals auf einen Server hochgeladen.",
     "rsv_1393": "Einzahlungen, Auszahlungen und Stripe-Zahlungen sind auf Entscheidung des Eigentümers geschlossen.",
+    "rsv_1394": "geplant — noch nicht live",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",

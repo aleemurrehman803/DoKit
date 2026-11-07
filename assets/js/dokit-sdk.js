@@ -23,6 +23,7 @@
 }(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // Planned base URL — not live yet (the API backend is in development; see /api/).
   var DEFAULT_BASE_URL = "https://api.dokit.app/v1";
 
   /**
@@ -52,7 +53,7 @@ function DoKitError(message, status, code, retryAfter) {
    * Create an SDK client.
    * @param {Object} opts
    * @param {string} opts.apiKey  Your DoKit API key (starts with "dk_"). Required.
-   * @param {string} [opts.baseUrl] Override the API base URL (default https://api.dokit.app/v1).
+   * @param {string} [opts.baseUrl] Override the API base URL (default https://api.dokit.app/v1 — planned, not live yet).
    */
   function DoKitSDK(opts) {
     opts = opts || {};

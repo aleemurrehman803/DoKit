@@ -19,6 +19,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1391": "Minhas imagens são enviadas para algum lugar?",
     "rsv_1392": "Não — tudo acontece no seu navegador. Suas imagens são redimensionadas no seu dispositivo e nunca são enviadas para nenhum servidor.",
     "rsv_1393": "Depósitos, saques e pagamentos Stripe estão encerrados por decisão do proprietário.",
+    "rsv_1394": "planejado — ainda não está no ar",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",
