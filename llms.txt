@@ -1,0 +1,67 @@
+# DoKit
+
+> DoKit is a free hub of online tools that run in your browser — no signup, no uploads, no watermark. Resize, compress and convert images, count words, and practise typing.
+
+## Tools
+
+- [DoKit Tools – All Free Online Tools](https://aleemurrehman803.github.io/DoKit/tools/): Every DoKit tool runs in your browser — image resizer, compressor, converter, word counter, case converter, board photo, password generator, unit converter, QR generator and typing test. No signup, no uploads, no watermark.
+- [Image Resizer Online Free – Resize JPG, PNG & WebP Without Losing Quality](https://aleemurrehman803.github.io/DoKit/tools/image-resizer/): Resize any image to exact pixels or a percentage, right in your browser. Your photos never leave your device — no signup, no watermark.
+- [Compress Image to 100KB, 50KB or Any Size Online Free](https://aleemurrehman803.github.io/DoKit/tools/image-compressor/): Compress JPG, PNG and WebP images to an exact file size — 50KB, 100KB, 200KB or your own target — privately in your browser.
+- [Image Converter Online Free – PNG to JPG, WebP to JPG, JPG to WebP](https://aleemurrehman803.github.io/DoKit/tools/image-converter/): Convert images between PNG, JPG, WebP and more in your browser. No uploads, no account, batch conversion included.
+- [Word Counter Online – Count Words, Characters & Reading Time](https://aleemurrehman803.github.io/DoKit/tools/word-counter/): Paste any text and instantly count words, characters, sentences and reading time. Free, private, no signup.
+- [Case Converter Online – Uppercase, Lowercase, Title Case, camelCase & snake_case](https://aleemurrehman803.github.io/DoKit/tools/case-converter/): Convert text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, snake_case and more in one click.
+- [Board Photo – Exam Photo Maker](https://aleemurrehman803.github.io/DoKit/tools/board-photo/): Make a board or university admission photo in the exact size and file size your board requires. Free, private, in your browser.
+- [Password Generator](https://aleemurrehman803.github.io/DoKit/tools/password-generator/): Generate strong passwords in your browser. Uses your device's secure random generator — nothing leaves this page.
+- [Unit Converter](https://aleemurrehman803.github.io/DoKit/tools/unit-converter/): Convert length, weight, temperature, volume and more between units. Pure maths, instant, in your browser.
+- [QR Code Generator](https://aleemurrehman803.github.io/DoKit/tools/qr-generator/): Create QR codes for links and text in your browser. Uses a built-in generator — nothing is uploaded.
+
+## Typing
+
+- [Free Typing Test – Check Your WPM & Accuracy, Plus Urdu Typing Lessons](https://aleemurrehman803.github.io/DoKit/typing/): Take a free typing test, check your WPM and accuracy, follow 44 step-by-step lessons — including Urdu typing with a phonetic keyboard.
+- [Typing Lessons – 44 Step-by-Step Lessons](https://aleemurrehman803.github.io/DoKit/typing/lessons/): All typing lessons from beginner keys to stories: practice each one in your browser, free.
+- [Typing Lesson – Practice](https://aleemurrehman803.github.io/DoKit/typing/lesson/): Practise a typing lesson with live feedback, WPM and accuracy. Progress saves on this device.
+- [Typing Practice – Free Practice Texts](https://aleemurrehman803.github.io/DoKit/typing/practice/): Practise typing with ready passages or your own text. Live WPM and accuracy; results save on this device.
+- [Typing Results – My History](https://aleemurrehman803.github.io/DoKit/typing/results/): Your typing test, lesson, practice and battle results, saved on this device only.
+- [Typing Progress – My Stats](https://aleemurrehman803.github.io/DoKit/typing/progress/): Your typing progress from on-device history: sessions, best WPM, average accuracy, lessons completed.
+- [Typing Dashboard](https://aleemurrehman803.github.io/DoKit/typing/dashboard/): Your typing hub: local progress summary and links to every typing page.
+- [Typing Games – Word Fall & Word Sprint](https://aleemurrehman803.github.io/DoKit/typing/games/): Learn while you play: Word Fall and Word Sprint typing games with best scores saved on this device.
+- [Urdu Typing – Phonetic Keyboard & Practice](https://aleemurrehman803.github.io/DoKit/typing/urdu/): Type Urdu with a standard phonetic layout: convert Roman text to Urdu, or practise with the on-screen keyboard.
+- [Typing FAQ](https://aleemurrehman803.github.io/DoKit/typing/faq/): How DoKit typing lessons, tests, practice and progress work — plain answers, no hype.
+- [Typing Certificate](https://aleemurrehman803.github.io/DoKit/typing/certificate/): How DoKit typing certificates work: what they show, and when issuing arrives.
+- [Verify Certificate](https://aleemurrehman803.github.io/DoKit/typing/verify/): Check a DoKit certificate ID against issued records.
+- [Typing Profile](https://aleemurrehman803.github.io/DoKit/typing/profile/): Your typing profile: local stats plus your account card.
+- [Games](https://aleemurrehman803.github.io/DoKit/games/): Typing games and TypeFight battles: play Word Fall, Word Sprint, or race in TypeFight.
+
+## TypeFight
+
+- [TypeFight – Typing Battles](https://aleemurrehman803.github.io/DoKit/typefight/): TypeFight turns typing into a sport: enter a room, race the same text, fastest and most accurate wins.
+- [TypeFight Battle – 60 Second Race](https://aleemurrehman803.github.io/DoKit/typefight/battle/): Race the same text for 60 seconds against bots. Live leaderboard, WPM and accuracy.
+- [TypeFight Wallet](https://aleemurrehman803.github.io/DoKit/typefight/wallet/): Your DoKit coin balance and history.
+- [Fighter Profile](https://aleemurrehman803.github.io/DoKit/typefight/profile/): Your TypeFight battle identity.
+- [Battle Certificates](https://aleemurrehman803.github.io/DoKit/typefight/certificate/): TypeFight battle certificates. Battle results show as practice certificates.
+- [Verify Battle Certificate](https://aleemurrehman803.github.io/DoKit/typefight/verify/): Check a TypeFight certificate against issued records.
+
+## Guides
+
+- [DoKit Guides – How to Resize, Compress & More](https://aleemurrehman803.github.io/DoKit/guides/): Practical how-tos for everyday image work: resize without losing quality, and compress to an exact KB target.
+- [How to Resize an Image Without Losing Quality (2026 Guide)](https://aleemurrehman803.github.io/DoKit/guides/how-to-resize-image-without-losing-quality/): Keep the aspect ratio locked, resize from the original, and pick the right format — JPG for photos, PNG for graphics, WebP for the web.
+- [How to Compress an Image to 100KB for Forms & Portals](https://aleemurrehman803.github.io/DoKit/guides/how-to-compress-image-to-100kb/): Forms and portals reject oversized photos. Learn how to hit an exact KB target without ruining quality — then do it free in your browser.
+- [How to convert text case](https://aleemurrehman803.github.io/DoKit/guides/convert-case/): Fix ALL-CAPS headings, lowercase SHOUTING, and format titles perfectly — six case styles, one click each.
+- [How to convert image formats](https://aleemurrehman803.github.io/DoKit/guides/convert-images/): Switch any image between JPG, PNG and WebP in seconds — smaller files, wider compatibility, zero uploads.
+- [How to count words](https://aleemurrehman803.github.io/DoKit/guides/count-words/): Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.
+
+## More
+
+- [DoKit Pricing – Free, Pro Rs 300, Team Rs 1500](https://aleemurrehman803.github.io/DoKit/pricing/): Start free. Pro is Rs 300 and Team is Rs 1500. Real prices only — no hidden charges.
+- [About DoKit – Free, Private Tools in Your Browser](https://aleemurrehman803.github.io/DoKit/about/): DoKit is a toolbox that lives in your browser — honest, free, and private. No ads, no tracking, no accounts standing between you and your work.
+- [Contact DoKit](https://aleemurrehman803.github.io/DoKit/contact/): Questions, ideas, bug reports, tool suggestions — every message is read personally. Email malikjalil014@gmail.com.
+- [Frequently Asked Questions](https://aleemurrehman803.github.io/DoKit/faq/): Everything you need to know about DoKit: free tools, privacy, accounts, payments, and support.
+- [Privacy Policy](https://aleemurrehman803.github.io/DoKit/privacy/): DoKit privacy policy: your files never leave your device. No tracking cookies, no advertising scripts.
+- [Terms of Service](https://aleemurrehman803.github.io/DoKit/terms/): Simple terms for the DoKit toolbox: free tools as-is, paid plans announced but not on sale yet.
+- [شرائط و ضوابط](https://aleemurrehman803.github.io/DoKit/terms-ur/): DoKit کی شرائط و ضوابط پڑھیں: آپ ہم سے کیا توقع رکھ سکتے ہیں، ہم آپ سے کیا توقع رکھتے ہیں، پلانز اور سکے، اور تنازعات کا حل۔
+- [Coming Soon](https://aleemurrehman803.github.io/DoKit/coming-soon/): New DoKit tools and features are announced here first. No invented launch dates.
+- [Wall of Love](https://aleemurrehman803.github.io/DoKit/wall-of-love/): What people say about DoKit. Share your own story — submissions are reviewed before they appear.
+- [Changelog](https://aleemurrehman803.github.io/DoKit/changelog/): What changed in DoKit, newest first.
+- [System Status](https://aleemurrehman803.github.io/DoKit/status/): Is DoKit working? Current status of the site, tools and upcoming services.
+- [API Documentation](https://aleemurrehman803.github.io/DoKit/api/): The planned DoKit API: endpoints, authentication and rate limits. Live access is Firestore-direct on the free Spark plan.
+- [Design System](https://aleemurrehman803.github.io/DoKit/design-system/): DoKit's design tokens and components: colours, type and the building blocks every page shares.
