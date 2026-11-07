@@ -883,9 +883,17 @@ function dokiMicStop(){
   // their <main> in once on load. Home is excluded (it has the hero
   // canvas + its own .reveal cards). Reduced-motion is handled by
   // the existing global rule (animation:none), not by JS.
+  // T047 (P5-DES-23): the full .4s fade replayed on EVERY non-home
+  // navigation, which felt slow/repetitive. The first page of the
+  // session keeps the full fade; later pages get the .2s variant.
   try {
     var mn = document.querySelector('main');
-    if (mn && !document.getElementById('hero-canvas')) { mn.classList.add('dk-enter'); }
+    if (mn && !document.getElementById('hero-canvas')) {
+      var entered = false;
+      try { entered = sessionStorage.getItem('dokit_entered') === '1'; } catch (e) {}
+      mn.classList.add(entered ? 'dk-enter-short' : 'dk-enter');
+      try { sessionStorage.setItem('dokit_entered', '1'); } catch (e) {}
+    }
   } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // Dark/light theme: data-theme on <html>, saved as dokit_theme.
   // Default is dark (the approved design); the button shows the

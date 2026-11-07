@@ -500,6 +500,10 @@ body{transition:background-color .15s,color .15s}
    Reduced-motion kills it via the existing global rule. */
 @keyframes dkpagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 main.dk-enter{animation:dkpagein .4s ease-out}
+/* T047 (P5-DES-23): same entrance, half the time — used on the
+ * 2nd+ page of a session so navigation feels instant. The global
+ * reduced-motion rule still kills both variants. */
+main.dk-enter-short{animation:dkpagein .2s ease-out}
 /* Nav dropdowns [117–118]: profile-menu look/values, left-aligned
    under the parent link. The parent <a> keeps its link + active
    behaviour; the caret toggles the menu (see bindNavDrop in main.js:
