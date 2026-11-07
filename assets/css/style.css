@@ -25,6 +25,8 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .btn.amber:hover{box-shadow:0 10px 24px rgba(255,197,49,.4)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)!important}
 .btn.ghost:hover{border-color:var(--violet);color:var(--amber)!important;box-shadow:none}
+/* T001 (P5-VIS-01): login/signup form buttons span the full form width, matching the inputs */
+#acct-login-form .btn,#acct-signup-form .btn{display:block;width:100%;margin:0 0 10px}
 .hero{position:relative;overflow:hidden;padding:72px 0 56px}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%}
 .glow{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
@@ -57,7 +59,7 @@ h3{font-size:21px;margin:22px 0 8px}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--amber);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
 .toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
 label{font-weight:700;display:block;margin:14px 0 6px}
-input[type=text],input[type=number],input[type=email],select,textarea{width:100%;background:#12101F;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
+input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{width:100%;background:#12101F;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
 input[type=range]{width:100%}
@@ -149,7 +151,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 [data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470}
 [data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: #7a5f00; }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
-[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
+[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
 /* PWA install banner + site announcement banner (both hidden unless set). */
 .install-banner,.site-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;flex-wrap:wrap}
 /* Sticky CTA + dismissible tip banner on the home page. */
@@ -290,9 +292,9 @@ body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 /* F2 [106] shared hover transition: the existing .15s pattern, extended
    to every hoverable that snapped at 0s. .btn/.card/.reveal already
    have their own transitions and are deliberately NOT listed here. */
-.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
+.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
 /* F3 [107] form-field hover (focus behaviour untouched). */
-input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,select:hover,textarea:hover{border-color:var(--amber)}
+input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[type=password]:hover,select:hover,textarea:hover{border-color:var(--amber)}
 /* F4 [108] active nav-link hover: the violet ring on violet was
    invisible — an amber ring is visible on violet. Rows inside a
    dropdown keep the menu look even when the active-marker lands on
