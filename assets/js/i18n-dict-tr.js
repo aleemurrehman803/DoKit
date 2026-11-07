@@ -24,6 +24,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1396": "Yeni bir şifre seçin",
     "rsv_1397": "Bir şifre seçin",
     "rsv_1398": "Referanslarla coin kazanın",
+    "rsv_1399": "Bildirimler yalnızca bu cihazda saklanır.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

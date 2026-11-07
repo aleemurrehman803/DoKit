@@ -24,6 +24,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1396": "Choisissez un nouveau mot de passe",
     "rsv_1397": "Choisissez un mot de passe",
     "rsv_1398": "Gagnez des pièces grâce aux parrainages",
+    "rsv_1399": "Les notifications sont stockées uniquement sur cet appareil.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Couleur unie",
     "rsv_1372": "Pivoter",

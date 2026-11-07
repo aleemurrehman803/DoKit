@@ -24,6 +24,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1396": "Escolha uma nova senha",
     "rsv_1397": "Escolha uma senha",
     "rsv_1398": "Ganhe moedas com indicações",
+    "rsv_1399": "As notificações são armazenadas somente neste dispositivo.",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",
