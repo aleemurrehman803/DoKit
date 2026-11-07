@@ -20,9 +20,44 @@ try {
   if (new URLSearchParams(window.location.search).get('dkdebug') === '1') { window.DK_DEBUG = true; }
 } catch (e) { /* URL parsing must never break boot */ }
 var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// T030 (P5-VIS-07): one header menu open at a time. Each menu binder
+// registers its OWN existing close function here; closeAllMenus(except)
+// runs every other registered closer, so opening any menu closes all the
+// rest — no second close mechanism, and Esc / outside-click / focus-return
+// keep calling the same closers as before. The mobile nav panel
+// (#nav-links, a class toggle rather than a hidden menu) is closed the
+// same way. An ancestor of the menu being opened is never closed: the
+// profile-menu language menu (#langMenu) lives inside #profMenu, so
+// opening it must leave the profile menu open. Exposed on window so
+// i18n.js (loaded later, dynamically) can register the language menus
+// and call it too.
+var dkMenuRegistry = [];
+function dkRegisterMenu(menuId, closeFn){
+  if (!menuId || typeof closeFn !== 'function') { return; }
+  dkMenuRegistry.push({ menuId: menuId, close: closeFn });
+}
+function dkCloseNavLinks(){
+  var l = document.getElementById('nav-links'), t = document.getElementById('nav-toggle');
+  if (l && l.classList.contains('open')) {
+    l.classList.remove('open');
+    if (t) { t.setAttribute('aria-expanded', 'false'); }
+  }
+}
+function closeAllMenus(exceptMenuId){
+  var exceptEl = exceptMenuId ? document.getElementById(exceptMenuId) : null;
+  dkMenuRegistry.forEach(function (entry) {
+    if (entry.menuId === exceptMenuId) { return; }
+    var el = document.getElementById(entry.menuId);
+    if (exceptEl && el && el.contains(exceptEl)) { return; } // ancestor: keep open
+    try { entry.close(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  });
+  if (exceptMenuId !== 'nav-links') { dkCloseNavLinks(); }
+}
+window.dkRegisterMenu = dkRegisterMenu;
+window.dkCloseAllMenus = closeAllMenus;
 // mobile nav
 var t = document.getElementById('nav-toggle'), l = document.getElementById('nav-links');
-if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); }); }
+if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) { closeAllMenus('nav-links'); } }); }
 // active nav
 try{
   var here = new URL(window.location.href).pathname.replace(/\/index\.html$/, '/');
@@ -692,26 +727,33 @@ function dokiMicStop(){
   function bindMenu(btnId, menuId, onPick, returnFocus){
     var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
     if (!btn || !menu) { return; }
+    // T030 (P5-VIS-07): the one close path for this menu — reused by the
+    // outside-click closer, the Escape closer and the central registry
+    // (closeAllMenus), so every close behaves identically.
+    function closeThis(){
+      if (!menu.hidden) { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    // T030: register with the central "one menu open at a time" registry.
+    if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, closeThis); }
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       // Re-open a menu that is mid-close instead of letting it vanish.
       if (menu.classList.contains('closing')) {
+        closeAllMenus(menuId);
         dkCancelClose(menu); menu.hidden = false;
         btn.setAttribute('aria-expanded', 'true'); return;
       }
       var willOpen = menu.hidden;
-      if (willOpen) { dkCancelClose(menu); menu.hidden = false; }
-      else { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      // T030: opening this menu closes every other menu first.
+      if (willOpen) { closeAllMenus(menuId); dkCancelClose(menu); menu.hidden = false; }
+      else { closeThis(); }
       btn.setAttribute('aria-expanded', String(willOpen));
     });
-    document.addEventListener('click', function () {
-      if (!menu.hidden) { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
-      btn.setAttribute('aria-expanded', 'false');
-    });
+    document.addEventListener('click', closeThis);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !menu.hidden) {
-        dkAnimateClose(menu, function(){ menu.hidden = true; });
-        btn.setAttribute('aria-expanded', 'false');
+        closeThis();
         if (returnFocus) { btn.focus(); }
       }
     });
@@ -770,13 +812,18 @@ function dokiMicStop(){
         menu = document.getElementById(menuId);
     if (!drop || !caret || !menu) { return; }
     var pinned = false;
-    function open(){ dkCancelClose(menu); menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
+    // T030 (P5-VIS-07): opening this dropdown closes every other menu
+    // first (hover-open, caret click and mid-close re-open all flow
+    // through open()).
+    function open(){ closeAllMenus(menuId); dkCancelClose(menu); menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
     function close(){
       // DES-21: only the visual hide is delayed (150ms fade); the state
       // (aria-expanded, pinned) changes immediately, as before.
       if(!menu.hidden){ dkAnimateClose(menu, function(){ menu.hidden = true; }); }
       caret.setAttribute('aria-expanded', 'false'); pinned = false;
     }
+    // T030: register this dropdown's existing close with the central registry.
+    if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, close); }
     // WHY the three-way click: a real mouse click always hovers
     // first, so hover-open runs before the click handler. A plain
     // toggle would therefore shut the menu the hover just opened

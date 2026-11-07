@@ -298,14 +298,23 @@
         } else { menu.hidden = true; }
         btn.setAttribute('aria-expanded', 'false');
       }
+      // T030 (P5-VIS-07): register this menu's existing close with the
+      // central registry (main.js) so opening any other menu closes it.
+      if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, close); }
       btn.addEventListener('click', function (ev) {
         ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
         // DES-21: a click on a menu that is mid-close re-opens it.
         if (menu.classList.contains('closing') && typeof window.dkCancelClose === 'function') {
+          // T030: re-opening still leaves only one menu open.
+          if (typeof window.dkCloseAllMenus === 'function') { window.dkCloseAllMenus(menuId); }
           window.dkCancelClose(menu); menu.hidden = false;
           btn.setAttribute('aria-expanded', 'true'); return;
         }
         var willOpen = menu.hidden;
+        // T030: opening this menu closes every other menu first. (The
+        // profile-menu language menu is nested inside #profMenu; the
+        // central closer never closes an ancestor, so it keeps working.)
+        if (willOpen && typeof window.dkCloseAllMenus === 'function') { window.dkCloseAllMenus(menuId); }
         menu.hidden = !willOpen;
         btn.setAttribute('aria-expanded', String(willOpen));
       });
