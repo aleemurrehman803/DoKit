@@ -42,7 +42,7 @@ typing/             TypeMaster suite (self-contained legacy module)
 css/                tokens.css (design tokens), hub.css (component library)
 js/                 i18n.js (DKI18N), ui.js (DKUI Shared UI API v1.0.0),
                     tools-data.js, assistant.js, assistant-kb.js, pages/
-assets/             logo.svg, icon.svg, og-cover.svg
+assets/             logo.svg, icon.svg, og-cover.jpg
 ```
 
 **Module rules** (bind every contributor):
@@ -59,8 +59,9 @@ assets/             logo.svg, icon.svg, og-cover.svg
 
 ## Assets note
 
-- `assets/og-cover.svg` (1200×630) is the designed social cover; it is
-  converted to PNG at publish time (SVG is the source of truth).
+- `assets/og-cover.jpg` (1200×630) is the live social cover used by all pages' OG tags.
+  (The former `assets/og-cover.svg` was deleted 8 Nov 2026 — T062, P5-RTE-12 — after a
+  full-tree check found zero references to it; a backup copy is kept outside the repo.)
 - `assets/icon.svg` is the PWA master icon; `icon-192.png` / `icon-512.png`
   referenced by the manifest are generated from it at publish time.
 
