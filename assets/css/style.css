@@ -44,6 +44,7 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .navtoggle{display:none;margin-left:auto;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
 .btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:var(--on-accent)!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(var(--violet-rgb),.45);color:var(--on-accent)}
+.btn:active{transform:translateY(0)}
 .btn.amber{background:var(--amber);color:var(--ink)!important}
 .btn.amber:hover{box-shadow:0 10px 24px rgba(255,197,49,.4)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)!important}
@@ -82,6 +83,7 @@ h3{font-size:21px;margin:22px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
 .card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
+.card:active{transform:translateY(-1px)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--amber);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
@@ -129,8 +131,9 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
 .faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:var(--pad-compact) var(--pad-card);margin:10px 0}
 .faq summary{font-weight:700;cursor:pointer}
-#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5)}
+#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5);transition:transform .15s}
 #chat-fab:hover{transform:translateY(-2px)}
+#chat-fab:active{transform:translateY(0)}
 /* T031 (P5-VIS-08): panel widened 340 -> 380px (desktop) so the chat
  * input gets a readable share; max-width keeps small screens fitting. */
 #chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:380px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
@@ -522,9 +525,10 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 .app-grid .app-tile:nth-child(8){animation-delay:.23s}
 .app-grid .app-tile:nth-child(9){animation-delay:.26s}
 @keyframes appTileIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
-.app-tile{border:1px solid transparent}
+.app-tile{border:1px solid transparent;transition:transform .18s ease}
 .app-tile svg{transition:transform .18s ease}
 .app-tile:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.app-tile:active{transform:translateY(-1px)}
 .app-tile:hover svg{transform:scale(1.18)}
 /* ---- Oct 26 footer base: centered + entrance animation + hover ---- */
 .footbase{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);position:relative;animation:footBaseIn .6s ease-out}
@@ -556,10 +560,12 @@ transition:none!important}`), so these animations are covered. */
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
 .ref-grid .ref-stat:nth-child(4){animation-delay:.14s}
 .ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.ref-stat:active{transform:translateY(-1px)}
 .ref-stat b{color:var(--amber);font-size:1.25em}
 @keyframes refFadeIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .ref-card{animation:refFadeIn .4s ease-out backwards}
 .ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.ref-card:active{transform:translateY(-1px)}
 .ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
 .ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
 .ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:12px 0;animation:refFadeIn .4s ease-out backwards}
