@@ -1294,7 +1294,7 @@ window.DK_I18N_DICT["de"] = {
     "about.stat_langs": "Sprachen",
     "about.stat_private": "Privat – Dateien werden nie hochgeladen",
     "about2.b1d": "Ihre Dateien werden auf Ihrem Gerät verarbeitet und nirgendwohin gesendet. Keine Tracking-Skripte, keine Werbe-Cookies, nichts, dem Sie widersprechen müssten – denn es gibt nichts, dem Sie zustimmen müssten.",
-    "about2.b2d": "Jedes Basis-Tool ist kostenlos, ohne Nutzungslimits und ohne Wasserzeichen. Optionale Pro-Pläne finanzieren die Entwicklung – sie nehmen Ihnen nie weg, was kostenlos war.",
+    "about2.b2d": "Jedes Basis-Tool ist kostenlos, ohne Nutzungslimits und ohne Wasserzeichen. Optionale Pro-Pläne werden die Entwicklung finanzieren – sie nehmen Ihnen nie weg, was kostenlos war.",
     "about2.b3d": "Gebaut für Studierende, Freelancer und Lehrkräfte in Pakistan und weltweit – in 10 Sprachen, lauffähig auf jedem modernen Smartphone oder Computer.",
     "about2.believe_t": "Woran wir glauben",
     "about2.founder_t": "Der Gründer",

@@ -1294,7 +1294,7 @@ window.DK_I18N_DICT["tr"] = {
     "about.stat_langs": "Diller",
     "about.stat_private": "Özel — dosyalarınız asla yüklenmez",
     "about2.b1d": "Dosyalarınız cihazınızda işlenir ve hiçbir yere gönderilmez. Takip betiği yok, reklam çerezi yok, vazgeçilecek bir şey yok — çünkü dahil olunacak bir şey de yok.",
-    "about2.b2d": "Her temel araç, kullanım sınırı ve filigran olmadan ücretsizdir. İsteğe bağlı Pro planlar geliştirmeyi finanse eder — ücretsiz olanı asla elinizden almaz.",
+    "about2.b2d": "Her temel araç, kullanım sınırı ve filigran olmadan ücretsizdir. İsteğe bağlı Pro planlar geliştirmeyi finanse edecek — ücretsiz olanı asla elinizden almaz.",
     "about2.b3d": "Pakistan'da ve dünya genelinde öğrenciler, serbest çalışanlar ve öğretmenler için hazırlandı — 10 dilde, her modern telefon ve bilgisayarda çalışır.",
     "about2.believe_t": "Neye inanıyoruz",
     "about2.founder_t": "Kurucu",

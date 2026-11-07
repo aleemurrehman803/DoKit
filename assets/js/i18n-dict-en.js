@@ -1289,7 +1289,7 @@ window.DK_I18N_DICT["en"] = {
     "about.stat_langs": "Languages",
     "about.stat_private": "private — files never uploaded",
     "about2.b1d": "Your files are processed on your device and never sent anywhere. No tracking scripts, no advertising cookies, nothing to opt out of — because there's nothing to opt into.",
-    "about2.b2d": "Every basic tool is free with no usage caps and no watermarks. Optional Pro plans fund development — they never take away what was free.",
+    "about2.b2d": "Every basic tool is free with no usage caps and no watermarks. Optional Pro plans will fund development — they never take away what was free.",
     "about2.b3d": "Built for students, freelancers, and teachers in Pakistan and worldwide — in 10 languages, working on any modern phone or computer.",
     "about2.believe_t": "What we believe",
     "about2.founder_t": "The founder",

@@ -1294,7 +1294,7 @@ window.DK_I18N_DICT["es"] = {
     "about.stat_langs": "Idiomas",
     "about.stat_private": "Privado — archivos nunca subidos",
     "about2.b1d": "Tus archivos se procesan en tu dispositivo y nunca se envían a ningún lado. Sin scripts de rastreo, sin cookies publicitarias, nada de qué excluirse — porque no hay nada a qué suscribirse.",
-    "about2.b2d": "Toda herramienta básica es gratis sin límites de uso ni marcas de agua. Los planes Pro opcionales financian el desarrollo — nunca quitan lo que era gratis.",
+    "about2.b2d": "Toda herramienta básica es gratis sin límites de uso ni marcas de agua. Los planes Pro opcionales financiarán el desarrollo — nunca quitan lo que era gratis.",
     "about2.b3d": "Hecho para estudiantes, freelancers y maestros en Pakistán y todo el mundo — en 10 idiomas, funciona en cualquier teléfono o computadora moderna.",
     "about2.believe_t": "En lo que creemos",
     "about2.founder_t": "El fundador",

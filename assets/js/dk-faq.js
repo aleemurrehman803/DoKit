@@ -14,7 +14,7 @@ window.DKFAQ = [
  },
  {
   "q": "Is DoKit really free?",
-  "a": "Yes. Every basic tool is free with no account, no watermarks, and no usage caps on normal use. Free basic tools will never be taken away or downgraded. Optional Pro plans fund development — they never take away what was free."
+  "a": "Yes. Every basic tool is free with no account, no watermarks, and no usage caps on normal use. Free basic tools will never be taken away or downgraded. Optional Pro plans will fund development — they never take away what was free."
  },
  {
   "q": "Do I need an account to use DoKit?",
