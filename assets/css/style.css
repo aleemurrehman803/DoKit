@@ -134,6 +134,14 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 /* ---- Phase 2b additions (one place — shared by all rebuilt pages) ---- */
 /* Admin tabs: buttons in a wrapping row; panels hidden until opened. */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+/* DES-15: admin tab buttons had no CSS at all (native OS buttons, and the
+   .active class admin.js toggles had no visible state). Styled as pills
+   matching .chip; .active copies the established .chip.active pattern
+   (violet background, white text) so the selected tab is obvious. */
+.tab-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.tab-btn:hover{border-color:var(--violet)}
+.tab-btn.active{background:var(--violet);color:#fff;border-color:var(--violet)}
+.tab-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* P4-1 (Oct 27): admin.js toggles .open on [data-apanel] panels, but no
    panel rule existed, so the inert `hidden` class hid nothing and all
    panels rendered stacked. These two rules are the whole fix. */
