@@ -21,6 +21,8 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1393": "Depósitos, saques e pagamentos Stripe estão encerrados por decisão do proprietário.",
     "rsv_1394": "planejado — ainda não está no ar",
     "rsv_1395": "Termos (urdu)",
+    "rsv_1396": "Escolha uma nova senha",
+    "rsv_1397": "Escolha uma senha",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",
