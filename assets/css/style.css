@@ -504,3 +504,9 @@ transition:none!important}`), so these animations are covered. */
 .foot-lang button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer}
 .foot-lang button:hover{border-color:var(--amber);color:var(--amber)}
 .foot-lang button[aria-current="true"]{color:var(--amber);border-color:var(--amber);font-weight:700}
+
+/* P5-VIS-03 (T026): the footer logo lost its gap — .footgrid a{display:block}
+ * (specificity 0,1,1) beats .logo{display:flex;gap:10px} (0,1,0), so the "D"
+ * box touched the "DoKit" wordmark (measured gap 0px vs 10px in the header).
+ * Restore flex + the same 10px gap for the footer logo only. */
+footer.site .logo{display:flex;align-items:center;gap:10px}
