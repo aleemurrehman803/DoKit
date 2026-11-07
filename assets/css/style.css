@@ -60,6 +60,11 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .eyebrow{color:var(--amber);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:13px}
 .hero h1{font-size:clamp(40px,6vw,68px);line-height:1.05;margin:10px 0 14px}
 .hero h1 .grad{background:linear-gradient(90deg,var(--violet2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* T053 (P5-DES-29): fallback if background-clip:text is unsupported
+ * (else color:transparent leaves "you'll ever need" invisible).
+ * The `or` form keeps the gradient in prefixed-only browsers;
+ * light theme uses --gold-text (amber is unreadable on light). */
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){.hero h1 .grad{color:var(--amber)}[data-theme="light"] .hero h1 .grad{color:var(--gold-text)}}
 .hero p.lead{font-size:20px;color:var(--muted);max-width:640px}
 .type-line{font-size:20px;margin:18px 0}
 #type-rotator{color:var(--amber);font-weight:800;border-right:3px solid var(--amber);padding-right:4px}
