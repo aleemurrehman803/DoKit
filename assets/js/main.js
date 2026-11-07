@@ -698,6 +698,7 @@ function dokiMicStop(){
           if (typeof window.syncTimeline === 'function') { window.syncTimeline(); }
           if (typeof window.syncContinue === 'function') { window.syncContinue(); }
           if (typeof window.syncLevel === 'function') { window.syncLevel(); }
+          if (typeof window.syncTheme === 'function') { window.syncTheme(); }
           if (typeof window.syncProblemKeys === 'function') { window.syncProblemKeys(); }
           if (typeof window.syncShareMsg === 'function') { window.syncShareMsg(); }
           if (typeof window.syncRzBg === 'function') { window.syncRzBg(); }
@@ -918,6 +919,14 @@ function dokiMicStop(){
       btn.setAttribute('aria-label', label);
     }
     apply(current());
+    /* T084 (P5-VIS-09): the label span no longer carries data-i18n — the
+     * engine rewrote this theme-managed label to rsv_1019 on every apply,
+     * so in light mode it read "Switch to light mode" while the aria-label
+     * said "Switch to dark mode". Re-apply on language change so the label
+     * stays translated, and expose syncTheme for the engine-load callback
+     * below (main.js runs before the dict arrives). */
+    window.syncTheme = function () { apply(current()); };
+    document.addEventListener('dokit:langchange', function () { apply(current()); });
     btn.addEventListener('click', function (e) {
       // Stop here so the profile menu's document-click closer does
       // not shut the menu the moment the theme is switched.
