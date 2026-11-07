@@ -280,7 +280,23 @@ body.has-sticky-cta{padding-bottom:84px}
 .chart-wrap{overflow-x:auto}
 .chart-wrap canvas{max-width:100%}
 /* Certificates: print only the certificate, never the chrome. */
-@media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
+@media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print,.dkf-sticky-action,.install-banner,.site-banner,.tour-card,.sticky-cta,#hero-canvas{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
+/* T040 (P5-DES-14): print light-reset — dark surfaces print white with
+ * dark text; muted text prints dark grey; amber text prints dark gold
+ * (readable on white, keeps the gold identity); the gradient hero word
+ * prints solid black (transparent gradient text prints invisible). */
+@media print{
+body{background:#fff!important;color:#000!important}
+a{color:#000!important}
+.card,.toolbox,.result,.passage,.note,.faq details,.ref-stat,.ref-level,.saas-steps,.key,.chip,.tag,.float-card{background:#fff!important}
+.card,.toolbox,.result,.passage,.faq details,.ref-stat,.ref-level,.saas-steps,.key,.chip,.float-card{color:#000!important}
+.muted,.lede,.card p,.note,.hero p.lead,.stats span,.ref-legend{color:#333!important}
+.note b{color:#000!important}
+.eyebrow,.tag,#type-rotator,.ref-stat b,.sample-badge{color:#8a6d00!important}
+.hero h1 .grad{background:none!important;color:#000!important;-webkit-background-clip:initial!important;background-clip:initial!important}
+input,select,textarea{background:#fff!important;color:#000!important}
+.btn,.btn.ghost,.btn.amber{background:#fff!important;color:#000!important;border:1.5px solid #666!important}
+}
 /* Typing certificate premium sheet (restored historical design; sheet-scoped only). */
 /* DES-06: certificate typography — the premium sheet inherits the body's
  * system-ui stack, so it reads as a plain page. Serif stack (Georgia on
