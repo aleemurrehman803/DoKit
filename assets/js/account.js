@@ -1095,7 +1095,7 @@
       var f = el.querySelector('form');
       if (f) { f.addEventListener('submit', onSubmit); }
     }
-    build('adm-announce', '<form class="toolbox"><label>Announcement text</label><input id="adm-ann-text" type="text" maxlength="200"><p><button class="btn" type="submit">Save announcement</button></p></form>', function (ev) {
+    build('adm-announce', '<form class="toolbox"><label for="adm-ann-text">Announcement text</label><input id="adm-ann-text" type="text" maxlength="200"><p><button class="btn" type="submit">Save announcement</button></p></form>', function (ev) {
       ev.preventDefault();
       var v = $('adm-ann-text') ? $('adm-ann-text').value.trim() : '';
       DKA.db().collection('site_settings').doc('announcement').set({text: v, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}).then(function () {
@@ -1109,7 +1109,7 @@
         showMsg('adm-msg', (window.dkT ? window.dkT('acct_saved', 'Saved.') : 'Saved.'), false);
       }).catch(function (err) { showMsg('adm-msg', friendlyError(err), true); });
     });
-    build('adm-pay', '<form class="toolbox"><label>Easypaisa</label><input id="adm-pay-easy" type="text"><label>JazzCash</label><input id="adm-pay-jazz" type="text"><label>Bank account</label><input id="adm-pay-bank" type="text"><label>USDT</label><input id="adm-pay-usdt" type="text"><p><button class="btn" type="submit">Save payment accounts</button></p></form>', function (ev) {
+    build('adm-pay', '<form class="toolbox"><label for="adm-pay-easy">Easypaisa</label><input id="adm-pay-easy" type="text"><label for="adm-pay-jazz">JazzCash</label><input id="adm-pay-jazz" type="text"><label for="adm-pay-bank">Bank account</label><input id="adm-pay-bank" type="text"><label for="adm-pay-usdt">USDT</label><input id="adm-pay-usdt" type="text"><p><button class="btn" type="submit">Save payment accounts</button></p></form>', function (ev) {
       ev.preventDefault();
       var g = function (id) { var e = $(id); return e ? e.value.trim() : ''; };
       DKA.db().collection('config').doc('payments').set({easypaisa: g('adm-pay-easy'), jazzcash: g('adm-pay-jazz'), bank: g('adm-pay-bank'), usdt: g('adm-pay-usdt'), updatedAt: firebase.firestore.FieldValue.serverTimestamp()}).then(function () {
@@ -1134,20 +1134,24 @@
         }).catch(function (err) { showMsg('adm-msg', friendlyError(err), true); });
       });
     }
+    /* T018 (P5-UX-04): every built label carries for= matching its input's
+     * id, so clicking a label focuses the field and screen readers announce
+     * the label with it. (The maintenance checkbox label already wraps its
+     * input — implicit association — and is left as it is.) */
     addForm('adm-comp', 'competitors',
-      '<label>Name</label><input name="cname" type="text" required><label>Note</label><input name="cnote" type="text">',
+      '<label for="adm-cname">Name</label><input id="adm-cname" name="cname" type="text" required><label for="adm-cnote">Note</label><input id="adm-cnote" name="cnote" type="text">',
       function (f) { return {name: f.cname.value.trim(), note: f.cnote.value.trim()}; },
       'adm-competitors', function () { admLoad(currentUser); });
     addForm('adm-ticket', 'tickets',
-      '<label>Title</label><input name="tname" type="text" required>',
+      '<label for="adm-tname">Title</label><input id="adm-tname" name="tname" type="text" required>',
       function (f) { return {title: f.tname.value.trim(), status: 'open'}; },
       'adm-tickets', function () { admLoad(currentUser); });
     addForm('adm-changelog', 'changelog',
-      '<label>Entry</label><input name="xtext" type="text" required>',
+      '<label for="adm-xtext">Entry</label><input id="adm-xtext" name="xtext" type="text" required>',
       function (f) { return {text: f.xtext.value.trim(), published: true}; },
       'adm-changelog', function () { admLoad(currentUser); });
     addForm('adm-exp', 'experiments',
-      '<label>Name</label><input name="ename" type="text" required>',
+      '<label for="adm-ename">Name</label><input id="adm-ename" name="ename" type="text" required>',
       function (f) { return {name: f.ename.value.trim()}; },
       'adm-exp', function () { admLoad(currentUser); });
   }
