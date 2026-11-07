@@ -116,6 +116,8 @@
   // must say so visibly instead of showing a broken/blank QR. The note
   // element is created once and reused across re-renders; it sits after
   // the QR paragraph so the verification link stays visible below it.
+  // The QR paragraph itself is hidden on failure (T067, P5-RTE-17) so no
+  // broken-image icon remains; setSheetQr re-shows it on the next render.
   function qrFailText() {
     return (window.dkT ? window.dkT('cert_qr_fail', 'QR code could not load. Use the verification link below to verify this certificate.') : 'QR code could not load. Use the verification link below to verify this certificate.');
   }
@@ -130,6 +132,10 @@
     }
     note.textContent = qrFailText();
     note.hidden = false;
+    // T067 (P5-RTE-17): hide the QR block itself so no broken-image icon
+    // remains — the note (inserted after the block) and the verify link
+    // below it stay visible. setSheetQr re-shows the block on re-render.
+    img.parentNode.hidden = true;
   }
   function hideQrFail() {
     var note = document.getElementById('cert-qr-note');
@@ -138,6 +144,8 @@
   function setSheetQr(img, url) {
     if (!img) { return; }
     hideQrFail();
+    // T067: re-show the QR block (a previous failed load may have hidden it).
+    if (img.parentNode) { img.parentNode.hidden = false; }
     img.onerror = function () { showQrFail(img); };
     img.onload = function () { hideQrFail(); };
     img.src = url;
