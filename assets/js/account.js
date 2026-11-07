@@ -908,6 +908,12 @@
   function admLoad(user){
     var g = $('adm-gate');
     if (g) { g.hidden = true; }
+    /* P5-UX-29 (T025): the "no real data yet" preview note is stale once
+     * an admin is confirmed — hide it as soon as admLoad runs, before the
+     * async list reads resolve. Guests and non-admins never reach admLoad,
+     * so they keep the reworded sign-in guidance in the note. */
+    var pn = $('adm-preview-note');
+    if (pn) { pn.hidden = true; }
     if (!DKA.db()) { return; }
     var db = DKA.db();
     // Counts (admin list reads; a failure shows the generic error note in the section).
