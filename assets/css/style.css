@@ -7,8 +7,12 @@
  * T032 (P5-DES-02): --violet-deep is the .btn / #chat-fab gradient
  * end (was literal #4B2FD6); --on-accent is white text on solid
  * violet/good/blue surfaces, white in both themes (light --text
- * is dark ink, so it cannot be used for button text). */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241}
+ * is dark ink, so it cannot be used for button text).
+ * T038 (P5-DES-12): card padding steps — --pad-card 20px (standard
+ * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
+ * 24px (spacious form/tool panels). Every card-family surface uses
+ * one of these three; the unexplained 16px/18px values are gone. */
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--captcha:#2e2a5e;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -76,7 +80,7 @@ h1{font-size:36px;line-height:1.15;margin:0 0 12px}
 h2{font-size:32px;line-height:1.2;margin:0 0 14px}
 h3{font-size:21px;margin:22px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;transition:transform .15s,border-color .15s,box-shadow .15s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
 .card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
@@ -94,17 +98,17 @@ h3{font-size:21px;margin:22px 0 8px}
 .ml-sm{margin-left:8px}
 .row-flex{display:flex;gap:8px;flex-wrap:wrap}
 .mw-100{max-width:100%}
-.toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+.toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:var(--pad-roomy)}
 label{font-weight:700;display:block;margin:14px 0 6px}
 input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
 input[type=range]{width:100%}
 .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:200px}
-.note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:14px 18px;color:var(--muted)}
+.note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:var(--pad-compact) var(--pad-card);color:var(--muted)}
 .note b{color:var(--text)}
 .ok{color:var(--good);font-weight:700}.err{color:var(--bad);font-weight:700}
-.result{margin-top:16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px}
+.result{margin-top:16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .result img,.preview img{max-width:100%;height:auto;border-radius:10px}
 .filelist{list-style:none;padding:0}.filelist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden}
@@ -116,7 +120,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .footgrid a{color:var(--muted);text-decoration:none;display:block;padding:3px 0}
 .footgrid a:hover{color:var(--amber);text-decoration:underline}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
-.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:10px 0}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:var(--pad-compact) var(--pad-card);margin:10px 0}
 .faq summary{font-weight:700;cursor:pointer}
 #chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5)}
 #chat-fab:hover{transform:translateY(-2px)}
@@ -155,7 +159,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .chip:hover{border-color:var(--amber);color:var(--amber)}
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
-.passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:18px}
+.passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
 .statnum{font-size:26px;font-weight:800}
 /* T027 (P5-VIS-04) — progress stats row: flex with a real gap between the
@@ -523,7 +527,7 @@ prefers-reduced-motion (verified: `*{animation:none!important;
 transition:none!important}`), so these animations are covered. */
 .ref-section{margin-top:28px}
 .ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
+.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
 .ref-grid .ref-stat:nth-child(1){animation-delay:.02s}
 .ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
@@ -535,7 +539,7 @@ transition:none!important}`), so these animations are covered. */
 .ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
 .ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
-.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;animation:refFadeIn .4s ease-out backwards}
+.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:12px 0;animation:refFadeIn .4s ease-out backwards}
 .ref-level:nth-of-type(1){animation-delay:.05s}
 .ref-level:nth-of-type(2){animation-delay:.10s}
 .ref-level:nth-of-type(3){animation-delay:.15s}
