@@ -488,3 +488,19 @@ transition:none!important}`), so these animations are covered. */
 .ref-level:nth-of-type(3){animation-delay:.15s}
 .ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
 .ref-legend{color:var(--muted)}
+
+/* P5-UX-15 (T021): surface the language switcher outside the profile menu.
+ * .lang-hdr = compact globe button in the header (desktop only — hidden
+ * at/below 768px, where header space is tight); .foot-lang = language row
+ * in the footer (all viewports, so mobile guests can find it too). Both
+ * call the same DKI18N.setLang() switcher as the profile-menu selector —
+ * no second switching implementation. */
+.lang-hdr{position:relative}
+.lang-hdr-btn{width:auto;padding:0 12px;border-radius:99px;font-size:14px;font-weight:700;gap:5px}
+.lang-hdr-btn .lang-hdr-code{font-size:13px;letter-spacing:.02em}
+@media(max-width:768px){.lang-hdr{display:none}}
+.foot-lang{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:24px 0 0;padding-top:18px;border-top:1px solid var(--line)}
+.foot-lang .foot-lang-label{color:var(--muted);font-size:13px;margin-right:2px}
+.foot-lang button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer}
+.foot-lang button:hover{border-color:var(--amber);color:var(--amber)}
+.foot-lang button[aria-current="true"]{color:var(--amber);border-color:var(--amber);font-weight:700}

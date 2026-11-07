@@ -168,6 +168,17 @@
    * selected. WHY a separate function: setLang(), apply(), and the initial
    * load all need it, and dynamic pages can call refresh() after injecting
    * new markup without re-applying every translation. */
+  /* P5-UX-15: one helper marks the selected item in any language menu,
+   * so the profile-menu selector, the header globe selector and the
+   * footer row all stay in sync from the same refreshSelector call. */
+  function markMenuSelected(menu, lang) {
+    if (!menu) return;
+    var items = menu.querySelectorAll('li[data-lang]');
+    for (var j = 0; j < items.length; j++) {
+      items[j].setAttribute('aria-selected', String(items[j].getAttribute('data-lang') === lang));
+    }
+  }
+
   function refreshSelector(lang) {
     lang = lang || current();
     var label = lang;
@@ -181,12 +192,20 @@
       var selectLabel = t('lang_select_label') || 'Language';
       btn.setAttribute('aria-label', selectLabel + ': ' + label);
     }
-    var menu = document.getElementById('langMenu');
-    if (menu) {
-      var items = menu.querySelectorAll('li[data-lang]');
-      for (var j = 0; j < items.length; j++) {
-        items[j].setAttribute('aria-selected', String(items[j].getAttribute('data-lang') === lang));
-      }
+    markMenuSelected(document.getElementById('langMenu'), lang);
+    /* P5-UX-15: header globe selector (desktop) — same label, 2-letter code. */
+    var curHdr = document.getElementById('langCurHdr');
+    if (curHdr) curHdr.textContent = lang.toUpperCase();
+    var btnHdr = document.getElementById('langBtnHdr');
+    if (btnHdr) {
+      var selectLabelHdr = t('lang_select_label') || 'Language';
+      btnHdr.setAttribute('aria-label', selectLabelHdr + ': ' + label);
+    }
+    markMenuSelected(document.getElementById('langMenuHdr'), lang);
+    /* P5-UX-15: footer language row (all viewports) — mark the active one. */
+    var footBtns = document.querySelectorAll('[data-lang-pick]');
+    for (var k = 0; k < footBtns.length; k++) {
+      footBtns[k].setAttribute('aria-current', String(footBtns[k].getAttribute('data-lang-pick') === lang));
     }
   }
 
@@ -256,50 +275,68 @@
    * there is exactly one place to fix selector bugs. The dataset flag stops
    * double-binding if this script ever runs twice. */
   function bindSelector() {
-    var btn = document.getElementById('langBtn');
-    var menu = document.getElementById('langMenu');
-    if (!btn || !menu) return;
-    if (btn.dataset.i18nBound) return;
-    btn.dataset.i18nBound = '1';
+    /* P5-UX-15: two header selectors share one switcher — the profile-menu
+     * pair (langBtn/langMenu) and the header globe pair (langBtnHdr/
+     * langMenuHdr, desktop only). Each pair gets the same toggle/pick
+     * wiring from bindOne(); both call setLang(). The footer row
+     * (data-lang-pick buttons, all viewports) is handled by one delegated
+     * listener below. Per-button dataset flags stop double-binding if
+     * this script ever runs twice. */
+    function bindOne(btnId, menuId) {
+      var btn = document.getElementById(btnId);
+      var menu = document.getElementById(menuId);
+      if (!btn || !menu) return;
+      if (btn.dataset.i18nBound) return;
+      btn.dataset.i18nBound = '1';
 
-    function close() {
-      // DES-21: same animated close as bindMenu (main.js exposes the
-      // helper on window; it loads before this file, but the typeof
-      // guard keeps the instant close if it ever does not).
-      if (!menu.hidden && typeof window.dkAnimateClose === 'function') {
-        window.dkAnimateClose(menu, function(){ menu.hidden = true; });
-      } else { menu.hidden = true; }
-      btn.setAttribute('aria-expanded', 'false');
-    }
-    btn.addEventListener('click', function (ev) {
-      ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
-      // DES-21: a click on a menu that is mid-close re-opens it.
-      if (menu.classList.contains('closing') && typeof window.dkCancelClose === 'function') {
-        window.dkCancelClose(menu); menu.hidden = false;
-        btn.setAttribute('aria-expanded', 'true'); return;
+      function close() {
+        // DES-21: same animated close as bindMenu (main.js exposes the
+        // helper on window; it loads before this file, but the typeof
+        // guard keeps the instant close if it ever does not).
+        if (!menu.hidden && typeof window.dkAnimateClose === 'function') {
+          window.dkAnimateClose(menu, function(){ menu.hidden = true; });
+        } else { menu.hidden = true; }
+        btn.setAttribute('aria-expanded', 'false');
       }
-      var willOpen = menu.hidden;
-      menu.hidden = !willOpen;
-      btn.setAttribute('aria-expanded', String(willOpen));
-    });
-    document.addEventListener('click', close);
-    document.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape') close();
-    });
-    function pick(item) {
-      if (!item) return;
-      setLang(item.getAttribute('data-lang'));
-      close();
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
+        // DES-21: a click on a menu that is mid-close re-opens it.
+        if (menu.classList.contains('closing') && typeof window.dkCancelClose === 'function') {
+          window.dkCancelClose(menu); menu.hidden = false;
+          btn.setAttribute('aria-expanded', 'true'); return;
+        }
+        var willOpen = menu.hidden;
+        menu.hidden = !willOpen;
+        btn.setAttribute('aria-expanded', String(willOpen));
+      });
+      document.addEventListener('click', close);
+      document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') close();
+      });
+      function pick(item) {
+        if (!item) return;
+        setLang(item.getAttribute('data-lang'));
+        close();
+      }
+      menu.addEventListener('click', function (ev) {
+        var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
+        pick(item);
+      });
+      menu.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
+        if (item) { ev.preventDefault(); pick(item); }
+      });
     }
-    menu.addEventListener('click', function (ev) {
-      var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
-      pick(item);
-    });
-    menu.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter' && ev.key !== ' ') return;
-      var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
-      if (item) { ev.preventDefault(); pick(item); }
-    });
+    bindOne('langBtn', 'langMenu');
+    bindOne('langBtnHdr', 'langMenuHdr');
+    if (!document.documentElement.dataset.dkFootLangBound) {
+      document.documentElement.dataset.dkFootLangBound = '1';
+      document.addEventListener('click', function (ev) {
+        var item = ev.target.closest ? ev.target.closest('[data-lang-pick]') : null;
+        if (item) setLang(item.getAttribute('data-lang-pick'));
+      });
+    }
   }
 
   /* Public API. getLang/refresh are aliases kept because the old engine
