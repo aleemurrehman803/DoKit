@@ -12,7 +12,7 @@
  * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
  * 24px (spacious form/tool panels). Every card-family surface uses
  * one of these three; the unexplained 16px/18px values are gone. */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-display:"Sora",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -39,7 +39,7 @@ button.linklike:hover{color:var(--amber)}
 .container--narrow{max-width:720px}
 header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px;font-family:var(--font-display)}
 .logo svg{flex:0 0 auto}
 .logo span em{font-style:normal;color:var(--amber)}
 .navlinks{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
@@ -125,9 +125,15 @@ section.block{padding:44px 0}
  * and below the hero h1 floor (40px); the Excel's suggested 32px would
  * have equalled h2, so the value is adjusted per its own allowance.
  * .hero h1 keeps its clamp (higher specificity). */
-h1{font-size:36px;line-height:1.15;margin:0 0 12px}
-h2{font-size:32px;line-height:1.2;margin:0 0 14px}
-h3{font-size:21px;margin:22px 0 8px}
+/* N01 (Phase C) + design §02: fluid heading scale. Desktop maxima are
+ * UNCHANGED (36/32/21px — the same values as before, so desktop is
+ * pixel-identical); the clamp floors shrink headings on small screens
+ * where fixed 36px was oversized. Display type uses the Sora stack
+ * (name only — Sora is self-hosted in Phase 2, no external request;
+ * renders as system-ui until then). Letter-spacing per design §02. */
+h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 12px;font-family:var(--font-display);letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.5vw,32px);line-height:1.2;margin:0 0 14px;font-family:var(--font-display);letter-spacing:-.02em}
+h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-display);letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
 .card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
@@ -230,7 +236,15 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 @keyframes dkthink{0%,100%{opacity:.25;transform:none}50%{opacity:1;transform:translateY(-2px)}}
 #chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
 #chat-log{padding:14px 18px;max-height:280px;overflow:auto}
-.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--bg)}
+/* N14 (Phase C): long unbroken strings (URLs, emails) wrap instead of
+ * overflowing their container. Targeted only — the three places that
+ * render user-controlled long strings: Doki chat bubbles (.msg, whose
+ * answers can contain long source URLs), the referral link
+ * (#ref-link, a long URL in <code>), and the read-only profile email
+ * fields. No global rule: headings/nav must keep their normal wrapping. */
+.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--bg);overflow-wrap:anywhere}
+#ref-link{overflow-wrap:anywhere}
+#acct-email-ro,#prof-email-ro{overflow-wrap:anywhere}
 .msg.bot{border-left:3px solid var(--violet)}
 #chat-form{display:flex;gap:4px;padding:12px 10px;border-top:1px solid var(--line)}
 #chat-form input{flex:1;min-width:0;padding:12px 8px}
@@ -509,7 +523,7 @@ input,select,textarea{background:#fff!important;color:#000!important}
  * Finger zones are tinted subtly so the learner can see which hand
  * owns each key; .next is the strong highlight for the current key. */
 .kb { display: flex; flex-direction: column; gap: 4px; max-width: 640px; }
-.kb-row { display: flex; gap: 4px; }
+.kb-row { display: flex; gap: 4px; min-width: 0; }
 .kb .key {
   flex: 1 1 0; min-width: 0; text-align: center; padding: 8px 2px;
   border: 1px solid var(--line); border-radius: 6px;
@@ -517,6 +531,18 @@ input,select,textarea{background:#fff!important;color:#000!important}
 }
 .kb .key.wide { flex-grow: 2; }
 .kb .key.space { flex-grow: 8; }
+/* N20 (Phase C / REG-003): the keyboard fits small screens. The row's
+ * min-width:0 (above) lets it shrink below its 389px min-content; at
+ * <=480px the keys also get smaller so the long word labels
+ * (Backspace/Enter/Shift) fit their share — wide keys take 3 shares
+ * instead of 2, and any residual label overflow clips cleanly inside
+ * the key (ellipsis) instead of spilling out of it. The key layout,
+ * order, finger zones and behaviour are unchanged. */
+@media(max-width:480px){
+  .kb .key{font-size:.8rem;padding:8px 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kb .key.wide{flex-grow:3}
+  .kb-row{gap:3px}
+}
 /* Finger-zone fills live in the F1 block below (surface vs surface2) —
  * the pale literals here were dead (superseded by source order) and
  * are removed, not restyled. T032 (P5-DES-02). */

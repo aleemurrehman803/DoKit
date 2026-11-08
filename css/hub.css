@@ -717,6 +717,8 @@ body.has-sticky-cta .dk-fab { inset-block-end: calc(4.5rem + env(safe-area-inset
   border-radius: var(--r-lg);
   font-size: var(--fs-sm);
   line-height: 1.55;
+  /* N14 (Phase C): long URLs in chat answers wrap inside the bubble. */
+  overflow-wrap: anywhere;
 }
 .dk-msg p { margin: 0 0 var(--sp-2); }
 .dk-msg p:last-child { margin-bottom: 0; }
