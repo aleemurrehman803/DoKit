@@ -418,6 +418,12 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
 .cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:var(--cert-photo-bg)}
 .cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on-accent);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+/* B80: example-certificate SAMPLE badge — sits where the real sheet's QR
+ * code sits (top-left), so the sample can never be mistaken for an
+ * issued certificate. The sample carries no ids, so certificate.js
+ * (sheet toggle, Print, PDF) can never touch it, and its wrapper is
+ * .no-print so window.print() skips it too. */
+.cert-sheet.cert-sample .cert-sample-badge{position:absolute;top:24px;left:24px;margin:0;border:3px solid var(--bad);color:var(--bad);font-weight:800;letter-spacing:2px;padding:6px 12px;transform:rotate(-12deg);border-radius:4px;background:rgba(255,255,255,.75)}
 .cert-issued{margin-top:18px;font-size:13px;text-align:center}
 .cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:var(--ink)}
 .cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:var(--cert-gold-ink)}
