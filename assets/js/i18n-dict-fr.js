@@ -28,6 +28,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1400": "p. ex. : Ali Ahmed",
     "rsv_1401": "p. ex. : you@example.com",
     "rsv_1402": "Dites-nous comment nous pouvons vous aider…",
+    "rsv_1403": "Les anciens certificats sont vérifiés dans les enregistrements Firestore. La vérification hors ligne n'est pas prise en charge.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Couleur unie",
     "rsv_1372": "Pivoter",
