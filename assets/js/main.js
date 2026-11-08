@@ -20,6 +20,19 @@ try {
   if (new URLSearchParams(window.location.search).get('dkdebug') === '1') { window.DK_DEBUG = true; }
 } catch (e) { /* URL parsing must never break boot */ }
 var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// B58: ONE pause state for all decorative motion. `paused` = the visitor
+// pressed Pause (persisted in localStorage); `tabHidden` = the T046
+// tab-hidden auto-pause. dkSyncPaused() applies html.dk-paused from
+// either source, so the tab-hidden listener can never wipe a manual
+// pause (and resuming the tab can never resume a manual pause).
+// The CSS rule html.dk-paused *{animation-play-state:paused} freezes
+// every CSS animation in place (float cards, marquee, …); the canvas
+// loop and the rotator check `paused` directly. Under reduced motion
+// everything is already static, so no persisted pause is restored.
+var paused = false;
+var tabHidden = document.visibilityState === 'hidden';
+try{ if(!reduced && localStorage.getItem('dokit_motion_paused') === '1'){ paused = true; } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+function dkSyncPaused(){ document.documentElement.classList.toggle('dk-paused', paused || tabHidden); }
 // T030 (P5-VIS-07): one header menu open at a time. Each menu binder
 // registers its OWN existing close function here; closeAllMenus(except)
 // runs every other registered closer, so opening any menu closes all the
@@ -185,20 +198,20 @@ if(s){
   }
 }
 // T046 (P5-DES-22): pause infinite animations while the tab is hidden.
-// visibilitychange toggles .dk-paused on <html>; the CSS rule freezes
-// every animation with play-state:paused (not none), so each one
-// resumes from exactly where it stopped — no jump.
+// visibilitychange updates the shared state (B58) — the class is set
+// from paused || tabHidden, so a manual pause survives a tab switch.
+// The CSS rule freezes every animation with play-state:paused (not
+// none), so each one resumes from exactly where it stopped — no jump.
 document.addEventListener('visibilitychange', function(){
-  document.documentElement.classList.toggle('dk-paused', document.visibilityState === 'hidden');
+  tabHidden = document.visibilityState === 'hidden';
+  dkSyncPaused();
 });
-if(document.visibilityState === 'hidden'){ document.documentElement.classList.add('dk-paused'); }
+dkSyncPaused();
 // hero particles
 var cv = document.getElementById('hero-canvas');
-var paused = false;
-// T046: the hero-canvas loop's own hidden flag (separate from the
-// user's manual `paused` above) + a guard so at most one frame is
-// ever scheduled (the visible-kick and the Pause button both re-kick).
-var tabHidden = document.visibilityState === 'hidden';
+// T046/B58: `paused` + `tabHidden` are hoisted above (single pause
+// state); framePending guards so at most one frame is ever scheduled
+// (the visible-kick and the Pause button both re-kick).
 var framePending = false;
 if(cv){
   var ctx = cv.getContext('2d'), W, H, parts = [];
@@ -218,10 +231,26 @@ if(cv){
   size(); mk(); draw();
   window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); } });
   var pb = document.getElementById('pause-motion');
-  if(pb){ pb.addEventListener('click', function(){
-    paused = !paused; pb.textContent = paused ? dkT('rsv_1003', 'Resume motion') : dkT('rsv_0433', 'Pause motion');
-    if(!paused && !reduced && !framePending){ draw(); }
-  }); }
+  if(pb){
+    // B58: keep the label via its data-i18n key (not a bare textContent
+    // overwrite, which used to discard the binding until the next
+    // language change) and expose the state to assistive tech.
+    function syncPauseBtn(){
+      pb.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      pb.setAttribute('data-i18n', paused ? 'rsv_1003' : 'rsv_0433');
+      pb.textContent = paused ? dkT('rsv_1003', 'Resume motion') : dkT('rsv_0433', 'Pause motion');
+    }
+    document.addEventListener('dokit:langchange', syncPauseBtn);
+    syncPauseBtn(); // applies a persisted pause (class + label + pressed)
+    dkSyncPaused();
+    pb.addEventListener('click', function(){
+      paused = !paused;
+      dkSyncPaused();
+      syncPauseBtn();
+      try{ localStorage.setItem('dokit_motion_paused', paused ? '1' : '0'); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      if(!paused && !reduced && !tabHidden && !framePending){ draw(); }
+    });
+  }
   document.addEventListener('visibilitychange', function(){
     tabHidden = document.visibilityState === 'hidden';
     if(!tabHidden && !paused && !reduced && !framePending){ framePending = true; requestAnimationFrame(draw); }
@@ -257,6 +286,9 @@ if(rot){
   else{
     var wi = 0, ci = 0, del = false;
     (function tick(){
+      // B58: while paused, re-check without touching ci/del — the word
+      // freezes mid-type and resumes exactly where it stopped.
+      if(paused){ setTimeout(tick, 200); return; }
       var w = dkT(words[wi][0], words[wi][1]);
       rot.textContent = w.slice(0, ci);
       if(!del){ ci++; if(ci > w.length){ del = true; setTimeout(tick, 1400); return; } setTimeout(tick, 90); }
