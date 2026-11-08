@@ -171,6 +171,12 @@ input[type=file]{width:100%;padding:10px 0}
 .guides-grid .card{height:100%}
 /* B84: reading-time label on guide cards + articles — small muted line. */
 .guide-readtime{font-size:14px;margin:6px 0 0}
+/* B93: About-page Doki figure — the site's own mascot photo (already published in the chat panel on every page), floated beside
+ * "Our story" on desktop, centred and stacked on small screens. */
+.about-doki{float:right;width:200px;margin:6px 0 16px 24px;text-align:center}
+.about-doki img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
+.about-doki figcaption{font-size:14px;color:var(--muted);margin-top:6px}
+@media(max-width:600px){.about-doki{float:none;width:180px;margin:0 auto 16px}}
 /* T090 (P5-VIS-15): the native file-input button renders white in Chromium's
  * dark mode — the only white control on the dark tool pages (the "empty white
  * box" on the resizer). Style it like the site's ghost buttons. */
