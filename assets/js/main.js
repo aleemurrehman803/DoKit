@@ -641,26 +641,56 @@ if(form){
     // Restore: local knowledge-base answers (data ported verbatim from
     // the old assistant-kb.js). The old Firebase search is NOT used —
     // matching is local only, so answers come from site content and
-    // are never invented. No match falls back to navigation links.
+    // are never invented. No KB match falls through to the FAQ lookup,
+    // then the honest unknown-answer branch (B98).
     var kbHit = null;
+    var qTokens = dkTokens(low);
     try {
       var kb = window.DKASSIST_KB;
       if (kb) {
         var kbLang = 'en';
         try { kbLang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         var entries = kb[kbLang] || kb.en || [];
-        var words = low.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2; });
+        // B98: whole-word matcher with a confidence threshold (replaces
+        // the substring scorer). The old scorer let a 3-letter stopword
+        // match by substring ('for' in 'format' scored +2, 'how' in the
+        // phrase 'how many words' scored +2, 'account' contains
+        // 'count'), so uncovered questions got confident wrong tool
+        // answers. Now a keyword counts only as a whole word (or a
+        // consecutive phrase), plural-tolerant, Unicode-safe.
+        // Scoring: the entry's first keyword (its distinctive root,
+        // e.g. 'resize') scores 3; a multi-word phrase scores 3 (it is
+        // specific evidence, e.g. 'who built dokit'); any other single
+        // keyword scores 2; a short token (<= 3 letters: 'png', 'wpm',
+        // 'pro') scores 3 on an exact whole-word hit only — it is
+        // distinctive, not a stopword. One question word can only be
+        // spent once: the KB lists both 'plan' and 'plans', and
+        // plural-tolerant matching would otherwise count the same word
+        // twice (ERR-B-018). A hit needs >= 3, so one generic word
+        // (e.g. 'capital' for the case converter, +2) can never answer.
         var best = null, bestScore = 0;
         entries.forEach(function (en) {
           var score = 0;
-          (en.kw || []).forEach(function (k) {
+          var usedSingles = {};
+          (en.kw || []).forEach(function (k, ki) {
             var kk = String(k).toLowerCase();
-            words.forEach(function (w) { if (kk.indexOf(w) !== -1 || w.indexOf(kk) !== -1) { score += 2; } });
-            if (low.indexOf(kk) !== -1) { score += 1; }
+            if (!dkPhraseHit(qTokens, kk)) { return; }
+            var kt = dkTokens(kk);
+            if (kt.length === 1) {
+              var hitTok = null;
+              for (var ti = 0; ti < qTokens.length; ti++) { if (dkWordEq(qTokens[ti], kt[0])) { hitTok = qTokens[ti]; break; } }
+              if (hitTok && usedSingles[hitTok]) { return; }
+              if (hitTok) { usedSingles[hitTok] = 1; }
+              if (kt[0].length <= 3) { score += 3; }
+              else if (ki === 0) { score += 3; }
+              else { score += 2; }
+            } else {
+              score += 3;
+            }
           });
           if (score > bestScore) { bestScore = score; best = en; }
         });
-        if (best && bestScore >= 2) { kbHit = best; }
+        if (best && bestScore >= 3) { kbHit = best; }
       }
     } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     // B97: approved-FAQ grounding (second source, KB first). The FAQ
@@ -669,13 +699,16 @@ if(form){
     // A hit needs >= 2 distinct content words from the question
     // (whole-word, plural-tolerant) with at least one word of length
     // >= 5, so stopword-only or single-word questions cannot match.
-    var qTokens = dkTokens(low);
+    // (qTokens is defined above, before the KB match.)
     var faqHit = null;
     try {
       var faq = window.DKFAQ;
       if (faq && faq.length) {
         var content = qTokens.filter(function (w) { return w.length >= 4 && !DK_STOP[w]; });
-        var shorts = qTokens.filter(function (w) { return w.length >= 2 && w.length < 4; });
+        // Short tokens count only if they are real content words:
+        // stopwords ('do', 'is', 'of') appear in nearly every FAQ
+        // question and would otherwise inflate any score (ERR-B-019).
+        var shorts = qTokens.filter(function (w) { return w.length >= 2 && w.length < 4 && !DK_STOP[w]; });
         var bestFaq = null, bestFaqScore = 0, bestFaqLong = false;
         faq.forEach(function (item) {
           var ft = dkTokens((item.q || '') + ' ' + (item.a || ''));
@@ -788,7 +821,13 @@ if(form){
       });
       return;
     } else {
-      b.textContent = reply + dkT('rsv_1008', 'These pages may help:');
+      // B98: honest unknown-answer branch. Below the confidence
+      // threshold Doki says so and directs to Contact FIRST (then FAQ
+      // and All Tools) — it never invents an answer and never pitches
+      // an unrelated tool. The Contact chip is forced here even when
+      // the question's own words suggested other links above.
+      b.textContent = dkT('rsv_1452', "I don't have that in DoKit's own information. Please contact us — we'll be glad to help.");
+      links = [['Contact', form.getAttribute('data-contact')], ['FAQ', form.getAttribute('data-faq')], ['All Tools', form.getAttribute('data-tools')]];
       appendChatLinks(b);
     }
     // B96: the thinking face set above must always resolve — a KB hit

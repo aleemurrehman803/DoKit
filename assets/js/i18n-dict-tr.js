@@ -83,6 +83,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1456": "Yazma pratiğine nasıl başlarım?",
     "rsv_1457": "Nasıl coin kazanırım?",
     "rsv_1458": "Kaynak:",
+    "rsv_1452": "Bu, DoKit'in kendi bilgilerinde yok. Lütfen bizimle iletişime geçin — yardımcı olmaktan memnuniyet duyarız.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

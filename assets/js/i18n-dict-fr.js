@@ -83,6 +83,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1456": "Comment commencer l'entraînement à la frappe ?",
     "rsv_1457": "Comment gagner des pièces ?",
     "rsv_1458": "Source :",
+    "rsv_1452": "Je n'ai pas cela dans les informations propres à DoKit. Veuillez nous contacter — nous serons ravis de vous aider.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Couleur unie",
     "rsv_1372": "Pivoter",

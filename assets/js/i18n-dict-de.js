@@ -83,6 +83,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1456": "Wie beginne ich mit dem Schreibtraining?",
     "rsv_1457": "Wie verdiene ich Münzen?",
     "rsv_1458": "Quelle:",
+    "rsv_1452": "Das steht nicht in DoKits eigenen Informationen. Bitte kontaktiere uns — wir helfen dir gerne weiter.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",
