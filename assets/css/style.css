@@ -793,6 +793,14 @@ transition:none!important}`), so these animations are covered. */
 .ref-level:nth-of-type(3){animation-delay:.15s}
 .ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-legend{color:var(--muted)}
+/* E-01 (Phase E): poster preview fits its column. WHY: the poster
+ * bitmap is 1080x1350 and had no CSS size, so the on-page preview
+ * rendered at full 1080 CSS px — overflowing a 390px phone (page
+ * scrolled horizontally to 1100px) and taller than a desktop viewport,
+ * so viewers mostly saw the empty lower half of the gradient. The
+ * bitmap dimensions are untouched (1080x1350, so the download keeps its
+ * size and format); only the preview is scaled to the container. */
+#refx-poster-holder canvas{max-width:100%;height:auto;display:block}
 
 /* P5-UX-15 (T021): surface the language switcher outside the profile menu.
  * .lang-hdr = compact globe button in the header (desktop only — hidden
