@@ -475,13 +475,57 @@ if(cpF){
 var cvF = $('cv-files');
 if(cvF){
   var list = $('cv-list');
+  /* B75: queued files + their rows, so format/quality changes can
+   * re-run the estimates without re-selecting. */
+  var cvQueued = [], cvRows = [];
+  function cvQuality(){
+    /* B75 reconciliation: the per-file buttons used to hardcode 0.9
+     * while "Convert all" used the slider — so an estimate could
+     * never agree with both. Both paths now read the slider (0.9
+     * when the slider is absent), and the estimate is measured at
+     * that same quality. */
+    var q = $('ta-cv-q');
+    return q ? (parseInt(q.value, 10) || 90) / 100 : 0.9;
+  }
+  function cvEstimate(f, row){
+    /* Estimate = a real encode at the selected format/quality (cheap
+     * and local). Canvas output is deterministic for the same input
+     * and quality, so the estimate equals the size the actual
+     * conversion produces — it is still labelled "Estimated" because
+     * it is measured before the user converts. */
+    var fmtSel = ($('cv-fmt') || {}).value || 'webp';
+    loadImage(f).then(function(im){
+      var sc = guardMP(im, null);
+      var c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      c.toBlob(function(blob){
+        if(!blob){ row.est.textContent = (window.dkT ? window.dkT('rsv_1211', '\u2014 failed.') : '\u2014 failed.'); return; }
+        row.est.textContent = (window.dkT ? window.dkT('rsv_1419', 'Estimated') : 'Estimated') + ': ' + fmt(blob.size);
+      }, 'image/' + fmtSel, cvQuality());
+    }).catch(function(e){ row.est.textContent = e.message; });
+  }
+  function cvRefreshEstimates(){
+    cvQueued.forEach(function(f, i){ if(cvRows[i]){ cvEstimate(f, cvRows[i]); } });
+  }
   cvF.addEventListener('change', function(){
     list.innerHTML = '';
+    cvQueued = []; cvRows = [];
     var files = Array.prototype.slice.call(cvF.files || []).slice(0, 10);
-    if(cvF.files.length > 10){ var w = document.createElement('p'); w.textContent = (window.dkT ? window.dkT('rsv_0987', 'Note: aik waqt me 10 files tak — pehli 10 li gayi hain.') : 'Note: aik waqt me 10 files tak — pehli 10 li gayi hain.'); list.appendChild(w); }
+    if(cvF.files.length > 10){ var w = document.createElement('p'); w.textContent = (window.dkT ? window.dkT('rsv_0987', 'Note: aik waqt me 10 files tak \u2014 pehli 10 li gayi hain.') : 'Note: aik waqt me 10 files tak \u2014 pehli 10 li gayi hain.'); list.appendChild(w); }
     files.forEach(function(f){
       var li = document.createElement('li');
+      /* B75 thumbnail: local object URL of the source, revoked once
+       * the image loads (same pattern as the compressor preview). */
+      var thumb = document.createElement('img');
+      var thumbUrl = URL.createObjectURL(f);
+      thumb.src = thumbUrl; thumb.alt = f.name;
+      thumb.style.maxWidth = '72px'; thumb.style.maxHeight = '72px';
+      thumb.onload = function(){ URL.revokeObjectURL(thumbUrl); };
+      li.appendChild(thumb);
       var sp = document.createElement('span'); sp.textContent = f.name + ' (' + fmt(f.size) + ')'; li.appendChild(sp);
+      li.appendChild(document.createTextNode(' '));
+      var est = document.createElement('span'); est.textContent = (window.dkT ? window.dkT('rsv_1419', 'Estimated') : 'Estimated') + ': \u2026'; li.appendChild(est);
+      li.appendChild(document.createTextNode(' '));
       var b = document.createElement('button'); b.className = 'btn ghost'; b.textContent = (window.dkT ? window.dkT('rsv_0965', 'Convert & Download') : 'Convert & Download');
       b.addEventListener('click', function(){
         loadImage(f).then(function(im){
@@ -490,14 +534,27 @@ if(cvF){
           c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
           var fmtSel = ($('cv-fmt') || {}).value || 'webp';
           c.toBlob(function(blob){
-            if(!blob){ b.textContent = (window.dkT ? window.dkT('rsv_0975', 'Failed — dobara try karein') : 'Failed — dobara try karein'); return; }
+            if(!blob){ b.textContent = (window.dkT ? window.dkT('rsv_0975', 'Failed \u2014 dobara try karein') : 'Failed \u2014 dobara try karein'); return; }
             var base = f.name.replace(/\.[^.]+$/, '');
-            downloadBlob(blob, base + '.' + fmtSel); b.textContent = (window.dkT ? window.dkT('rsv_0973', 'Downloaded ✓') : 'Downloaded ✓');
-          }, 'image/' + fmtSel, 0.9);
+            downloadBlob(blob, base + '.' + fmtSel); b.textContent = (window.dkT ? window.dkT('rsv_0973', 'Downloaded \u2713') : 'Downloaded \u2713');
+          }, 'image/' + fmtSel, cvQuality());
         }).catch(function(e){ b.textContent = e.message; });
       });
       li.appendChild(b); list.appendChild(li);
+      var row = { est: est };
+      cvQueued.push(f); cvRows.push(row);
+      cvEstimate(f, row);
     });
   });
+  /* Re-estimate when the format or the quality slider changes (the
+   * estimate must always match the download it previews). Debounced:
+   * the slider fires on every tick while dragging. */
+  var cvFmt = $('cv-fmt');
+  if(cvFmt){ cvFmt.addEventListener('change', cvRefreshEstimates); }
+  var cvQ2 = $('ta-cv-q'), cvEstTimer = null;
+  if(cvQ2){ cvQ2.addEventListener('input', function(){
+    if(cvEstTimer){ clearTimeout(cvEstTimer); }
+    cvEstTimer = setTimeout(cvRefreshEstimates, 300);
+  }); }
 }
 })();

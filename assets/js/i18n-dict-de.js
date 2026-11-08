@@ -44,6 +44,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1416": "größer",
     "rsv_1417": "Stapel gesamt",
     "rsv_1418": "Warnung: Die Ausgabe ist größer als das Original.",
+    "rsv_1419": "Geschätzt",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",

@@ -44,6 +44,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1416": "daha büyük",
     "rsv_1417": "Toplu toplam",
     "rsv_1418": "Uyarı: çıktı orijinalden daha büyük.",
+    "rsv_1419": "Tahmini",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

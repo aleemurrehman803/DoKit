@@ -44,6 +44,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1416": "maior",
     "rsv_1417": "Total do lote",
     "rsv_1418": "Aviso: o resultado é maior que o original.",
+    "rsv_1419": "Estimado",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",

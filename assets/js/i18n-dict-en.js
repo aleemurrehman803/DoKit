@@ -44,6 +44,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1416": "larger",
     "rsv_1417": "Batch total",
     "rsv_1418": "Warning: the output is larger than the original.",
+    "rsv_1419": "Estimated",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",
