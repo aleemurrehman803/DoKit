@@ -61,14 +61,14 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 /* T001 (P5-VIS-01): login/signup form buttons span the full form width, matching the inputs */
 #acct-login-form .btn,#acct-signup-form .btn{display:block;width:100%;margin:0 0 10px}
 .hero{position:relative;overflow:hidden;padding:72px 0 56px}
-#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
-.glow{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
-.glow.a{width:420px;height:420px;background:var(--violet);top:-120px;right:-80px}
-.glow.b{width:340px;height:340px;background:var(--amber);opacity:.28;bottom:-140px;left:-60px}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;pointer-events:none}
+.glow.a{width:520px;height:520px;background:var(--violet);top:-220px;left:-120px;animation:drift 14s ease-in-out infinite alternate}
+.glow.b{width:420px;height:420px;background:var(--amber);opacity:.2;bottom:-240px;right:-80px;animation:drift 18s ease-in-out infinite alternate-reverse}
 .hero-inner{position:relative}
 .eyebrow{color:var(--amber);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:13px}
-.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.05;margin:10px 0 14px}
-.hero h1 .grad{background:linear-gradient(90deg,var(--violet2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.04;letter-spacing:-.03em;margin:10px 0 14px}
+.hero h1 .grad{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* T053 (P5-DES-29): fallback if background-clip:text is unsupported
  * (else color:transparent leaves "you'll ever need" invisible).
  * The `or` form keeps the gradient in prefixed-only browsers;
@@ -88,11 +88,21 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 #tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
 #tool-search-results [role="option"].active,#tool-search-results [role="option"]:hover{background:var(--surface2);color:var(--amber)}
 #tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
-.float-card{position:absolute;background:rgba(29,25,51,.9);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.35);animation:floaty 5s ease-in-out infinite}
-.float-card.a{right:6%;top:18%}.float-card.b{right:16%;top:52%;animation-delay:1.2s}.float-card.c{right:3%;top:68%;animation-delay:2.1s}
-/* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */
-[dir="rtl"] .float-card{display:none}
-@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.float-card{position:absolute;background:rgba(29,25,51,.92);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13px;font-weight:700;box-shadow:0 16px 34px rgba(0,0,0,.35);animation:floaty 5.5s ease-in-out infinite;white-space:nowrap}
+/* DA-01 (Phase C): the float-cards live in the .orbit row below the
+ * search chips (design §01), not pinned to the hero's right edge.
+ * Positions / rotations / delays are the design's; --rot is consumed
+ * by the floaty keyframes below. */
+.float-card.fc1{left:4%;top:8px;--rot:-2deg}
+.float-card.fc2{left:26%;top:52px;--rot:1.5deg;animation-delay:.7s}
+.float-card.fc3{left:50%;top:2px;--rot:-1deg;animation-delay:1.3s}
+.float-card.fc4{right:22%;top:56px;--rot:2deg;animation-delay:.4s}
+.float-card.fc5{right:3%;top:6px;--rot:-1.5deg;animation-delay:1.8s}
+/* WHY the RTL hide is gone: the old right-edge cards covered the RTL
+ * hero heading's first words, so they were hidden in RTL. The orbit
+ * sits BELOW the heading in normal flow, so it cannot cover it — the
+ * cards show in RTL too. */
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--rot,0deg))}50%{transform:translateY(-11px) rotate(var(--rot,0deg))}}
 /* B59: tools marquee strip (moved here from css/polish.css §31, which no
  * page loads — the dead copy there is removed, so exactly one live copy
  * exists). CSS transform only, no JS ticker. The track holds two
@@ -306,7 +316,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * two lines, so the hamburger (same links, same menu) takes over.
  * The grid / float-card / footgrid rules stay at 900px — they are
  * content layout, not navigation, and must not move with the nav. */
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.footgrid{grid-template-columns:1fr}}
 /* T036 (P5-DES-08): the hero clamp's 40px floor is too large at 320-360px
  * (3 lines with "need" widowed). At <=600px the floor drops to 32px
  * (9vw: 32px at 360px, 35px at 390px, capped at 40px above ~444px). */
@@ -783,3 +793,76 @@ transition:none!important}`), so these animations are covered. */
  * box touched the "DoKit" wordmark (measured gap 0px vs 10px in the header).
  * Restore flex + the same 10px gap for the footer logo only. */
 footer.site .logo{display:flex;align-items:center;gap:10px}
+
+/* =====================================================================
+ * DA-01 (Phase C — Design Alignment, design file §01): homepage hero
+ * rebuilt to the Phase 1 design. VISUAL ONLY — no markup IDs, classes,
+ * data attributes, i18n keys, links or JS behaviour change here (the
+ * DOM reorder + two extra cards live in index.html; the particle
+ * constellation lives in assets/js/main.js). This block is APPENDED at
+ * the end of the file on purpose: every rule here must beat the
+ * light-theme overrides mid-file ([data-theme="light"] ...) on equal
+ * specificity, because the hero is ALWAYS DARK in both themes.
+ * The new animations (drift, pulse, caretBlink, floaty) are covered by
+ * the two existing mechanisms — html.dk-paused (Pause button, style
+ * line ~329) pauses them, and the prefers-reduced-motion rule (~324)
+ * kills them outright — so no extra motion handling is needed here.
+ * ------------------------------------------------------------------ */
+/* Always-dark hero: scope the dark tokens onto .hero so the light
+ * theme's [data-theme="light"] vars do not leak in. Values are the
+ * live dark tokens from :root (not invented). */
+.hero{background:#12101F;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;color:#F4F2FF}
+/* The light theme swaps the H1 gradient to violet->gold (readable on
+ * light). The hero is always dark now, so that swap must not apply:
+ * same selector as the light rule, later in the file, so it wins.
+ * NOTE: the `background` shorthand resets background-clip to
+ * border-box, so the clip + transparent colour must be re-asserted
+ * in this same rule — without them the gradient renders as a solid
+ * block and the text turns invisible (seen in the light screenshot). */
+[data-theme="light"] .hero h1 .grad{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* Centred hero body, design max-width 860px. */
+.hero .hero-inner{max-width:860px;margin:0 auto;text-align:center}
+/* Eyebrow -> pill (design tag). The pulse dot is a ::before, NOT
+ * markup: data-i18n wipes the eyebrow's children on language change. */
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,76,241,.22);border:1px solid rgba(139,116,255,.45);color:#B7A6FF;border-radius:999px;padding:6px 14px;font-size:12.5px;letter-spacing:1.5px}
+.hero .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:#FFC531;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+/* Typed line (design): display font, white, min-height so the line
+ * does not jump as words change length; the caret blinks (design 1s). */
+.hero .type-line{font-family:var(--font-display);font-size:clamp(20px,3.2vw,30px);font-weight:700;color:#F4F2FF;min-height:1.35em;margin:14px 0 0}
+.hero .type-line #type-rotator{color:#F4F2FF;border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite}
+@keyframes caretBlink{0%,49%{border-right-color:var(--amber)}50%,100%{border-right-color:transparent}}
+/* Lead (design): smaller, centred, 600px. */
+.hero p.lead{font-size:16.5px;max-width:600px;margin:12px auto 0;color:#B9B3E0}
+/* Searchbox -> glass (design). Scoped to .hero so the FAQ searchbox
+ * (same class, theme-aware) is untouched. The input is transparent
+ * and borderless; focus is shown by the :focus-within ring. */
+.hero .searchbox{margin:22px auto 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:7px;backdrop-filter:blur(8px)}
+.hero .searchbox:focus-within{border-color:#8B74FF;box-shadow:0 0 0 4px rgba(108,76,241,.28)}
+.hero .searchbox .search-field input{background:transparent;border:0;color:#F4F2FF;font-size:15px;padding:11px 12px;border-radius:10px}
+.hero .searchbox .search-field input::placeholder{color:#9B94C4}
+.hero .searchbox .search-field input:focus{outline:0;box-shadow:none}
+.hero .searchbox .btn{padding:11px 18px;flex:none}
+.hero .searchbox .btn.ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+/* Search chips -> glass (design), centred row, amber hover + lift. */
+.hero .search-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:16px 0 0}
+.hero .search-chips .chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#F4F2FF;font-size:12.5px;padding:6px 12px}
+.hero .search-chips .chip:hover{background:rgba(255,197,49,.16);border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+/* Orbit row (design): the float-cards sit in normal flow below the
+ * chips, so they can never cover the heading (this is what lets the
+ * RTL hide and the <=900px hide be removed). Height 118px, 96px on
+ * small screens with the two middle cards hidden. */
+.orbit{position:relative;height:118px;margin-top:30px}
+@media(max-width:760px){.orbit{height:96px}.float-card.fc2,.float-card.fc4{display:none}}
+/* At phone widths the three remaining cards (fc1/fc3/fc5, each
+ * ~170-220px wide with their preview line) cannot sit side by side
+ * in a ~350px orbit without overlapping, so they stack vertically
+ * instead (preview hidden, so each card is just icon + name). */
+@media(max-width:480px){.orbit{height:auto;display:flex;flex-direction:column;align-items:center;gap:8px}.orbit .float-card{position:static}.orbit .float-card .float-preview{display:none}}
+/* Stats -> glass hstat (design). Content unchanged (B56: no counts). */
+.hero .stats{margin-top:26px;justify-content:center;flex-wrap:wrap;gap:12px}
+.hero .stats>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 18px}
+.hero .stats b{display:block;font-size:19px;color:#F4F2FF}
+.hero .stats span{font-size:11.5px;color:#B9B3E0}
+/* Glow drift (design): violet 14s, amber 18s, gentle translate only. */
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(28px,18px)}}
