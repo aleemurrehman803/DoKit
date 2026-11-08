@@ -480,8 +480,68 @@ function ensureKb(){
 }
 function dokiLoadFaq(){
   // KB-only (Oct 26): no FAQ/AI provider is loaded. Doki answers from
-  // assistant-kb.js, lazy-loaded on first panel open (P5-RTE-01).
-  ensureKb();
+  // assistant-kb.js plus the owner-approved static FAQ (dk-faq.js,
+  // B97), both lazy-loaded on first panel open (P5-RTE-01 pattern).
+  // Still no provider: the FAQ is a static lookup, never a live-AI call.
+  ensureDokiSources();
+}
+// B97: lazy-load the owner-approved FAQ the same way as the KB — one
+// shared promise, 3s safety timeout, resolves false on failure so the
+// turn falls back to KB/links instead of hanging.
+var __dkFaqPromise = null;
+function ensureFaq(){
+  if (window.DKFAQ) { return Promise.resolve(true); }
+  if (__dkFaqPromise) { return __dkFaqPromise; }
+  __dkFaqPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){ if (!done) { done = true; resolve(ok); } }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/main.js"]');
+        base = m ? m.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'dk-faq.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkFaqPromise;
+}
+// B97: one combined lazy load for both static Doki sources (KB +
+// approved FAQ). A failed load just means that source is skipped.
+function ensureDokiSources(){
+  return Promise.all([ensureKb(), ensureFaq()]).then(function(){ return true; });
+}
+// B97/B98 (Phase B): whole-word matching helpers for the Doki matcher.
+// Tokenising on Unicode letters/digits (not \b, which is ASCII-only
+// and would break non-Latin keywords) keeps Urdu/Arabic/Hindi keywords
+// working exactly like English ones.
+var DK_STOP = {a:1, an:1, the:1, is:1, are:1, was:1, were:1, do:1, does:1, did:1, how:1, what:1, when:1, where:1, which:1, who:1, whom:1, why:1, can:1, could:1, should:1, would:1, will:1, may:1, might:1, i:1, me:1, my:1, you:1, your:1, we:1, us:1, our:1, it:1, its:1, this:1, that:1, there:1, here:1, of:1, for:1, to:1, in:1, on:1, at:1, by:1, with:1, from:1, and:1, or:1, but:1, if:1, so:1, not:1, no:1, please:1, get:1, have:1, has:1, had:1, am:1, be:1, been:1, any:1, all:1, about:1, into:1, over:1, under:1, up:1, down:1, out:1, per:1, via:1};
+function dkTokens(s){
+  return (s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(function (w) { return !!w; });
+}
+function dkWordEq(a, b){
+  // Plural-tolerant equality: 'plan' matches 'plans', never a substring.
+  return a === b || (a + 's') === b || (b + 's') === a;
+}
+function dkPhraseHit(tokens, phrase){
+  var pt = dkTokens(phrase);
+  if (!pt.length) { return false; }
+  if (pt.length === 1) {
+    for (var i = 0; i < tokens.length; i++) { if (dkWordEq(tokens[i], pt[0])) { return true; } }
+    return false;
+  }
+  for (var s = 0; s + pt.length <= tokens.length; s++) {
+    var ok = true;
+    for (var j = 0; j < pt.length; j++) { if (!dkWordEq(tokens[s + j], pt[j])) { ok = false; break; } }
+    if (ok) { return true; }
+  }
+  return false;
 }
 function dokiGemini(req){
   // KB-only stub (Oct 26): live AI removed by owner choice. Always
@@ -510,18 +570,19 @@ if(form){
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var inp = document.getElementById('chat-input'); var q = (inp.value || '').trim(); if(!q) return;
-    /* P5-RTE-01: the KB is lazy-loaded (first panel open). If it has not
-     * arrived yet, show thinking dots and answer once it lands (or after
-     * the load fails/times out — the links fallback then applies, as
-     * before). The common path (KB already present) runs synchronously,
-     * exactly as before. */
-    if (window.DKASSIST_KB) { runChatSubmit(); return; }
+    /* P5-RTE-01 (B97: KB + approved FAQ): both sources are lazy-loaded
+     * (first panel open). If they have not arrived yet, show thinking
+     * dots and answer once they land (or after the load fails/times
+     * out — the links fallback then applies, as before). The common
+     * path (sources already present) runs synchronously, exactly as
+     * before. */
+    if (window.DKASSIST_KB && window.DKFAQ) { runChatSubmit(); return; }
     var log = document.getElementById('chat-log');
     var b = document.createElement('div'); b.className = 'msg bot';
     var dots = document.createElement('span'); dots.className = 'dk-thinking';
     for (var di = 0; di < 3; di++) { dots.appendChild(document.createElement('i')); }
     b.appendChild(dots); log.appendChild(b); log.scrollTop = log.scrollHeight;
-    ensureKb().then(function(){
+    ensureDokiSources().then(function(){
       if (b.parentNode) { b.parentNode.removeChild(b); }
       runChatSubmit();
     });
@@ -602,6 +663,38 @@ if(form){
         if (best && bestScore >= 2) { kbHit = best; }
       }
     } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    // B97: approved-FAQ grounding (second source, KB first). The FAQ
+    // file is owner-approved static data (dk-faq.js, 93 Q&As) consulted
+    // as a static lookup — never a live-AI call, provider stays null.
+    // A hit needs >= 2 distinct content words from the question
+    // (whole-word, plural-tolerant) with at least one word of length
+    // >= 5, so stopword-only or single-word questions cannot match.
+    var qTokens = dkTokens(low);
+    var faqHit = null;
+    try {
+      var faq = window.DKFAQ;
+      if (faq && faq.length) {
+        var content = qTokens.filter(function (w) { return w.length >= 4 && !DK_STOP[w]; });
+        var shorts = qTokens.filter(function (w) { return w.length >= 2 && w.length < 4; });
+        var bestFaq = null, bestFaqScore = 0, bestFaqLong = false;
+        faq.forEach(function (item) {
+          var ft = dkTokens((item.q || '') + ' ' + (item.a || ''));
+          var fset = {}; ft.forEach(function (w) { fset[w] = 1; });
+          var score = 0, hasLong = false;
+          content.forEach(function (w) {
+            for (var k in fset) { if (dkWordEq(w, k)) { score += 1; if (w.length >= 5) { hasLong = true; } break; } }
+          });
+          shorts.forEach(function (w) {
+            // Short tokens count only on an exact whole-word hit in the
+            // FAQ *question* (not the answer body) — 'pay' must be what
+            // the question is about, not a passing mention.
+            if (dkTokens(item.q || '').indexOf(w) !== -1) { score += 1; }
+          });
+          if (score > bestFaqScore) { bestFaqScore = score; bestFaq = item; bestFaqLong = hasLong; }
+        });
+        if (bestFaq && bestFaqScore >= 2 && bestFaqLong) { faqHit = bestFaq; }
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     // Shared fallback renderer: the sync links path and the AI path's
     // ungrounded/error fallback render exactly the same chips.
     function appendChatLinks(el){
@@ -625,11 +718,43 @@ if(form){
         b.appendChild(document.createElement('br'));
         b.appendChild(document.createTextNode('• ' + step));
       });
-      var kbPage = {'image-resizer':'data-resizer','image-compressor':'data-compressor','image-converter':'data-converter','word-counter':'data-counter','case-converter':'data-case','typing':'data-typing','typefight':'data-battle','hub':'data-tools'}[kbHit.id];
-      if (kbPage && form.getAttribute(kbPage)) {
-        var ka = document.createElement('a'); ka.className = 'chip'; ka.href = form.getAttribute(kbPage); ka.textContent = dkT('rsv_0989', 'Open it'); b.appendChild(document.createElement('br')); b.appendChild(ka);
+      // B97: source line — every KB answer names the site page it came
+      // from. Founder/coins derive their URL from the pricing URL: the
+      // form carries no data-about / data-referrals attribute, and the
+      // replace keeps the same relative depth from every page.
+      var pricingHref = form.getAttribute('data-pricing') || '';
+      var kbSrcMap = {
+        'founder': ['nav_about', pricingHref.replace(/pricing\/$/, 'about/')],
+        'image-resizer': ['tool_resizer_name', form.getAttribute('data-resizer')],
+        'image-compressor': ['tool_compressor_name', form.getAttribute('data-compressor')],
+        'image-converter': ['tool_converter_name', form.getAttribute('data-converter')],
+        'word-counter': ['tool_counter_name', form.getAttribute('data-counter')],
+        'case-converter': ['tool_case_name', form.getAttribute('data-case')],
+        'typing': ['test_title', form.getAttribute('data-typing')],
+        'typefight': ['tool_typefight_name', form.getAttribute('data-battle')],
+        'pricing': ['nav_pricing', form.getAttribute('data-pricing')],
+        'coins': ['ref_nav', pricingHref.replace(/pricing\/$/, 'account/referrals/')],
+        'hub': ['nav_all_tools', form.getAttribute('data-tools')]
+      };
+      var kbSrc = kbSrcMap[kbHit.id] || null;
+      if (kbSrc && kbSrc[1]) {
+        var ka = document.createElement('a'); ka.className = 'chip'; ka.href = kbSrc[1]; ka.textContent = dkT('rsv_0989', 'Open it'); b.appendChild(document.createElement('br')); b.appendChild(ka);
+        b.appendChild(document.createElement('br'));
+        var srcLine = document.createElement('span'); srcLine.className = 'doki-source';
+        srcLine.textContent = dkT('rsv_1458', 'Source:') + ' ';
+        var srcA = document.createElement('a'); srcA.href = kbSrc[1]; srcA.textContent = dkT(kbSrc[0], kbSrc[0]);
+        srcLine.appendChild(srcA); b.appendChild(srcLine);
       }
       // KB-hit answer: success briefly, then idle (mirrors the AI path).
+      dokiHeadSuccess();
+    } else if (faqHit) {
+      // B97: approved-FAQ answer, with the same source line (FAQ page).
+      b.textContent = faqHit.a || '';
+      b.appendChild(document.createElement('br'));
+      var fsrc = document.createElement('span'); fsrc.className = 'doki-source';
+      fsrc.textContent = dkT('rsv_1458', 'Source:') + ' ';
+      var fsrcA = document.createElement('a'); fsrcA.href = form.getAttribute('data-faq'); fsrcA.textContent = dkT('nav_faq', 'FAQ');
+      fsrc.appendChild(fsrcA); b.appendChild(fsrc);
       dokiHeadSuccess();
     } else if (window.DKChat.provider && window.DKFAQ) {
       // AI path (grounded): thinking dots until the provider answers.

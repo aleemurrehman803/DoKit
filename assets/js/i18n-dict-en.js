@@ -82,6 +82,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1455": "How do I compress an image?",
     "rsv_1456": "How do I start typing practice?",
     "rsv_1457": "How do I earn coins?",
+    "rsv_1458": "Source:",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",

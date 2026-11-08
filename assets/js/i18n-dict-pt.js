@@ -82,6 +82,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1455": "Como comprimo uma imagem?",
     "rsv_1456": "Como começo a prática de digitação?",
     "rsv_1457": "Como ganho moedas?",
+    "rsv_1458": "Fonte:",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",

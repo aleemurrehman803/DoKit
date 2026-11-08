@@ -249,6 +249,9 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .doki-suggest{margin:4px 0 8px}
 .doki-suggest-label{display:block;color:var(--muted);font-size:13px;margin:2px 0 6px}
 .doki-suggest .chip{margin:3px 4px 3px 0;text-align:left;white-space:normal}
+/* B97: source line under a grounded answer (KB or FAQ) — small, muted,
+ * the page name links to the source page. */
+.doki-source{font-size:13px;color:var(--muted)}
 /* B96: small-screen panel — narrower side margins and a log capped to
  * the viewport, so the panel never runs off-screen on short phones.
  * Bottom is left to the existing rules (incl. the sticky-CTA offset). */
