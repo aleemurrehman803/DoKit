@@ -610,7 +610,7 @@ window.DK_I18N_DICT["es"] = {
     "rsv_0726": "p. ej. DK-2026-0001",
     "rsv_0727": "p. ej. K7P2Q",
     "rsv_0728": "p. ej. TF-2026-0001",
-    "rsv_0729": "herramientas gratuitas",
+    "rsv_0729": "Herramientas gratuitas",
     "rsv_0730": "¿Qué es iNVERSE cAsE?",
     "rsv_0731": "kebab-case",
     "rsv_0732": "lowercase",

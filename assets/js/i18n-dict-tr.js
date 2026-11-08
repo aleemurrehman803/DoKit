@@ -610,7 +610,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_0726": "örn. DK-2026-0001",
     "rsv_0727": "örn. K7P2Q",
     "rsv_0728": "örn. TF-2026-0001",
-    "rsv_0729": "ücretsiz araçlar",
+    "rsv_0729": "Ücretsiz Araçlar",
     "rsv_0730": "iNVERSE cAsE nedir?",
     "rsv_0731": "kebab-case",
     "rsv_0732": "lowercase",
