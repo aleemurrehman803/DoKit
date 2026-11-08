@@ -243,6 +243,19 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * form_send label is untouched. */
 #chat-form button[type="submit"]{flex:none;padding:8px 10px;font-size:13px}
 #chat-form .doki-mic-btn{padding:7px 8px}
+/* B96: suggested-question chips under the greeting (built by
+ * dokiSessionUI in main.js). Same .chip component as /tools/; the row
+ * wraps, so four chips never overflow a 390px panel. */
+.doki-suggest{margin:4px 0 8px}
+.doki-suggest-label{display:block;color:var(--muted);font-size:13px;margin:2px 0 6px}
+.doki-suggest .chip{margin:3px 4px 3px 0;text-align:left;white-space:normal}
+/* B96: small-screen panel — narrower side margins and a log capped to
+ * the viewport, so the panel never runs off-screen on short phones.
+ * Bottom is left to the existing rules (incl. the sticky-CTA offset). */
+@media (max-width:480px){
+  #chat-panel{right:12px;max-width:calc(100vw - 24px)}
+  #chat-log{max-height:38vh}
+}
 .chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
 /* B54: quick-search chips under the homepage search field (same .chip
  * component as /tools/; the row is a plain <p> so it wraps on mobile). */

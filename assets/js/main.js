@@ -392,6 +392,9 @@ if(fab && panel){ fab.addEventListener('click', function(){
   // Panel open: greeting briefly, then idle. Panel closed: sleep off,
   // FAB instance stays idle (it is always idle).
   if(opened){ dokiHeadGreet(); dokiSleepArm(); } else { dokiSleepClear(); }
+  // B96: keyboard users land in the input when the panel opens — no
+  // extra Tab stops through the page behind the panel.
+  if(opened){ var ci = document.getElementById('chat-input'); if(ci){ ci.focus(); } }
 }); }
 // AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
 // (bindNavDrop): close on Escape and return focus to the launcher
@@ -525,10 +528,26 @@ if(form){
     function runChatSubmit(){
     var log = document.getElementById('chat-log');
     var u = document.createElement('div'); u.className = 'msg'; u.textContent = q; log.appendChild(u);
+    // B96: drop the suggestion chips once the user has asked — they
+    // have done their job, and the transcript stays clean.
+    var sg = log.querySelector('.doki-suggest'); if (sg) { sg.parentNode.removeChild(sg); }
     // Session record: user turn + the request a future provider would get.
     // No send happens while provider is null (KB path below answers).
     var req = window.DKChat.buildRequest(q);
     window.DKChat.history.push({ role: 'user', text: q });
+    // B96: a brief, honest thinking state on the fast (KB-loaded) path.
+    // The answer is a local lookup, but the dots + thinking face make
+    // the turn feel answered rather than pasted, and give the header
+    // state time to be seen. The KB-wait path above already shows dots
+    // while the KB loads, so this delay applies only here.
+    var think = document.createElement('div'); think.className = 'msg bot';
+    var tdots = document.createElement('span'); tdots.className = 'dk-thinking';
+    for (var tdi = 0; tdi < 3; tdi++) { tdots.appendChild(document.createElement('i')); }
+    think.appendChild(tdots); log.appendChild(think); log.scrollTop = log.scrollHeight;
+    dokiSet(dokiHead(), 'doki--thinking');
+    setTimeout(function(){ renderChatAnswer(); }, 300);
+    function renderChatAnswer(){
+    if (think.parentNode) { think.parentNode.removeChild(think); }
     var b = document.createElement('div'); b.className = 'msg bot';
     var low = q.toLowerCase(), reply = dkT('rsv_1021', 'I answer from DoKit\'s own content. ');
     var links = [];
@@ -647,9 +666,16 @@ if(form){
       b.textContent = reply + dkT('rsv_1008', 'These pages may help:');
       appendChatLinks(b);
     }
+    // B96: the thinking face set above must always resolve — a KB hit
+    // shows success (inside its branch); any other sync answer returns
+    // to idle here so the header never sticks on thinking.
+    var _h = dokiHead();
+    if (_h && _h.classList.contains('doki--thinking')) { dokiSet(_h, 'doki--idle'); }
     log.appendChild(b); inp.value = ''; log.scrollTop = log.scrollHeight;
     // Session record: bot turn (rendered answer text, chips included).
     window.DKChat.history.push({ role: 'bot', text: b.textContent });
+    if (window.__dokiChatSave) { window.__dokiChatSave(); }
+    } /* end renderChatAnswer (B96: thinking-delay wrapper) */
     } /* end runChatSubmit (P5-RTE-01: KB-wait wrapper) */
   });
 }
@@ -750,10 +776,87 @@ function dokiMicStop(){
     fresh.type = 'button';
     fresh.className = 'btn ghost';
     fresh.textContent = dkT('acct_chat_new', 'New chat');
+    // B96: suggested questions (covered KB topics only) + tab-scoped
+    // history. The chips are real <button>s built here, not in HTML,
+    // so every page with the panel gets them from this one place.
+    // History lives in sessionStorage (tab-scoped, matching the old
+    // in-memory model): a reload in the same tab restores the chat,
+    // closing the tab forgets it. Nothing is ever sent to Firestore.
+    // The log HTML round-trips safely: user text is inserted via
+    // textContent, so it is escaped in the serialised HTML.
+    var CHAT_STORE_KEY = 'dokit_chat_history';
+    function dokiChatSave(){
+      try {
+        var msgs = log.querySelectorAll('.msg');
+        // Cap the stored transcript (last 30 turns) so one tab cannot
+        // grow storage without bound.
+        var keep = [];
+        for (var i = Math.max(0, msgs.length - 30); i < msgs.length; i++) { keep.push(msgs[i].outerHTML); }
+        window.sessionStorage.setItem(CHAT_STORE_KEY, keep.join(''));
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    }
+    window.__dokiChatSave = dokiChatSave;
+    function dokiSuggestBuild(){
+      // Show only while the log holds just the greeting — once the
+      // user has asked something, the chips have done their job.
+      if (log.querySelector('.doki-suggest')) { return; }
+      if (log.querySelectorAll('.msg').length !== 1) { return; }
+      var row = document.createElement('div');
+      row.className = 'doki-suggest';
+      var lab = document.createElement('span');
+      lab.className = 'doki-suggest-label';
+      lab.textContent = dkT('rsv_1453', 'Try one:');
+      row.appendChild(lab);
+      var chipQs = ['How do I resize an image?', 'How do I compress an image?', 'How do I start typing practice?', 'How do I earn coins?'];
+      ['rsv_1454', 'rsv_1455', 'rsv_1456', 'rsv_1457'].forEach(function (key, idx) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip doki-suggest-chip';
+        chip.textContent = dkT(key, chipQs[idx]);
+        row.appendChild(chip);
+      });
+      log.appendChild(row);
+    }
+    // One delegated listener for the chips: it survives a history
+    // restore (restored chips are the same buttons, re-created from
+    // the stored HTML) and costs a single handler per page.
+    log.addEventListener('click', function (ev) {
+      var chip = ev.target && ev.target.closest ? ev.target.closest('.doki-suggest-chip') : null;
+      if (!chip) { return; }
+      var inp = document.getElementById('chat-input');
+      if (!inp) { return; }
+      inp.value = chip.textContent;
+      chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+    // Restore a same-tab transcript, if any, and rebuild the
+    // in-memory session from it (the provider request builder reads
+    // DKChat.history). The mode bar lives outside #chat-log, so it is
+    // never part of the stored transcript.
+    try {
+      var stored = window.sessionStorage.getItem(CHAT_STORE_KEY);
+      if (stored) {
+        log.innerHTML = stored;
+        window.DKChat.history = [];
+        Array.prototype.forEach.call(log.querySelectorAll('.msg'), function (m) {
+          window.DKChat.history.push({ role: m.classList.contains('bot') ? 'bot' : 'user', text: m.textContent });
+        });
+        // The greeting clone must track the restored greeting.
+        var restoredGreet = log.querySelector('.msg');
+        if (restoredGreet) { greetClone = restoredGreet.cloneNode(true); }
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    dokiSuggestBuild();
     fresh.addEventListener('click', function () {
       window.DKChat.clear();
+      try { window.sessionStorage.removeItem(CHAT_STORE_KEY); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      // Re-clone the greeting now (not at init): the i18n engine may
+      // have re-rendered it after this script ran, and the stored
+      // transcript's first message is the greeting in the live language.
+      var g = log.querySelector('.msg');
+      if (g) { greetClone = g.cloneNode(true); }
       while (log.firstChild) { log.removeChild(log.firstChild); }
       if (greetClone) { log.appendChild(greetClone.cloneNode(true)); }
+      dokiSuggestBuild();
     });
     bar.appendChild(mode);
     bar.appendChild(fresh);
