@@ -1244,13 +1244,35 @@ function dokiMicStop(){
         var cats = (card.getAttribute('data-cat') || '').split(' ');
         card.style.display = (!cat || cat === 'all' || cats.indexOf(cat) !== -1) ? '' : 'none';
       });
+      /* B83: the same filter drives the Guides grid — guide cards carry
+       * the same data-cat values as tool cards (image/text/typing/
+       * security/utility). No second handler: one filter, two grids.
+       * The empty state shows only when the grid exists and nothing
+       * in it matches (a category with zero guides). */
+      var guideCards = document.querySelectorAll('.guides-grid .card');
+      var visible = 0;
+      guideCards.forEach(function (card) {
+        var cats = (card.getAttribute('data-cat') || '').split(' ');
+        var show = (!cat || cat === 'all' || cats.indexOf(cat) !== -1);
+        card.style.display = show ? '' : 'none';
+        if (show) { visible++; }
+      });
+      var empty = document.getElementById('guides-empty');
+      if (empty) { empty.hidden = guideCards.length === 0 || visible !== 0; }
     }
     document.querySelectorAll('[data-filter]').forEach(function (chip) {
       chip.addEventListener('click', function () {
-        document.querySelectorAll('[data-filter]').forEach(function (c) { c.classList.remove('active'); });
+        document.querySelectorAll('[data-filter]').forEach(function (c) { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
         chip.classList.add('active');
+        /* B83: pressed state for screen readers (also applied to the
+         * /tools/ chips — same handler, same behaviour). */
+        chip.setAttribute('aria-pressed', 'true');
         applyFilter(chip.getAttribute('data-filter'));
       });
+    });
+    /* B83: initial pressed state — "All" is the default view. */
+    document.querySelectorAll('[data-filter]').forEach(function (chip) {
+      chip.setAttribute('aria-pressed', chip.getAttribute('data-filter') === 'all' ? 'true' : 'false');
     });
     document.querySelectorAll('[data-finder]').forEach(function (chip) {
       chip.addEventListener('click', function () {

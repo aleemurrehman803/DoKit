@@ -73,6 +73,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1445": "Dokunarak yazma nasıl öğrenilir",
     "rsv_1446": "Ana satır tuşlarından tam hikâyelere 44 adım adım ders — ücretsiz, tarayıcınızda.",
     "rsv_1447": "Dokunarak yazma bir yetenek değil, beceridir: kısa günlük dersler, önce doğruluk, sonra hız.",
+    "rsv_1448": "Bu kategoride henüz kılavuz yok.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

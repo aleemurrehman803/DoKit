@@ -73,6 +73,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1445": "So lernen Sie Blindschreiben",
     "rsv_1446": "44 Lektionen Schritt für Schritt, von der Grundreihe bis zu vollständigen Texten — kostenlos, in Ihrem Browser.",
     "rsv_1447": "Blindschreiben ist eine Fähigkeit, kein Talent: kurze tägliche Lektionen, erst Genauigkeit, dann Geschwindigkeit.",
+    "rsv_1448": "Noch keine Anleitungen in dieser Kategorie.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",

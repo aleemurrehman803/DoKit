@@ -73,6 +73,7 @@ window.DK_I18N_DICT["pt"] = {
     "rsv_1445": "Como aprender digitação por toque",
     "rsv_1446": "44 lições passo a passo, das teclas base às histórias completas — grátis, no seu navegador.",
     "rsv_1447": "Digitação por toque é uma habilidade, não um talento: lições diárias curtas, precisão primeiro, velocidade depois.",
+    "rsv_1448": "Ainda não há guias nesta categoria.",
     "rsv_1380": "Transparente",
     "rsv_1381": "Cor sólida",
     "rsv_1372": "Girar",

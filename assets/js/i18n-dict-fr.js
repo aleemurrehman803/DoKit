@@ -73,6 +73,7 @@ window.DK_I18N_DICT["fr"] = {
     "rsv_1445": "Comment apprendre la frappe au clavier",
     "rsv_1446": "44 leçons pas à pas, des touches de la rangée de base aux histoires complètes — gratuitement, dans votre navigateur.",
     "rsv_1447": "La frappe au clavier est une compétence, pas un talent : de courtes leçons quotidiennes, la précision d'abord, la vitesse suit.",
+    "rsv_1448": "Aucun guide dans cette catégorie pour le moment.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Couleur unie",
     "rsv_1372": "Pivoter",

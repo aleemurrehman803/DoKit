@@ -73,6 +73,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1445": "How to learn touch typing",
     "rsv_1446": "44 step-by-step lessons, from home-row keys to full stories — free, in your browser.",
     "rsv_1447": "Touch typing is a skill, not a talent: short daily lessons, accuracy first, speed follows.",
+    "rsv_1448": "No guides in this category yet.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",
