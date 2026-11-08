@@ -200,7 +200,10 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * form_send label is untouched. */
 #chat-form button[type="submit"]{flex:none;padding:8px 10px;font-size:13px}
 #chat-form .doki-mic-btn{padding:7px 8px}
-.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px}
+.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
+/* B54: quick-search chips under the homepage search field (same .chip
+ * component as /tools/; the row is a plain <p> so it wraps on mobile). */
+.search-chips{margin:12px 0 0}.search-chips .chip{margin:3px 3px 3px 0}
 .chip:hover{border-color:var(--amber);color:var(--amber)}
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
