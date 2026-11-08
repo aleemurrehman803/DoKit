@@ -1681,21 +1681,53 @@ function dokiMicStop(){
     window.syncHeroH1 = sync;
     sync();
   })();
-  // Notify-me forms (coming-soon, TypeFight hub, API docs): the form
-  // opens the visitor's own mail app with a prefilled message to the
-  // site contact — honestly labeled, because no list is saved on
-  // DoKit until the backend arrives in Phase 3.
+  // Notify-me forms (coming-soon, TypeFight hub, API docs) + the guides
+  // newsletter strip: Q1 (Phase D) decided the destination — notify-me
+  // forms write to the `notify` collection, the guides strip to
+  // `newsletter` (data-collection). Both live rules (df3ef92c) allow a
+  // public create with EXACTLY {email, createdAt} (email 4-120 chars),
+  // so the topic is deliberately NOT stored and no rules change was
+  // needed. Success is shown ONLY on a confirmed write (never on
+  // failure — the old dead code confirmed falsely); on failure the form
+  // stays usable and shows the error note with the contact mailto.
   document.querySelectorAll('.notify-form').forEach(function (f) {
     f.addEventListener('submit', function (e) {
       e.preventDefault();
-      var email = f.querySelector('input[type="email"]');
-      var addr = email ? email.value.trim() : '';
-      var topic = f.getAttribute('data-topic') || 'DoKit updates';
-      var subject = encodeURIComponent(dkT('rsv_1030', 'Notify me: ') + topic);
-      var body = encodeURIComponent(dkT('rsv_1031', 'Please notify me about ') + topic + dkT('rsv_1056', '.\nMy email: ') + addr);
-      window.location.href = 'mailto:malikjalil014@gmail.com?subject=' + subject + '&body=' + body;
-      var note = f.querySelector('.notify-sent');
-      if (note) { note.hidden = false; }
+      var emailEl = f.querySelector('input[type="email"]');
+      var addr = emailEl ? emailEl.value.trim() : '';
+      var sent = f.querySelector('.notify-sent');
+      var err = f.querySelector('.notify-error');
+      var btn = f.querySelector('button[type="submit"]');
+      if (err) { err.hidden = true; }
+      // WHY (rules): email must be 4-120 chars; the browser's own
+      // type=email check already ran (required + type=email) — this
+      // guards the rules' length bound before any write is attempted.
+      if (addr.length < 4 || addr.length > 120 || addr.indexOf('@') < 1) {
+        if (err) { err.hidden = false; }
+        return;
+      }
+      var db = null;
+      try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
+      if (!db || !window.firebase || !firebase.firestore) {
+        if (err) { err.hidden = false; }
+        return;
+      }
+      // WHY (rules): only these two collections allow a public create
+      // with this shape; the attribute is allow-listed, never trusted.
+      var col = f.getAttribute('data-collection') || 'notify';
+      if (col !== 'notify' && col !== 'newsletter') { col = 'notify'; }
+      if (btn) { btn.disabled = true; }
+      db.collection(col).add({
+        email: addr,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function () {
+        if (sent) { sent.hidden = false; }
+        if (emailEl) { emailEl.disabled = true; }
+      }, function (e3) {
+        window.dkSwallow && window.dkSwallow(e3, 'main.js');
+        if (err) { err.hidden = false; }
+        if (btn) { btn.disabled = false; }
+      });
     });
   });
 

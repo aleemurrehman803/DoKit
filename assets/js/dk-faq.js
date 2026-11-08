@@ -290,7 +290,7 @@ window.DKFAQ = [
  },
  {
   "q": "What plans does DoKit offer?",
-  "a": "Free — Rs 0 forever; Pro — Rs 300 per month; Team — Rs 1,500 per month. Real prices only — no hidden charges."
+  "a": "Free — Rs 0 forever; Pro — Rs 300 per month; Team — Rs 1,500 per month. No hidden charges."
  },
  {
   "q": "Are Pro and Team on sale yet?",
