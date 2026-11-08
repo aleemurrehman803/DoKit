@@ -396,7 +396,12 @@
    * actually agree. Deferred scripts run after DOM parse, so the
    * element exists here when present; absent on other pages = no-op. */
   try {
-    var capturedRef = sessionStorage.getItem('dokit_ref') || '';
+    /* D2 (Nov 8, owner decision): read via getCapturedRef() — sessionStorage
+     * OR ?ref= from the URL — so the checkbox does not depend on the boot
+     * capture above having run first (e.g. storage write failed). The
+     * checkbox stays unchecked by default; visibility alone never
+     * activates anything (activation needs the checked box at submit). */
+    var capturedRef = getCapturedRef();
     var consentWrap = document.getElementById('ref-consent-wrap');
     if (capturedRef && consentWrap) { consentWrap.hidden = false; }
   } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
