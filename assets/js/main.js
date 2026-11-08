@@ -1281,6 +1281,40 @@ function dokiMicStop(){
       });
     });
   })();
+  // B95: FAQ live search — filters the 10 native <details> by question +
+  // answer text (textContent matching only; the query is never rendered
+  // as HTML). Clearing restores all 10. Enter opens the first visible
+  // match. The <details> open/close behaviour itself is untouched (native).
+  (function faqSearch(){
+    var input = document.getElementById('faq-search');
+    if (!input) { return; }
+    var items = Array.prototype.slice.call(document.querySelectorAll('.faq details'));
+    var empty = document.getElementById('faq-empty');
+    if (!items.length) { return; }
+    function apply(q) {
+      q = (q || '').trim().toLowerCase();
+      var visible = 0;
+      items.forEach(function (d) {
+        var show = !q || d.textContent.toLowerCase().indexOf(q) !== -1;
+        d.style.display = show ? '' : 'none';
+        if (show) { visible++; }
+      });
+      if (empty) { empty.hidden = visible !== 0; }
+      return visible;
+    }
+    input.addEventListener('input', function () { apply(input.value); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') { return; }
+      e.preventDefault();
+      apply(input.value);
+      var first = items.filter(function (d) { return d.style.display !== 'none'; })[0];
+      if (first) {
+        first.open = true;
+        var sum = first.querySelector('summary');
+        if (sum) { sum.focus(); }
+      }
+    });
+  })();
   // Rules copy helper (admin tool, restored from the old site):
   // fetch the legacy rules from the public repo and copy them.
   // If automatic copy is blocked, show the text for manual copy.
