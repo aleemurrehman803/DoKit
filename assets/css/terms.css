@@ -12,7 +12,11 @@
 .terms-nav a{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
 .terms-nav a:hover{background:var(--surface2)}
 .terms-nav .terms-nav-part a{font-weight:800;color:var(--amber)}
-.terms-body section{margin:0 0 32px;scroll-margin-top:90px}
+/* T029 (P5-VIS-06): the per-section scroll-margin-top:90px is removed —
+ * the global html{scroll-padding-top:90px} in style.css now provides the
+ * same 90px offset. Keeping both would double it (~180px) on every
+ * terms anchor jump. Net terms behaviour is unchanged (90px). */
+.terms-body section{margin:0 0 32px}
 .terms-body h2{margin-top:8px}
 .terms-body h3{margin-top:20px}
 .terms-part h2{padding-bottom:10px;border-bottom:2px solid var(--line)}

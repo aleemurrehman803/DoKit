@@ -130,7 +130,7 @@
     "acct_sub_upgrade": "⬆️ Mejorar",
     "acct_sub_upgrade_note": "Pro ($6/mes) y Team ($29/mes) aún no están a la venta. Cuando se lancen podrás pagar con USDT o PKR (Easypaisa / JazzCash).",
     "acct_sub_wallet": "🪙 Billetera de monedas",
-    "acct_sub_wallet_d": "1 moneda = Rs 1. Deposita y retira dinero real.",
+    "acct_sub_wallet_d": "1 moneda = Rs 1.", "acct_payments_closed": "Los depósitos, retiros y pagos con Stripe están cerrados por decisión del propietario.",
     "acct_wd_acct": "Tu número de cuenta / dirección de billetera",
     "acct_wd_balance": "Saldo",
     "acct_wd_h1": "💸 Retiro",

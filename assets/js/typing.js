@@ -31,13 +31,34 @@ function render(){
 function stats(){
   var correct = 0; for(var i = 0; i < typed.length; i++){ if(typed[i] === passage[i]) correct++; }
   var mins = (Date.now() - startTime) / 60000;
-  var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
+  /* T085 (P5-VIS-10): WPM is 0 until a full second has elapsed — with
+   * elapsed near 0 the division would flash an absurd WPM (thousands) on
+   * the live display. This is a DISPLAY clamp only, not a scoring floor:
+   * finish() rejects sub-second runs before it ever calls stats(), and the
+   * 1s interval's first tick is at >= 1s, so scoring is exactly as before
+   * (see the WPM0 FIX comment in finish()). Accuracy needs no clamp: it
+   * is exact from the first keystroke. */
+  var elapsedOk = mins >= 1 / 60;
+  var wpm = elapsedOk && mins > 0 ? Math.round((correct / 5) / mins) : 0;
   // Net WPM counts correct characters only; gross WPM counts every typed
   // character. Both use the same elapsed time, so the certificate can
   // show them side by side without inventing either value.
-  var gross = mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
+  var gross = elapsedOk && mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
   var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
-  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct, gross: gross};
+  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; syncAccRing(acc); return {wpm: wpm, acc: acc, correct: correct, gross: gross};
+}
+/* B77: accuracy dial — the ring fills in proportion to the same live
+ * acc value, on the same keystroke cadence as the text (stats() is
+ * called per keystroke by T085, and reset() calls this too). The %
+ * text stays beside the ring, so colour is never the only signal.
+ * Thresholds: >=95 good (green), 90-94 warn (amber), <90 bad (red) —
+ * the existing --good/--amber/--bad tokens, no new colours. */
+function syncAccRing(acc){
+  var ring = document.getElementById('ty-acc-ring'), arc = document.getElementById('ty-acc-arc');
+  if(!ring || !arc){ return; }
+  arc.style.strokeDashoffset = String(100 - acc);
+  ring.setAttribute('aria-valuenow', String(acc));
+  ring.setAttribute('data-acc', acc >= 95 ? 'good' : (acc >= 90 ? 'warn' : 'bad'));
 }
 // HOOKS (referral-complete §7): stamp the signed-in user's doc with
 // lastTestAt and, when set, clear coinsFrozen (a finished test proves
@@ -48,12 +69,12 @@ function stats(){
 function stampLastTest(){
   try{
     var db = null, auth = null;
-    try{ if(window.DKA && window.DKA.db){ db = window.DKA.db(); } }catch(e){}
-    if(!db){ try{ if(window.firebase && window.firebase.firestore){ db = window.firebase.firestore(); } }catch(e){} }
+    try{ if(window.DKA && window.DKA.db){ db = window.DKA.db(); } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+    if(!db){ try{ if(window.firebase && window.firebase.firestore){ db = window.firebase.firestore(); } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); } }
     try{
       if(window.DKA && window.DKA.auth){ auth = window.DKA.auth(); }
       else if(window.firebase && window.firebase.auth){ auth = window.firebase.auth(); }
-    }catch(e){}
+    }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
     var user = auth ? auth.currentUser : null;
     if(!db || !user || !user.uid){ return; }
     var ref = db.collection('users').doc(user.uid);
@@ -64,9 +85,9 @@ function stampLastTest(){
       try{ upd.lastTestAt = window.firebase.firestore.FieldValue.serverTimestamp(); }
       catch(e){ upd.lastTestAt = Date.now(); }
       if(d.coinsFrozen){ upd.coinsFrozen = false; }
-      ref.update(upd).catch(function(){});
-    }).catch(function(){});
-  }catch(e){}
+      ref.update(upd).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); });
+    }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); });
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
 // HOOKS (referral-complete §7): when a challenge marker is pending in
 // localStorage, record the local completion marker the challenge
@@ -92,10 +113,48 @@ function recordChallengeDone(){
       if(window.DKA && window.DKA.auth){ auth2 = window.DKA.auth(); }
       else if(window.firebase && window.firebase.auth){ auth2 = window.firebase.auth(); }
       uid = auth2 ? auth2.currentUser.uid : null;
-    }catch(e){}
+    }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
     if(pendingUid && uid && pendingUid !== uid){ return; }
     localStorage.setItem('dk_challenge_done', JSON.stringify({ challengeId: challengeId, at: Date.now() }));
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+}
+/* P5-RTE-03: referrals.js (263 KB) is NOT loaded with the typing page —
+ * only the activation writer is needed here, and only after a test
+ * finishes. Idempotent shared promise, mirroring main.js ensureKb:
+ * resolves true when window.DKREF lands, false on load error / 3s
+ * timeout, so the finish flow never hangs and never throws. One
+ * deliberate difference from ensureKb: a failed load clears the shared
+ * promise so the next finished test retries (a transient failure must
+ * not lose the user's referral activation for the whole session). */
+var __dkRefPromise = null;
+function ensureReferrals(){
+  if (window.DKREF && window.DKREF.recordActivation) { return Promise.resolve(true); }
+  if (__dkRefPromise) { return __dkRefPromise; }
+  __dkRefPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){
+      if (!done) {
+        done = true;
+        if (!ok) { __dkRefPromise = null; }
+        resolve(ok);
+      }
+    }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/typing.js"]');
+        base = m ? m.src.replace(/assets\/js\/typing\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'referrals.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkRefPromise;
 }
 function finish(){
   if(done) return;
@@ -133,13 +192,24 @@ function finish(){
       // milestone check, which counts verified-only results).
       window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,verified:!pasted});
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Referral activation (silent): first consented test only; never breaks typing.
-  try{ if(window.DKREF && window.DKREF.recordActivation){ window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } }catch(e){}
+  // P5-RTE-03: referrals.js loads lazily — only after a test finishes
+  // (263 KB saved up front). Already loaded (e.g. a previous test this
+  // session): the writer runs synchronously, exactly as before.
+  try {
+    if (window.DKREF && window.DKREF.recordActivation) {
+      window.DKREF.recordActivation(st.wpm, st.acc, typed.length);
+    } else {
+      ensureReferrals().then(function(){
+        try { if (window.DKREF && window.DKREF.recordActivation) { window.DKREF.recordActivation(st.wpm, st.acc, typed.length); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+      });
+    }
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // HOOKS (referral-complete §7): lastTestAt (+ unfreeze) and the
   // local challenge-done marker; both silent, neither breaks typing.
-  try{ stampLastTest(); }catch(e){}
-  try{ recordChallengeDone(); }catch(e){}
+  try{ stampLastTest(); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
+  try{ recordChallengeDone(); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Gamification (Task 5, historical rules): test XP + badges, once per
   // identical result per day; never breaks typing. wpm here is already
   // net-style (correct chars / 5 / minutes), i.e. historical nwpm.
@@ -149,12 +219,12 @@ function finish(){
       var testKey = 'test:' + day + ':' + Math.round(st.wpm) + ':' + Math.round(st.acc);
       window.DK2.afterActivity('test', { nwpm: Math.round(st.wpm), dur: limit, acc: Math.round(st.acc) }, { testKey: testKey });
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
 function reset(newPassage){
   if(newPassage) passage = newPassage;
   typed = ''; started = false; done = false; pasted = false; clearInterval(timer); left = limit;
-  input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%';
+  input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%'; syncAccRing(100);
   resEl.innerHTML = ''; render(); input.focus();
 }
 // HOOKS (referral-complete §7): pasting is allowed in the typing
@@ -175,6 +245,12 @@ input.addEventListener('input', function(ev){
     }, 1000);
   }
   if(typed.length >= passage.length){ finish(); input.disabled = true; }
+  /* T085 (P5-VIS-10): update the visible stats on every keystroke, not
+   * only on the 1s interval — a wrong character left accuracy showing the
+   * previous value (100%) for up to a second. stats() itself clamps WPM
+   * to 0 in the first second, so no spike; the interval still drives the
+   * countdown. */
+  if(started) stats();
   render();
 });
 var sel = document.getElementById('ty-time-sel');

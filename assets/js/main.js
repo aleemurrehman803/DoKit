@@ -1,9 +1,82 @@
 
 (function(){
+/* P5-UX-23 (T023): one silent-error counter for the codebase's empty catch
+ * sites. Every empty catch calls window.dkSwallow(err, where): it always
+ * counts in memory (invisible to users) and console.warns only when the
+ * debug flag is on (?dkdebug=1, or window.DK_DEBUG = true in the console).
+ * Behaviour is untouched — this only observes, and the observer itself can
+ * never throw. Inspect with window.DKDiag.count / .last (last 50 entries). */
+window.DKDiag = { count: 0, last: [] };
+window.dkSwallow = function (err, where) {
+  try {
+    window.DKDiag.count++;
+    var entry = { where: where || '?', message: (err && err.message) ? String(err.message) : String(err), at: Date.now() };
+    window.DKDiag.last.push(entry);
+    if (window.DKDiag.last.length > 50) window.DKDiag.last.shift();
+    if (window.DK_DEBUG) { console.warn('[DoKit] swallowed error:', entry.where, entry.message); }
+  } catch (e) { /* the observer must never throw, even if diagnostics break */ }
+};
+try {
+  if (new URLSearchParams(window.location.search).get('dkdebug') === '1') { window.DK_DEBUG = true; }
+} catch (e) { /* URL parsing must never break boot */ }
 var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// B58: ONE pause state for all decorative motion. `paused` = the visitor
+// pressed Pause (persisted in localStorage); `tabHidden` = the T046
+// tab-hidden auto-pause. dkSyncPaused() applies html.dk-paused from
+// either source, so the tab-hidden listener can never wipe a manual
+// pause (and resuming the tab can never resume a manual pause).
+// The CSS rule html.dk-paused *{animation-play-state:paused} freezes
+// every CSS animation in place (float cards, marquee, …); the canvas
+// loop and the rotator check `paused` directly. Under reduced motion
+// everything is already static, so no persisted pause is restored.
+var paused = false;
+var tabHidden = document.visibilityState === 'hidden';
+try{ if(!reduced && localStorage.getItem('dokit_motion_paused') === '1'){ paused = true; } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+function dkSyncPaused(){ document.documentElement.classList.toggle('dk-paused', paused || tabHidden); }
+// T030 (P5-VIS-07): one header menu open at a time. Each menu binder
+// registers its OWN existing close function here; closeAllMenus(except)
+// runs every other registered closer, so opening any menu closes all the
+// rest — no second close mechanism, and Esc / outside-click / focus-return
+// keep calling the same closers as before. The mobile nav panel
+// (#nav-links, a class toggle rather than a hidden menu) is closed the
+// same way. An ancestor of the menu being opened is never closed: the
+// profile-menu language menu (#langMenu) lives inside #profMenu, so
+// opening it must leave the profile menu open. Exposed on window so
+// i18n.js (loaded later, dynamically) can register the language menus
+// and call it too.
+var dkMenuRegistry = [];
+function dkRegisterMenu(menuId, closeFn){
+  if (!menuId || typeof closeFn !== 'function') { return; }
+  dkMenuRegistry.push({ menuId: menuId, close: closeFn });
+}
+function dkCloseNavLinks(){
+  var l = document.getElementById('nav-links'), t = document.getElementById('nav-toggle');
+  if (l && l.classList.contains('open')) {
+    l.classList.remove('open');
+    if (t) { t.setAttribute('aria-expanded', 'false'); }
+  }
+}
+function closeAllMenus(exceptMenuId){
+  var exceptEl = exceptMenuId ? document.getElementById(exceptMenuId) : null;
+  dkMenuRegistry.forEach(function (entry) {
+    if (entry.menuId === exceptMenuId) { return; }
+    var el = document.getElementById(entry.menuId);
+    if (exceptEl && el && el.contains(exceptEl)) { return; } // ancestor: keep open
+    try { entry.close(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  });
+  // T039 (P5-DES-13): #nav-links is an ancestor of the nav dropdowns,
+  // so the ancestor rule above applies here too — closing the mobile
+  // nav would hide the dropdown being opened (<=900px hamburger band).
+  if (exceptMenuId !== 'nav-links') {
+    var navLinks = document.getElementById('nav-links');
+    if (!(exceptEl && navLinks && navLinks.contains(exceptEl))) { dkCloseNavLinks(); }
+  }
+}
+window.dkRegisterMenu = dkRegisterMenu;
+window.dkCloseAllMenus = closeAllMenus;
 // mobile nav
 var t = document.getElementById('nav-toggle'), l = document.getElementById('nav-links');
-if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); }); }
+if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) { closeAllMenus('nav-links'); } }); }
 // active nav
 try{
   var here = new URL(window.location.href).pathname.replace(/\/index\.html$/, '/');
@@ -11,26 +84,135 @@ try{
     var p = new URL(a.href, window.location.href).pathname.replace(/\/index\.html$/, '/');
     if(p === here){ a.classList.add('active'); }
   });
-}catch(e){}
+}catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 // reveal on scroll
 if('IntersectionObserver' in window && !reduced){
   var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold: .12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 } else { document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); }); }
-// tool search filter
+// B53: live tool search — filter + results listbox + Enter routing.
+// The registry is the page's own .tool-card elements (one source, shared
+// with the /tools/ page): name from data-name, keywords from
+// data-keywords, description from the card text. Routing uses ONLY the
+// card's own link (allow-list) — the query text is never used as a URL,
+// so javascript:/protocol-relative input can never navigate off-site.
 var s = document.getElementById('tool-search');
 if(s){
-  s.addEventListener('input', function(){
-    var q = s.value.trim().toLowerCase();
+  var resultsBox = document.getElementById('tool-search-results');
+  var emptyBox = document.getElementById('tool-search-empty');
+  var clearBtn = document.getElementById('tool-search-clear');
+  var activeOpt = -1; // index into the current visible matches
+  function norm(t){ return String(t || '').toLowerCase().replace(/-/g, ' '); }
+  // All cards on this page, with their link + searchable text, in DOM order.
+  function toolEntries(){
+    var out = [];
     document.querySelectorAll('.tool-card').forEach(function(c){
-      var name = (c.getAttribute('data-name') || '').toLowerCase();
-      c.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+      var link = c.querySelector('a.cardlink');
+      if(!link) { return; }
+      out.push({ card: c, link: link, name: (c.getAttribute('data-name') || '').trim(),
+        hay: norm((c.getAttribute('data-name') || '') + ' ' + (c.getAttribute('data-keywords') || '') + ' ' + c.textContent) });
     });
+    return out;
+  }
+  function currentMatches(q){
+    if(!q) { return []; }
+    return toolEntries().filter(function(e){ return e.hay.indexOf(q) !== -1; });
+  }
+  function hideBoxes(){
+    if(resultsBox){ resultsBox.hidden = true; resultsBox.innerHTML = ''; }
+    if(emptyBox){ emptyBox.hidden = true; }
+    s.setAttribute('aria-expanded', 'false');
+    activeOpt = -1;
+  }
+  function markActive(list){
+    var opts = resultsBox ? resultsBox.querySelectorAll('[role="option"]') : [];
+    opts.forEach(function(o, i){
+      var on = (i === activeOpt);
+      o.classList.toggle('active', on);
+      o.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if(list && list[activeOpt]) { s.setAttribute('aria-activedescendant', 'opt-' + activeOpt); }
+    else { s.removeAttribute('aria-activedescendant'); }
+  }
+  function goTo(entry){
+    if(!entry) { return; }
+    // Same-origin by construction: the href comes from a card on this page.
+    window.location.href = new URL(entry.link.getAttribute('href'), window.location.href).href;
+  }
+  s.addEventListener('input', function(){
+    var q = norm(s.value.trim());
+    var entries = toolEntries();
+    entries.forEach(function(e){
+      e.card.style.display = (!q || e.hay.indexOf(q) !== -1) ? '' : 'none';
+    });
+    if(!resultsBox && !emptyBox) { return; } // /tools/ page: filter only
+    var matches = currentMatches(q);
+    activeOpt = -1;
+    if(!q){ hideBoxes(); return; }
+    if(matches.length === 0){
+      if(resultsBox){ resultsBox.hidden = true; resultsBox.innerHTML = ''; }
+      if(emptyBox){ emptyBox.hidden = false; }
+      s.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    if(emptyBox){ emptyBox.hidden = true; }
+    if(resultsBox){
+      resultsBox.innerHTML = '';
+      matches.forEach(function(e, i){
+        var b = document.createElement('button');
+        b.type = 'button'; b.setAttribute('role', 'option'); b.id = 'opt-' + i;
+        b.setAttribute('aria-selected', 'false'); b.textContent = e.name;
+        // mousedown (not click): fires before the input blur that hides the box.
+        b.addEventListener('mousedown', function(ev){ ev.preventDefault(); goTo(e); });
+        resultsBox.appendChild(b);
+      });
+      resultsBox.hidden = false;
+      s.setAttribute('aria-expanded', 'true');
+    }
   });
+  s.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ s.value = ''; s.dispatchEvent(new Event('input', { bubbles: true })); s.blur(); return; }
+    var matches = currentMatches(norm(s.value.trim()));
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      if(!resultsBox || resultsBox.hidden || matches.length === 0) { return; }
+      e.preventDefault();
+      activeOpt = e.key === 'ArrowDown'
+        ? Math.min(activeOpt + 1, matches.length - 1)
+        : Math.max(activeOpt - 1, 0);
+      markActive(matches);
+      return;
+    }
+    if(e.key === 'Enter'){
+      if(matches.length === 0) { return; } // empty state: never navigate
+      e.preventDefault();
+      goTo(activeOpt >= 0 ? matches[activeOpt] : matches[0]);
+    }
+  });
+  document.addEventListener('click', function(e){
+    if(resultsBox && !resultsBox.hidden && !e.target.closest('.search-field')) { hideBoxes(); }
+  });
+  if(clearBtn){
+    clearBtn.addEventListener('click', function(){
+      s.value = ''; s.dispatchEvent(new Event('input', { bubbles: true })); s.focus();
+    });
+  }
 }
+// T046 (P5-DES-22): pause infinite animations while the tab is hidden.
+// visibilitychange updates the shared state (B58) — the class is set
+// from paused || tabHidden, so a manual pause survives a tab switch.
+// The CSS rule freezes every animation with play-state:paused (not
+// none), so each one resumes from exactly where it stopped — no jump.
+document.addEventListener('visibilitychange', function(){
+  tabHidden = document.visibilityState === 'hidden';
+  dkSyncPaused();
+});
+dkSyncPaused();
 // hero particles
 var cv = document.getElementById('hero-canvas');
-var paused = false;
+// T046/B58: `paused` + `tabHidden` are hoisted above (single pause
+// state); framePending guards so at most one frame is ever scheduled
+// (the visible-kick and the Pause button both re-kick).
+var framePending = false;
 if(cv){
   var ctx = cv.getContext('2d'), W, H, parts = [];
   function size(){ var r = cv.parentElement.getBoundingClientRect(); W = cv.width = r.width; H = cv.height = r.height; }
@@ -43,15 +225,36 @@ if(cv){
       if(p.x < 0 || p.x > W) p.vx *= -1; if(p.y < 0 || p.y > H) p.vy *= -1;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(' + p.c + ',.8)'; ctx.fill();
     });
-    if(!paused && !reduced){ requestAnimationFrame(draw); }
+    framePending = false;
+    if(!paused && !reduced && !tabHidden){ framePending = true; requestAnimationFrame(draw); }
   }
   size(); mk(); draw();
   window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); } });
   var pb = document.getElementById('pause-motion');
-  if(pb){ pb.addEventListener('click', function(){
-    paused = !paused; pb.textContent = paused ? dkT('rsv_1003', 'Resume motion') : dkT('rsv_0433', 'Pause motion');
-    if(!paused && !reduced){ draw(); }
-  }); }
+  if(pb){
+    // B58: keep the label via its data-i18n key (not a bare textContent
+    // overwrite, which used to discard the binding until the next
+    // language change) and expose the state to assistive tech.
+    function syncPauseBtn(){
+      pb.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      pb.setAttribute('data-i18n', paused ? 'rsv_1003' : 'rsv_0433');
+      pb.textContent = paused ? dkT('rsv_1003', 'Resume motion') : dkT('rsv_0433', 'Pause motion');
+    }
+    document.addEventListener('dokit:langchange', syncPauseBtn);
+    syncPauseBtn(); // applies a persisted pause (class + label + pressed)
+    dkSyncPaused();
+    pb.addEventListener('click', function(){
+      paused = !paused;
+      dkSyncPaused();
+      syncPauseBtn();
+      try{ localStorage.setItem('dokit_motion_paused', paused ? '1' : '0'); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      if(!paused && !reduced && !tabHidden && !framePending){ draw(); }
+    });
+  }
+  document.addEventListener('visibilitychange', function(){
+    tabHidden = document.visibilityState === 'hidden';
+    if(!tabHidden && !paused && !reduced && !framePending){ framePending = true; requestAnimationFrame(draw); }
+  });
   if(reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); }
 }
 // WHY (i18n): JS-rendered strings (rotator words, chat link labels)
@@ -66,7 +269,7 @@ function dkT(key, fallback){
       var v = eng.t(key);
       if(v) return v;
     }
-  }catch(e){}
+  }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   return fallback;
 }
 window.dkT = dkT;
@@ -83,6 +286,9 @@ if(rot){
   else{
     var wi = 0, ci = 0, del = false;
     (function tick(){
+      // B58: while paused, re-check without touching ci/del — the word
+      // freezes mid-type and resumes exactly where it stopped.
+      if(paused){ setTimeout(tick, 200); return; }
       var w = dkT(words[wi][0], words[wi][1]);
       rot.textContent = w.slice(0, ci);
       if(!del){ ci++; if(ci > w.length){ del = true; setTimeout(tick, 1400); return; } setTimeout(tick, 90); }
@@ -173,17 +379,33 @@ function dokiWake(){
   dokiSleepArm();
 }
 if(fab && panel){ fab.addEventListener('click', function(){
-  var opened = panel.classList.toggle('open');
+  // DES-21: close fades out (dkAnimateClose) instead of snapping; a
+  // click on a panel that is mid-close re-opens it.
+  var opened;
+  if (panel.classList.contains('open')) {
+    if (panel.classList.contains('closing')) { dkCancelClose(panel); opened = true; }
+    else { dkAnimateClose(panel, function(){ panel.classList.remove('open'); }); opened = false; }
+  } else {
+    dkCancelClose(panel); panel.classList.add('open'); opened = true;
+  }
   dokiLoadFaq();
   // Panel open: greeting briefly, then idle. Panel closed: sleep off,
   // FAB instance stays idle (it is always idle).
   if(opened){ dokiHeadGreet(); dokiSleepArm(); } else { dokiSleepClear(); }
+  // B96: keyboard users land in the input when the panel opens — no
+  // extra Tab stops through the page behind the panel.
+  if(opened){ var ci = document.getElementById('chat-input'); if(ci){ ci.focus(); } }
 }); }
 // AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
 // (bindNavDrop): close on Escape and return focus to the launcher
 // (here the FAB). The panel is non-modal; this only adds the close.
+// DES-21: focus returns immediately while the panel fades — the
+// keyboard user is never left waiting on (or trapped by) the close.
 if(fab && panel){ document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape' && panel.classList.contains('open')){ panel.classList.remove('open'); fab.focus(); }
+  if(e.key === 'Escape' && panel.classList.contains('open')){
+    dkAnimateClose(panel, function(){ panel.classList.remove('open'); });
+    fab.focus();
+  }
 }); }
 if(panel){ panel.addEventListener('click', dokiWake); panel.addEventListener('input', dokiWake); }
 // ---- Doki idle blink (photo pass, Oct 25) ----
@@ -226,9 +448,100 @@ setInterval(dokiBlinkTick, 5000);
 // Doki answers from the site's own knowledge base (assistant-kb.js) and
 // falls back to navigation links. dokiGemini below is kept as a stub
 // returning DK_NOT_GROUNDED so any old caller degrades gracefully.
+/* P5-RTE-01: lazy-load the Doki knowledge base on first chat-panel open
+ * instead of on every page load (71 KB saved until the user chats).
+ * Idempotent: one shared promise for the panel-open call and the submit
+ * handler's wait. Resolves even on load failure (after a 3s safety
+ * timeout) so chat never hangs — the answer then falls back to links,
+ * exactly as it does when no KB is present. */
+var __dkKbPromise = null;
+function ensureKb(){
+  if (window.DKASSIST_KB) { return Promise.resolve(true); }
+  if (__dkKbPromise) { return __dkKbPromise; }
+  __dkKbPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){ if (!done) { done = true; resolve(ok); } }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/main.js"]');
+        base = m ? m.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'assistant-kb.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkKbPromise;
+}
 function dokiLoadFaq(){
   // KB-only (Oct 26): no FAQ/AI provider is loaded. Doki answers from
-  // assistant-kb.js, loaded site-wide by loadSharedScripts.
+  // assistant-kb.js plus the owner-approved static FAQ (dk-faq.js,
+  // B97), both lazy-loaded on first panel open (P5-RTE-01 pattern).
+  // Still no provider: the FAQ is a static lookup, never a live-AI call.
+  ensureDokiSources();
+}
+// B97: lazy-load the owner-approved FAQ the same way as the KB — one
+// shared promise, 3s safety timeout, resolves false on failure so the
+// turn falls back to KB/links instead of hanging.
+var __dkFaqPromise = null;
+function ensureFaq(){
+  if (window.DKFAQ) { return Promise.resolve(true); }
+  if (__dkFaqPromise) { return __dkFaqPromise; }
+  __dkFaqPromise = new Promise(function (resolve) {
+    var done = false;
+    function finish(ok){ if (!done) { done = true; resolve(ok); } }
+    try {
+      var base = window.__dkJsBase || '';
+      if (!base) {
+        var m = document.querySelector('script[src$="assets/js/main.js"]');
+        base = m ? m.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/') : '';
+      }
+      if (!base) { finish(false); return; }
+      var s = document.createElement('script');
+      s.src = base + 'dk-faq.js';
+      s.onload = function(){ finish(true); };
+      s.onerror = function(){ finish(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ finish(false); }, 3000);
+    } catch (e) { finish(false); }
+  });
+  return __dkFaqPromise;
+}
+// B97: one combined lazy load for both static Doki sources (KB +
+// approved FAQ). A failed load just means that source is skipped.
+function ensureDokiSources(){
+  return Promise.all([ensureKb(), ensureFaq()]).then(function(){ return true; });
+}
+// B97/B98 (Phase B): whole-word matching helpers for the Doki matcher.
+// Tokenising on Unicode letters/digits (not \b, which is ASCII-only
+// and would break non-Latin keywords) keeps Urdu/Arabic/Hindi keywords
+// working exactly like English ones.
+var DK_STOP = {a:1, an:1, the:1, is:1, are:1, was:1, were:1, do:1, does:1, did:1, how:1, what:1, when:1, where:1, which:1, who:1, whom:1, why:1, can:1, could:1, should:1, would:1, will:1, may:1, might:1, i:1, me:1, my:1, you:1, your:1, we:1, us:1, our:1, it:1, its:1, this:1, that:1, there:1, here:1, of:1, for:1, to:1, in:1, on:1, at:1, by:1, with:1, from:1, and:1, or:1, but:1, if:1, so:1, not:1, no:1, please:1, get:1, have:1, has:1, had:1, am:1, be:1, been:1, any:1, all:1, about:1, into:1, over:1, under:1, up:1, down:1, out:1, per:1, via:1};
+function dkTokens(s){
+  return (s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(function (w) { return !!w; });
+}
+function dkWordEq(a, b){
+  // Plural-tolerant equality: 'plan' matches 'plans', never a substring.
+  return a === b || (a + 's') === b || (b + 's') === a;
+}
+function dkPhraseHit(tokens, phrase){
+  var pt = dkTokens(phrase);
+  if (!pt.length) { return false; }
+  if (pt.length === 1) {
+    for (var i = 0; i < tokens.length; i++) { if (dkWordEq(tokens[i], pt[0])) { return true; } }
+    return false;
+  }
+  for (var s = 0; s + pt.length <= tokens.length; s++) {
+    var ok = true;
+    for (var j = 0; j < pt.length; j++) { if (!dkWordEq(tokens[s + j], pt[j])) { ok = false; break; } }
+    if (ok) { return true; }
+  }
+  return false;
 }
 function dokiGemini(req){
   // KB-only stub (Oct 26): live AI removed by owner choice. Always
@@ -247,7 +560,7 @@ window.DKChat = window.DKChat || {
   setProvider: function (fn) { this.provider = (typeof fn === 'function') ? fn : null; },
   buildRequest: function (q) {
     var lang = 'en';
-    try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+    try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     return { messages: this.history.concat([{ role: 'user', text: q }]), personality: 'helpful', lang: lang };
   },
   clear: function () { this.history = []; }
@@ -257,12 +570,45 @@ if(form){
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var inp = document.getElementById('chat-input'); var q = (inp.value || '').trim(); if(!q) return;
+    /* P5-RTE-01 (B97: KB + approved FAQ): both sources are lazy-loaded
+     * (first panel open). If they have not arrived yet, show thinking
+     * dots and answer once they land (or after the load fails/times
+     * out — the links fallback then applies, as before). The common
+     * path (sources already present) runs synchronously, exactly as
+     * before. */
+    if (window.DKASSIST_KB && window.DKFAQ) { runChatSubmit(); return; }
+    var log = document.getElementById('chat-log');
+    var b = document.createElement('div'); b.className = 'msg bot';
+    var dots = document.createElement('span'); dots.className = 'dk-thinking';
+    for (var di = 0; di < 3; di++) { dots.appendChild(document.createElement('i')); }
+    b.appendChild(dots); log.appendChild(b); log.scrollTop = log.scrollHeight;
+    ensureDokiSources().then(function(){
+      if (b.parentNode) { b.parentNode.removeChild(b); }
+      runChatSubmit();
+    });
+    function runChatSubmit(){
     var log = document.getElementById('chat-log');
     var u = document.createElement('div'); u.className = 'msg'; u.textContent = q; log.appendChild(u);
+    // B96: drop the suggestion chips once the user has asked — they
+    // have done their job, and the transcript stays clean.
+    var sg = log.querySelector('.doki-suggest'); if (sg) { sg.parentNode.removeChild(sg); }
     // Session record: user turn + the request a future provider would get.
     // No send happens while provider is null (KB path below answers).
     var req = window.DKChat.buildRequest(q);
     window.DKChat.history.push({ role: 'user', text: q });
+    // B96: a brief, honest thinking state on the fast (KB-loaded) path.
+    // The answer is a local lookup, but the dots + thinking face make
+    // the turn feel answered rather than pasted, and give the header
+    // state time to be seen. The KB-wait path above already shows dots
+    // while the KB loads, so this delay applies only here.
+    var think = document.createElement('div'); think.className = 'msg bot';
+    var tdots = document.createElement('span'); tdots.className = 'dk-thinking';
+    for (var tdi = 0; tdi < 3; tdi++) { tdots.appendChild(document.createElement('i')); }
+    think.appendChild(tdots); log.appendChild(think); log.scrollTop = log.scrollHeight;
+    dokiSet(dokiHead(), 'doki--thinking');
+    setTimeout(function(){ renderChatAnswer(); }, 300);
+    function renderChatAnswer(){
+    if (think.parentNode) { think.parentNode.removeChild(think); }
     var b = document.createElement('div'); b.className = 'msg bot';
     var low = q.toLowerCase(), reply = dkT('rsv_1021', 'I answer from DoKit\'s own content. ');
     var links = [];
@@ -295,37 +641,102 @@ if(form){
     // Restore: local knowledge-base answers (data ported verbatim from
     // the old assistant-kb.js). The old Firebase search is NOT used —
     // matching is local only, so answers come from site content and
-    // are never invented. No match falls back to navigation links.
+    // are never invented. No KB match falls through to the FAQ lookup,
+    // then the honest unknown-answer branch (B98).
     var kbHit = null;
+    var qTokens = dkTokens(low);
     try {
       var kb = window.DKASSIST_KB;
       if (kb) {
         var kbLang = 'en';
-        try { kbLang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+        try { kbLang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         var entries = kb[kbLang] || kb.en || [];
-        var words = low.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2; });
+        // B98: whole-word matcher with a confidence threshold (replaces
+        // the substring scorer). The old scorer let a 3-letter stopword
+        // match by substring ('for' in 'format' scored +2, 'how' in the
+        // phrase 'how many words' scored +2, 'account' contains
+        // 'count'), so uncovered questions got confident wrong tool
+        // answers. Now a keyword counts only as a whole word (or a
+        // consecutive phrase), plural-tolerant, Unicode-safe.
+        // Scoring: the entry's first keyword (its distinctive root,
+        // e.g. 'resize') scores 3; a multi-word phrase scores 3 (it is
+        // specific evidence, e.g. 'who built dokit'); any other single
+        // keyword scores 2; a short token (<= 3 letters: 'png', 'wpm',
+        // 'pro') scores 3 on an exact whole-word hit only — it is
+        // distinctive, not a stopword. One question word can only be
+        // spent once: the KB lists both 'plan' and 'plans', and
+        // plural-tolerant matching would otherwise count the same word
+        // twice (ERR-B-018). A hit needs >= 3, so one generic word
+        // (e.g. 'capital' for the case converter, +2) can never answer.
         var best = null, bestScore = 0;
         entries.forEach(function (en) {
           var score = 0;
-          (en.kw || []).forEach(function (k) {
+          var usedSingles = {};
+          (en.kw || []).forEach(function (k, ki) {
             var kk = String(k).toLowerCase();
-            words.forEach(function (w) { if (kk.indexOf(w) !== -1 || w.indexOf(kk) !== -1) { score += 2; } });
-            if (low.indexOf(kk) !== -1) { score += 1; }
+            if (!dkPhraseHit(qTokens, kk)) { return; }
+            var kt = dkTokens(kk);
+            if (kt.length === 1) {
+              var hitTok = null;
+              for (var ti = 0; ti < qTokens.length; ti++) { if (dkWordEq(qTokens[ti], kt[0])) { hitTok = qTokens[ti]; break; } }
+              if (hitTok && usedSingles[hitTok]) { return; }
+              if (hitTok) { usedSingles[hitTok] = 1; }
+              if (kt[0].length <= 3) { score += 3; }
+              else if (ki === 0) { score += 3; }
+              else { score += 2; }
+            } else {
+              score += 3;
+            }
           });
           if (score > bestScore) { bestScore = score; best = en; }
         });
-        if (best && bestScore >= 2) { kbHit = best; }
+        if (best && bestScore >= 3) { kbHit = best; }
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    // B97: approved-FAQ grounding (second source, KB first). The FAQ
+    // file is owner-approved static data (dk-faq.js, 93 Q&As) consulted
+    // as a static lookup — never a live-AI call, provider stays null.
+    // A hit needs >= 2 distinct content words from the question
+    // (whole-word, plural-tolerant) with at least one word of length
+    // >= 5, so stopword-only or single-word questions cannot match.
+    // (qTokens is defined above, before the KB match.)
+    var faqHit = null;
+    try {
+      var faq = window.DKFAQ;
+      if (faq && faq.length) {
+        var content = qTokens.filter(function (w) { return w.length >= 4 && !DK_STOP[w]; });
+        // Short tokens count only if they are real content words:
+        // stopwords ('do', 'is', 'of') appear in nearly every FAQ
+        // question and would otherwise inflate any score (ERR-B-019).
+        var shorts = qTokens.filter(function (w) { return w.length >= 2 && w.length < 4 && !DK_STOP[w]; });
+        var bestFaq = null, bestFaqScore = 0, bestFaqLong = false;
+        faq.forEach(function (item) {
+          var ft = dkTokens((item.q || '') + ' ' + (item.a || ''));
+          var fset = {}; ft.forEach(function (w) { fset[w] = 1; });
+          var score = 0, hasLong = false;
+          content.forEach(function (w) {
+            for (var k in fset) { if (dkWordEq(w, k)) { score += 1; if (w.length >= 5) { hasLong = true; } break; } }
+          });
+          shorts.forEach(function (w) {
+            // Short tokens count only on an exact whole-word hit in the
+            // FAQ *question* (not the answer body) — 'pay' must be what
+            // the question is about, not a passing mention.
+            if (dkTokens(item.q || '').indexOf(w) !== -1) { score += 1; }
+          });
+          if (score > bestFaqScore) { bestFaqScore = score; bestFaq = item; bestFaqLong = hasLong; }
+        });
+        if (bestFaq && bestFaqScore >= 2 && bestFaqLong) { faqHit = bestFaq; }
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     // Shared fallback renderer: the sync links path and the AI path's
     // ungrounded/error fallback render exactly the same chips.
     function appendChatLinks(el){
       // WHY (i18n): chat link labels translate through the same dict
-      // keys as the footer/cards. Only labels with a verified key are
-      // mapped; the rest (Lessons, Practice, Games, TypeFight Battle,
-      // Changelog, API Docs, Design System, Progress) have no old
-      // translation and stay English, honestly, until one is supplied.
-      var CHAT_LABEL_KEY = {'Pricing':'nav_pricing','Image Compressor':'tool_compressor_name','Image Resizer':'tool_resizer_name','Image Converter':'tool_converter_name','Word Counter':'tool_counter_name','Case Converter':'tool_case_name','Typing Test':'test_title','Board Photo':'bp.title','Password Generator':'cs2_t','Unit Converter':'cs4_t','QR Generator':'cs1_t','Wall of Love':'wol.title','System Status':'status.title','Certificate':'cert_word','Results':'resizer.results_title','Dashboard':'acct_dash_h1','Contact':'nav_contact','FAQ':'nav_faq','All Tools':'nav_all_tools'};
+      // keys as the footer/cards. T083 (P5-UX-30): the last eight labels
+      // (Lessons, Practice, Games, TypeFight Battle, Changelog, API Docs,
+      // Design System, Progress) now map to their existing keys too, so
+      // every chip renders in the active language.
+      var CHAT_LABEL_KEY = {'Pricing':'nav_pricing','Image Compressor':'tool_compressor_name','Image Resizer':'tool_resizer_name','Image Converter':'tool_converter_name','Word Counter':'tool_counter_name','Case Converter':'tool_case_name','Typing Test':'test_title','Board Photo':'bp.title','Password Generator':'cs2_t','Unit Converter':'cs4_t','QR Generator':'cs1_t','Wall of Love':'wol.title','System Status':'status.title','Certificate':'cert_word','Results':'resizer.results_title','Dashboard':'acct_dash_h1','Contact':'nav_contact','FAQ':'nav_faq','All Tools':'nav_all_tools','Lessons':'rsv_0367','Practice':'rsv_0453','Games':'rsv_0280','TypeFight Battle':'tool_typefight_name','Changelog':'rsv_0144','API Docs':'rsv_0214','Design System':'rsv_0208','Progress':'rsv_0469'};
       links.forEach(function(lk){
         if(!lk[1]){ return; }
         var a = document.createElement('a'); a.className = 'chip'; a.href = lk[1];
@@ -340,11 +751,43 @@ if(form){
         b.appendChild(document.createElement('br'));
         b.appendChild(document.createTextNode('• ' + step));
       });
-      var kbPage = {'image-resizer':'data-resizer','image-compressor':'data-compressor','image-converter':'data-converter','word-counter':'data-counter','case-converter':'data-case','typing':'data-typing','typefight':'data-battle','hub':'data-tools'}[kbHit.id];
-      if (kbPage && form.getAttribute(kbPage)) {
-        var ka = document.createElement('a'); ka.className = 'chip'; ka.href = form.getAttribute(kbPage); ka.textContent = dkT('rsv_0989', 'Open it'); b.appendChild(document.createElement('br')); b.appendChild(ka);
+      // B97: source line — every KB answer names the site page it came
+      // from. Founder/coins derive their URL from the pricing URL: the
+      // form carries no data-about / data-referrals attribute, and the
+      // replace keeps the same relative depth from every page.
+      var pricingHref = form.getAttribute('data-pricing') || '';
+      var kbSrcMap = {
+        'founder': ['nav_about', pricingHref.replace(/pricing\/$/, 'about/')],
+        'image-resizer': ['tool_resizer_name', form.getAttribute('data-resizer')],
+        'image-compressor': ['tool_compressor_name', form.getAttribute('data-compressor')],
+        'image-converter': ['tool_converter_name', form.getAttribute('data-converter')],
+        'word-counter': ['tool_counter_name', form.getAttribute('data-counter')],
+        'case-converter': ['tool_case_name', form.getAttribute('data-case')],
+        'typing': ['test_title', form.getAttribute('data-typing')],
+        'typefight': ['tool_typefight_name', form.getAttribute('data-battle')],
+        'pricing': ['nav_pricing', form.getAttribute('data-pricing')],
+        'coins': ['ref_nav', pricingHref.replace(/pricing\/$/, 'account/referrals/')],
+        'hub': ['nav_all_tools', form.getAttribute('data-tools')]
+      };
+      var kbSrc = kbSrcMap[kbHit.id] || null;
+      if (kbSrc && kbSrc[1]) {
+        var ka = document.createElement('a'); ka.className = 'chip'; ka.href = kbSrc[1]; ka.textContent = dkT('rsv_0989', 'Open it'); b.appendChild(document.createElement('br')); b.appendChild(ka);
+        b.appendChild(document.createElement('br'));
+        var srcLine = document.createElement('span'); srcLine.className = 'doki-source';
+        srcLine.textContent = dkT('rsv_1458', 'Source:') + ' ';
+        var srcA = document.createElement('a'); srcA.href = kbSrc[1]; srcA.textContent = dkT(kbSrc[0], kbSrc[0]);
+        srcLine.appendChild(srcA); b.appendChild(srcLine);
       }
       // KB-hit answer: success briefly, then idle (mirrors the AI path).
+      dokiHeadSuccess();
+    } else if (faqHit) {
+      // B97: approved-FAQ answer, with the same source line (FAQ page).
+      b.textContent = faqHit.a || '';
+      b.appendChild(document.createElement('br'));
+      var fsrc = document.createElement('span'); fsrc.className = 'doki-source';
+      fsrc.textContent = dkT('rsv_1458', 'Source:') + ' ';
+      var fsrcA = document.createElement('a'); fsrcA.href = form.getAttribute('data-faq'); fsrcA.textContent = dkT('nav_faq', 'FAQ');
+      fsrc.appendChild(fsrcA); b.appendChild(fsrc);
       dokiHeadSuccess();
     } else if (window.DKChat.provider && window.DKFAQ) {
       // AI path (grounded): thinking dots until the provider answers.
@@ -378,12 +821,26 @@ if(form){
       });
       return;
     } else {
-      b.textContent = reply + dkT('rsv_1008', 'These pages may help:');
+      // B98: honest unknown-answer branch. Below the confidence
+      // threshold Doki says so and directs to Contact FIRST (then FAQ
+      // and All Tools) — it never invents an answer and never pitches
+      // an unrelated tool. The Contact chip is forced here even when
+      // the question's own words suggested other links above.
+      b.textContent = dkT('rsv_1452', "I don't have that in DoKit's own information. Please contact us — we'll be glad to help.");
+      links = [['Contact', form.getAttribute('data-contact')], ['FAQ', form.getAttribute('data-faq')], ['All Tools', form.getAttribute('data-tools')]];
       appendChatLinks(b);
     }
+    // B96: the thinking face set above must always resolve — a KB hit
+    // shows success (inside its branch); any other sync answer returns
+    // to idle here so the header never sticks on thinking.
+    var _h = dokiHead();
+    if (_h && _h.classList.contains('doki--thinking')) { dokiSet(_h, 'doki--idle'); }
     log.appendChild(b); inp.value = ''; log.scrollTop = log.scrollHeight;
     // Session record: bot turn (rendered answer text, chips included).
     window.DKChat.history.push({ role: 'bot', text: b.textContent });
+    if (window.__dokiChatSave) { window.__dokiChatSave(); }
+    } /* end renderChatAnswer (B96: thinking-delay wrapper) */
+    } /* end runChatSubmit (P5-RTE-01: KB-wait wrapper) */
   });
 }
 // ---- Doki voice input (photo pass, Oct 25): real Web Speech ----
@@ -425,7 +882,7 @@ function dokiMicStop(){
   var form = document.getElementById('chat-form');
   if(!btn || !form) return;
   btn.addEventListener('click', function(){
-    if(dokiListening && dokiRec){ try { dokiRec.stop(); } catch (e) {} return; }
+    if(dokiListening && dokiRec){ try { dokiRec.stop(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } return; }
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR){ dokiMicNote('doki_mic_nosupport', 'Voice input is not supported in this browser.'); return; }
     var inp = document.getElementById('chat-input');
@@ -442,7 +899,7 @@ function dokiMicStop(){
         }
         if(inp) inp.value = (final || interim);
         if(final && final.trim()){
-          try { dokiRec.stop(); } catch (e) {}
+          try { dokiRec.stop(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
           form.dispatchEvent(new Event('submit', { cancelable: true }));
         }
       };
@@ -483,15 +940,92 @@ function dokiMicStop(){
     fresh.type = 'button';
     fresh.className = 'btn ghost';
     fresh.textContent = dkT('acct_chat_new', 'New chat');
+    // B96: suggested questions (covered KB topics only) + tab-scoped
+    // history. The chips are real <button>s built here, not in HTML,
+    // so every page with the panel gets them from this one place.
+    // History lives in sessionStorage (tab-scoped, matching the old
+    // in-memory model): a reload in the same tab restores the chat,
+    // closing the tab forgets it. Nothing is ever sent to Firestore.
+    // The log HTML round-trips safely: user text is inserted via
+    // textContent, so it is escaped in the serialised HTML.
+    var CHAT_STORE_KEY = 'dokit_chat_history';
+    function dokiChatSave(){
+      try {
+        var msgs = log.querySelectorAll('.msg');
+        // Cap the stored transcript (last 30 turns) so one tab cannot
+        // grow storage without bound.
+        var keep = [];
+        for (var i = Math.max(0, msgs.length - 30); i < msgs.length; i++) { keep.push(msgs[i].outerHTML); }
+        window.sessionStorage.setItem(CHAT_STORE_KEY, keep.join(''));
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    }
+    window.__dokiChatSave = dokiChatSave;
+    function dokiSuggestBuild(){
+      // Show only while the log holds just the greeting — once the
+      // user has asked something, the chips have done their job.
+      if (log.querySelector('.doki-suggest')) { return; }
+      if (log.querySelectorAll('.msg').length !== 1) { return; }
+      var row = document.createElement('div');
+      row.className = 'doki-suggest';
+      var lab = document.createElement('span');
+      lab.className = 'doki-suggest-label';
+      lab.textContent = dkT('rsv_1453', 'Try one:');
+      row.appendChild(lab);
+      var chipQs = ['How do I resize an image?', 'How do I compress an image?', 'How do I start typing practice?', 'How do I earn coins?'];
+      ['rsv_1454', 'rsv_1455', 'rsv_1456', 'rsv_1457'].forEach(function (key, idx) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip doki-suggest-chip';
+        chip.textContent = dkT(key, chipQs[idx]);
+        row.appendChild(chip);
+      });
+      log.appendChild(row);
+    }
+    // One delegated listener for the chips: it survives a history
+    // restore (restored chips are the same buttons, re-created from
+    // the stored HTML) and costs a single handler per page.
+    log.addEventListener('click', function (ev) {
+      var chip = ev.target && ev.target.closest ? ev.target.closest('.doki-suggest-chip') : null;
+      if (!chip) { return; }
+      var inp = document.getElementById('chat-input');
+      if (!inp) { return; }
+      inp.value = chip.textContent;
+      chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+    // Restore a same-tab transcript, if any, and rebuild the
+    // in-memory session from it (the provider request builder reads
+    // DKChat.history). The mode bar lives outside #chat-log, so it is
+    // never part of the stored transcript.
+    try {
+      var stored = window.sessionStorage.getItem(CHAT_STORE_KEY);
+      if (stored) {
+        log.innerHTML = stored;
+        window.DKChat.history = [];
+        Array.prototype.forEach.call(log.querySelectorAll('.msg'), function (m) {
+          window.DKChat.history.push({ role: m.classList.contains('bot') ? 'bot' : 'user', text: m.textContent });
+        });
+        // The greeting clone must track the restored greeting.
+        var restoredGreet = log.querySelector('.msg');
+        if (restoredGreet) { greetClone = restoredGreet.cloneNode(true); }
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    dokiSuggestBuild();
     fresh.addEventListener('click', function () {
       window.DKChat.clear();
+      try { window.sessionStorage.removeItem(CHAT_STORE_KEY); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      // Re-clone the greeting now (not at init): the i18n engine may
+      // have re-rendered it after this script ran, and the stored
+      // transcript's first message is the greeting in the live language.
+      var g = log.querySelector('.msg');
+      if (g) { greetClone = g.cloneNode(true); }
       while (log.firstChild) { log.removeChild(log.firstChild); }
       if (greetClone) { log.appendChild(greetClone.cloneNode(true)); }
+      dokiSuggestBuild();
     });
     bar.appendChild(mode);
     bar.appendChild(fresh);
     panel.insertBefore(bar, chatForm);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
   // Phase 2b: shell forms (login, signup, verify, wall) — submitting
   // only reveals the honest Phase 3 note. Nothing is sent anywhere.
@@ -516,17 +1050,39 @@ function dokiMicStop(){
       var cur = document.currentScript;
       if (!cur || !cur.src) { return; }
       var base = cur.src.replace(/assets\/js\/main\.js.*$/, 'assets/js/');
+      /* P5-RTE-01: remember the JS base for lazy loads (KB on first chat
+       * open; extra i18n dicts on language switch). document.currentScript
+       * is only set while this script evaluates. */
+      window.__dkJsBase = base;
       function load(f, next) {
         var s = document.createElement('script'); s.src = base + f;
         if (next) { s.onload = next; s.onerror = next; }
         document.head.appendChild(s);
       }
-      load('assistant-kb.js');
+      /* P5-RTE-01: load only the active language dict (+ English fallback)
+       * instead of the 1.25 MB ten-language monolith. Language resolution
+       * mirrors i18n.js current(): ?lang= wins, then stored dokit_lang,
+       * then English. (assistant-kb.js is no longer loaded here — it loads
+       * on first chat-panel open; see ensureKb/dokiLoadFaq.) */
+      var LANGS = ['en','ur','ar','hi','es','fr','pt','de','tr','ru'];
+      function isLang(c){ return LANGS.indexOf(c) !== -1; }
+      function activeLang(){
+        try {
+          var q = new URLSearchParams(window.location.search).get('lang');
+          if (q && isLang(q)) { return q; }
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+        try {
+          var stored = window.localStorage.getItem('dokit_lang');
+          if (stored && isLang(stored)) { return stored; }
+        } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+        return 'en';
+      }
+      var lang = activeLang();
       // Dictionary first, engine second: the engine reads the dict
       // on init, so order matters (chained, not parallel). Once the
       // engine arrives, re-sync the hero H1 (it loads async, after
       // main.js has already run).
-      load('i18n-dict.js', function () {
+      function loadEngine(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
           if (typeof window.syncKeyboards === 'function') { window.syncKeyboards(); }
@@ -537,13 +1093,53 @@ function dokiMicStop(){
           if (typeof window.syncTimeline === 'function') { window.syncTimeline(); }
           if (typeof window.syncContinue === 'function') { window.syncContinue(); }
           if (typeof window.syncLevel === 'function') { window.syncLevel(); }
+          if (typeof window.syncTheme === 'function') { window.syncTheme(); }
           if (typeof window.syncProblemKeys === 'function') { window.syncProblemKeys(); }
           if (typeof window.syncShareMsg === 'function') { window.syncShareMsg(); }
           if (typeof window.syncRzBg === 'function') { window.syncRzBg(); }
         });
-      });
-    } catch (e) {}
+      }
+      if (lang === 'en') {
+        load('i18n-dict-en.js', loadEngine);
+      } else {
+        load('i18n-dict-en.js', function () {
+          load('i18n-dict-' + lang + '.js', loadEngine);
+        });
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
+  // DES-21: animated close-out for menus/panels (shared helper).
+  // Opening animates (dkmenuin .15s) but the hidden-toggle mechanism
+  // hid instantly. The close path adds .closing (dkmenuout .15s, the
+  // exact reverse), waits DK_CLOSE_MS, then hides. Timeout-only — no
+  // animationend listener: a listener would misfire on the NEXT open
+  // animation if a close was cancelled mid-flight. Re-open cancels
+  // the pending timer first (dkCancelClose), so a fast close->reopen
+  // can never hide a freshly opened menu. Reduced-motion users get
+  // the instant close (unchanged behaviour); the global CSS rule
+  // would also kill the animation, which is why the load-time
+  // `reduced` flag — not animationend — decides the path. Exposed on
+  // window so i18n.js (loaded later, dynamically) can use it too.
+  var DK_CLOSE_MS = 150;
+  function dkCancelClose(el){
+    if(!el) return;
+    if(el._dkCloseTimer){ clearTimeout(el._dkCloseTimer); el._dkCloseTimer = null; }
+    el.classList.remove('closing');
+  }
+  function dkAnimateClose(el, doHide){
+    if(!el) return;
+    if(el.classList.contains('closing')) return; // already closing; the pending timer hides it
+    if(el._dkCloseTimer){ clearTimeout(el._dkCloseTimer); el._dkCloseTimer = null; } // defensive: timer without the class
+    if(reduced){ doHide(); return; }
+    el.classList.add('closing');
+    el._dkCloseTimer = setTimeout(function(){
+      el._dkCloseTimer = null;
+      el.classList.remove('closing');
+      doHide();
+    }, DK_CLOSE_MS);
+  }
+  window.dkAnimateClose = dkAnimateClose;
+  window.dkCancelClose = dkCancelClose;
   // Small dropdown helper (used by language + profile menus): toggle
   // on button click, close on outside click or Escape. returnFocus
   // (launcher only): on Escape, return focus to the button — never
@@ -551,17 +1147,33 @@ function dokiMicStop(){
   function bindMenu(btnId, menuId, onPick, returnFocus){
     var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
     if (!btn || !menu) { return; }
+    // T030 (P5-VIS-07): the one close path for this menu — reused by the
+    // outside-click closer, the Escape closer and the central registry
+    // (closeAllMenus), so every close behaves identically.
+    function closeThis(){
+      if (!menu.hidden) { dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    // T030: register with the central "one menu open at a time" registry.
+    if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, closeThis); }
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      var open = menu.hidden; menu.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
+      // Re-open a menu that is mid-close instead of letting it vanish.
+      if (menu.classList.contains('closing')) {
+        closeAllMenus(menuId);
+        dkCancelClose(menu); menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true'); return;
+      }
+      var willOpen = menu.hidden;
+      // T030: opening this menu closes every other menu first.
+      if (willOpen) { closeAllMenus(menuId); dkCancelClose(menu); menu.hidden = false; }
+      else { closeThis(); }
+      btn.setAttribute('aria-expanded', String(willOpen));
     });
-    document.addEventListener('click', function () {
-      menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
-    });
+    document.addEventListener('click', closeThis);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !menu.hidden) {
-        menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+        closeThis();
         if (returnFocus) { btn.focus(); }
       }
     });
@@ -600,10 +1212,10 @@ function dokiMicStop(){
         }
         head.hidden = !anyVisible;
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   }
   window.dkApplyHeaderAuth = applyHeaderAuth;
-  try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) {}
+  try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // App launcher (item 103): same dropdown behaviour as the profile
   // menu, plus focus return on Escape (keyboard users land back on
   // the launcher button instead of losing their place).
@@ -620,8 +1232,18 @@ function dokiMicStop(){
         menu = document.getElementById(menuId);
     if (!drop || !caret || !menu) { return; }
     var pinned = false;
-    function open(){ menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
-    function close(){ menu.hidden = true; caret.setAttribute('aria-expanded', 'false'); pinned = false; }
+    // T030 (P5-VIS-07): opening this dropdown closes every other menu
+    // first (hover-open, caret click and mid-close re-open all flow
+    // through open()).
+    function open(){ closeAllMenus(menuId); dkCancelClose(menu); menu.hidden = false; caret.setAttribute('aria-expanded', 'true'); }
+    function close(){
+      // DES-21: only the visual hide is delayed (150ms fade); the state
+      // (aria-expanded, pinned) changes immediately, as before.
+      if(!menu.hidden){ dkAnimateClose(menu, function(){ menu.hidden = true; }); }
+      caret.setAttribute('aria-expanded', 'false'); pinned = false;
+    }
+    // T030: register this dropdown's existing close with the central registry.
+    if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, close); }
     // WHY the three-way click: a real mouse click always hovers
     // first, so hover-open runs before the click handler. A plain
     // toggle would therefore shut the menu the hover just opened
@@ -632,13 +1254,16 @@ function dokiMicStop(){
     caret.addEventListener('click', function (e) {
       e.stopPropagation();
       if (menu.hidden) { pinned = true; open(); }
+      // DES-21: a caret click on a menu that is mid-close re-opens it
+      // instead of pinning a menu that is about to vanish.
+      else if (menu.classList.contains('closing')) { pinned = true; open(); }
       else if (pinned) { close(); }
       else { pinned = true; }
     });
     drop.addEventListener('mouseenter', function () {
       try {
         if (window.matchMedia('(hover:hover)').matches) { open(); }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     });
     drop.addEventListener('mouseleave', function () { if (!pinned) { close(); } });
     document.addEventListener('click', function (e) {
@@ -654,10 +1279,18 @@ function dokiMicStop(){
   // their <main> in once on load. Home is excluded (it has the hero
   // canvas + its own .reveal cards). Reduced-motion is handled by
   // the existing global rule (animation:none), not by JS.
+  // T047 (P5-DES-23): the full .4s fade replayed on EVERY non-home
+  // navigation, which felt slow/repetitive. The first page of the
+  // session keeps the full fade; later pages get the .2s variant.
   try {
     var mn = document.querySelector('main');
-    if (mn && !document.getElementById('hero-canvas')) { mn.classList.add('dk-enter'); }
-  } catch (e) {}
+    if (mn && !document.getElementById('hero-canvas')) {
+      var entered = false;
+      try { entered = sessionStorage.getItem('dokit_entered') === '1'; } catch (e) {}
+      mn.classList.add(entered ? 'dk-enter-short' : 'dk-enter');
+      try { sessionStorage.setItem('dokit_entered', '1'); } catch (e) {}
+    }
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // Dark/light theme: data-theme on <html>, saved as dokit_theme.
   // Default is dark (the approved design); the button shows the
   // opposite icon, i.e. what clicking will switch to.
@@ -681,12 +1314,20 @@ function dokiMicStop(){
       btn.setAttribute('aria-label', label);
     }
     apply(current());
+    /* T084 (P5-VIS-09): the label span no longer carries data-i18n — the
+     * engine rewrote this theme-managed label to rsv_1019 on every apply,
+     * so in light mode it read "Switch to light mode" while the aria-label
+     * said "Switch to dark mode". Re-apply on language change so the label
+     * stays translated, and expose syncTheme for the engine-load callback
+     * below (main.js runs before the dict arrives). */
+    window.syncTheme = function () { apply(current()); };
+    document.addEventListener('dokit:langchange', function () { apply(current()); });
     btn.addEventListener('click', function (e) {
       // Stop here so the profile menu's document-click closer does
       // not shut the menu the moment the theme is switched.
       if (e) { e.stopPropagation(); }
       var next = (current() === 'dark') ? 'light' : 'dark';
-      try { localStorage.setItem('dokit_theme', next); } catch (e) {}
+      try { localStorage.setItem('dokit_theme', next); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       apply(next);
     });
   })();
@@ -698,13 +1339,13 @@ function dokiMicStop(){
       var cur = document.currentScript;
       if (!cur || !cur.src) { return; }
       var swUrl = cur.src.replace(/assets\/js\/main\.js.*$/, 'sw.js');
-      navigator.serviceWorker.register(swUrl).catch(function () {});
-    } catch (e) {}
+      navigator.serviceWorker.register(swUrl).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); });
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
   // PWA install banner: shown once per browser until dismissed.
   (function installBanner(){
     var dismissed = false;
-    try { dismissed = localStorage.getItem('dokit_pwa_dismissed') === '1'; } catch (e) {}
+    try { dismissed = localStorage.getItem('dokit_pwa_dismissed') === '1'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     if (dismissed) { return; }
     var deferred = null;
     window.addEventListener('beforeinstallprompt', function (e) {
@@ -720,7 +1361,7 @@ function dokiMicStop(){
       });
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
       dis.addEventListener('click', function () {
-        try { localStorage.setItem('dokit_pwa_dismissed', '1'); } catch (err) {}
+        try { localStorage.setItem('dokit_pwa_dismissed', '1'); } catch (err) { window.dkSwallow && window.dkSwallow(err, 'main.js'); }
         bar.remove();
       });
       bar.appendChild(inst); bar.appendChild(dis);
@@ -741,13 +1382,13 @@ function dokiMicStop(){
       bar.querySelector('span').textContent = msg;
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
       dis.addEventListener('click', function () {
-        try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) {}
+        try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         bar.remove();
       });
       bar.appendChild(dis);
       var main = document.getElementById('main');
       if (main) { main.parentNode.insertBefore(bar, main); } else { document.body.appendChild(bar); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
   // Home: live word-counter demo (counts only, nothing is sent).
   (function demo(){
@@ -768,7 +1409,7 @@ function dokiMicStop(){
       try { return JSON.parse(localStorage.getItem('dokit_favs') || '[]'); } catch (e) { return []; }
     }
     function set(list) {
-      try { localStorage.setItem('dokit_favs', JSON.stringify(list)); } catch (e) {}
+      try { localStorage.setItem('dokit_favs', JSON.stringify(list)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     }
     document.querySelectorAll('.tool-card').forEach(function (card) {
       var link = card.querySelector('a.cardlink'); if (!link) { return; }
@@ -821,6 +1462,7 @@ function dokiMicStop(){
         document.body.appendChild(back); document.body.appendChild(card);
       }
       back.classList.add('open');
+      document.body.classList.add('dk-tour-open'); // T050: hide the sticky bar while the tour is open.
       card.innerHTML = '';
       var h = document.createElement('h3'); h.textContent = steps[i][0]; card.appendChild(h);
       var p = document.createElement('p'); p.textContent = steps[i][1]; card.appendChild(p);
@@ -837,17 +1479,17 @@ function dokiMicStop(){
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
     }
-    function close() { if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
+    function close() { document.body.classList.remove('dk-tour-open'); if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
     btn.addEventListener('click', show);
   })();
   // Dismissible tip banner on the home page (dismissal remembered).
   (function tip(){
     var tip = document.getElementById('dk-hint'); if (!tip) { return; }
-    try { if (localStorage.getItem('dokit_hint_dismissed') === '1') { tip.remove(); return; } } catch (e) {}
+    try { if (localStorage.getItem('dokit_hint_dismissed') === '1') { tip.remove(); return; } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var close = tip.querySelector('[data-hint-close]');
     if (close) {
       close.addEventListener('click', function () {
-        try { localStorage.setItem('dokit_hint_dismissed', '1'); } catch (e) {}
+        try { localStorage.setItem('dokit_hint_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         tip.remove();
       });
     }
@@ -869,13 +1511,35 @@ function dokiMicStop(){
         var cats = (card.getAttribute('data-cat') || '').split(' ');
         card.style.display = (!cat || cat === 'all' || cats.indexOf(cat) !== -1) ? '' : 'none';
       });
+      /* B83: the same filter drives the Guides grid — guide cards carry
+       * the same data-cat values as tool cards (image/text/typing/
+       * security/utility). No second handler: one filter, two grids.
+       * The empty state shows only when the grid exists and nothing
+       * in it matches (a category with zero guides). */
+      var guideCards = document.querySelectorAll('.guides-grid .card');
+      var visible = 0;
+      guideCards.forEach(function (card) {
+        var cats = (card.getAttribute('data-cat') || '').split(' ');
+        var show = (!cat || cat === 'all' || cats.indexOf(cat) !== -1);
+        card.style.display = show ? '' : 'none';
+        if (show) { visible++; }
+      });
+      var empty = document.getElementById('guides-empty');
+      if (empty) { empty.hidden = guideCards.length === 0 || visible !== 0; }
     }
     document.querySelectorAll('[data-filter]').forEach(function (chip) {
       chip.addEventListener('click', function () {
-        document.querySelectorAll('[data-filter]').forEach(function (c) { c.classList.remove('active'); });
+        document.querySelectorAll('[data-filter]').forEach(function (c) { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
         chip.classList.add('active');
+        /* B83: pressed state for screen readers (also applied to the
+         * /tools/ chips — same handler, same behaviour). */
+        chip.setAttribute('aria-pressed', 'true');
         applyFilter(chip.getAttribute('data-filter'));
       });
+    });
+    /* B83: initial pressed state — "All" is the default view. */
+    document.querySelectorAll('[data-filter]').forEach(function (chip) {
+      chip.setAttribute('aria-pressed', chip.getAttribute('data-filter') === 'all' ? 'true' : 'false');
     });
     document.querySelectorAll('[data-finder]').forEach(function (chip) {
       chip.addEventListener('click', function () {
@@ -884,47 +1548,39 @@ function dokiMicStop(){
       });
     });
   })();
-  // Captcha on login/signup shells: client-side visual code only
-  // (never a real security gate — the pages are Phase 3 shells).
-  // A wrong code blocks the submit and refreshes; a right code lets
-  // the shell's Phase 3 note show as usual.
-  (function captcha(){
-    var box = document.getElementById('cap-code'); if (!box) { return; }
-    var input = document.getElementById('cap-input');
-    var refresh = document.getElementById('cap-refresh');
-    var audio = document.getElementById('cap-audio');
-    var err = document.getElementById('cap-err');
-    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    var code = '';
-    function gen() {
-      code = '';
-      for (var i = 0; i < 5; i++) { code += chars[Math.floor(Math.random() * chars.length)]; }
-      box.textContent = code;
-    }
-    gen();
-    if (refresh) { refresh.addEventListener('click', function () { gen(); if (err) { err.textContent = ''; } }); }
-    if (audio) {
-      audio.addEventListener('click', function () {
-        try {
-          var u = new SpeechSynthesisUtterance(code.split('').join(' '));
-          speechSynthesis.speak(u);
-        } catch (e) {}
+  // B95: FAQ live search — filters the 10 native <details> by question +
+  // answer text (textContent matching only; the query is never rendered
+  // as HTML). Clearing restores all 10. Enter opens the first visible
+  // match. The <details> open/close behaviour itself is untouched (native).
+  (function faqSearch(){
+    var input = document.getElementById('faq-search');
+    if (!input) { return; }
+    var items = Array.prototype.slice.call(document.querySelectorAll('.faq details'));
+    var empty = document.getElementById('faq-empty');
+    if (!items.length) { return; }
+    function apply(q) {
+      q = (q || '').trim().toLowerCase();
+      var visible = 0;
+      items.forEach(function (d) {
+        var show = !q || d.textContent.toLowerCase().indexOf(q) !== -1;
+        d.style.display = show ? '' : 'none';
+        if (show) { visible++; }
       });
+      if (empty) { empty.hidden = visible !== 0; }
+      return visible;
     }
-    var formEl = box.closest('form');
-    if (formEl && input) {
-      formEl.addEventListener('submit', function (e) {
-        if ((input.value || '').trim().toUpperCase() !== code) {
-          // Block the submit (and hide any Phase 3 note another
-          // handler just showed) until the code matches.
-          e.preventDefault();
-          var note = formEl.querySelector('.phase3-note');
-          if (note) { note.hidden = true; }
-          if (err) { err.textContent = dkT('rsv_1007', 'That code does not match — try the new one.'); }
-          gen();
-        }
-      });
-    }
+    input.addEventListener('input', function () { apply(input.value); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') { return; }
+      e.preventDefault();
+      apply(input.value);
+      var first = items.filter(function (d) { return d.style.display !== 'none'; })[0];
+      if (first) {
+        first.open = true;
+        var sum = first.querySelector('summary');
+        if (sum) { sum.focus(); }
+      }
+    });
   })();
   // Rules copy helper (admin tool, restored from the old site):
   // fetch the legacy rules from the public repo and copy them.
@@ -972,7 +1628,7 @@ function dokiMicStop(){
     }
     function sync() {
       var lang = 'en';
-      try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) {}
+      try { lang = localStorage.getItem('dokit_lang') || 'en'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       if (lang === 'en') {
         if (h1.innerHTML !== orig) { h1.innerHTML = orig; }
         return;
@@ -982,12 +1638,12 @@ function dokiMicStop(){
         if (window.DK_I18N && typeof window.DK_I18N.t === 'function') {
           text = window.DK_I18N.t('tools.h1');
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       if (!text || text === 'tools.h1') {
         try {
           var dict = window.DK_I18N_DICT || {};
           text = (dict[lang] && dict[lang]['tools.h1']) || (dict.en && dict.en['tools.h1']);
-        } catch (e2) {}
+        } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
       }
       if (text) { h1.innerHTML = '<span class="grad">' + esc(text) + '</span>'; }
     }
@@ -1023,8 +1679,8 @@ function dokiMicStop(){
 (function saasSteps() {
   document.querySelectorAll('[data-saas-steps]').forEach(function (box) {
     var x = box.querySelector('.saas-steps-x');
-    try { if (localStorage.getItem('dk_steps_seen')) { box.hidden = true; return; } } catch (e) {}
-    if (x) { x.addEventListener('click', function () { box.hidden = true; try { localStorage.setItem('dk_steps_seen', '1'); } catch (e) {} }); }
+    try { if (localStorage.getItem('dk_steps_seen')) { box.hidden = true; return; } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    if (x) { x.addEventListener('click', function () { box.hidden = true; try { localStorage.setItem('dk_steps_seen', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } }); }
     var steps = box.querySelectorAll('.saas-step');
     function done(n) { if (steps[n]) { steps[n].classList.add('done'); } }
     document.addEventListener('change', function (e) {
@@ -1051,9 +1707,15 @@ function dokiMicStop(){
  * text: fills the editable textarea with the translated sample text. */
 (function sampleButtons() {
   function sampleImage() {
+    /* DES-01: sample-image gradient — JS-side constants mirroring the
+     * brand tokens (canvas cannot use CSS var()): violet mirrors
+     * --violet (#6C4CF1), orange is the gradient accent (#FF8A5C).
+     * Values unchanged. */
+    var GRAD_VIOLET = '#6C4CF1';
+    var GRAD_ORANGE = '#FF8A5C';
     var c = document.createElement('canvas'); c.width = 800; c.height = 600;
     var x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 800, 600);
-    g.addColorStop(0, '#6C4CF1'); g.addColorStop(1, '#FF8A5C');
+    g.addColorStop(0, GRAD_VIOLET); g.addColorStop(1, GRAD_ORANGE);
     x.fillStyle = g; x.fillRect(0, 0, 800, 600);
     x.fillStyle = 'rgba(255,255,255,.92)'; x.textAlign = 'center';
     x.font = 'bold 72px sans-serif'; x.fillText('Sample', 400, 290);
@@ -1072,7 +1734,7 @@ function dokiMicStop(){
         try {
           var dt = new DataTransfer(); dt.items.add(f); input.files = dt.files;
           input.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (err) { /* older browsers */ }
+        } catch (err) { /* older browsers */ window.dkSwallow && window.dkSwallow(err, 'main.js'); }
         b.disabled = false;
       });
     } else if (kind === 'text') {
@@ -1124,7 +1786,47 @@ function dokiMicStop(){
   try {
     new MutationObserver(function () { syncLabel(); upd(); })
       .observe(btn, { attributes: true, childList: true, subtree: true, characterData: true });
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+})();
+
+/* Home sticky CTA pill (P5-VIS-02).
+ * The pill (#stickyCta, home page only) used to be an unconditional sticky
+ * bar that covered page text at every scroll position on every viewport.
+ * It is now mobile-only (<=768px), appears only after 600px of scroll, and
+ * can be dismissed for the rest of the session. Mirrors the (never-loaded)
+ * home.js gate; body.has-sticky-cta reserves bottom padding (style.css)
+ * so the shown bar never covers page content. No-ops on every other page. */
+(function initStickyCta() {
+  var bar = document.getElementById('stickyCta');
+  if (!bar) { return; }
+  var KEY = 'dokit_sticky_cta_dismissed';
+  var dismissed = false;
+  try { dismissed = window.sessionStorage.getItem(KEY) === '1'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  var mq = window.matchMedia ? window.matchMedia('(max-width: 768px)') : null;
+  function upd() {
+    var show = !dismissed && (window.scrollY || window.pageYOffset) > 600 && (!mq || mq.matches);
+    bar.classList.toggle('on', show);
+    /* Next frame: animate in. */
+    requestAnimationFrame(function () { bar.classList.toggle('show', show); });
+    document.body.classList.toggle('has-sticky-cta', show);
+    bar.hidden = !show;
+  }
+  var closeBtn = bar.querySelector('.sticky-cta__close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      dismissed = true;
+      try { window.sessionStorage.setItem(KEY, '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      upd();
+    });
+  }
+  var tick = false;
+  window.addEventListener('scroll', function () {
+    if (tick) { return; } tick = true;
+    requestAnimationFrame(function () { tick = false; upd(); });
+  }, { passive: true });
+  window.addEventListener('resize', upd);
+  if (mq && mq.addEventListener) { mq.addEventListener('change', upd); }
+  upd();
 })();
 
   /* Phase 4: load the account backend module (account.js) on pages that
@@ -1136,7 +1838,7 @@ function dokiMicStop(){
       if (window.__dkaLoaded) { return; }
       if (document.querySelector('script[src$="assets/js/account.js"]')) { window.__dkaLoaded = true; return; }
       var src = '';
-      try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+      try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       var marker = 'assets/js/main.js';
       var at = src ? src.indexOf(marker) : -1;
       if (at < 0) { return; }
@@ -1145,7 +1847,7 @@ function dokiMicStop(){
       s.src = src.slice(0, at) + 'assets/js/account.js';
       s.defer = true;
       document.head.appendChild(s);
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   })();
 
 /* Referral module loader: the wallet daily-claim button (wf-claim-btn)
@@ -1160,7 +1862,7 @@ function dokiMicStop(){
     if (!document.getElementById('wf-claim-btn')) { return; }
     if (document.querySelector('script[src$="assets/js/referrals.js"]')) { return; }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1168,7 +1870,7 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 /* Homepage shoutout slot (item #55): the homepage does not list
@@ -1200,7 +1902,7 @@ function dokiMicStop(){
       hero.parentNode.insertBefore(section, hero.nextSibling);
     }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1208,10 +1910,10 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     s.onload = function () {
-      try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) {}
+      try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     };
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 
@@ -1261,12 +1963,12 @@ function dokiMicStop(){
        * returning silently. If it had already finished, DKREF would
        * be present and the branch above would have run. */
       try { existing.addEventListener('load', function () {
-        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
-      }); } catch (e) {}
+        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      }); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
       return;
     }
     var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) {}
+    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     var marker = 'assets/js/main.js';
     var at = src ? src.indexOf(marker) : -1;
     if (at < 0) { return; }
@@ -1274,10 +1976,10 @@ function dokiMicStop(){
     s.src = src.slice(0, at) + 'assets/js/referrals.js';
     s.defer = true;
     s.onload = function () {
-      try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) {}
+      try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     };
     document.head.appendChild(s);
-  } catch (e) {}
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
 /* Task 8 — privacy-first analytics writer (restored from old js/analytics.js).
@@ -1336,15 +2038,15 @@ function dokiMicStop(){
       try {
         var r = document.referrer ? new URL(document.referrer).hostname : '';
         if (r && r !== window.location.hostname) { e.ref = r.slice(0, 80); }
-      } catch (e2) {}
+      } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
       QUEUE.push(e);
       if (QUEUE.length >= MAX_BATCH) { flush(); }
-    } catch (e3) {}
+    } catch (e3) { window.dkSwallow && window.dkSwallow(e3, 'main.js'); }
   }
   function flush() {
     if (flushing || !QUEUE.length) { return; }
     var db = null;
-    try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e) {}
+    try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     if (!db) { QUEUE.length = 0; return; }
     flushing = true;
     var batch = QUEUE.splice(0, MAX_BATCH);
@@ -1374,10 +2076,10 @@ function dokiMicStop(){
             if (!b) { return; }
             var label = (b.textContent || b.value || '').trim().slice(0, 40);
             enqueue('tool_used', { tool: slug, action: label });
-          } catch (e) {}
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         }, { passive: true });
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   }
   window.DKAnalytics = {
     track: function (type, extra) { enqueue(String(type).slice(0, 30), extra || {}); },
@@ -1386,4 +2088,108 @@ function dokiMicStop(){
   };
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); }
   else { init(); }
+})();
+
+/* B66 — Drag-and-drop upload: ONE shared dropzone implementation.
+ * Inspection verdict (why this is the consolidation, not a third copy):
+ * the four unloaded bundles (tools/image-{resizer,compressor,converter}/
+ * tool.js + tools/board-photo/tool.js) are four DIVERGENT full-tool
+ * rewrites, not copies of a dropzone — each ~46-75 KB, each expecting a
+ * DKUI.renderNav/renderFooter shell the routed pages do not use, its own
+ * embedded i18n dict, and DOM ids the routed pages do not have. Wiring
+ * any one of them in would replace the routed tool logic wholesale.
+ * So per the owner decision (REUSE FIRST, consolidate if the copies
+ * cannot both be wired cleanly): this single handler in main.js — the
+ * one script every page already loads — wires any #dz on the page (the
+ * four image-tool pages only). Drop/paste feed the SAME file input the
+ * browse path uses (DataTransfer + change event), so the existing
+ * per-tool handlers run exactly as browse-upload does: same validation,
+ * same results, same errors. Nothing is ever uploaded — processing stays
+ * on-device (B69). A dropped URL/text is never fetched (no SSRF /
+ * open-fetch hole): only File objects from the drop/paste are taken.
+ * The unloaded bundles are left untouched as dead code (deleting four
+ * full alternate tool implementations is an owner call, not this idea);
+ * exactly ONE dropzone implementation exists in the loaded scripts. */
+(function () {
+  var dz = document.getElementById('dz');
+  if (!dz) { return; }
+  var input = dz.querySelector('input[type=file]');
+  if (!input) { return; }
+  var multi = !!input.multiple;
+  /* One error line under the dropzone, reused for every rejected file. */
+  var errEl = document.createElement('p');
+  errEl.className = 'err'; errEl.id = 'dz-err'; errEl.setAttribute('aria-live', 'polite');
+  dz.parentNode.insertBefore(errEl, dz.nextSibling);
+  function showErr(msg) { errEl.textContent = msg; }
+  function clearErr() { errEl.textContent = ''; }
+  function t(key, fallback) { return (window.dkT ? window.dkT(key, fallback) : fallback); }
+  /* Validate against the input's own accept list + the 25 MB cap the
+   * browse path enforces (loadImage in tools.js, validFile in the dead
+   * board-photo bundle). A file failing either check shows the SAME
+   * message the browse path shows for it. */
+  function acceptOk(file) {
+    var acc = (input.getAttribute('accept') || '').toLowerCase();
+    if (!acc) { return true; }
+    var type = (file.type || '').toLowerCase();
+    var parts = acc.split(',');
+    for (var i = 0; i < parts.length; i++) {
+      var a = parts[i].trim();
+      if (a === 'image/*' && type.indexOf('image/') === 0) { return true; }
+      if (a && a === type) { return true; }
+      if (a.charAt(0) === '.' && file.name.toLowerCase().slice(-a.length) === a) { return true; }
+    }
+    return false;
+  }
+  function feedFiles(list) {
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) { return; }
+    clearErr();
+    var good = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (!acceptOk(f)) { showErr(t('rsv_1009', 'This image could not be read. Please choose a PNG, JPG or WebP file.')); return; }
+      if (f.size > 25 * 1024 * 1024) { showErr(t('rsv_0977', 'File is larger than 25 MB. Please choose a smaller file.')); return; }
+      good.push(f);
+    }
+    if (!good.length) { return; }
+    if (!multi) { good = good.slice(0, 1); }
+    /* Feed the real input so the existing change handler runs — the
+     * drop path is then identical to browse-upload by construction. */
+    var dt = new DataTransfer();
+    good.forEach(function (f) { dt.items.add(f); });
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  /* Click anywhere on the zone (except the input/label themselves,
+   * whose native behaviour already opens the file dialog) browses. */
+  dz.addEventListener('click', function (e) {
+    if (e.target === input || (e.target && e.target.tagName === 'LABEL')) { return; }
+    input.click();
+  });
+  dz.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+  });
+  ['dragover', 'dragenter'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) { feedFiles(e.dataTransfer.files); }
+  });
+  /* Paste is document-level: a paste lands on the focused element, not
+   * necessarily on #dz. Skipped inside text fields so typing/pasting
+   * text is never hijacked; only clipboard FILES are taken. */
+  document.addEventListener('paste', function (e) {
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    var cd = e.clipboardData;
+    if (cd && cd.files && cd.files.length) { feedFiles(cd.files); }
+  });
+  /* An unhandled drop anywhere on the page would navigate the browser
+   * away from the tool (dropping a file on a bare page loads it).
+   * Block that for the whole document; #dz still handles its own drops. */
+  document.addEventListener('dragover', function (e) { e.preventDefault(); });
+  document.addEventListener('drop', function (e) { e.preventDefault(); });
 })();

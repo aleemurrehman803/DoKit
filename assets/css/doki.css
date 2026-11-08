@@ -34,10 +34,10 @@
 .doki-zzz,
 .doki-micring { display: none; }
 .doki-thinkdots { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); gap: 4px; }
-.doki-thinkdots i { width: 7px; height: 7px; border-radius: 50%; background: #6C4CF1; display: inline-block; }
-.doki-zzz { position: absolute; top: 0; right: 2px; font-weight: 800; font-size: 14px; color: #6C4CF1; letter-spacing: 1px; }
+.doki-thinkdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--violet); display: inline-block; }
+.doki-zzz { position: absolute; top: 0; right: 2px; font-weight: 800; font-size: 14px; color: var(--violet); letter-spacing: 1px; }
 .doki-zzz span { display: inline-block; }
-.doki-micring { position: absolute; inset: -5px; border: 3px solid #6C4CF1; border-radius: 50%; }
+.doki-micring { position: absolute; inset: -5px; border: 3px solid var(--violet); border-radius: 50%; }
 
 /* ---- idle (default): gentle breathing ---- */
 /* Header: the photo bobs against the panel surface (natural backdrop). */
@@ -78,7 +78,7 @@
 /* ---- mic (real voice input): pulsing violet ring + glow ---- */
 .chead .doki--mic .doki-photo { animation: doki-bob 4s ease-in-out infinite; }
 .doki--mic .doki-micring { display: block; animation: doki-micpulse 1.6s ease-in-out infinite; }
-.doki--mic { filter: drop-shadow(0 0 14px rgba(108, 76, 241, 0.55)) drop-shadow(0 0 34px rgba(108, 76, 241, 0.30)); }
+.doki--mic { filter: drop-shadow(0 0 14px rgba(var(--violet-rgb), 0.55)) drop-shadow(0 0 34px rgba(var(--violet-rgb), 0.30)); }
 
 /* ---- face variant: the photo IS the whole character at every size, so
  * no crop, no group-hiding, no responsive face-only variant is needed.
@@ -86,10 +86,9 @@
 .doki--face .doki-photo { border-radius: 50%; }
 
 /* ---- dark-background violet glow (panel header / dark sections) ---- */
-.doki--glow { filter: drop-shadow(0 0 14px rgba(108, 76, 241, 0.55)) drop-shadow(0 0 34px rgba(108, 76, 241, 0.30)); }
+.doki--glow { filter: drop-shadow(0 0 14px rgba(var(--violet-rgb), 0.55)) drop-shadow(0 0 34px rgba(var(--violet-rgb), 0.30)); }
 
 /* ---- size helpers (parent wires these to #chat-fab / .chead) ---- */
-.doki-fab { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex: none; }
 .doki-head { width: 64px; height: 64px; flex: none; }
 
 /* ---- mic button inside the chat form ---- */

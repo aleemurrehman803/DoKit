@@ -130,7 +130,7 @@
     "acct_sub_upgrade": "⬆️ ترقية",
     "acct_sub_upgrade_note": "خطتا Pro ($6/شهر) وTeam ($29/شهر) غير متاحتين للبيع بعد. عند إطلاقهما ستتمكن من الدفع بـ USDT أو بالروبية (Easypaisa / JazzCash).",
     "acct_sub_wallet": "🪙 محفظة العملات",
-    "acct_sub_wallet_d": "عملة واحدة = روبية واحدة. أودِع واسحب أموالًا حقيقية.",
+    "acct_sub_wallet_d": "عملة واحدة = روبية واحدة.", "acct_payments_closed": "الإيداعات والسحوبات ومدفوعات Stripe مغلقة بقرار من المالك.",
     "acct_wd_acct": "رقم حسابك / عنوان محفظتك",
     "acct_wd_balance": "الرصيد",
     "acct_wd_h1": "💸 سحب",

@@ -44,8 +44,8 @@
   var typed = '', started = false, startTime = 0, left = 60;
   var timer = null, done = false, bots = [];
   // HOOKS (referral-complete §7): difficulty of the race in progress,
-  // captured at start (the select may change mid-race, so finish()
-  // must not re-read it). Falls back to the page's default, medium.
+  // captured at start (the select is locked during the race — T079 —
+  // so finish() must not re-read it). Falls back to the page's default, medium.
   var raceDiff = 'medium';
 
   // Render the passage with per-character feedback (same pattern as
@@ -124,24 +124,28 @@
   function stampLastTest() {
     try {
       var db = null, auth = null;
-      try { if (window.DKA && window.DKA.db) { db = window.DKA.db(); } } catch (e) {}
-      if (!db) { try { if (window.firebase && window.firebase.firestore) { db = window.firebase.firestore(); } } catch (e) {} }
+      try { if (window.DKA && window.DKA.db) { db = window.DKA.db(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
+      if (!db) { try { if (window.firebase && window.firebase.firestore) { db = window.firebase.firestore(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); } }
       try {
         if (window.DKA && window.DKA.auth) { auth = window.DKA.auth(); }
         else if (window.firebase && window.firebase.auth) { auth = window.firebase.auth(); }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
       var user = auth ? auth.currentUser : null;
       if (!db || !user || !user.uid) { return; }
       var ref = db.collection('users').doc(user.uid);
       var upd = {};
       try { upd.lastTestAt = window.firebase.firestore.FieldValue.serverTimestamp(); }
       catch (e) { upd.lastTestAt = Date.now(); }
-      ref.update(upd).catch(function () {});
-    } catch (e) {}
+      ref.update(upd).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); });
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
   }
   function finish() {
     if (done) { return; }
     done = true; clearInterval(timer); inputEl.disabled = true;
+    /* T079 (P5-UX-19): the race is over — unlock the difficulty select so
+     * the next race can pick a new speed. Placed here, before the flagged
+     * early-return below, so BOTH finish paths re-enable it. */
+    if (diffEl) { diffEl.disabled = false; }
     var st = stats();
     renderBoard();
     runCheatChecks();
@@ -180,12 +184,12 @@
         } catch (e) { wins = []; }
         wins.push({ date: new Date().toISOString().slice(0, 10), difficulty: raceDiff, won: true });
         if (wins.length > 200) { wins = wins.slice(wins.length - 200); }
-        try { localStorage.setItem('dk_tf_wins', JSON.stringify(wins)); } catch (e) {}
+        try { localStorage.setItem('dk_tf_wins', JSON.stringify(wins)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
     // HOOKS (referral-complete §7): lastTestAt stamp, same pattern as
     // typing.js; silent, never breaks the result display.
-    try { stampLastTest(); } catch (e) {}
+    try { stampLastTest(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'typefight.js'); }
   }
   // Pasting is blocked during races (anti-cheat, stated on the page).
   inputEl.addEventListener('paste', function (e) {
@@ -215,6 +219,10 @@
     // small random variance so no two races play identically.
     var base = DIFFS[diffEl ? diffEl.value : 'medium'] || 45;
     raceDiff = diffEl ? diffEl.value : 'medium';
+    /* T079 (P5-UX-19): lock the difficulty while the race runs — the bot
+     * speed is captured here at Start, so a live select mid-race did
+     * nothing and misled the player. finish() re-enables it. */
+    if (diffEl) { diffEl.disabled = true; }
     bots = BOT_NAMES.map(function (name) {
       return { name: name, wpm: base * (0.9 + Math.random() * 0.2), chars: 0 };
     });

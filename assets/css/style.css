@@ -1,14 +1,42 @@
 
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B}
+/* DES-01 tokens: --gold/--gold2 (certificate gold), --blue (keyboard +
+ * trend-chart blue). Light theme
+ * inherits them from :root (no override), so one :root edit recolours
+ * them in both themes; --gold-text is the separate light-theme gold
+ * for eyebrow/tag text (contrast on light backgrounds).
+ * T032 (P5-DES-02): --violet-deep is the .btn / #chat-fab gradient
+ * end (was literal #4B2FD6); --on-accent is white text on solid
+ * violet/good/blue surfaces, white in both themes (light --text
+ * is dark ink, so it cannot be used for button text).
+ * T038 (P5-DES-12): card padding steps — --pad-card 20px (standard
+ * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
+ * 24px (spacious form/tool panels). Every card-family surface uses
+ * one of these three; the unexplained 16px/18px values are gone. */
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6;font-size:17px}
+/* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
+ * the sticky header instead of under it. 90px = header (~68px at every
+ * viewport) + ~22px margin — the same offset the terms page previously
+ * carried per-section (terms.css), now provided once, globally. It only
+ * affects scroll-to positions (anchors, scrollIntoView); normal scrolling
+ * is untouched. */
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);line-height:1.6;font-size:17px}
 a{color:var(--violet2)}
 a:hover{color:var(--amber)}
+/* T069 (P5-RTE-19 / P5-UX-07): a button that looks like a text link (the
+ * "Forgot password?" reset action on the login page is a button now, not
+ * an href="#" anchor). Mirrors the base a / a:hover colours. */
+button.linklike{background:none;border:0;padding:0;font:inherit;color:var(--violet2);text-decoration:underline;cursor:pointer}
+button.linklike:hover{color:var(--amber)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
 /* WHY clip instead of left:-9999px: the -9999px offset breaks paint on RTL pages in Chromium (blank frame) and can explode the scroll area; the clip pattern hides the link identically for sighted users while keeping it keyboard-focusable. */
-.skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:#17142E;padding:8px 12px;z-index:100}
+.skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:var(--ink);padding:8px 12px;z-index:100}
 .container{max-width:1120px;margin:0 auto;padding:0 20px}
+/* T037 (P5-DES-11): narrow container for auth/form/settings pages —
+ * forms read as forms, not stretched lines. Used on the main
+ * container only (header nav + footer keep the full 1120px). */
+.container--narrow{max-width:720px}
 header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px}
@@ -17,72 +45,184 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .navlinks{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 .navlinks a{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:10px;font-weight:600}
 .navlinks a:hover{background:var(--surface2);color:var(--amber);box-shadow:0 0 0 1px var(--violet)}
-.navlinks a.active{background:var(--violet);color:#fff}
+.navlinks a.active{background:var(--violet);color:var(--on-accent)}
 .navtoggle{display:none;margin-left:auto;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
-.btn{display:inline-block;background:linear-gradient(135deg,var(--violet),#4B2FD6);color:#fff!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(108,76,241,.45);color:#fff}
-.btn.amber{background:var(--amber);color:#17142E!important}
+.btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:var(--on-accent)!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(var(--violet-rgb),.45);color:var(--on-accent)}
+.btn:active{transform:translateY(0)}
+.btn.amber{background:var(--amber);color:var(--ink)!important}
 .btn.amber:hover{box-shadow:0 10px 24px rgba(255,197,49,.4)}
 .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--text)!important}
 .btn.ghost:hover{border-color:var(--violet);color:var(--amber)!important;box-shadow:none}
+/* T078 (P5-UX-18): a disabled button-link (aria-disabled, no href) — visibly
+ * dimmed, unclickable, and it must not lift on hover like an enabled .btn. */
+.btn[aria-disabled="true"]{opacity:.45;pointer-events:none;cursor:not-allowed}
+.btn[aria-disabled="true"]:hover{transform:none;box-shadow:none}
+/* T001 (P5-VIS-01): login/signup form buttons span the full form width, matching the inputs */
+#acct-login-form .btn,#acct-signup-form .btn{display:block;width:100%;margin:0 0 10px}
 .hero{position:relative;overflow:hidden;padding:72px 0 56px}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%}
 .glow{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
-.glow.a{width:420px;height:420px;background:#6C4CF1;top:-120px;right:-80px}
-.glow.b{width:340px;height:340px;background:#FFC531;opacity:.28;bottom:-140px;left:-60px}
+.glow.a{width:420px;height:420px;background:var(--violet);top:-120px;right:-80px}
+.glow.b{width:340px;height:340px;background:var(--amber);opacity:.28;bottom:-140px;left:-60px}
 .hero-inner{position:relative}
 .eyebrow{color:var(--amber);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:13px}
 .hero h1{font-size:clamp(40px,6vw,68px);line-height:1.05;margin:10px 0 14px}
 .hero h1 .grad{background:linear-gradient(90deg,var(--violet2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* T053 (P5-DES-29): fallback if background-clip:text is unsupported
+ * (else color:transparent leaves "you'll ever need" invisible).
+ * The `or` form keeps the gradient in prefixed-only browsers;
+ * light theme uses --gold-text (amber is unreadable on light). */
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){.hero h1 .grad{color:var(--amber)}[data-theme="light"] .hero h1 .grad{color:var(--gold-text)}}
 .hero p.lead{font-size:20px;color:var(--muted);max-width:640px}
 .type-line{font-size:20px;margin:18px 0}
 #type-rotator{color:var(--amber);font-weight:800;border-right:3px solid var(--amber);padding-right:4px}
 .searchbox{margin:22px 0;display:flex;gap:10px;max-width:560px}
 .searchbox input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:13px 16px;font-size:16px}
+/* B53: homepage search results — the listbox and empty state sit under
+ * the input (inside .search-field, so they track the input's width);
+ * option buttons are full-width rows, keyboard-highlighted via .active. */
+.search-field{position:relative;flex:1;display:flex;min-width:0}
+.search-field input{flex:1;min-width:0}
+#tool-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(0,0,0,.4);overflow:hidden}
+#tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
+#tool-search-results [role="option"].active,#tool-search-results [role="option"]:hover{background:var(--surface2);color:var(--amber)}
+#tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
 .float-card{position:absolute;background:rgba(29,25,51,.9);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.35);animation:floaty 5s ease-in-out infinite}
 .float-card.a{right:6%;top:18%}.float-card.b{right:16%;top:52%;animation-delay:1.2s}.float-card.c{right:3%;top:68%;animation-delay:2.1s}
 /* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */
 [dir="rtl"] .float-card{display:none}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+/* B59: tools marquee strip (moved here from css/polish.css §31, which no
+ * page loads — the dead copy there is removed, so exactly one live copy
+ * exists). CSS transform only, no JS ticker. The track holds two
+ * identical halves; the -50% loop point is seamless because the halves
+ * are equal width (spacing lives inside each item, not as a track gap).
+ * Hover pauses it; html.dk-paused (B58) pauses it; the global
+ * prefers-reduced-motion rule below kills the animation outright. */
+.tools-marquee{overflow:hidden;border-bottom:1px solid var(--line);background:var(--surface);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.tools-marquee .marquee-track{display:flex;width:max-content;animation:dk-marquee 28s linear infinite;align-items:center}
+.tools-marquee:hover .marquee-track{animation-play-state:paused}
+.mq-half{display:flex;align-items:center}
+.mq-item{white-space:nowrap;padding:10px 14px;color:var(--muted);font-weight:700}
+.mq-sep{color:var(--amber);padding:0 2px}
+@keyframes dk-marquee{to{transform:translateX(-50%)}}
+[dir="rtl"] .marquee-track{animation-name:dk-marquee-rtl}
+@keyframes dk-marquee-rtl{to{transform:translateX(50%)}}
+/* B55: float cards are links to their tools; the preview line shows one
+ * honest illustrative value, always labelled Sample — never a fake live
+ * number. The values are examples of what the tool does (resizer scales
+ * 800x600 to 400x300; compressor targets an exact KB; typing reports WPM
+ * + accuracy), not measurements of the visitor's files. */
+a.float-card{color:var(--text);text-decoration:none}
+a.float-card:hover{border-color:var(--amber)}
+.float-card .float-preview{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+.float-card .sample-tag{display:inline-block;border:1px solid var(--amber);color:var(--amber);border-radius:99px;padding:0 6px;font-size:11px;font-weight:700}
 .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px}
 .stats b{font-size:22px;display:block}.stats span{color:var(--muted);font-size:14px}
 section.block{padding:44px 0}
+/* DES-05: base h1 rule — non-hero page titles. 36px sits above h2 (32px)
+ * and below the hero h1 floor (40px); the Excel's suggested 32px would
+ * have equalled h2, so the value is adjusted per its own allowance.
+ * .hero h1 keeps its clamp (higher specificity). */
+h1{font-size:36px;line-height:1.15;margin:0 0 12px}
 h2{font-size:32px;line-height:1.2;margin:0 0 14px}
 h3{font-size:21px;margin:22px 0 8px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;transition:transform .15s,border-color .15s,box-shadow .15s}
-.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(108,76,241,.25)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
+.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
+.card:active{transform:translateY(-1px)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--amber);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
-.toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+/* DES-10: utilities replacing repeated inline styles (224 sites). .lede
+ * is the muted paragraph (hero subs, intro lines, footer tagline);
+ * .muted is the muted inline note — it also resets font-weight to 400
+ * for the Doki "(preview)" label inside the bold chat header. .mt-sm /
+ * .ml-sm / .row-flex / .mw-100 cover the other repeated values. One-offs
+ * (display:none toggles, face-guide overlay, single margins) keep their
+ * inline styles, per the issue. */
+.lede{color:var(--muted)}
+.muted{font-weight:400;color:var(--muted)}
+.mt-sm{margin-top:.4rem}
+.ml-sm{margin-left:8px}
+.row-flex{display:flex;gap:8px;flex-wrap:wrap}
+.mw-100{max-width:100%}
+.toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:var(--pad-roomy)}
+/* B66: shared dropzone — the visible drag-and-drop target on the four
+ * image-tool pages. One implementation only, wired in main.js (dkWire
+ * dropzone): the file input inside #dz stays the browse path, and
+ * drop/paste feed that same input. Dragover state is amber; the
+ * prefers-reduced-motion global rule already kills the transition. */
+.dropzone{border:2px dashed var(--violet);border-radius:14px;padding:18px;text-align:center;transition:border-color .15s,background .15s}
+.dropzone.dragover{border-color:var(--amber);background:rgba(255,197,49,.12)}
+.dropzone .dz-title{font-weight:700;margin:0 0 4px}
+.dropzone .dz-hint{margin:0 0 10px;color:var(--muted);font-size:14px}
+.dropzone input[type=file]{max-width:100%}
 label{font-weight:700;display:block;margin:14px 0 6px}
-input[type=text],input[type=number],input[type=email],select,textarea{width:100%;background:#12101F;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
+input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
+/* T090 (P5-VIS-15): equal-height guide cards — the guides grid rows sized
+ * independently (225px row 1 vs 198px row 2). grid-auto-rows:1fr makes every
+ * implicit row the same height (verified live in the T090 probe). Scoped to
+ * .guides-grid only; the shared .grid is untouched. */
+.guides-grid{grid-auto-rows:1fr}
+.guides-grid .card{height:100%}
+/* B84: reading-time label on guide cards + articles — small muted line. */
+.guide-readtime{font-size:14px;margin:6px 0 0}
+/* B93: About-page Doki figure — the site's own mascot photo (already published in the chat panel on every page), floated beside
+ * "Our story" on desktop, centred and stacked on small screens. */
+.about-doki{float:right;width:200px;margin:6px 0 16px 24px;text-align:center}
+.about-doki img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
+.about-doki figcaption{font-size:14px;color:var(--muted);margin-top:6px}
+@media(max-width:600px){.about-doki{float:none;width:180px;margin:0 auto 16px}}
+/* T090 (P5-VIS-15): the native file-input button renders white in Chromium's
+ * dark mode — the only white control on the dark tool pages (the "empty white
+ * box" on the resizer). Style it like the site's ghost buttons. */
+input[type=file]::file-selector-button,input[type=file]::-webkit-file-upload-button{background:transparent;border:1.5px solid var(--line);color:var(--text);border-radius:8px;padding:8px 14px;margin-right:10px;font:inherit;cursor:pointer}
 input[type=range]{width:100%}
+/* T042 (P5-DES-17): range/checkbox/radio inputs match the site palette.
+ * accent-color tints the native checked box / slider thumb violet;
+ * the range gets the same bordered-box + amber-hover treatment as the
+ * text inputs (style.css:438) so the hover border has something to change. */
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--violet)}
+input[type=range]{border:1px solid var(--line);border-radius:99px;transition:border-color .15s}
+input[type=range]:hover{border-color:var(--amber)}
 .row{display:flex;gap:14px;flex-wrap:wrap}.row>*{flex:1;min-width:200px}
-.note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:14px 18px;color:var(--muted)}
+.note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:var(--pad-compact) var(--pad-card);color:var(--muted)}
 .note b{color:var(--text)}
 .ok{color:var(--good);font-weight:700}.err{color:var(--bad);font-weight:700}
-.result{margin-top:16px;background:#12101F;border:1px solid var(--line);border-radius:12px;padding:16px}
-.result img,.preview img{max-width:100%;height:auto;border-radius:10px}
+.result{margin-top:16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
+.result img{max-width:100%;height:auto;border-radius:10px}
 .filelist{list-style:none;padding:0}.filelist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden}
 th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
 th{background:var(--surface2)}
 .tablewrap{overflow-x:auto}
 footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
-.footgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:24px}
+.footgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:24px}
+/* T070 (P5-RTE-20): a fourth "More" footer column — the <=900px rule below
+ * already collapses the grid to a single column, so mobile is unaffected. */
 .footgrid a{color:var(--muted);text-decoration:none;display:block;padding:3px 0}
 .footgrid a:hover{color:var(--amber);text-decoration:underline}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
-.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:10px 0}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:var(--pad-compact) var(--pad-card);margin:10px 0}
 .faq summary{font-weight:700;cursor:pointer}
-#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),#4B2FD6);border:0;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(108,76,241,.5)}
+#chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5);transition:transform .15s}
 #chat-fab:hover{transform:translateY(-2px)}
-#chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:340px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
+#chat-fab:active{transform:translateY(0)}
+/* T031 (P5-VIS-08): panel widened 340 -> 380px (desktop) so the chat
+ * input gets a readable share; max-width keeps small screens fitting. */
+#chat-panel{position:fixed;right:20px;bottom:92px;z-index:90;width:380px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
 #chat-panel.open{display:block}
+/* T031: the mode bar (built by dokiSessionUI in main.js) had NO CSS — its
+ * label sat flush against the panel edge with no gap to the New chat
+ * button. Flex row with panel padding; the label takes the free space and
+ * ellipsises instead of ever running under the button. */
+.chat-mode{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line)}
+.chat-mode span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:14px}
+.chat-mode .btn{flex:none;padding:10px 14px}
 .dk-thinking{display:inline-flex;gap:4px;align-items:center}
 .dk-thinking i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:dkthink 1s infinite}
 .dk-thinking i:nth-child(2){animation-delay:.15s}
@@ -90,25 +230,85 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 @keyframes dkthink{0%,100%{opacity:.25;transform:none}50%{opacity:1;transform:translateY(-2px)}}
 #chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
 #chat-log{padding:14px 18px;max-height:280px;overflow:auto}
-.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:#12101F}
+.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--bg)}
 .msg.bot{border-left:3px solid var(--violet)}
-#chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-#chat-form input{flex:1}
-.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px}
+#chat-form{display:flex;gap:4px;padding:12px 10px;border-top:1px solid var(--line)}
+#chat-form input{flex:1;min-width:0;padding:12px 8px}
+/* T031: the Send button used the global .btn padding (12px 22px, ~137px
+ * wide for "Send message"), leaving the input ~123px in a 340px panel so
+ * the placeholder was cut off ("Type your qu…"). Smaller button here only
+ * — scoped to the submit button so the mic keeps its own sizing — plus a
+ * slightly narrower input padding and form padding, so the full
+ * placeholder fits even in the 350px-wide panel at 390px. The shared
+ * form_send label is untouched. */
+#chat-form button[type="submit"]{flex:none;padding:8px 10px;font-size:13px}
+#chat-form .doki-mic-btn{padding:7px 8px}
+/* B96: suggested-question chips under the greeting (built by
+ * dokiSessionUI in main.js). Same .chip component as /tools/; the row
+ * wraps, so four chips never overflow a 390px panel. */
+.doki-suggest{margin:4px 0 8px}
+.doki-suggest-label{display:block;color:var(--muted);font-size:13px;margin:2px 0 6px}
+.doki-suggest .chip{margin:3px 4px 3px 0;text-align:left;white-space:normal}
+/* B97: source line under a grounded answer (KB or FAQ) — small, muted,
+ * the page name links to the source page. */
+.doki-source{font-size:13px;color:var(--muted)}
+/* B96: small-screen panel — narrower side margins and a log capped to
+ * the viewport, so the panel never runs off-screen on short phones.
+ * Bottom is left to the existing rules (incl. the sticky-CTA offset). */
+@media (max-width:480px){
+  #chat-panel{right:12px;max-width:calc(100vw - 24px)}
+  #chat-log{max-height:38vh}
+}
+.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
+/* B54: quick-search chips under the homepage search field (same .chip
+ * component as /tools/; the row is a plain <p> so it wraps on mobile). */
+.search-chips{margin:12px 0 0}.search-chips .chip{margin:3px 3px 3px 0}
 .chip:hover{border-color:var(--amber);color:var(--amber)}
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
-.passage{font-size:19px;line-height:2;background:#12101F;border:1px solid var(--line);border-radius:12px;padding:18px}
+.passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
 .statnum{font-size:26px;font-weight:800}
+/* B77: accuracy dial — an SVG ring around the live accuracy % (r=15.9155
+ * makes the circumference exactly 100, so stroke-dashoffset = 100-acc).
+ * The % text stays beside the ring, so colour is never the only signal.
+ * Thresholds reuse the brand tokens: >=95% good (green), 90-94% warn
+ * (amber), <90% bad (red). Reduced-motion users get a static ring: the
+ * global reduced-motion rule already kills the transition. */
+.acc-ring{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
+.acc-ring-svg{width:30px;height:30px;flex:none}
+.acc-ring-bg{fill:none;stroke:var(--line);stroke-width:3}
+.acc-ring-fg{fill:none;stroke:var(--good);stroke-width:3;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:0;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .2s,stroke .2s}
+.acc-ring[data-acc=warn] .acc-ring-fg{stroke:var(--amber)}
+.acc-ring[data-acc=bad] .acc-ring-fg{stroke:var(--bad)}
+/* T027 (P5-VIS-04) — progress stats row: flex with a real gap between the
+ * four stats; each .pg-stat keeps its number glued to its label. */
+.pg-stats-row{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}
+.pg-stat{white-space:nowrap}
 @media(max-width:900px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
-@media(max-width:600px){body{font-size:16px}.grid{grid-template-columns:1fr}.hero{padding:48px 0 36px}.hero p.lead{font-size:17px}.row>*{min-width:100%}}
+/* T036 (P5-DES-08): the hero clamp's 40px floor is too large at 320-360px
+ * (3 lines with "need" widowed). At <=600px the floor drops to 32px
+ * (9vw: 32px at 360px, 35px at 390px, capped at 40px above ~444px). */
+@media(max-width:600px){body{font-size:16px}.grid{grid-template-columns:1fr}.hero{padding:48px 0 36px}.hero p.lead{font-size:17px}.row>*{min-width:100%}.hero h1{font-size:clamp(32px,9vw,40px)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+/* T046 (P5-DES-22): pause infinite animations while the tab is hidden.
+ * .dk-paused is toggled on <html> by the visibilitychange listener in
+ * main.js. play-state:paused (not none) freezes each animation where
+ * it is, so it resumes from the same spot — no jump. */
+html.dk-paused *{animation-play-state:paused!important}
 
 
 /* ---- Phase 2b additions (one place — shared by all rebuilt pages) ---- */
 /* Admin tabs: buttons in a wrapping row; panels hidden until opened. */
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+/* DES-15: admin tab buttons had no CSS at all (native OS buttons, and the
+   .active class admin.js toggles had no visible state). Styled as pills
+   matching .chip; .active copies the established .chip.active pattern
+   (violet background, white text) so the selected tab is obvious. */
+.tab-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.tab-btn:hover{border-color:var(--violet)}
+.tab-btn.active{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
+.tab-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* P4-1 (Oct 27): admin.js toggles .open on [data-apanel] panels, but no
    panel rule existed, so the inert `hidden` class hid nothing and all
    panels rendered stacked. These two rules are the whole fix. */
@@ -120,11 +320,11 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .key{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer}
 .key:hover{border-color:var(--amber);color:var(--amber)}
 /* Word Fall play area: fixed height so falling words stay inside. */
-.game-area{position:relative;height:260px;overflow:hidden;background:#12101F;border:1px solid var(--line);border-radius:12px}
+.game-area{position:relative;height:260px;overflow:hidden;background:var(--bg);border:1px solid var(--line);border-radius:12px}
 .fall-word{position:absolute;left:50%;transform:translateX(-50%);font-size:26px;font-weight:800;color:var(--amber);white-space:nowrap}
 /* Brand swatches for the design-system page (real token colours). */
 .swatch{display:inline-block;width:56px;height:56px;border-radius:12px;border:1px solid var(--line);vertical-align:middle;margin-right:10px}
-.sw-violet{background:#6C4CF1}.sw-amber{background:#FFC531}.sw-ink{background:#17142E}.sw-bg{background:#12101F}.sw-surface{background:#1D1933}
+.sw-violet{background:var(--violet)}.sw-amber{background:var(--amber)}.sw-ink{background:var(--ink)}.sw-bg{background:var(--bg)}.sw-surface{background:var(--surface)}.sw-violet2{background:var(--violet2)}.sw-violet-deep{background:var(--violet-deep)}
 /* SAMPLE badge for certificate previews (never a real certificate). */
 .sample-badge{display:inline-block;border:2px solid var(--amber);color:var(--amber);border-radius:8px;padding:4px 10px;font-weight:800;letter-spacing:2px}
 
@@ -132,29 +332,67 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 /* ---- Restore additions (audit gap restore — one place, shared) ---- */
 /* Header controls: language selector, profile avatar menu, theme toggle. */
 .nav-actions{display:flex;gap:8px;align-items:center}
-.lang-drop,.prof-drop{position:relative}
+.prof-drop{position:relative}
 .lang-btn,.theme-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer}
-.lang-btn:hover,.theme-btn:hover{border-color:var(--amber);color:var(--amber)}
+.lang-btn:hover,.theme-btn:hover,.navtoggle:hover{border-color:var(--amber);color:var(--amber)}
 .lang-menu,.prof-menu,.app-panel{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
 .lang-menu li{padding:8px 10px;border-radius:8px;cursor:pointer}
 .lang-menu li:hover{background:var(--surface2);color:var(--amber)}
 .lang-menu li[aria-selected="true"]{color:var(--amber);font-weight:700}
-.prof-menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
-.prof-menu a:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
+.prof-menu a,.prof-menu button.prof-row{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.prof-menu a:hover,.prof-menu button.prof-row:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
 .dk-avatarbtn,.app-btn{background:var(--surface2);border:1px solid var(--line);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer}
 .dk-avatarbtn:hover,.app-btn:hover{border-color:var(--amber);color:var(--amber)}
 .dk-avatarbtn__inner{display:flex}
-#chat-fab img, #chat-fab .doki-svg{display:block;border-radius:50%;object-fit:cover}
+#chat-fab img{display:block;border-radius:50%;object-fit:cover}
 /* Light theme: same tokens, light values (dark stays the default). */
-[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470}
-[data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: #7a5f00; }
+[data-theme="light"]{--bg:#F6F4FF;--surface:#FFFFFF;--surface2:#EDE9FF;--line:#D8D2F0;--text:#17142E;--muted:#5A5470;--gold-text:#7a5f00;--violet2:#6C4CF1;--good:#1E7A4C;--bad:#D92D20}
+[data-theme="light"] .eyebrow, [data-theme="light"] .tag { color: var(--gold-text); }
 [data-theme="light"] header.site{background:rgba(246,244,255,.92)}
-[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:#fff}
+[data-theme="light"] input[type=text],[data-theme="light"] input[type=number],[data-theme="light"] input[type=email],[data-theme="light"] input[type=password],[data-theme="light"] input[type=url],[data-theme="light"] select,[data-theme="light"] textarea,[data-theme="light"] .result,[data-theme="light"] .passage,[data-theme="light"] .msg,[data-theme="light"] .game-area,[data-theme="light"] .float-card{background:var(--surface)}
+/* T045 (P5-DES-20): selects use the site's input styling, not the native
+ * OS chevron. appearance:none keeps the native <select> behaviour
+ * (keyboard + screen reader untouched) and swaps the arrow for a
+ * muted chevron drawn as a background SVG; the light-theme rule
+ * re-states it with the light --muted stroke, because the light
+ * background shorthand above would otherwise wipe the image. The
+ * border/radius/padding come from the base input rule (style.css:103). */
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23B9B3E0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+[data-theme="light"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235A5470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+/* T033 (P5-DES-03): light theme had dark leftovers + unreadable
+ * accent text. Sticky bar mirrors the light header bg; glows soften
+ * to the amber glow's level (.28); the hero gradient's amber end
+ * becomes --gold (3.25:1, fine for a 68px display heading); persistent
+ * amber text (rotator, logo "Kit", falling game word, selected
+ * language, sample badge) becomes --gold-text (6.06:1 on white).
+ * Hover-only amber text is left alone (transient feedback, and every
+ * hover also changes background/border). --amber itself is NOT
+ * overridden: .btn.amber keeps its amber fill + ink text (11.30:1). */
+[data-theme="light"] .dkf-sticky-action{background:rgba(246,244,255,.94)}
+[data-theme="light"] .glow{opacity:.28}
+[data-theme="light"] .hero h1 .grad{background:linear-gradient(90deg,var(--violet),var(--gold));-webkit-background-clip:text;background-clip:text}
+[data-theme="light"] #type-rotator,[data-theme="light"] .logo span em,[data-theme="light"] .fall-word,[data-theme="light"] .lang-menu li[aria-selected="true"]{color:var(--gold-text)}
+[data-theme="light"] .sample-badge{color:var(--gold-text);border-color:var(--gold-text)}
 /* PWA install banner + site announcement banner (both hidden unless set). */
 .install-banner,.site-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;flex-wrap:wrap}
-/* Sticky CTA + dismissible tip banner on the home page. */
-.sticky-cta{position:sticky;bottom:20px;z-index:40;display:flex;justify-content:center;pointer-events:none}
+/* Sticky CTA (home page only) + dismissible tip banner on the home page.
+ * P5-VIS-02: the pill used to be an unconditional sticky bar that covered
+ * page text at every scroll position on every viewport. It is now a
+ * mobile-only (<=768px) fixed bar, shown by JS only after 600px of scroll,
+ * dismissible per session, and body padding reserves room for it so it
+ * never covers page content. Desktop keeps the in-flow hero/pricing CTAs. */
+.sticky-cta{position:fixed;inset-inline:0;bottom:0;z-index:40;display:none;justify-content:center;align-items:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none;transform:translateY(110%);transition:transform .25s ease;background:var(--surface);border-top:1px solid var(--line)}
+.sticky-cta.on{display:flex}
+.sticky-cta.show{transform:translateY(0)}
+.sticky-cta[hidden]{display:none}
 .sticky-cta a{pointer-events:auto}
+.sticky-cta__close{pointer-events:auto;flex:0 0 auto;position:absolute;left:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* P5-VIS-02: close sits at the LEFT end — the Doki FAB is fixed at
+ * bottom-right (z-index 90) and would cover a right-side close button. */
+.sticky-cta__close:hover{border-color:var(--amber);color:var(--amber)}
+/* Reserve room for the shown bar so it never covers page content. */
+body.has-sticky-cta{padding-bottom:84px}
+@media (prefers-reduced-motion: reduce){.sticky-cta{transition:none}}
 .tip-banner{display:flex;gap:12px;align-items:center;justify-content:space-between}
 /* Favorites: star on tool cards + panel on the home page. */
 .fav-star{background:transparent;border:0;font-size:20px;cursor:pointer;color:var(--muted)}
@@ -164,47 +402,93 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .tour-backdrop.open{display:block}
 .tour-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:420px;width:calc(100vw - 40px);z-index:96}
 /* Tool filter chips + picker chips (shared active state). */
-.chip.active{background:var(--violet);color:#fff;border-color:var(--violet)}
-.pick.sel{background:var(--violet);color:#fff;border-color:var(--violet)}
-/* Captcha box on login/signup (client-side code, never a real gate). */
-.captcha-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.captcha-code{font-size:24px;font-weight:800;letter-spacing:6px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 10px,#2e2a5e 10px,#2e2a5e 20px);border:1px solid var(--line);border-radius:10px;padding:8px 16px;user-select:none}
+.chip.active{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
+/* B78: in-page typing sub-nav — the same .chip component as /tools/
+ * (B62), not a new component. The current mode reuses .chip.active +
+ * aria-current="page". The strip is the in-page complement to the
+ * header Typing dropdown, which it does not duplicate. */
+.typing-subnav{display:flex;flex-wrap:wrap;margin:0 0 16px}
+.pick.sel{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
 /* Typing finger keyboard: zones tint the key's bottom edge; the
    active key (current character) gets the amber fill. */
-/* Progress charts + timeline (device-local data only). */
-.chart-wrap{overflow-x:auto}
-.chart-wrap canvas{max-width:100%}
 /* Certificates: print only the certificate, never the chrome. */
-@media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
+@media print{header.site,footer.site,#chat-fab,#chat-panel,.navtoggle,.no-print,.dkf-sticky-action,.install-banner,.site-banner,.tour-card,.sticky-cta,#hero-canvas{display:none!important}body{background:#fff;color:#000}.cert-sheet{border:2px solid #000;border-radius:0;padding:24px}}
+/* T040 (P5-DES-14): print light-reset — dark surfaces print white with
+ * dark text; muted text prints dark grey; amber text prints dark gold
+ * (readable on white, keeps the gold identity); the gradient hero word
+ * prints solid black (transparent gradient text prints invisible). */
+@media print{
+body{background:#fff!important;color:#000!important}
+a{color:#000!important}
+.card,.toolbox,.result,.passage,.note,.faq details,.ref-stat,.ref-level,.saas-steps,.key,.chip,.tag,.float-card{background:#fff!important}
+.card,.toolbox,.result,.passage,.faq details,.ref-stat,.ref-level,.saas-steps,.key,.chip,.float-card{color:#000!important}
+.muted,.lede,.card p,.note,.hero p.lead,.stats span,.ref-legend{color:#333!important}
+.note b{color:#000!important}
+.eyebrow,.tag,#type-rotator,.ref-stat b,.sample-badge{color:#8a6d00!important}
+.hero h1 .grad{background:none!important;color:#000!important;-webkit-background-clip:initial!important;background-clip:initial!important}
+input,select,textarea{background:#fff!important;color:#000!important}
+.btn,.btn.ghost,.btn.amber{background:#fff!important;color:#000!important;border:1.5px solid #666!important}
+}
 /* Typing certificate premium sheet (restored historical design; sheet-scoped only). */
-.cert-sheet.cert-premium{position:relative;border:4px double #b8860b;outline:2px solid #6C4CF1;outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:#17142E}
-.cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6C4CF1}
+/* DES-06: certificate typography — the premium sheet inherits the body's
+ * system-ui stack, so it reads as a plain page. Serif stack (Georgia on
+ * Windows/Mac, Liberation/DejaVu/Noto Serif on Linux, Times elsewhere)
+ * for the formal certificate voice; no webfont dependency (the site
+ * loads zero webfonts, and self-hosting the historical Playfair/Great
+ * Vibes/Cormorant needs an owner decision). Print inherits this rule. */
+.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid var(--violet);outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:var(--cert-paper);color:var(--ink);font-family:var(--font-serif)}
+.cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet)}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
-@media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
-.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid #b8860b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:#b8860b;transform:rotate(-12deg);text-align:center}
-.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid #b8860b;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#6C4CF1;background:#f0ebff}
-.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,#b8860b,#daa520);color:#fff;padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
+.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:var(--cert-photo-bg)}
+.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on-accent);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+/* B80: example-certificate SAMPLE badge — sits where the real sheet's QR
+ * code sits (top-left), so the sample can never be mistaken for an
+ * issued certificate. The sample carries no ids, so certificate.js
+ * (sheet toggle, Print, PDF) can never touch it, and its wrapper is
+ * .no-print so window.print() skips it too. */
+.cert-sheet.cert-sample .cert-sample-badge{position:absolute;top:24px;left:24px;margin:0;border:3px solid var(--bad);color:var(--bad);font-weight:800;letter-spacing:2px;padding:6px 12px;transform:rotate(-12deg);border-radius:4px;background:rgba(255,255,255,.75)}
 .cert-issued{margin-top:18px;font-size:13px;text-align:center}
-.cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:#17142E}
-.cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:#6b5a1e}
-.cert-sheet.cert-premium .cert-statement{font-size:14px;line-height:1.6;max-width:560px;margin:12px auto;color:#3a3558}
-.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:#17142E}
-.cert-sheet.cert-premium .cert-net{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0 0;color:#17142E}
-.cert-sheet.cert-premium .cert-net-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6C4CF1;margin:0 0 14px}
+.cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:var(--ink)}
+.cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:var(--cert-gold-ink)}
+.cert-sheet.cert-premium .cert-statement{font-size:14px;line-height:1.6;max-width:560px;margin:12px auto;color:var(--cert-ink-soft)}
+/* DES-06: the candidate name is the signature-style text — a script
+ * stack (Segoe Script on Windows, Brush Script on Mac) where the
+ * platform has one; elsewhere it falls back to the platform's cursive
+ * default (Noto Sans on this Linux VM — verified via fc-match). */
+.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:var(--ink);font-family:var(--font-script)}
+/* DES-06: the battle sheet has no .cert-name wrapper — its name output
+ * (#cert-name-out) gets the same script stack without the typing
+ * sheet's 30px sizing, so both sheets' names render as signatures. */
+.cert-sheet.cert-premium #cert-name-out{font-family:var(--font-script)}
+.cert-sheet.cert-premium .cert-net{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0 0;color:var(--ink)}
+.cert-sheet.cert-premium .cert-net-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet);margin:0 0 14px}
 .cert-sheet.cert-premium .cert-stats{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:center;margin:16px 0}
 .cert-sheet.cert-premium .cert-stat{min-width:110px}
-.cert-sheet.cert-premium .cert-stat-label{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
-.cert-sheet.cert-premium .cert-stat b{font-size:18px;color:#17142E}
+.cert-sheet.cert-premium .cert-stat-label{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cert-muted)}
+.cert-sheet.cert-premium .cert-stat b{font-size:18px;color:var(--ink)}
 .cert-sheet.cert-premium .cert-meta{font-size:14px}
-.cert-sheet.cert-premium .cert-scale{font-size:12px;color:#666;margin-top:12px}
-.cert-sheet.cert-premium .cert-qr img{width:120px;height:120px;border:1px solid #ddd;border-radius:6px}
-.cert-sheet.cert-premium .cert-verify a{color:#6C4CF1;word-break:break-all}
-.cert-sheet.cert-premium .cert-signatures{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid #e0d9c8}
+.cert-sheet.cert-premium .cert-scale{font-size:12px;color:var(--cert-muted);margin-top:12px}
+.cert-sheet.cert-premium .cert-qr img{width:120px;height:120px;border:1px solid var(--cert-qr-border);border-radius:6px}
+.cert-sheet.cert-premium .cert-verify a{color:var(--violet);word-break:break-all}
+@media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
+/* T052 (P5-DES-28): 521-768px intermediate breakpoint, extended to
+ * the whole <=768px band. Below 521px the 520px rule already made the
+ * QR static, but its title/net/name declarations never applied (the
+ * block sat before those base rules, so they won the tie) and the
+ * seal was never addressed — at 390px the title clipped off the
+ * sheet and the seal overlapped the authority. Both blocks now sit
+ * at the end of the premium section so they win: the 520px block
+ * keeps its smaller fonts, and this block makes BOTH corner elements
+ * static (in flow, centred) with 0 side margins, so the title and
+ * authority can never collide with QR/seal at any width <=768px. */
+@media (max-width:768px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-seal{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px}}
+.cert-sheet.cert-premium .cert-signatures{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid var(--cert-line)}
 .cert-sheet.cert-premium .cert-sig{text-align:center;width:200px}
-.cert-sheet.cert-premium .cert-sig-line{border-top:2px solid #1a1a2e;min-height:28px}
-.cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px}
-.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:#b8860b;font-weight:600}
-@media print{.cert-sheet.cert-premium{border:4px double #b8860b;outline:none;border-radius:4px;background:#fff;color:#000}}
+.cert-sheet.cert-premium .cert-sig-line{border-top:2px solid var(--cert-sig-line);min-height:28px}
+.cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:var(--cert-muted);text-transform:uppercase;letter-spacing:1px}
+.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:var(--gold);font-weight:600}
+@media print{.cert-sheet.cert-premium{border:4px double var(--gold);outline:none;border-radius:4px;background:#fff;color:#000}}
 @media print{@page{size:A4 landscape;margin:12mm}.cert-sheet.cert-premium{max-width:250mm;margin-left:auto;margin-right:auto}}
 /* Urdu pages: right-aligned inputs under RTL. */
 [dir="rtl"] input[type=text],[dir="rtl"] textarea{text-align:right}
@@ -221,23 +505,21 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .kb-row { display: flex; gap: 4px; }
 .kb .key {
   flex: 1 1 0; min-width: 0; text-align: center; padding: 8px 2px;
-  border: 1px solid var(--border, #e2e8f0); border-radius: 6px;
-  background: var(--surface-2, #f1f5f9); font-size: .9rem; user-select: none;
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: .9rem; user-select: none;
 }
 .kb .key.wide { flex-grow: 2; }
 .kb .key.space { flex-grow: 8; }
-/* Finger zones: left hand cool, right hand warm — a learning aid only. */
-.kb .key.f-lpinky, .kb .key.f-lring, .kb .key.f-lmiddle, .kb .key.f-lindex { background: #eef2ff; }
-.kb .key.f-rindex, .kb .key.f-rmiddle, .kb .key.f-rring, .kb .key.f-rpinky { background: #fff7ed; }
-.kb .key.next { outline: 2px solid #1a56db; outline-offset: 1px; font-weight: 700; }
-.kb .key.pressed { background: #1a56db; color: #fff; }
+/* Finger-zone fills live in the F1 block below (surface vs surface2) —
+ * the pale literals here were dead (superseded by source order) and
+ * are removed, not restyled. T032 (P5-DES-02). */
 
 /* How-to steps panels (restored old saas-steps pattern, new design tokens). */
 .saas-steps{display:flex;gap:12px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:20px;position:relative;flex-wrap:wrap}
 .saas-step{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .saas-step-n{display:inline-flex;align-items:center;justify-content:center;width:1.6rem;height:1.6rem;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:12px}
 .saas-step.done{color:var(--text)}
-.saas-step.done .saas-step-n{background:var(--good);border-color:var(--good);color:#fff}
+.saas-step.done .saas-step-n{background:var(--good);border-color:var(--good);color:var(--on-accent)}
 .saas-step.done .saas-step-n::before{content:"\2713"}
 .saas-step.done .saas-step-n{font-size:0}
 .saas-steps-x{margin-inline-start:auto;background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--muted)}
@@ -248,7 +530,20 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .dkf-sticky-action[hidden]{display:none}
 .dkf-sticky-action .btn{inline-size:100%;max-inline-size:28rem;min-height:48px}
 @media (min-width:769px){.dkf-sticky-action{display:none}}
+/* T050 (P5-DES-26): hide the sticky action bar (z-index 210) while
+ * the guided tour is open, so it can never paint over the tour card
+ * (z-index 96) or its buttons. The tour adds/removes .dk-tour-open
+ * on <body> (main.js tour()); the bar's own show/hide logic is
+ * untouched and resumes when the tour closes. */
+body.dk-tour-open .dkf-sticky-action{display:none}
 body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
+/* P5-VIS-02: same FAB lift while the home sticky-CTA bar is shown, so the
+ * FAB never covers the bar (or its dismiss button) on mobile. */
+body.has-sticky-cta #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
+/* T051 (P5-DES-27): the FAB lifts to bottom 72px under both classes
+ * above, so lift the panel with it — 144px = 72px FAB bottom +
+ * 60px FAB height + 12px gap (the normal 92px = 80px + 12px). */
+body.dkf-has-sticky #chat-panel,body.has-sticky-cta #chat-panel{bottom:calc(4.5rem + 72px + env(safe-area-inset-bottom))}
 
 
 /* ---- Header items 99/103: profile menu rows + app launcher ---- */
@@ -263,8 +558,11 @@ body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
 .app-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;text-align:center;line-height:1.3}
 .app-tile svg{flex:0 0 auto}
-.prof-menu a.prof-row{display:flex;align-items:center;gap:10px}
-.prof-menu a.prof-row svg{flex:0 0 auto}
+.prof-menu a.prof-row,.prof-menu button.prof-row{display:flex;align-items:center;gap:10px}
+.prof-menu a.prof-row svg,.prof-menu button.prof-row svg{flex:0 0 auto}
+/* T069 (P5-RTE-19 / P5-UX-07): the Sign out row is a <button> now — strip
+ * the UA button chrome so it renders exactly like the anchor rows. */
+.prof-menu button.prof-row{background:transparent;border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
 .prof-menu a[hidden],.app-tile[hidden]{display:none}
 /* Oct 26: hidden must actually hide — .btn sets display:inline-block,
    which beats the UA [hidden] rule, so .btn[hidden] elements (e.g. the
@@ -287,12 +585,19 @@ body.dkf-has-sticky #chat-fab{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 .kb .key{background:var(--surface2);border-color:var(--line);color:var(--text)}
 .kb .key.f-lpinky,.kb .key.f-lring,.kb .key.f-lmiddle,.kb .key.f-lindex{background:var(--surface)}
 .kb .key.f-rindex,.kb .key.f-rmiddle,.kb .key.f-rring,.kb .key.f-rpinky{background:var(--surface2)}
+/* DES-01: keyboard state highlights — kept AFTER the F1 finger fills on
+ * purpose. Same specificity (0,3,0) as the finger rules, so source order
+ * decides: here .pressed wins its background (before this move the F1
+ * rules overrode it and the press flash never showed). .next keeps its
+ * --blue outline. */
+.kb .key.next { outline: 2px solid var(--blue); outline-offset: 1px; font-weight: 700; }
+.kb .key.pressed { background: var(--blue); color: var(--on-accent); }
 /* F2 [106] shared hover transition: the existing .15s pattern, extended
    to every hoverable that snapped at 0s. .btn/.card/.reveal already
    have their own transitions and are deliberately NOT listed here. */
-.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
+.navlinks a,.chip,.key,.lang-menu li,.prof-menu a,.prof-menu button.prof-row,.app-tile,.lang-btn,.theme-btn,.dk-avatarbtn,.app-btn,#chat-fab,.footgrid a,.card a.cardlink,.fav-star,.faq summary,.saas-steps-x,.pick,.nav-drop-caret,.nav-drop-menu a,input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
 /* F3 [107] form-field hover (focus behaviour untouched). */
-input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,select:hover,textarea:hover{border-color:var(--amber)}
+input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,input[type=password]:hover,input[type=url]:hover,select:hover,textarea:hover{border-color:var(--amber)}
 /* F4 [108] active nav-link hover: the violet ring on violet was
    invisible — an amber ring is visible on violet. Rows inside a
    dropdown keep the menu look even when the active-marker lands on
@@ -307,19 +612,36 @@ input[type=text]:hover,input[type=number]:hover,input[type=email]:hover,select:h
 .saas-steps-x:hover{color:var(--amber)}
 .pick:not(.sel):hover{border-color:var(--amber);color:var(--amber)}
 /* F9 [113] open-motion: menus/panels animate in on open (the animation
-   runs when hidden is removed, so no JS change was needed). Close
-   stays instant: the shared hidden-toggle mechanism cannot animate
-   out without rewriting verified bindMenu/chat/tab toggles — see the
-   parent report for that gap. Theme switch fades via body transition. */
+   runs when hidden is removed, so no JS change was needed). DES-21:
+   close now animates too — JS adds .closing (dkmenuout, the exact
+   reverse, same .15s) and hides the element 150ms later; re-open
+   cancels the pending hide. Reduced-motion users never get .closing
+   (main.js skips the animated path), and the global reduced-motion
+   rule kills the animation anyway. Theme switch fades via body transition. */
 @keyframes dkmenuin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .lang-menu,.prof-menu,.app-panel,.nav-drop-menu{animation:dkmenuin .15s ease-out}
 #chat-panel.open{animation:dkmenuin .15s ease-out}
+@keyframes dkmenuout{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px)}}
+/* .closing must come after the dkmenuin rules: #chat-panel.closing ties
+   #chat-panel.open on specificity, so source order decides; the menu
+   selectors win on specificity (two classes vs one). pointer-events
+   stops clicks on a fading menu. */
+.lang-menu.closing,.prof-menu.closing,.app-panel.closing,.nav-drop-menu.closing,#chat-panel.closing{animation:dkmenuout .15s ease-out;pointer-events:none}
+/* DES-21 (admin tabs): the incoming panel fades in so a switch feels
+   smooth. No fade-out: the outgoing panel cannot fade without delaying
+   every switch by 150ms (panels are in normal flow, so a crossfade
+   would need a layout restructure). */
+.tab-panel.open{animation:dkmenuin .15s ease-out}
 body{transition:background-color .15s,color .15s}
 /* F10 [114] entrance animation for non-home pages: main.js adds
    .dk-enter to <main> on pages without the home hero canvas.
    Reduced-motion kills it via the existing global rule. */
 @keyframes dkpagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 main.dk-enter{animation:dkpagein .4s ease-out}
+/* T047 (P5-DES-23): same entrance, half the time — used on the
+ * 2nd+ page of a session so navigation feels instant. The global
+ * reduced-motion rule still kills both variants. */
+main.dk-enter-short{animation:dkpagein .2s ease-out}
 /* Nav dropdowns [117–118]: profile-menu look/values, left-aligned
    under the parent link. The parent <a> keeps its link + active
    behaviour; the caret toggles the menu (see bindNavDrop in main.js:
@@ -359,9 +681,10 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 .app-grid .app-tile:nth-child(8){animation-delay:.23s}
 .app-grid .app-tile:nth-child(9){animation-delay:.26s}
 @keyframes appTileIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
-.app-tile{border:1px solid transparent}
+.app-tile{border:1px solid transparent;transition:transform .18s ease}
 .app-tile svg{transition:transform .18s ease}
-.app-tile:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.app-tile:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.app-tile:active{transform:translateY(-1px)}
 .app-tile:hover svg{transform:scale(1.18)}
 /* ---- Oct 26 footer base: centered + entrance animation + hover ---- */
 .footbase{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);position:relative;animation:footBaseIn .6s ease-out}
@@ -370,8 +693,6 @@ main.dk-enter{animation:dkpagein .4s ease-out}
 .footbase:hover::before{width:220px}
 .footbase a{display:inline-block;padding:2px 4px;border-radius:6px;transition:color .18s,transform .18s}
 .footbase a:hover{color:var(--amber);text-decoration:underline;transform:translateY(-1px)}
-.footbase span{transition:color .18s}
-.footbase span:hover{color:var(--text)}
 /* ---- Referral Phase 1 (Oct 26): page-scoped .ref-* styles ONLY ----
 WHY page-scoped: these classes exist only on account/referrals/ and
 the dashboard card, so they cannot restyle any other page. WHY these
@@ -387,21 +708,45 @@ prefers-reduced-motion (verified: `*{animation:none!important;
 transition:none!important}`), so these animations are covered. */
 .ref-section{margin-top:28px}
 .ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
+.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
 .ref-grid .ref-stat:nth-child(1){animation-delay:.02s}
 .ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
 .ref-grid .ref-stat:nth-child(4){animation-delay:.14s}
-.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.ref-stat:active{transform:translateY(-1px)}
 .ref-stat b{color:var(--amber);font-size:1.25em}
 @keyframes refFadeIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .ref-card{animation:refFadeIn .4s ease-out backwards}
-.ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.ref-card:active{transform:translateY(-1px)}
 .ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
 .ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
-.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;animation:refFadeIn .4s ease-out backwards}
+.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:12px 0;animation:refFadeIn .4s ease-out backwards}
 .ref-level:nth-of-type(1){animation-delay:.05s}
 .ref-level:nth-of-type(2){animation-delay:.10s}
 .ref-level:nth-of-type(3){animation-delay:.15s}
-.ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(108,76,241,.35)}
+.ref-level:hover{border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-legend{color:var(--muted)}
+
+/* P5-UX-15 (T021): surface the language switcher outside the profile menu.
+ * .lang-hdr = compact globe button in the header (desktop only — hidden
+ * at/below 768px, where header space is tight); .foot-lang = language row
+ * in the footer (all viewports, so mobile guests can find it too). Both
+ * call the same DKI18N.setLang() switcher as the profile-menu selector —
+ * no second switching implementation. */
+.lang-hdr{position:relative}
+.lang-hdr-btn{width:auto;padding:0 12px;border-radius:99px;font-size:14px;font-weight:700;gap:5px}
+.lang-hdr-btn .lang-hdr-code{font-size:13px;letter-spacing:.02em}
+@media(max-width:768px){.lang-hdr{display:none}}
+.foot-lang{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:24px 0 0;padding-top:18px;border-top:1px solid var(--line)}
+.foot-lang .foot-lang-label{color:var(--muted);font-size:13px;margin-right:2px}
+.foot-lang button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer}
+.foot-lang button:hover{border-color:var(--amber);color:var(--amber)}
+.foot-lang button[aria-current="true"]{color:var(--amber);border-color:var(--amber);font-weight:700}
+
+/* P5-VIS-03 (T026): the footer logo lost its gap — .footgrid a{display:block}
+ * (specificity 0,1,1) beats .logo{display:flex;gap:10px} (0,1,0), so the "D"
+ * box touched the "DoKit" wordmark (measured gap 0px vs 10px in the header).
+ * Restore flex + the same 10px gap for the footer logo only. */
+footer.site .logo{display:flex;align-items:center;gap:10px}

@@ -27,6 +27,21 @@
     if (n < 1048576) { return (n / 1024).toFixed(1) + ' KB'; }
     return (n / 1048576).toFixed(2) + ' MB';
   }
+  /* B74 savings: percentage change from original to output bytes,
+   * computed from the ACTUAL blobs, never estimates. Negative
+   * savings (output larger than the original) are shown plainly,
+   * never clamped to 0% or hidden. */
+  function savingsPct(orig, out) {
+    if (!orig || orig <= 0) { return 0; }
+    return Math.round((orig - out) / orig * 100);
+  }
+  function savingsText(orig, out) {
+    var pct = savingsPct(orig, out);
+    var word = pct >= 0
+      ? (window.dkT ? window.dkT('rsv_1415', 'smaller') : 'smaller')
+      : (window.dkT ? window.dkT('rsv_1416', 'larger') : 'larger');
+    return Math.abs(pct) + '% ' + word;
+  }
   function downloadBlob(blob, name) {
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -96,6 +111,20 @@
     for (var si = 0; si < socialBtns.length; si++) {
       (function (btn) {
         btn.addEventListener('click', function () {
+          /* B67 width-only preset (data-ta-w-only): set the width and
+           * let the aspect lock derive the height from the loaded
+           * image — dispatch 'input' so tools.js's lock handler runs.
+           * With no image loaded, or the lock off, the height is
+           * left as-is (the user still presses Resize). */
+          var wOnly = btn.getAttribute('data-ta-w-only');
+          if (wOnly) {
+            rzW.value = wOnly;
+            var ev;
+            try { ev = new Event('input', { bubbles: true }); }
+            catch (e) { ev = document.createEvent('Event'); ev.initEvent('input', true, false); }
+            rzW.dispatchEvent(ev);
+            return;
+          }
           rzW.value = btn.getAttribute('data-ta-w');
           rzH.value = btn.getAttribute('data-ta-h');
         });
@@ -139,8 +168,16 @@
           cpResult.innerHTML = '';
           var p = document.createElement('p');
           p.textContent = (window.dkT ? window.dkT('rsv_1197', 'Manual quality') : 'Manual quality') + ' ' + Math.round(cpQuality() * 100)
-            + '%: ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(file.size) + ')';
+            + '%: ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(file.size) + ', ' + savingsText(file.size, blob.size) + ')';
           cpResult.appendChild(p);
+          /* B74 gotcha fix: the manual slider can silently ENLARGE a
+           * file (a small flat PNG re-encoded as JPEG). Say so. */
+          if (blob.size > file.size) {
+            var w = document.createElement('p');
+            w.className = 'err';
+            w.textContent = (window.dkT ? window.dkT('rsv_1418', 'Warning: the output is larger than the original.') : 'Warning: the output is larger than the original.');
+            cpResult.appendChild(w);
+          }
           var d = document.createElement('button');
           d.className = 'btn'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download');
           d.addEventListener('click', function () {
@@ -151,44 +188,206 @@
       }).catch(function (e) { cpResult.textContent = e.message; });
     });
   }
+  /* ============ Compressor: batch queue (B70) ========================
+   * NEEDS: #ta-cp-batch, #ta-cp-batch-list, #ta-cp-target-mode
+   * (fragment). WHY: the old batch wiped earlier results on every
+   * re-select (cpBatchList.innerHTML = ''), had no per-file remove,
+   * and could only use the slider quality — the headline target-KB
+   * flow was single-file only. HOW: a real queue. Selections APPEND
+   * to cpBatchItems (10-file TOTAL cap, not per-selection); each item
+   * gets its own Remove button; the "Use the target size" checkbox
+   * runs the same 8-round binary search the single-file target flow
+   * (tools.js) uses, per file. Queue state (name / original size /
+   * output blob) is kept on each item so B73 (ZIP) and B74 (savings)
+   * can read it. cpBatchAfterChange() is the shared post-change hook
+   * (defined by B73/B74; guarded with typeof until then). */
   var cpBatch = $('ta-cp-batch'), cpBatchList = $('ta-cp-batch-list');
+  /* Queue state, shared by the batch render + B73 ZIP + B74 totals:
+   * [{ file, name, origSize, blob, outName, li, sp, done }] */
+  var cpBatchItems = [];
+  function cpBatchTargetKB() {
+    var sel = ($('cp-target') || {}).value || '100';
+    if (sel === 'custom') { return parseFloat(($('cp-custom') || {}).value || '0') || 0; }
+    return parseFloat(sel) || 0;
+  }
+  function cpEncodeTarget(img, type, target) {
+    /* Same 8-round binary search as the single-file target flow in
+     * tools.js (0.05-0.95, keep the best blob that fits). */
+    var c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    function blobAt(q) { return new Promise(function (r) { c.toBlob(function (b) { r(b); }, type, q); }); }
+    return (async function () {
+      var lo = 0.05, hi = 0.95, best = null;
+      for (var i = 0; i < 8; i++) {
+        var mid = (lo + hi) / 2, b = await blobAt(mid);
+        if (!b) { break; }
+        best = { blob: b, q: mid };
+        if (b.size <= target) { lo = mid; } else { hi = mid; }
+      }
+      return best;
+    })();
+  }
   if (cpBatch && cpBatchList) {
     cpBatch.addEventListener('change', function () {
-      var files = Array.prototype.slice.call(cpBatch.files || [], 0, 10);
+      var slots = 10 - cpBatchItems.length;
+      var files = Array.prototype.slice.call(cpBatch.files || [], 0, Math.max(slots, 0));
       cpBatch.value = '';
-      cpBatchList.innerHTML = '';
+      /* Drop any earlier "batch full / nothing chosen" note lines so
+       * they never pile up; real items are never wiped (B70). */
+      var notes = cpBatchList.querySelectorAll('.cp-batch-note');
+      for (var ni = 0; ni < notes.length; ni++) { notes[ni].remove(); }
       if (!files.length) {
-        /* WHY (i18n): batch messages go through dkT() like the manual
-         * flow (item 36); Download reuses rsv_0972. */
         var li0 = document.createElement('li');
-        li0.textContent = (window.dkT ? window.dkT('rsv_1210', 'No images chosen.') : 'No images chosen.');
+        li0.className = 'cp-batch-note';
+        li0.textContent = slots <= 0
+          ? (window.dkT ? window.dkT('rsv_1413', 'Batch is full (10 images). Remove one to add more.') : 'Batch is full (10 images). Remove one to add more.')
+          : (window.dkT ? window.dkT('rsv_1210', 'No images chosen.') : 'No images chosen.');
         cpBatchList.appendChild(li0);
         return;
       }
+      var useTarget = !!($('ta-cp-target-mode') || {}).checked;
+      var targetKB = useTarget ? cpBatchTargetKB() : 0;
       files.forEach(function (f) {
+        var item = { file: f, name: f.name, origSize: f.size, blob: null, outName: '', done: false };
+        cpBatchItems.push(item);
         var li = document.createElement('li');
-        li.textContent = f.name + ' …';
+        item.li = li;
+        var sp = document.createElement('span');
+        item.sp = sp;
+        sp.textContent = f.name + ' \u2026';
+        li.appendChild(sp);
+        /* Per-file Remove: drops the item from the queue (the ZIP set
+         * and the totals are computed from the queue, so they follow). */
+        var rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'btn ghost'; rm.textContent = '\u00d7';
+        rm.setAttribute('aria-label', (window.dkT ? window.dkT('rsv_1414', 'Remove') : 'Remove') + ' ' + f.name);
+        rm.addEventListener('click', function () {
+          var at = cpBatchItems.indexOf(item);
+          if (at !== -1) { cpBatchItems.splice(at, 1); }
+          if (li.parentNode) { li.parentNode.removeChild(li); }
+          if (typeof cpBatchAfterChange === 'function') { cpBatchAfterChange(); }
+        });
+        li.appendChild(document.createTextNode(' ')); li.appendChild(rm);
         cpBatchList.appendChild(li);
+        function fail(msg) {
+          sp.textContent = f.name + ' ' + msg;
+          li.innerHTML = '';
+          li.appendChild(sp); li.appendChild(document.createTextNode(' ')); li.appendChild(rm);
+        }
+        /* extra: honest note appended when a target-mode encode lands
+         * above the target (same wording as the single-file flow's
+         * "Closest possible" line — rsv_0937/rsv_0940). */
+        function finish(blob, extra) {
+          if (!blob) { fail(window.dkT ? window.dkT('rsv_1211', '\u2014 failed.') : '\u2014 failed.'); return; }
+          item.blob = blob; item.outSize = blob.size; item.done = true;
+          li.innerHTML = '';
+          var sp2 = document.createElement('span');
+          sp2.textContent = f.name + ' \u2192 ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(f.size) + ', ' + savingsText(f.size, blob.size) + ')' + (extra || '') + ' ';
+          item.sp = sp2;
+          var d = document.createElement('button');
+          d.className = 'btn ghost'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download');
+          d.addEventListener('click', function () { downloadBlob(blob, item.outName); });
+          li.appendChild(sp2); li.appendChild(d); li.appendChild(document.createTextNode(' ')); li.appendChild(rm);
+          if (typeof cpBatchAfterChange === 'function') { cpBatchAfterChange(); }
+        }
         loadImage(f).then(function (img) {
           var c = document.createElement('canvas');
           c.width = img.naturalWidth; c.height = img.naturalHeight;
           c.getContext('2d').drawImage(img, 0, 0);
           var fmtSel = ($('cp-fmt') || {}).value || 'keep';
           var type = fmtSel === 'webp' ? 'image/webp' : 'image/jpeg';
-          c.toBlob(function (blob) {
-            if (!blob) { li.textContent = f.name + ' ' + (window.dkT ? window.dkT('rsv_1211', '— failed.') : '— failed.'); return; }
-            li.innerHTML = '';
-            var sp = document.createElement('span');
-            sp.textContent = f.name + ' → ' + fmt(blob.size) + ' ';
-            var d = document.createElement('button');
-            d.className = 'btn ghost'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download');
-            d.addEventListener('click', function () {
-              downloadBlob(blob, 'dokit-' + f.name.replace(/\.[^.]+$/, '')
-                + '.' + type.split('/')[1]);
+          item.outName = 'dokit-' + f.name.replace(/\.[^.]+$/, '') + '.' + type.split('/')[1];
+          if (useTarget) {
+            if (!targetKB || targetKB <= 0) {
+              fail(window.dkT ? window.dkT('rsv_1005', 'Sahi target size (KB) choose karein.') : 'Sahi target size (KB) choose karein.');
+              return;
+            }
+            cpEncodeTarget(img, type, targetKB * 1024).then(function (best) {
+              if (!best) { finish(null); return; }
+              /* Honest above-target label (B70): the binary search
+               * keeps the last trial, which can land just above the
+               * target on noisy images — say so, like the
+               * single-file flow does, instead of passing it off
+               * as a hit. */
+              var above = best.blob.size > targetKB * 1024
+                ? (window.dkT ? window.dkT('rsv_0937', ' (still above the ') : ' (still above the ')
+                  + targetKB
+                  + (window.dkT ? window.dkT('rsv_0940', ' KB target — try resizing smaller or using WebP).') : ' KB target — try resizing smaller or using WebP).')
+                : '';
+              finish(best.blob, above);
             });
-            li.appendChild(sp); li.appendChild(d);
-          }, type, cpQuality());
-        }).catch(function () { li.textContent = f.name + ' ' + (window.dkT ? window.dkT('rsv_1212', '— could not be read.') : '— could not be read.'); });
+          } else {
+            c.toBlob(function (blob) { finish(blob); }, type, cpQuality());
+          }
+        }).catch(function () { fail(window.dkT ? window.dkT('rsv_1212', '\u2014 could not be read.') : '\u2014 could not be read.'); });
+      });
+    });
+  }
+
+  /* ============ Compressor: Download all as ZIP (B73) ===============
+   * NEEDS: #ta-cp-zip (fragment). WHY: the batch had only per-file
+   * downloads. HOW: reuse the resizer's hand-rolled zero-dependency
+   * ZIP writer (tools.js buildZip, exposed as window.dkBuildZip) —
+   * NO new library. The ZIP set is computed from the B70 queue
+   * (cpBatchItems), so re-selects accumulate and Remove shrinks it
+   * for free. The ZIP is built only on click, never eagerly (10
+   * files x up to 25 MB each must not sit in memory as a ZIP until
+   * the user asks for it). This is also the cpBatchAfterChange()
+   * hook B70 calls after every queue change. */
+  var cpZipBtn = $('ta-cp-zip');
+  function cpBatchAfterChange() {
+    if (cpZipBtn) {
+      var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      cpZipBtn.hidden = done.length < 2;
+    }
+    /* B74 batch total: sums the ACTUAL bytes of finished items, and
+     * the per-file savings above. Empty / no finished items yet:
+     * the line stays blank. */
+    var totalEl = $('ta-cp-batch-total');
+    if (totalEl) {
+      var fin = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      if (!fin.length) { totalEl.textContent = ''; return; }
+      var oTot = 0, uTot = 0;
+      fin.forEach(function (it) { oTot += it.origSize || 0; uTot += it.outSize || 0; });
+      totalEl.textContent = (window.dkT ? window.dkT('rsv_1417', 'Batch total') : 'Batch total') + ': ' + fmt(uTot)
+        + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(oTot) + ', ' + savingsText(oTot, uTot) + ')';
+    }
+  }
+  if (cpZipBtn) {
+    cpZipBtn.addEventListener('click', function () {
+      var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      /* Too few files, or the writer missing (tools.js failed to
+       * load): do nothing — per-file downloads still work. */
+      if (done.length < 2 || typeof window.dkBuildZip !== 'function') { return; }
+      /* ZIP entry names must be ASCII-safe (the stored writer packs
+       * one byte per char) and UNIQUE — the same file can be batched
+       * twice, and duplicate names collapse on extract. Suffix
+       * repeats like the resizer does (" (2)", " (3)"); per-file
+       * downloads keep the real name. */
+      var seenNames = {};
+      var files = done.map(function (it) {
+        var base = it.outName.replace(/[^\x20-\x7E]/g, '_');
+        var name = base, n = 1;
+        while (seenNames[name]) {
+          n++;
+          var dot = base.lastIndexOf('.');
+          name = base.slice(0, dot) + ' (' + n + ')' + base.slice(dot);
+        }
+        seenNames[name] = true;
+        return { name: name, blob: it.blob };
+      });
+      window.dkBuildZip(files).then(function (zipBlob) {
+        downloadBlob(zipBlob, 'dokit-compressed.zip');
+      }).catch(function () {
+        /* Reuse the resizer's ZIP error string (rsv_1384). */
+        var msg = window.dkT ? window.dkT('rsv_1384', 'Couldn\'t build the ZIP file. Try downloading images one by one.') : 'Couldn\'t build the ZIP file. Try downloading images one by one.';
+        var list = $('ta-cp-batch-list');
+        if (!list) { return; }
+        var li = document.createElement('li');
+        li.className = 'cp-batch-note err';
+        li.textContent = msg;
+        list.appendChild(li);
       });
     });
   }

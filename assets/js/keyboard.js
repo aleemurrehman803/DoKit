@@ -77,6 +77,12 @@
     if (!container) { return; }
     container.innerHTML = '';
     container.className = 'kb';
+    /* T077 (P5-UX-17, D6 owner decision): the finger keyboard is pure visual
+     * feedback — the keys are inert divs with no interactive purpose — so
+     * hide the whole container from assistive tech. The separate hint line
+     * stays exposed: it tells the learner which finger to use. Set here so
+     * it survives re-renders (resync on language change re-calls render). */
+    container.setAttribute('aria-hidden', 'true');
     keyEls = {};
     hintEl = hint || null;
     ROWS.forEach(function (row) {

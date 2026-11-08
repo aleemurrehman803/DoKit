@@ -18,15 +18,21 @@
  *      with "beta" tags on ar/hi/de/ru. The new header is static HTML from
  *      the generator, so this engine self-wires the static selector markup
  *      (see bindSelector below) and carries no beta tags: the chrome keys in
- *      i18n-dict.js are fully translated in all 10 languages except the four
- *      newer tool names, which fall back to English (see README.md).
+ *      the per-language dict files are fully translated in all 10 languages
+ *      except the four newer tool names, which fall back to English (see
+ *      README.md). (P5-RTE-01: the ten-language monolith i18n-dict.js was
+ *      split into i18n-dict-<lang>.js; only the active language + English
+ *      are loaded at boot, and setLang() fetches any other language's dict
+ *      on demand.)
  *   4. Global name is window.DK_I18N. window.DKI18N is kept as an alias so
  *      any old snippet calling DKI18N.t()/setLang() keeps working.
  *
  * CONTRACTS THE PARENT MUST KEEP (see README.md for the full list)
- *   - Load i18n-dict.js BEFORE this file (both with defer, in that order).
- *     The engine still reads window.DK_I18N_DICT live on every lookup, so a
- *     swapped order degrades gracefully instead of breaking.
+ *   - Load the per-language dict files BEFORE this file (in order:
+ *     i18n-dict-en.js, then i18n-dict-<active>.js when the active language
+ *     is not English, then this engine). main.js loadSharedScripts owns
+ *     that order. The engine still reads window.DK_I18N_DICT live on every
+ *     lookup, so a swapped order degrades gracefully instead of breaking.
  *   - Put data-i18n ONLY on leaf elements (elements whose whole text content
  *     is the string). Applying textContent to a wrapper would wipe its child
  *     links/buttons — that is why the footer base line must be split into
@@ -85,14 +91,14 @@
     try {
       var q = new URLSearchParams(window.location.search).get('lang');
       if (q && isLang(q)) {
-        try { window.localStorage.setItem(STORAGE_KEY, q); } catch (e) { /* private mode: ignore */ }
+        try { window.localStorage.setItem(STORAGE_KEY, q); } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
         return q;
       }
-    } catch (e) { /* old browsers without URLSearchParams: fall through */ }
+    } catch (e) { /* old browsers without URLSearchParams: fall through */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
     try {
       var stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored && isLang(stored)) return stored;
-    } catch (e) { /* private mode: ignore */ }
+    } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
     return 'en';
   }
 
@@ -162,6 +168,17 @@
    * selected. WHY a separate function: setLang(), apply(), and the initial
    * load all need it, and dynamic pages can call refresh() after injecting
    * new markup without re-applying every translation. */
+  /* P5-UX-15: one helper marks the selected item in any language menu,
+   * so the profile-menu selector, the header globe selector and the
+   * footer row all stay in sync from the same refreshSelector call. */
+  function markMenuSelected(menu, lang) {
+    if (!menu) return;
+    var items = menu.querySelectorAll('li[data-lang]');
+    for (var j = 0; j < items.length; j++) {
+      items[j].setAttribute('aria-selected', String(items[j].getAttribute('data-lang') === lang));
+    }
+  }
+
   function refreshSelector(lang) {
     lang = lang || current();
     var label = lang;
@@ -175,13 +192,54 @@
       var selectLabel = t('lang_select_label') || 'Language';
       btn.setAttribute('aria-label', selectLabel + ': ' + label);
     }
-    var menu = document.getElementById('langMenu');
-    if (menu) {
-      var items = menu.querySelectorAll('li[data-lang]');
-      for (var j = 0; j < items.length; j++) {
-        items[j].setAttribute('aria-selected', String(items[j].getAttribute('data-lang') === lang));
-      }
+    markMenuSelected(document.getElementById('langMenu'), lang);
+    /* P5-UX-15: header globe selector (desktop) — same label, 2-letter code. */
+    var curHdr = document.getElementById('langCurHdr');
+    if (curHdr) curHdr.textContent = lang.toUpperCase();
+    var btnHdr = document.getElementById('langBtnHdr');
+    if (btnHdr) {
+      var selectLabelHdr = t('lang_select_label') || 'Language';
+      btnHdr.setAttribute('aria-label', selectLabelHdr + ': ' + label);
     }
+    markMenuSelected(document.getElementById('langMenuHdr'), lang);
+    /* P5-UX-15: footer language row (all viewports) — mark the active one. */
+    var footBtns = document.querySelectorAll('[data-lang-pick]');
+    for (var k = 0; k < footBtns.length; k++) {
+      footBtns[k].setAttribute('aria-current', String(footBtns[k].getAttribute('data-lang-pick') === lang));
+    }
+  }
+
+  /* P5-RTE-01: only the active language dict (+ English) is loaded at boot
+   * (main.js loadSharedScripts). Switching to a language whose dict is not
+   * loaded yet fetches its per-language file first, then applies. The base
+   * is this engine file's own URL (captured at load; document.currentScript
+   * is only set while this script evaluates), falling back to the base
+   * main.js recorded. On load failure the previous language is restored,
+   * so the page never sits half-translated with a mismatched selector. */
+  var DICT_BASE = null;
+  try {
+    var selfScript = document.currentScript;
+    if (selfScript && selfScript.src) { DICT_BASE = selfScript.src.replace(/i18n\.js.*$/, ''); }
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
+  function dictBase(){
+    if (DICT_BASE) return DICT_BASE;
+    if (window.__dkJsBase) return window.__dkJsBase;
+    return '';
+  }
+  function loadDict(code, ok, fail){
+    try {
+      var base = dictBase();
+      if (!base) { fail(); return; }
+      var s = document.createElement('script');
+      s.src = base + 'i18n-dict-' + code + '.js';
+      s.onload = ok; s.onerror = fail;
+      document.head.appendChild(s);
+    } catch (e) { fail(); }
+  }
+  function dispatchLangChange(code){
+    try {
+      document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: code } }));
+    } catch (e) { /* very old browsers: translation already applied above */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
   }
 
   /* Switch language: persist, re-apply, and tell the page. WHY dispatch a
@@ -191,11 +249,24 @@
    * engine having to know about every widget. */
   function setLang(code) {
     if (!isLang(code)) code = 'en';
-    try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ }
-    apply(code);
-    try {
-      document.dispatchEvent(new CustomEvent('dokit:langchange', { detail: { lang: code } }));
-    } catch (e) { /* very old browsers: translation already applied above */ }
+    /* Previously applied language (<html lang> is set by apply() on every
+     * run) — the restore target if the new dict fails to load. */
+    var prev = document.documentElement.lang || current();
+    if (!isLang(prev)) prev = 'en';
+    try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
+    if (code === 'en' || (window.DK_I18N_DICT && window.DK_I18N_DICT[code])) {
+      apply(code);
+      dispatchLangChange(code);
+      return;
+    }
+    loadDict(code, function(){
+      apply(code);
+      dispatchLangChange(code);
+    }, function(){
+      try { window.localStorage.setItem(STORAGE_KEY, prev); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
+      apply(prev);
+      dispatchLangChange(prev);
+    });
   }
 
   /* Wire the static header selector (header-selector.html). WHY self-wire
@@ -204,40 +275,77 @@
    * there is exactly one place to fix selector bugs. The dataset flag stops
    * double-binding if this script ever runs twice. */
   function bindSelector() {
-    var btn = document.getElementById('langBtn');
-    var menu = document.getElementById('langMenu');
-    if (!btn || !menu) return;
-    if (btn.dataset.i18nBound) return;
-    btn.dataset.i18nBound = '1';
+    /* P5-UX-15: two header selectors share one switcher — the profile-menu
+     * pair (langBtn/langMenu) and the header globe pair (langBtnHdr/
+     * langMenuHdr, desktop only). Each pair gets the same toggle/pick
+     * wiring from bindOne(); both call setLang(). The footer row
+     * (data-lang-pick buttons, all viewports) is handled by one delegated
+     * listener below. Per-button dataset flags stop double-binding if
+     * this script ever runs twice. */
+    function bindOne(btnId, menuId) {
+      var btn = document.getElementById(btnId);
+      var menu = document.getElementById(menuId);
+      if (!btn || !menu) return;
+      if (btn.dataset.i18nBound) return;
+      btn.dataset.i18nBound = '1';
 
-    function close() {
-      menu.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
+      function close() {
+        // DES-21: same animated close as bindMenu (main.js exposes the
+        // helper on window; it loads before this file, but the typeof
+        // guard keeps the instant close if it ever does not).
+        if (!menu.hidden && typeof window.dkAnimateClose === 'function') {
+          window.dkAnimateClose(menu, function(){ menu.hidden = true; });
+        } else { menu.hidden = true; }
+        btn.setAttribute('aria-expanded', 'false');
+      }
+      // T030 (P5-VIS-07): register this menu's existing close with the
+      // central registry (main.js) so opening any other menu closes it.
+      if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu(menuId, close); }
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
+        // DES-21: a click on a menu that is mid-close re-opens it.
+        if (menu.classList.contains('closing') && typeof window.dkCancelClose === 'function') {
+          // T030: re-opening still leaves only one menu open.
+          if (typeof window.dkCloseAllMenus === 'function') { window.dkCloseAllMenus(menuId); }
+          window.dkCancelClose(menu); menu.hidden = false;
+          btn.setAttribute('aria-expanded', 'true'); return;
+        }
+        var willOpen = menu.hidden;
+        // T030: opening this menu closes every other menu first. (The
+        // profile-menu language menu is nested inside #profMenu; the
+        // central closer never closes an ancestor, so it keeps working.)
+        if (willOpen && typeof window.dkCloseAllMenus === 'function') { window.dkCloseAllMenus(menuId); }
+        menu.hidden = !willOpen;
+        btn.setAttribute('aria-expanded', String(willOpen));
+      });
+      document.addEventListener('click', close);
+      document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') close();
+      });
+      function pick(item) {
+        if (!item) return;
+        setLang(item.getAttribute('data-lang'));
+        close();
+      }
+      menu.addEventListener('click', function (ev) {
+        var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
+        pick(item);
+      });
+      menu.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
+        if (item) { ev.preventDefault(); pick(item); }
+      });
     }
-    btn.addEventListener('click', function (ev) {
-      ev.stopPropagation(); /* WHY: the document click-closer below would otherwise close it instantly */
-      var willOpen = menu.hidden;
-      menu.hidden = !willOpen;
-      btn.setAttribute('aria-expanded', String(willOpen));
-    });
-    document.addEventListener('click', close);
-    document.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape') close();
-    });
-    function pick(item) {
-      if (!item) return;
-      setLang(item.getAttribute('data-lang'));
-      close();
+    bindOne('langBtn', 'langMenu');
+    bindOne('langBtnHdr', 'langMenuHdr');
+    if (!document.documentElement.dataset.dkFootLangBound) {
+      document.documentElement.dataset.dkFootLangBound = '1';
+      document.addEventListener('click', function (ev) {
+        var item = ev.target.closest ? ev.target.closest('[data-lang-pick]') : null;
+        if (item) setLang(item.getAttribute('data-lang-pick'));
+      });
     }
-    menu.addEventListener('click', function (ev) {
-      var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
-      pick(item);
-    });
-    menu.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter' && ev.key !== ' ') return;
-      var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
-      if (item) { ev.preventDefault(); pick(item); }
-    });
   }
 
   /* Public API. getLang/refresh are aliases kept because the old engine

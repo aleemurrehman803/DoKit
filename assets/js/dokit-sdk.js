@@ -23,6 +23,7 @@
 }(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // Planned base URL — not live yet (the API backend is in development; see /api/).
   var DEFAULT_BASE_URL = "https://api.dokit.app/v1";
 
   /**
@@ -30,7 +31,7 @@
    * machine-readable `code` from the API error body (see /api/).
    */
   // WHY (i18n): SDK error strings surface in the API docs demo output, so they translate like any UI text. T() reads the page dict when i18n.js has loaded and returns the English fallback otherwise (the SDK also runs without main.js).
-function T(k, fb){ try { if (typeof window !== 'undefined' && window.dkT) return window.dkT(k, fb); } catch (e) {} return fb; }
+function T(k, fb){ try { if (typeof window !== 'undefined' && window.dkT) return window.dkT(k, fb); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'dokit-sdk.js'); } return fb; }
 function DoKitError(message, status, code, retryAfter) {
     var e = new Error(message);
     e.name = "DoKitError";
@@ -52,7 +53,7 @@ function DoKitError(message, status, code, retryAfter) {
    * Create an SDK client.
    * @param {Object} opts
    * @param {string} opts.apiKey  Your DoKit API key (starts with "dk_"). Required.
-   * @param {string} [opts.baseUrl] Override the API base URL (default https://api.dokit.app/v1).
+   * @param {string} [opts.baseUrl] Override the API base URL (default https://api.dokit.app/v1 — planned, not live yet).
    */
   function DoKitSDK(opts) {
     opts = opts || {};

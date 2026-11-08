@@ -54,7 +54,7 @@
       var done = JSON.parse(window.localStorage.getItem('dokit_urdu_lessons_done') || '[]');
       if (done.indexOf(id) === -1) { done.push(id); }
       window.localStorage.setItem('dokit_urdu_lessons_done', JSON.stringify(done));
-    } catch (e) { /* storage unavailable: page keeps working, nothing faked */ }
+    } catch (e) { /* storage unavailable: page keeps working, nothing faked */ window.dkSwallow && window.dkSwallow(e, 'urdu-lessons-viewer.js'); }
   }
 
   // -- Typing state ----------------------------------------------------------

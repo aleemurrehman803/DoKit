@@ -55,11 +55,17 @@
   var root = (typeof window !== 'undefined') ? window
     : (typeof global !== 'undefined' ? global : {});
 
+  /* T035 (P5-DES-07): canvas font stack — mirrors the body stack
+   * in style.css. Canvas cannot use CSS var(), so the stack lives
+   * here once; both canvas painters (referral QR card +
+   * poster) build their font strings from it. */
+  var FONT_STACK = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+
   /* ---------- helpers (internal; DOM-free where possible) ---------- */
   function T(key, fallback) {
     try {
       if (root.dkT) { return root.dkT(key, fallback); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return fallback;
   }
   function esc(s) {
@@ -90,7 +96,7 @@
       if (typeof v.toDate === 'function') { return v.toDate().toLocaleDateString(); }
       if (typeof v === 'number') { return new Date(v).toLocaleDateString(); }
       if (typeof v === 'string') { return v.slice(0, 10); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return '';
   }
   function fmtDateTime(v) {
@@ -99,7 +105,7 @@
       if (typeof v.toDate === 'function') { return v.toDate().toLocaleString(); }
       if (typeof v === 'number') { return new Date(v).toLocaleString(); }
       if (typeof v === 'string') { return v; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return '';
   }
 
@@ -232,10 +238,10 @@
         var d = root.DKA.db();
         if (d) { return d; }
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     try {
       if (root.firebase && root.firebase.firestore) { return root.firebase.firestore(); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return null;
   }
   function serverTimestamp() {
@@ -277,7 +283,7 @@
         else if (e.createdAt instanceof Date) { dd = e.createdAt; }
         else if (typeof e.createdAt === 'number') { dd = new Date(e.createdAt); }
         else if (typeof e.createdAt === 'string') { dd = new Date(e.createdAt); }
-      } catch (err) {}
+      } catch (err) { window.dkSwallow && window.dkSwallow(err, 'referrals.js'); }
       if (dd && !isNaN(dd.getTime()) && dd.getFullYear() + '-' + dd.getMonth() === thisMonth) {
         stats.monthlyEarnings += amt;
       }
@@ -481,7 +487,7 @@
       if (typeof root.QRCode !== 'undefined') {
         try {
           new root.QRCode(qrBox, { text: link, width: 180, height: 180, correctLevel: root.QRCode.CorrectLevel.M });
-        } catch (err) { /* QR failure never breaks the share tools */ }
+        } catch (err) { /* QR failure never breaks the share tools */ window.dkSwallow && window.dkSwallow(err, 'referrals.js'); }
       } else {
         var a = document.createElement('a');
         a.href = siteRoot() + 'tools/qr-generator/';
@@ -513,7 +519,7 @@
       var mainEl = (typeof document !== 'undefined') ? document.getElementById('ref-main') : null;
       if (guestEl) { guestEl.hidden = true; }
       if (mainEl) { mainEl.hidden = false; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     renderStats('ref-stats', summary);
     renderTree('ref-tree', summary);
     renderTable('ref-table', summary);
@@ -628,7 +634,7 @@
     /* CORE-2 admin queue is APPENDED, never merged into the rows
      * above: the existing admin list output is untouched, and the
      * queue lives in its own container below it. */
-    try { renderAdminQueue(e, currentUid()); } catch (err) {}
+    try { renderAdminQueue(e, currentUid()); } catch (err) { window.dkSwallow && window.dkSwallow(err, 'referrals.js'); }
     return true;
   }
   function adminSetPaused(id, paused, reason) {
@@ -668,7 +674,7 @@
       try {
         if (root.DKA && root.DKA.auth) { auth = root.DKA.auth(); }
         else if (root.firebase && root.firebase.auth) { auth = root.firebase.auth(); }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       var user = auth ? auth.currentUser : null;
       if (!user || !user.uid) { return Promise.resolve(); }
       var uid = user.uid;
@@ -692,7 +698,7 @@
             flags: { source: 'typing-test', chars: c }
           });
         });
-      }).catch(function () {});
+      }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); });
     } catch (e) { return Promise.resolve(); }
   }
 
@@ -896,7 +902,7 @@
         var t = Date.parse(v);
         return isNaN(t) ? NaN : t;
       }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return NaN;
   }
   function dayKey(ms) {
@@ -1938,14 +1944,14 @@
   function dk2Results() {
     try {
       if (root.DK2 && root.DK2.getResults) { return root.DK2.getResults() || []; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return [];
   }
   function dk2Lessons() {
     try {
       if (root.DK2 && root.DK2.getLessons) { return root.DK2.getLessons() || []; }
       if (root.DK2 && Array.isArray(root.DK2.lessons)) { return root.DK2.lessons; }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     return [];
   }
   function dk2MappedResults() {
@@ -2105,7 +2111,7 @@
       try {
         var rawWins = JSON.parse(window.localStorage.getItem('dk_tf_wins') || '[]');
         wins = typefightWins(rawWins, Date.now());
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       var weekly = weeklyProgress(results, mondayOf(Date.now()));
       var prof = profileCompleteness(profileInfo);
       var now = Date.now();
@@ -2465,7 +2471,7 @@
     try {
       if (root.DKA && root.DKA.auth) { auth = root.DKA.auth(); }
       else if (root.firebase && root.firebase.auth) { auth = root.firebase.auth(); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     var user = auth ? auth.currentUser : null;
     if (!user) { return Promise.resolve(false); }
     var uid = user.uid;
@@ -3076,7 +3082,7 @@
   function clearChallengeDoneMarker() {
     try {
       if (root.localStorage && root.localStorage.removeItem) { root.localStorage.removeItem('dk_challenge_done'); }
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
   }
   function confirmChallengeDone(uid, challengeId) {
     var d = coreDb();
@@ -3676,8 +3682,8 @@
           if (ctx) {
             var bgColor = '#ffffff';
             var inkColor = '#111111';
-            var fontBig = 'bold 26px sans-serif';
-            var fontSmall = '16px sans-serif';
+            var fontBig = 'bold 26px ' + FONT_STACK;
+            var fontSmall = '16px ' + FONT_STACK;
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, 360, 280);
             ctx.fillStyle = inkColor;
@@ -3696,7 +3702,7 @@
             }
           }
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       refxBind(container, function (btn) {
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -4226,7 +4232,7 @@
               });
             })(btns[i]);
           }
-        }).catch(function () {});
+        }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); });
       }
       return true;
     }).catch(function () { return false; });
@@ -4308,9 +4314,14 @@
           if (ctx) {
             var grad = ctx.createLinearGradient(0, 0, 0, 1350);
             var idx = wkNum % 3;
-            var firstColor = '#7c3aed';
-            var secondColor = '#db2777';
-            if (idx === 1) { firstColor = '#f59e0b'; secondColor = '#ef4444'; }
+            /* DES-01: poster gradient palette — JS-side constants
+             * (canvas cannot use CSS var()). The violet mirrors the
+             * --violet brand family; amber/red/pink are the poster's
+             * own template colours. Values unchanged. */
+            var POSTER_COLORS = { violet: '#7c3aed', pink: '#db2777', amber: '#f59e0b', red: '#ef4444' };
+            var firstColor = POSTER_COLORS.violet;
+            var secondColor = POSTER_COLORS.pink;
+            if (idx === 1) { firstColor = POSTER_COLORS.amber; secondColor = POSTER_COLORS.red; }
             if (idx === 2) { firstColor = '#111827'; secondColor = '#374151'; }
             grad.addColorStop(0, firstColor);
             grad.addColorStop(1, secondColor);
@@ -4318,16 +4329,16 @@
             ctx.fillRect(0, 0, 1080, 1350);
             var ink = '#ffffff';
             ctx.fillStyle = ink;
-            ctx.font = 'bold 72px sans-serif';
+            ctx.font = 'bold 72px ' + FONT_STACK;
             ctx.fillText(name, 60, 200);
-            ctx.font = '44px sans-serif';
+            ctx.font = '44px ' + FONT_STACK;
             var rankLine = 'Rank: ' + stats.rank;
             var teamLine = 'Team: ' + stats.active + ' active friends';
             var coinsLine = 'Coins: ' + coins;
             ctx.fillText(rankLine, 60, 300);
             ctx.fillText(teamLine, 60, 370);
             ctx.fillText(coinsLine, 60, 440);
-            ctx.font = '32px sans-serif';
+            ctx.font = '32px ' + FONT_STACK;
             var linkText = link;
             var y = 540;
             var chunk = 38;
@@ -4338,7 +4349,7 @@
             }
           }
         }
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       refxBind(container, function () {
         if (!posterCanvas) { return; }
         var doneText = 'Poster downloaded.';
@@ -4362,7 +4373,7 @@
             a2.click();
             refxNote(container, doneText);
           }
-        } catch (err) {}
+        } catch (err) { window.dkSwallow && window.dkSwallow(err, 'referrals.js'); }
       });
       return true;
     }).catch(function () { return false; });
@@ -4400,7 +4411,7 @@
           var t = toMs(w.date != null ? w.date : w.dateMs);
           if (!isNaN(t) && t >= season.startMs && t < season.endMs) { winsInSeason++; }
         });
-      } catch (e) {}
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       var claimsInSeason = coinClaims.filter(function (c) {
         var t = toMs(c.createdAt);
         return !isNaN(t) && t >= season.startMs && t < season.endMs;
@@ -4523,7 +4534,7 @@
     var existing = document.getElementById('refx-rate-banner');
     var a = RATES.RATE_ANNOUNCEMENT;
     if (!a) {
-      try { if (existing && existing.parentNode) { existing.parentNode.removeChild(existing); } } catch (e) {}
+      try { if (existing && existing.parentNode) { existing.parentNode.removeChild(existing); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
       return false;
     }
     var left = rateGraceLeft(a.announcedAt, Date.now());
@@ -4698,7 +4709,7 @@
     var queueEl = null;
     try {
       queueEl = containerEl.querySelector ? containerEl.querySelector('#refx-admin-queue') : null;
-    } catch (e) {}
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
     if (!queueEl) {
       queueEl = document.createElement('div');
       queueEl.id = 'refx-admin-queue';
@@ -4974,7 +4985,7 @@
             if (navigator.clipboard && navigator.clipboard.writeText) {
               navigator.clipboard.writeText(JSON.stringify(lastQuarter)).then(function () { refxNote(queueEl, copiedText); });
             } else { refxNote(queueEl, copiedText); }
-          } catch (e) {}
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
           btn.disabled = false;
         } else if (action === 'q-quarter-csv') {
           if (!lastQuarter) { btn.disabled = false; return; }

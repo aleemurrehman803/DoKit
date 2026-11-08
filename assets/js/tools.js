@@ -2,6 +2,18 @@
 (function(){
 function $(id){ return document.getElementById(id); }
 function fmt(n){ if(n < 1024) return n + ' B'; if(n < 1048576) return (n/1024).toFixed(1) + ' KB'; return (n/1048576).toFixed(2) + ' MB'; }
+/* B74 savings (same helper as tools-additions.js — the two files are
+ * separate IIFEs and already duplicate fmt/downloadBlob/loadImage):
+ * percentage change from original to output bytes, computed from the
+ * ACTUAL blobs, never estimates. Negative savings are shown plainly. */
+function savingsPct(orig, out){ if(!orig || orig <= 0){ return 0; } return Math.round((orig - out) / orig * 100); }
+function savingsText(orig, out){
+  var pct = savingsPct(orig, out);
+  var word = pct >= 0
+    ? (window.dkT ? window.dkT('rsv_1415', 'smaller') : 'smaller')
+    : (window.dkT ? window.dkT('rsv_1416', 'larger') : 'larger');
+  return Math.abs(pct) + '% ' + word;
+}
 function err(el, msg){ el.textContent = msg; el.className = 'err'; }
 function okmsg(el, msg){ el.textContent = msg; el.className = 'ok'; }
 function downloadBlob(blob, name){ var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
@@ -80,8 +92,8 @@ if(cc){
   var cpy = $('cc-copy');
   if(cpy){ cpy.addEventListener('click', function(){
     var v = ccOut.value; if(!v) return;
-    if(navigator.clipboard){ navigator.clipboard.writeText(v).catch(function(){}); }
-    else { ccOut.select(); try{ document.execCommand('copy'); }catch(e){} }
+    if(navigator.clipboard){ navigator.clipboard.writeText(v).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'tools.js'); }); }
+    else { ccOut.select(); try{ document.execCommand('copy'); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'tools.js'); } }
   }); }
 }
 /* ---------- Resizer parked fixes: stored-ZIP writer + color-based
@@ -172,6 +184,10 @@ function buildZip(files){
     return new Blob(parts.concat(cdParts, [eocd.buffer]), { type: 'application/zip' });
   });
 }
+/* B73: the compressor batch (tools-additions.js, a separate IIFE)
+ * reuses this writer — expose it rather than duplicating ~80 lines
+ * of ZIP code. No new library is added anywhere. */
+window.dkBuildZip = buildZip;
 /* Sample the background colour from a source image's corners: average a
  * 3x3 block at each corner, then take the most common corner colour
  * (plain backgrounds agree in 3-4 corners; a stray object in one corner
@@ -412,6 +428,7 @@ if(cpF){
     var targetKB = targetSel === 'custom' ? parseFloat(($('cp-custom') || {}).value || '0') : parseFloat(targetSel);
     if(!targetKB || targetKB <= 0){ err(cres, (window.dkT ? window.dkT('rsv_1005', 'Sahi target size (KB) choose karein.') : 'Sahi target size (KB) choose karein.')); return; }
     var target = targetKB * 1024;
+    var origSize = (cpF.files[0] ? cpF.files[0].size : 0);
     var outFmt = ($('cp-fmt') || {}).value || 'keep';
     var sc = guardMP(cimg, cnote);
     var c = document.createElement('canvas'); c.width = Math.round(cimg.naturalWidth * sc); c.height = Math.round(cimg.naturalHeight * sc);
@@ -434,6 +451,19 @@ if(cpF){
       if(best.blob.size <= target){ p.textContent = (window.dkT ? window.dkT('rsv_0971', 'Done! ') : 'Done! ') + fmt(best.blob.size) + (window.dkT ? window.dkT('rsv_0938', ' (target ') : ' (target ') + targetKB + (window.dkT ? window.dkT('rsv_0943', ' KB, quality ') : ' KB, quality ') + Math.round(best.q * 100) + '%)'; }
       else { p.textContent = (window.dkT ? window.dkT('rsv_0961', 'Closest possible: ') : 'Closest possible: ') + fmt(best.blob.size) + (window.dkT ? window.dkT('rsv_0937', ' (still above the ') : ' (still above the ') + targetKB + (window.dkT ? window.dkT('rsv_0940', ' KB target — try resizing smaller or using WebP).') : ' KB target — try resizing smaller or using WebP).'); }
       cres.appendChild(p);
+      /* B74: before/after summary from the actual blobs. The
+       * select-time "Original:" line is wiped by the result render
+       * above, so restate it here; negative savings are shown, and
+       * an output larger than the original gets an honest warning. */
+      var sv = document.createElement('p');
+      sv.textContent = (window.dkT ? window.dkT('rsv_0990', 'Original: ') : 'Original: ') + fmt(origSize) + ' \u2192 ' + fmt(best.blob.size) + ' \u2014 ' + savingsText(origSize, best.blob.size);
+      cres.appendChild(sv);
+      if (best.blob.size > origSize) {
+        var w = document.createElement('p');
+        w.className = 'err';
+        w.textContent = (window.dkT ? window.dkT('rsv_1418', 'Warning: the output is larger than the original.') : 'Warning: the output is larger than the original.');
+        cres.appendChild(w);
+      }
       var im2 = document.createElement('img'); im2.src = URL.createObjectURL(best.blob); im2.alt = (window.dkT ? window.dkT('rsv_0964', 'Compressed image preview') : 'Compressed image preview'); cres.appendChild(im2);
       var d = document.createElement('button'); d.className = 'btn'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download'); d.style.marginTop = '12px';
       d.addEventListener('click', function(){ downloadBlob(best.blob, 'dokit-compressed.' + ext); });
@@ -445,13 +475,57 @@ if(cpF){
 var cvF = $('cv-files');
 if(cvF){
   var list = $('cv-list');
+  /* B75: queued files + their rows, so format/quality changes can
+   * re-run the estimates without re-selecting. */
+  var cvQueued = [], cvRows = [];
+  function cvQuality(){
+    /* B75 reconciliation: the per-file buttons used to hardcode 0.9
+     * while "Convert all" used the slider — so an estimate could
+     * never agree with both. Both paths now read the slider (0.9
+     * when the slider is absent), and the estimate is measured at
+     * that same quality. */
+    var q = $('ta-cv-q');
+    return q ? (parseInt(q.value, 10) || 90) / 100 : 0.9;
+  }
+  function cvEstimate(f, row){
+    /* Estimate = a real encode at the selected format/quality (cheap
+     * and local). Canvas output is deterministic for the same input
+     * and quality, so the estimate equals the size the actual
+     * conversion produces — it is still labelled "Estimated" because
+     * it is measured before the user converts. */
+    var fmtSel = ($('cv-fmt') || {}).value || 'webp';
+    loadImage(f).then(function(im){
+      var sc = guardMP(im, null);
+      var c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      c.toBlob(function(blob){
+        if(!blob){ row.est.textContent = (window.dkT ? window.dkT('rsv_1211', '\u2014 failed.') : '\u2014 failed.'); return; }
+        row.est.textContent = (window.dkT ? window.dkT('rsv_1419', 'Estimated') : 'Estimated') + ': ' + fmt(blob.size);
+      }, 'image/' + fmtSel, cvQuality());
+    }).catch(function(e){ row.est.textContent = e.message; });
+  }
+  function cvRefreshEstimates(){
+    cvQueued.forEach(function(f, i){ if(cvRows[i]){ cvEstimate(f, cvRows[i]); } });
+  }
   cvF.addEventListener('change', function(){
     list.innerHTML = '';
+    cvQueued = []; cvRows = [];
     var files = Array.prototype.slice.call(cvF.files || []).slice(0, 10);
-    if(cvF.files.length > 10){ var w = document.createElement('p'); w.textContent = (window.dkT ? window.dkT('rsv_0987', 'Note: aik waqt me 10 files tak — pehli 10 li gayi hain.') : 'Note: aik waqt me 10 files tak — pehli 10 li gayi hain.'); list.appendChild(w); }
+    if(cvF.files.length > 10){ var w = document.createElement('p'); w.textContent = (window.dkT ? window.dkT('rsv_0987', 'Note: aik waqt me 10 files tak \u2014 pehli 10 li gayi hain.') : 'Note: aik waqt me 10 files tak \u2014 pehli 10 li gayi hain.'); list.appendChild(w); }
     files.forEach(function(f){
       var li = document.createElement('li');
+      /* B75 thumbnail: local object URL of the source, revoked once
+       * the image loads (same pattern as the compressor preview). */
+      var thumb = document.createElement('img');
+      var thumbUrl = URL.createObjectURL(f);
+      thumb.src = thumbUrl; thumb.alt = f.name;
+      thumb.style.maxWidth = '72px'; thumb.style.maxHeight = '72px';
+      thumb.onload = function(){ URL.revokeObjectURL(thumbUrl); };
+      li.appendChild(thumb);
       var sp = document.createElement('span'); sp.textContent = f.name + ' (' + fmt(f.size) + ')'; li.appendChild(sp);
+      li.appendChild(document.createTextNode(' '));
+      var est = document.createElement('span'); est.textContent = (window.dkT ? window.dkT('rsv_1419', 'Estimated') : 'Estimated') + ': \u2026'; li.appendChild(est);
+      li.appendChild(document.createTextNode(' '));
       var b = document.createElement('button'); b.className = 'btn ghost'; b.textContent = (window.dkT ? window.dkT('rsv_0965', 'Convert & Download') : 'Convert & Download');
       b.addEventListener('click', function(){
         loadImage(f).then(function(im){
@@ -460,14 +534,27 @@ if(cvF){
           c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
           var fmtSel = ($('cv-fmt') || {}).value || 'webp';
           c.toBlob(function(blob){
-            if(!blob){ b.textContent = (window.dkT ? window.dkT('rsv_0975', 'Failed — dobara try karein') : 'Failed — dobara try karein'); return; }
+            if(!blob){ b.textContent = (window.dkT ? window.dkT('rsv_0975', 'Failed \u2014 dobara try karein') : 'Failed \u2014 dobara try karein'); return; }
             var base = f.name.replace(/\.[^.]+$/, '');
-            downloadBlob(blob, base + '.' + fmtSel); b.textContent = (window.dkT ? window.dkT('rsv_0973', 'Downloaded ✓') : 'Downloaded ✓');
-          }, 'image/' + fmtSel, 0.9);
+            downloadBlob(blob, base + '.' + fmtSel); b.textContent = (window.dkT ? window.dkT('rsv_0973', 'Downloaded \u2713') : 'Downloaded \u2713');
+          }, 'image/' + fmtSel, cvQuality());
         }).catch(function(e){ b.textContent = e.message; });
       });
       li.appendChild(b); list.appendChild(li);
+      var row = { est: est };
+      cvQueued.push(f); cvRows.push(row);
+      cvEstimate(f, row);
     });
   });
+  /* Re-estimate when the format or the quality slider changes (the
+   * estimate must always match the download it previews). Debounced:
+   * the slider fires on every tick while dragging. */
+  var cvFmt = $('cv-fmt');
+  if(cvFmt){ cvFmt.addEventListener('change', cvRefreshEstimates); }
+  var cvQ2 = $('ta-cv-q'), cvEstTimer = null;
+  if(cvQ2){ cvQ2.addEventListener('input', function(){
+    if(cvEstTimer){ clearTimeout(cvEstTimer); }
+    cvEstTimer = setTimeout(cvRefreshEstimates, 300);
+  }); }
 }
 })();

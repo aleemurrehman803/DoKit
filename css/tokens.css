@@ -23,13 +23,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand */
-  --dk-violet: #6C4CF1;
-  --dk-violet-deep: #4A2FD6;
-  --dk-violet-soft: #EFEAFF;
-  --dk-amber: #FFC531;
-  --dk-amber-deep: #D99E00;
-  --dk-ink: #17142E;
+  /* Brand — B60: each brand hex is defined ONCE, under the canonical
+     names (--violet, --amber, --ink, shared with assets/css/style.css);
+     the --dk-* names below are aliases, not second definitions. Values
+     are unchanged, so flat pages render identically. (Theme values
+     --bg/--surface/--text stay light-first here by design: this file
+     serves the legacy flat pages, while style.css is dark-first.) */
+  --violet: #6C4CF1;
+  --violet-deep: #4A2FD6;
+  --violet-soft: #EFEAFF;
+  --amber: #FFC531;
+  --amber-deep: #D99E00;
+  --ink: #17142E;
+  --dk-violet: var(--violet);
+  --dk-violet-deep: var(--violet-deep);
+  --dk-violet-soft: var(--violet-soft);
+  --dk-amber: var(--amber);
+  --dk-amber-deep: var(--amber-deep);
+  --dk-ink: var(--ink);
 
   /* Neutral scale (light theme: paper → ink). Violet-tinted grays to match brand. */
   --neutral-50:  #FAF9FD;
@@ -41,20 +52,20 @@
   --neutral-600: #5C5778;
   --neutral-700: #413D63;
   --neutral-800: #282442;
-  --neutral-900: #17142E;
+  --neutral-900: var(--ink);
 
   /* Light theme surfaces */
   --bg: #FFFFFF;
   --bg-soft: #F6F4FF;
   --surface: #FFFFFF;
   --surface-2: #F1EDFF;
-  --text: #17142E;
+  --text: var(--ink);
   --text-muted: var(--neutral-600); /* #5C5778 — 6.8:1 on white */
   --border: var(--neutral-200);     /* #E4DFF5 */
   --border-width: 1px;             /* convention: hairline borders are 1px solid var(--border) */
-  --primary: #6C4CF1;
+  --primary: var(--violet);
   --primary-contrast: #FFFFFF;
-  --accent: #FFC531;
+  --accent: var(--amber);
   --danger: #C93A3A;
   --error: var(--danger);          /* semantic alias */
   --success: #2FA36B;

@@ -10,11 +10,11 @@ window.DKFAQ = [
  },
  {
   "q": "Who built DoKit?",
-  "a": "Malik Jalil Ur Rehman Khokhar designed and built every tool and every page on DoKit — from the image utilities to TypeMaster, the design to the code."
+  "a": "Malik Jalil Ur Rehman Khokhar designed and built every tool and every page on DoKit — from the image utilities to the typing school, the design to the code."
  },
  {
   "q": "Is DoKit really free?",
-  "a": "Yes. Every basic tool is free with no account, no watermarks, and no usage caps on normal use. Free basic tools will never be taken away or downgraded. Optional Pro plans fund development — they never take away what was free."
+  "a": "Yes. Every basic tool is free with no account, no watermarks, and no usage caps on normal use. Free basic tools will never be taken away or downgraded. Optional Pro plans will fund development — they never take away what was free."
  },
  {
   "q": "Do I need an account to use DoKit?",
@@ -50,11 +50,11 @@ window.DKFAQ = [
  },
  {
   "q": "Who is Doki?",
-  "a": "Doki is the DoKit Assistant. It answers from the site's own information about DoKit's tools, typing, and pricing. The current chat widget text says live AI answers are already here."
+  "a": "Doki is the DoKit Assistant. It answers from the site's own information about DoKit's tools, typing, and pricing."
  },
  {
   "q": "What tools does DoKit offer?",
-  "a": "9 tools plus the typing school: Image Resizer, Image Compressor, Image Converter, Word Counter, Case Converter, Board Photo, Password Generator, Unit Converter, and QR Generator — plus Typing Test, Typing Lessons, and TypeFight under Typing & Learning."
+  "a": "DoKit offers image and text tools, plus a typing school: Image Resizer, Image Compressor, Image Converter, Word Counter, Case Converter, Board Photo, Password Generator, Unit Converter, and QR Generator — plus Typing Test, Typing Lessons, and TypeFight under Typing & Learning."
  },
  {
   "q": "How do I use a DoKit tool?",
@@ -118,7 +118,7 @@ window.DKFAQ = [
  },
  {
   "q": "Can I compress many images at once?",
-  "a": "One at a time for now — batch mode is coming soon. (Note: batch processing exists in the Image Resizer; the compressor's knowledge-base entry says one at a time.)"
+  "a": "Yes — drop in several images at once. Each is compressed to your target, and when two or more succeed you can download them all together as one ZIP file."
  },
  {
   "q": "What are the exact-KB targets on the home page?",
@@ -209,8 +209,8 @@ window.DKFAQ = [
   "a": "Length, Weight, Temperature, Volume, Area, Speed, Time, and Value — instantly. It is pure maths — nothing is sent anywhere. Units can be swapped with one tap."
  },
  {
-  "q": "What is TypeMaster?",
-  "a": "TypeMaster is DoKit's typing tutor section, with lessons, tests, and games."
+  "q": "What is the typing tutor?",
+  "a": "DoKit's typing tutor section, with lessons, tests, and games."
  },
  {
   "q": "How many typing lessons are there, and how are they grouped?",
@@ -298,7 +298,7 @@ window.DKFAQ = [
  },
  {
   "q": "What does Pro include?",
-  "a": "Everything in Free, plus batch processing, one-click presets, priority support, and early access to new tools."
+  "a": "Everything in Free, plus priority support and early access to new tools. Batch processing and one-click presets are already free today."
  },
  {
   "q": "What does Team include?",
@@ -362,7 +362,7 @@ window.DKFAQ = [
  },
  {
   "q": "What is coming soon?",
-  "a": "Pro plans (Pro Rs 300/month, Team Rs 1,500/month, with batch processing, presets, classrooms, and admin) launching after the backend arrives; more tools (the toolbox grows on request — suggest a tool via the contact page); and the full typing lesson library, including Urdu phonetic lessons, continuing to grow with the live site. Nothing is dated here until it is confirmed — no invented launch dates."
+  "a": "Pro plans (Pro Rs 300/month, Team Rs 1,500/month) launching after the backend arrives; more tools (the toolbox grows on request — suggest a tool via the contact page); and the full typing lesson library, including Urdu phonetic lessons, continuing to grow with the live site. Nothing is dated here until it is confirmed — no invented launch dates."
  },
  {
   "q": "How do \"notify me\" / email update lists work?",
