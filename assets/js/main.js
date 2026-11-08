@@ -66,7 +66,8 @@ function closeAllMenus(exceptMenuId){
   });
   // T039 (P5-DES-13): #nav-links is an ancestor of the nav dropdowns,
   // so the ancestor rule above applies here too — closing the mobile
-  // nav would hide the dropdown being opened (<=900px hamburger band).
+  // nav would hide the dropdown being opened (<=1000px hamburger band,
+  // N05 Phase C: band moved 900px -> 1000px).
   if (exceptMenuId !== 'nav-links') {
     var navLinks = document.getElementById('nav-links');
     if (!(exceptEl && navLinks && navLinks.contains(exceptEl))) { dkCloseNavLinks(); }

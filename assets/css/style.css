@@ -285,7 +285,14 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * four stats; each .pg-stat keeps its number glued to its label. */
 .pg-stats-row{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}
 .pg-stat{white-space:nowrap}
-@media(max-width:900px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
+@media(max-width:1000px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}}
+/* N05 (Phase C): the hamburger band moved 900px -> 1000px. The header
+ * nav ("Referral Earnings" last) fits on one line only at >=1000px even
+ * after the profile-menu nesting fix; below that the full nav wraps to
+ * two lines, so the hamburger (same links, same menu) takes over.
+ * The grid / float-card / footgrid rules stay at 900px — they are
+ * content layout, not navigation, and must not move with the nav. */
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
 /* T036 (P5-DES-08): the hero clamp's 40px floor is too large at 320-360px
  * (3 lines with "need" widowed). At <=600px the floor drops to 32px
  * (9vw: 32px at 360px, 35px at 390px, capped at 40px above ~444px). */
@@ -659,7 +666,7 @@ main.dk-enter-short{animation:dkpagein .2s ease-out}
 .nav{gap:12px}
 .navlinks{gap:2px}
 .navlinks a{padding:8px 10px}
-@media(max-width:1100px) and (min-width:901px){.navlinks a{padding:8px 8px;font-size:15px}.logo{font-size:19px}}
+@media(max-width:1100px) and (min-width:1001px){.navlinks a{padding:8px 8px;font-size:15px}.logo{font-size:19px}}
 .prof-sep{border:0;border-top:1px solid var(--line);margin:8px 0}
 .prof-menu .lang-btn{width:100%;justify-content:flex-start;text-align:left;border-radius:10px}
 .prof-menu .lang-menu{position:static;box-shadow:none;border:0;background:transparent;padding:4px 0 0;min-width:0}
