@@ -29,6 +29,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1401": "e.g. you@example.com",
     "rsv_1402": "Tell us how we can help…",
     "rsv_1403": "Legacy certificates are verified against Firestore records. Offline verification is not supported.",
+    "rsv_1404": "Sample",
     "rsv_1405": "No tools match your search.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",

@@ -93,6 +93,15 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 /* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */
 [dir="rtl"] .float-card{display:none}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+/* B55: float cards are links to their tools; the preview line shows one
+ * honest illustrative value, always labelled Sample — never a fake live
+ * number. The values are examples of what the tool does (resizer scales
+ * 800x600 to 400x300; compressor targets an exact KB; typing reports WPM
+ * + accuracy), not measurements of the visitor's files. */
+a.float-card{color:var(--text);text-decoration:none}
+a.float-card:hover{border-color:var(--amber)}
+.float-card .float-preview{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+.float-card .sample-tag{display:inline-block;border:1px solid var(--amber);color:var(--amber);border-radius:99px;padding:0 6px;font-size:11px;font-weight:700}
 .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px}
 .stats b{font-size:22px;display:block}.stats span{color:var(--muted);font-size:14px}
 section.block{padding:44px 0}

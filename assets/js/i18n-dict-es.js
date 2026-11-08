@@ -29,6 +29,7 @@ window.DK_I18N_DICT["es"] = {
     "rsv_1401": "p. ej., you@example.com",
     "rsv_1402": "Cuéntenos cómo podemos ayudarle…",
     "rsv_1403": "Los certificados antiguos se verifican con los registros de Firestore. La verificación sin conexión no es compatible.",
+    "rsv_1404": "Ejemplo",
     "rsv_1405": "Ninguna herramienta coincide con tu búsqueda.",
     "rsv_1380": "Transparente",
     "rsv_1381": "Color sólido",
