@@ -31,6 +31,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_1403": "Alte Zertifikate werden anhand der Firestore-Datensätze geprüft. Eine Offline-Prüfung wird nicht unterstützt.",
     "rsv_1404": "Beispiel",
     "rsv_1405": "Kein Tool passt zu Ihrer Suche.",
+    "rsv_1406": "Die DoKit-API — Endpunkte, Authentifizierung und Ratenlimits. Geplant, noch nicht live; Webhooks sind für v1.1 geplant.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Volltonfarbe",
     "rsv_1372": "Drehen",

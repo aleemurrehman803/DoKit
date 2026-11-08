@@ -31,6 +31,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1403": "Eski sertifikalar Firestore kayıtlarına göre doğrulanır. Çevrimdışı doğrulama desteklenmez.",
     "rsv_1404": "Örnek",
     "rsv_1405": "Aramanızla eşleşen araç yok.",
+    "rsv_1406": "DoKit API — uç noktalar, kimlik doğrulama ve hız sınırları. Planlandı, henüz yayında değil; web kancaları v1.1 için planlandı.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",

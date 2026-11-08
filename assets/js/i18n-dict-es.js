@@ -31,6 +31,7 @@ window.DK_I18N_DICT["es"] = {
     "rsv_1403": "Los certificados antiguos se verifican con los registros de Firestore. La verificación sin conexión no es compatible.",
     "rsv_1404": "Ejemplo",
     "rsv_1405": "Ninguna herramienta coincide con tu búsqueda.",
+    "rsv_1406": "La API de DoKit: endpoints, autenticación y límites de uso. Planeada, aún no disponible; los webhooks están planeados para la v1.1.",
     "rsv_1380": "Transparente",
     "rsv_1381": "Color sólido",
     "rsv_1372": "Girar",

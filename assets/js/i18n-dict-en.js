@@ -31,6 +31,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_1403": "Legacy certificates are verified against Firestore records. Offline verification is not supported.",
     "rsv_1404": "Sample",
     "rsv_1405": "No tools match your search.",
+    "rsv_1406": "The DoKit API — endpoints, authentication and rate limits. Planned, not live yet; webhooks are planned for v1.1.",
     "rsv_1380": "Transparent",
     "rsv_1381": "Solid color",
     "rsv_1372": "Rotate",
