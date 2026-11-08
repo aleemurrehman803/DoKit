@@ -12,7 +12,7 @@
  * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
  * 24px (spacious form/tool panels). Every card-family surface uses
  * one of these three; the unexplained 16px/18px values are gone. */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px}
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -21,7 +21,7 @@
  * affects scroll-to positions (anchors, scrollIntoView); normal scrolling
  * is untouched. */
 html{scroll-behavior:smooth;scroll-padding-top:90px}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6;font-size:17px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);line-height:1.6;font-size:17px}
 a{color:var(--violet2)}
 a:hover{color:var(--amber)}
 /* T069 (P5-RTE-19 / P5-UX-07): a button that looks like a text link (the
@@ -278,7 +278,7 @@ html.dk-paused *{animation-play-state:paused!important}
 .fall-word{position:absolute;left:50%;transform:translateX(-50%);font-size:26px;font-weight:800;color:var(--amber);white-space:nowrap}
 /* Brand swatches for the design-system page (real token colours). */
 .swatch{display:inline-block;width:56px;height:56px;border-radius:12px;border:1px solid var(--line);vertical-align:middle;margin-right:10px}
-.sw-violet{background:var(--violet)}.sw-amber{background:var(--amber)}.sw-ink{background:var(--ink)}.sw-bg{background:var(--bg)}.sw-surface{background:var(--surface)}
+.sw-violet{background:var(--violet)}.sw-amber{background:var(--amber)}.sw-ink{background:var(--ink)}.sw-bg{background:var(--bg)}.sw-surface{background:var(--surface)}.sw-violet2{background:var(--violet2)}.sw-violet-deep{background:var(--violet-deep)}
 /* SAMPLE badge for certificate previews (never a real certificate). */
 .sample-badge{display:inline-block;border:2px solid var(--amber);color:var(--amber);border-radius:8px;padding:4px 10px;font-weight:800;letter-spacing:2px}
 
@@ -385,34 +385,34 @@ input,select,textarea{background:#fff!important;color:#000!important}
  * for the formal certificate voice; no webfont dependency (the site
  * loads zero webfonts, and self-hosting the historical Playfair/Great
  * Vibes/Cormorant needs an owner decision). Print inherits this rule. */
-.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid var(--violet);outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:#fffdf7;color:var(--ink);font-family:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif}
+.cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid var(--violet);outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:var(--cert-paper);color:var(--ink);font-family:var(--font-serif)}
 .cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet)}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
 .cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
-.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:#f0ebff}
+.cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:var(--cert-photo-bg)}
 .cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on-accent);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
 .cert-issued{margin-top:18px;font-size:13px;text-align:center}
 .cert-sheet.cert-premium .cert-title{margin:10px 130px 8px;font-size:24px;font-weight:800;letter-spacing:1.5px;color:var(--ink)}
-.cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:#6b5a1e}
-.cert-sheet.cert-premium .cert-statement{font-size:14px;line-height:1.6;max-width:560px;margin:12px auto;color:#3a3558}
+.cert-sheet.cert-premium .cert-practice{font-size:13px;font-weight:600;color:var(--cert-gold-ink)}
+.cert-sheet.cert-premium .cert-statement{font-size:14px;line-height:1.6;max-width:560px;margin:12px auto;color:var(--cert-ink-soft)}
 /* DES-06: the candidate name is the signature-style text — a script
  * stack (Segoe Script on Windows, Brush Script on Mac) where the
  * platform has one; elsewhere it falls back to the platform's cursive
  * default (Noto Sans on this Linux VM — verified via fc-match). */
-.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:var(--ink);font-family:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive}
+.cert-sheet.cert-premium .cert-name{font-size:30px;font-weight:800;margin:14px 0 2px;color:var(--ink);font-family:var(--font-script)}
 /* DES-06: the battle sheet has no .cert-name wrapper — its name output
  * (#cert-name-out) gets the same script stack without the typing
  * sheet's 30px sizing, so both sheets' names render as signatures. */
-.cert-sheet.cert-premium #cert-name-out{font-family:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive}
+.cert-sheet.cert-premium #cert-name-out{font-family:var(--font-script)}
 .cert-sheet.cert-premium .cert-net{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0 0;color:var(--ink)}
 .cert-sheet.cert-premium .cert-net-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet);margin:0 0 14px}
 .cert-sheet.cert-premium .cert-stats{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:center;margin:16px 0}
 .cert-sheet.cert-premium .cert-stat{min-width:110px}
-.cert-sheet.cert-premium .cert-stat-label{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
+.cert-sheet.cert-premium .cert-stat-label{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cert-muted)}
 .cert-sheet.cert-premium .cert-stat b{font-size:18px;color:var(--ink)}
 .cert-sheet.cert-premium .cert-meta{font-size:14px}
-.cert-sheet.cert-premium .cert-scale{font-size:12px;color:#666;margin-top:12px}
-.cert-sheet.cert-premium .cert-qr img{width:120px;height:120px;border:1px solid #ddd;border-radius:6px}
+.cert-sheet.cert-premium .cert-scale{font-size:12px;color:var(--cert-muted);margin-top:12px}
+.cert-sheet.cert-premium .cert-qr img{width:120px;height:120px;border:1px solid var(--cert-qr-border);border-radius:6px}
 .cert-sheet.cert-premium .cert-verify a{color:var(--violet);word-break:break-all}
 @media (max-width:520px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px;font-size:21px}.cert-sheet.cert-premium .cert-net{font-size:36px}.cert-sheet.cert-premium .cert-name{font-size:24px}}
 /* T052 (P5-DES-28): 521-768px intermediate breakpoint, extended to
@@ -426,10 +426,10 @@ input,select,textarea{background:#fff!important;color:#000!important}
  * static (in flow, centred) with 0 side margins, so the title and
  * authority can never collide with QR/seal at any width <=768px. */
 @media (max-width:768px){.cert-sheet.cert-premium .cert-qr{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-seal{position:static;margin:12px auto}.cert-sheet.cert-premium .cert-authority{margin:0 0 8px}.cert-sheet.cert-premium .cert-title{margin:10px 0 8px}}
-.cert-sheet.cert-premium .cert-signatures{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid #e0d9c8}
+.cert-sheet.cert-premium .cert-signatures{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid var(--cert-line)}
 .cert-sheet.cert-premium .cert-sig{text-align:center;width:200px}
-.cert-sheet.cert-premium .cert-sig-line{border-top:2px solid #1a1a2e;min-height:28px}
-.cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px}
+.cert-sheet.cert-premium .cert-sig-line{border-top:2px solid var(--cert-sig-line);min-height:28px}
+.cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:var(--cert-muted);text-transform:uppercase;letter-spacing:1px}
 .cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:var(--gold);font-weight:600}
 @media print{.cert-sheet.cert-premium{border:4px double var(--gold);outline:none;border-radius:4px;background:#fff;color:#000}}
 @media print{@page{size:A4 landscape;margin:12mm}.cert-sheet.cert-premium{max-width:250mm;margin-left:auto;margin-right:auto}}

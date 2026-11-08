@@ -26,11 +26,21 @@
 <h1 data-i18n="rsv_0208">Design System</h1>
 <p class="lede"  data-i18n="rsv_0572">The design system every DoKit page follows. One shared stylesheet — no per-page copies.</p>
 <h2 data-i18n="rsv_0163">Colours</h2>
-<p><span class="swatch sw-violet"></span> Violet <code>#6C4CF1</code> — primary<br>
-<span class="swatch sw-amber"></span> Amber <code>#FFC531</code> — call to action<br>
-<span class="swatch sw-ink"></span> Ink <code>#17142E</code> — headings<br>
-<span class="swatch sw-bg"></span> <span data-i18n="rsv_1221">Background</span> <code>#12101F</code> — page<br>
-<span class="swatch sw-surface"></span> Surface <code>#1D1933</code> — cards</p>
+<p><span class="swatch sw-violet"></span> Violet <code>#6C4CF1</code> <code>--violet</code> (alias <code>--primary</code>) — primary<br>
+<span class="swatch sw-violet2"></span> Violet light <code>#8B6FF5</code> <code>--violet2</code> — gradient start, links<br>
+<span class="swatch sw-violet-deep"></span> Violet deep <code>#4B2FD6</code> <code>--violet-deep</code> — gradient end, buttons<br>
+<span class="swatch sw-amber"></span> Amber <code>#FFC531</code> <code>--amber</code> (alias <code>--accent</code>) — call to action<br>
+<span class="swatch sw-ink"></span> Ink <code>#17142E</code> <code>--ink</code> — headings<br>
+<span class="swatch sw-bg"></span> <span data-i18n="rsv_1221">Background</span> <code>#12101F</code> <code>--bg</code> — page<br>
+<span class="swatch sw-surface"></span> Surface <code>#1D1933</code> <code>--surface</code> — cards</p>
+<h2>Tokens</h2>
+<p>One canonical system, defined once in <code>assets/css/style.css</code> <code>:root</code>. Change a token there and every routed page follows. Legacy <code>css/tokens.css</code> (flat pages only) defines each brand hex once under the same canonical names and aliases its old <code>--dk-*</code> names to them. The old TypeMaster blue in <code>css/main.css</code> is a legacy flat-file identity, not part of this system.</p>
+<table><tr><th>Scale</th><th>Tokens</th><th>Use</th></tr>
+<tr><td>Spacing</td><td><code>--sp-1</code> to <code>--sp-10</code> (0.25rem – 4rem)</td><td>Margins, padding, gaps</td></tr>
+<tr><td>Type</td><td><code>--fs-xs</code> to <code>--fs-3xl</code> (0.75rem – clamp 3rem)</td><td>Font sizes</td></tr>
+<tr><td>Radius</td><td><code>--r-sm</code> <code>--r-md</code> <code>--r-lg</code> <code>--r-xl</code> <code>--r-pill</code></td><td>Buttons, cards, modals, pills</td></tr>
+<tr><td>Font</td><td><code>--font-sans</code> <code>--font-serif</code> <code>--font-script</code></td><td>Body, certificates, signatures</td></tr>
+<tr><td>Card padding</td><td><code>--pad-compact</code> <code>--pad-card</code> <code>--pad-roomy</code></td><td>14px / 20px / 24px card padding</td></tr></table>
 <h2 data-i18n="rsv_0603">Type</h2>
 <p><b>Heading 1</b> — page titles, exactly one per page.<br><b>Heading 2</b> — sections.<br>Body text — plain, readable, no jargon.</p>
 <h2 data-i18n="rsv_0167">Components</h2>
