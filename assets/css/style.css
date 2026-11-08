@@ -415,8 +415,19 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 [data-theme="light"] .hero h1 .grad{background:linear-gradient(90deg,var(--violet),var(--gold));-webkit-background-clip:text;background-clip:text}
 [data-theme="light"] #type-rotator,[data-theme="light"] .logo span em,[data-theme="light"] .fall-word,[data-theme="light"] .lang-menu li[aria-selected="true"]{color:var(--gold-text)}
 [data-theme="light"] .sample-badge{color:var(--gold-text);border-color:var(--gold-text)}
-/* PWA install banner + site announcement banner (both hidden unless set). */
-.install-banner,.site-banner{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:16px 0;flex-wrap:wrap}
+/* PWA install banner + site announcement banner (both hidden unless set).
+ * CLS-F01 (Phase D): these bars are inserted into the document flow by
+ * main.js AFTER first paint (install banner on beforeinstallprompt,
+ * site banner when window.DOKIT_BANNER is set). In-flow insertion
+ * pushed the hero down 137px on mobile / ~100px on desktop and produced
+ * CLS 0.15 mobile / 0.08 desktop (Lighthouse 13.6.0, loopback). The
+ * bars are therefore fixed-position toasts now: inserting or removing
+ * one can never move page content. z-index 85 sits below the Doki FAB
+ * (90, stays clickable on top) and above the sticky CTA (40); on
+ * phones the toast sits above the FAB (bottom:92px) so it never covers
+ * it or the sticky CTA bar. */
+.install-banner,.site-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 32px);max-width:560px;z-index:85;display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0;flex-wrap:wrap;box-shadow:0 16px 34px rgba(0,0,0,.4)}
+@media(max-width:760px){.install-banner,.site-banner{bottom:92px}}
 /* Sticky CTA (home page only) + dismissible tip banner on the home page.
  * P5-VIS-02: the pill used to be an unconditional sticky bar that covered
  * page text at every scroll position on every viewport. It is now a
@@ -841,7 +852,14 @@ footer.site .logo{display:flex;align-items:center;gap:10px}
 /* Typed line (design): display font, white, min-height so the line
  * does not jump as words change length; the caret blinks (design 1s). */
 .hero .type-line{font-family:var(--font-display);font-size:clamp(20px,3.2vw,30px);font-weight:700;color:#F4F2FF;min-height:1.35em;margin:14px 0 0}
-.hero .type-line #type-rotator{color:#F4F2FF;border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite}
+/* CLS-F01 (Phase D): the rotator types one character at a time, so a
+ * plain inline span changes width on every keystroke and the centred
+ * "Try: …" line re-centres, shifting the "Try:" text on every tick
+ * (Lighthouse micro-shifts ~0.002). A fixed min-width box (longest
+ * English word is "Password Generator", 18 chars) keeps the line width
+ * constant, so typing moves nothing. min-width, not width, so a longer
+ * translation can still grow instead of wrapping. */
+.hero .type-line #type-rotator{color:#F4F2FF;border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite;display:inline-block;min-width:19ch;text-align:left}
 @keyframes caretBlink{0%,49%{border-right-color:var(--amber)}50%,100%{border-right-color:transparent}}
 /* Lead (design): smaller, centred, 600px. */
 .hero p.lead{font-size:16.5px;max-width:600px;margin:12px auto 0;color:#B9B3E0}
