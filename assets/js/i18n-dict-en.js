@@ -1030,7 +1030,7 @@ window.DK_I18N_DICT["en"] = {
     "rsv_0260": "Experiments and variants.",
     "rsv_0221": "DoKit may change, add, or retire tools over time. Free basic tools will not be taken away or downgraded.",
     "rsv_0222": "DoKit started with a simple frustration: everyday online tools were stuffed with pop-up ads, demanded an account before doing anything useful, or quietly uploaded your files to a server you never asked about. So we built the opposite. Every DoKit tool runs entirely on your device, inside your browser. Your photos are resized on your phone. Your words are counted on your laptop. There is no server to breach, because your files never leave your hands.",
-    "rsv_0224": "DoKit runs without any third-party library, and a zip library would break that promise. Separate download tools keep it fast and self-contained.",
+    "rsv_0224": "DoKit runs without any third-party library, and it does not need one for ZIP files either — the resizer builds them with a small hand-rolled writer. Downloads stay separate here so the tool stays fast and self-contained.",
     "rsv_0226": "DoKit — Free Online Tools",
     "rsv_0227": "DoKit's free tools are provided as-is, for personal and professional use. You are responsible for the content you process with them and for checking outputs before you rely on them.",
     "rsv_0228": "DoKit's image tools saved me hours. No upload, no waiting — everything happens instantly in the browser.",

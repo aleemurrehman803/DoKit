@@ -1037,7 +1037,7 @@ window.DK_I18N_DICT["es"] = {
     "rsv_0260": "Experimentos y variantes.",
     "rsv_0221": "DoKit puede cambiar, añadir o retirar herramientas con el tiempo. Las herramientas básicas gratuitas no se eliminarán ni se degradarán.",
     "rsv_0222": "DoKit empezó con una simple frustración: las herramientas en línea de todos los días estaban llenas de anuncios emergentes, exigían una cuenta antes de hacer algo útil o subían silenciosamente tus archivos a un servidor del que nunca preguntaste. Así que construimos lo opuesto. Cada herramienta de DoKit funciona por completo en tu dispositivo, dentro de tu navegador. Tus fotos se redimensionan en tu teléfono. Tus palabras se cuentan en tu portátil. No hay ningún servidor que vulnerar, porque tus archivos nunca salen de tus manos.",
-    "rsv_0224": "DoKit funciona sin ninguna biblioteca de terceros, y una biblioteca zip rompería esa promesa. Las herramientas de descarga separadas lo mantienen rápido y autónomo.",
+    "rsv_0224": "DoKit funciona sin ninguna biblioteca de terceros, y tampoco necesita una para los archivos ZIP: el redimensionador los crea con un pequeño generador propio. Las descargas siguen siendo separadas para que la herramienta sea rápida y autónoma.",
     "rsv_0226": "DoKit: herramientas gratuitas en línea",
     "rsv_0227": "Las herramientas gratuitas de DoKit se proporcionan tal cual, para uso personal y profesional. Eres responsable del contenido que procesas con ellas y de verificar los resultados antes de confiar en ellos.",
     "rsv_0228": "Las herramientas de imagen de DoKit me ahorraron horas. Sin subidas, sin esperas: todo ocurre al instante en el navegador.",

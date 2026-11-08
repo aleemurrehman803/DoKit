@@ -302,6 +302,60 @@
     });
   }
 
+  /* ============ Compressor: Download all as ZIP (B73) ===============
+   * NEEDS: #ta-cp-zip (fragment). WHY: the batch had only per-file
+   * downloads. HOW: reuse the resizer's hand-rolled zero-dependency
+   * ZIP writer (tools.js buildZip, exposed as window.dkBuildZip) —
+   * NO new library. The ZIP set is computed from the B70 queue
+   * (cpBatchItems), so re-selects accumulate and Remove shrinks it
+   * for free. The ZIP is built only on click, never eagerly (10
+   * files x up to 25 MB each must not sit in memory as a ZIP until
+   * the user asks for it). This is also the cpBatchAfterChange()
+   * hook B70 calls after every queue change. */
+  var cpZipBtn = $('ta-cp-zip');
+  function cpBatchAfterChange() {
+    if (!cpZipBtn) { return; }
+    var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+    cpZipBtn.hidden = done.length < 2;
+  }
+  if (cpZipBtn) {
+    cpZipBtn.addEventListener('click', function () {
+      var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      /* Too few files, or the writer missing (tools.js failed to
+       * load): do nothing — per-file downloads still work. */
+      if (done.length < 2 || typeof window.dkBuildZip !== 'function') { return; }
+      /* ZIP entry names must be ASCII-safe (the stored writer packs
+       * one byte per char) and UNIQUE — the same file can be batched
+       * twice, and duplicate names collapse on extract. Suffix
+       * repeats like the resizer does (" (2)", " (3)"); per-file
+       * downloads keep the real name. */
+      var seenNames = {};
+      var files = done.map(function (it) {
+        var base = it.outName.replace(/[^\x20-\x7E]/g, '_');
+        var name = base, n = 1;
+        while (seenNames[name]) {
+          n++;
+          var dot = base.lastIndexOf('.');
+          name = base.slice(0, dot) + ' (' + n + ')' + base.slice(dot);
+        }
+        seenNames[name] = true;
+        return { name: name, blob: it.blob };
+      });
+      window.dkBuildZip(files).then(function (zipBlob) {
+        downloadBlob(zipBlob, 'dokit-compressed.zip');
+      }).catch(function () {
+        /* Reuse the resizer's ZIP error string (rsv_1384). */
+        var msg = window.dkT ? window.dkT('rsv_1384', 'Couldn\'t build the ZIP file. Try downloading images one by one.') : 'Couldn\'t build the ZIP file. Try downloading images one by one.';
+        var list = $('ta-cp-batch-list');
+        if (!list) { return; }
+        var li = document.createElement('li');
+        li.className = 'cp-batch-note err';
+        li.textContent = msg;
+        list.appendChild(li);
+      });
+    });
+  }
+
   /* ============ Converter: quality slider + Remove-all ===================
    * NEEDS: #cv-files, #cv-fmt (existing) + #ta-cv-q, #ta-cv-q-val,
    * #ta-cv-all, #ta-cv-list, #ta-cv-clear (fragment). WHY: old q

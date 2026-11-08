@@ -172,6 +172,10 @@ function buildZip(files){
     return new Blob(parts.concat(cdParts, [eocd.buffer]), { type: 'application/zip' });
   });
 }
+/* B73: the compressor batch (tools-additions.js, a separate IIFE)
+ * reuses this writer — expose it rather than duplicating ~80 lines
+ * of ZIP code. No new library is added anywhere. */
+window.dkBuildZip = buildZip;
 /* Sample the background colour from a source image's corners: average a
  * 3x3 block at each corner, then take the most common corner colour
  * (plain backgrounds agree in 3-4 corners; a stray object in one corner

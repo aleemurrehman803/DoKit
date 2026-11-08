@@ -1037,7 +1037,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_0260": "Deneyler ve varyantlar.",
     "rsv_0221": "DoKit zamanla araçları değiştirebilir, ekleyebilir veya kaldırabilir. Ücretsiz temel araçlar geri alınmayacak veya düşürülmeyecek.",
     "rsv_0222": "DoKit basit bir hayal kırıklığıyla başladı: gündelik çevrimiçi araçlar pop-up reklamlarla doluydu, yararlı bir şey yapmadan önce hesap istiyordu veya dosyalarınızı sessizce hiç sormadığınız bir sunucuya yüklüyordu. Biz de tam tersini inşa ettik. Her DoKit aracı tamamen cihazınızda, tarayıcınızın içinde çalışır. Fotoğraflarınız telefonunuzda yeniden boyutlandırılır. Kelimeleriniz dizüstü bilgisayarınızda sayılır. İhlal edilecek sunucu yoktur, çünkü dosyalarınız ellerinizden hiç çıkmaz.",
-    "rsv_0224": "DoKit hiçbir üçüncü taraf kütüphanesi olmadan çalışır ve bir zip kütüphanesi bu sözü bozardı. Ayrı indirme araçları onu hızlı ve bağımsız tutar.",
+    "rsv_0224": "DoKit, üçüncü taraf kitaplık olmadan çalışır ve ZIP dosyaları için de buna ihtiyaç duymaz — yeniden boyutlandırıcı bunları küçük, el yapımı bir yazıcıyla oluşturur. İndirmeler ayrı kalır, böylece araç hızlı ve bağımsız kalır.",
     "rsv_0226": "DoKit — Ücretsiz Çevrimiçi Araçlar",
     "rsv_0227": "DoKit'in ücretsiz araçları olduğu gibi, kişisel ve profesyonel kullanım için sunulur. Onlarla işlediğiniz içerikten ve güvenmeden önce çıktıları denetlemekten siz sorumlusunuz.",
     "rsv_0228": "DoKit'in görsel araçları bana saatler kazandırdı. Yükleme yok, bekleme yok — her şey tarayıcıda anında olur.",

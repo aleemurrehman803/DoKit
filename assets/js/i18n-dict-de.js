@@ -1037,7 +1037,7 @@ window.DK_I18N_DICT["de"] = {
     "rsv_0260": "Experimente und Varianten.",
     "rsv_0221": "DoKit kann Tools im Laufe der Zeit ändern, hinzufügen oder einstellen. Kostenlose Basistools werden nicht entfernt oder herabgestuft.",
     "rsv_0222": "DoKit begann mit einer einfachen Frustration: Alltags-Online-Tools waren vollgestopft mit Pop-up-Werbung, verlangten ein Konto, bevor sie etwas Nützliches taten, oder luden Ihre Dateien leise auf einen Server hoch, nach dem Sie nie gefragt hatten. Also bauten wir das Gegenteil. Jedes DoKit-Tool läuft vollständig auf Ihrem Gerät, in Ihrem Browser. Ihre Fotos werden auf Ihrem Handy skaliert. Ihre Wörter werden auf Ihrem Laptop gezählt. Es gibt keinen Server, der gehackt werden könnte, denn Ihre Dateien verlassen nie Ihre Hände.",
-    "rsv_0224": "DoKit läuft ohne externe Bibliotheken, und eine Zip-Bibliothek würde dieses Versprechen brechen. Separate Download-Tools halten es schnell und eigenständig.",
+    "rsv_0224": "DoKit läuft ohne Bibliotheken von Drittanbietern und braucht auch für ZIP-Dateien keine — der Größenänderer erstellt sie mit einem kleinen handgeschriebenen Writer. Downloads bleiben getrennt, damit das Tool schnell und eigenständig bleibt.",
     "rsv_0226": "DoKit — kostenlose Online-Tools",
     "rsv_0227": "Die kostenlosen DoKit-Tools werden wie besehen bereitgestellt, für den persönlichen und beruflichen Gebrauch. Sie sind verantwortlich für die Inhalte, die Sie damit verarbeiten, und dafür, Ausgaben zu prüfen, bevor Sie sich darauf verlassen.",
     "rsv_0228": "Die DoKit-Bildtools haben mir Stunden gespart. Kein Upload, kein Warten — alles geschieht sofort im Browser.",
