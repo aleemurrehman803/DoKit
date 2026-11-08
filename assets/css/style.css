@@ -149,6 +149,16 @@ h3{font-size:21px;margin:22px 0 8px}
 .row-flex{display:flex;gap:8px;flex-wrap:wrap}
 .mw-100{max-width:100%}
 .toolbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:var(--pad-roomy)}
+/* B66: shared dropzone — the visible drag-and-drop target on the four
+ * image-tool pages. One implementation only, wired in main.js (dkWire
+ * dropzone): the file input inside #dz stays the browse path, and
+ * drop/paste feed that same input. Dragover state is amber; the
+ * prefers-reduced-motion global rule already kills the transition. */
+.dropzone{border:2px dashed var(--violet);border-radius:14px;padding:18px;text-align:center;transition:border-color .15s,background .15s}
+.dropzone.dragover{border-color:var(--amber);background:rgba(255,197,49,.12)}
+.dropzone .dz-title{font-weight:700;margin:0 0 4px}
+.dropzone .dz-hint{margin:0 0 10px;color:var(--muted);font-size:14px}
+.dropzone input[type=file]{max-width:100%}
 label{font-weight:700;display:block;margin:14px 0 6px}
 input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
 textarea{min-height:160px;resize:vertical}

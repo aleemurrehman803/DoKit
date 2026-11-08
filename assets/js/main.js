@@ -1766,3 +1766,107 @@ function dokiMicStop(){
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); }
   else { init(); }
 })();
+
+/* B66 — Drag-and-drop upload: ONE shared dropzone implementation.
+ * Inspection verdict (why this is the consolidation, not a third copy):
+ * the four unloaded bundles (tools/image-{resizer,compressor,converter}/
+ * tool.js + tools/board-photo/tool.js) are four DIVERGENT full-tool
+ * rewrites, not copies of a dropzone — each ~46-75 KB, each expecting a
+ * DKUI.renderNav/renderFooter shell the routed pages do not use, its own
+ * embedded i18n dict, and DOM ids the routed pages do not have. Wiring
+ * any one of them in would replace the routed tool logic wholesale.
+ * So per the owner decision (REUSE FIRST, consolidate if the copies
+ * cannot both be wired cleanly): this single handler in main.js — the
+ * one script every page already loads — wires any #dz on the page (the
+ * four image-tool pages only). Drop/paste feed the SAME file input the
+ * browse path uses (DataTransfer + change event), so the existing
+ * per-tool handlers run exactly as browse-upload does: same validation,
+ * same results, same errors. Nothing is ever uploaded — processing stays
+ * on-device (B69). A dropped URL/text is never fetched (no SSRF /
+ * open-fetch hole): only File objects from the drop/paste are taken.
+ * The unloaded bundles are left untouched as dead code (deleting four
+ * full alternate tool implementations is an owner call, not this idea);
+ * exactly ONE dropzone implementation exists in the loaded scripts. */
+(function () {
+  var dz = document.getElementById('dz');
+  if (!dz) { return; }
+  var input = dz.querySelector('input[type=file]');
+  if (!input) { return; }
+  var multi = !!input.multiple;
+  /* One error line under the dropzone, reused for every rejected file. */
+  var errEl = document.createElement('p');
+  errEl.className = 'err'; errEl.id = 'dz-err'; errEl.setAttribute('aria-live', 'polite');
+  dz.parentNode.insertBefore(errEl, dz.nextSibling);
+  function showErr(msg) { errEl.textContent = msg; }
+  function clearErr() { errEl.textContent = ''; }
+  function t(key, fallback) { return (window.dkT ? window.dkT(key, fallback) : fallback); }
+  /* Validate against the input's own accept list + the 25 MB cap the
+   * browse path enforces (loadImage in tools.js, validFile in the dead
+   * board-photo bundle). A file failing either check shows the SAME
+   * message the browse path shows for it. */
+  function acceptOk(file) {
+    var acc = (input.getAttribute('accept') || '').toLowerCase();
+    if (!acc) { return true; }
+    var type = (file.type || '').toLowerCase();
+    var parts = acc.split(',');
+    for (var i = 0; i < parts.length; i++) {
+      var a = parts[i].trim();
+      if (a === 'image/*' && type.indexOf('image/') === 0) { return true; }
+      if (a && a === type) { return true; }
+      if (a.charAt(0) === '.' && file.name.toLowerCase().slice(-a.length) === a) { return true; }
+    }
+    return false;
+  }
+  function feedFiles(list) {
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) { return; }
+    clearErr();
+    var good = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (!acceptOk(f)) { showErr(t('rsv_1009', 'This image could not be read. Please choose a PNG, JPG or WebP file.')); return; }
+      if (f.size > 25 * 1024 * 1024) { showErr(t('rsv_0977', 'File is larger than 25 MB. Please choose a smaller file.')); return; }
+      good.push(f);
+    }
+    if (!good.length) { return; }
+    if (!multi) { good = good.slice(0, 1); }
+    /* Feed the real input so the existing change handler runs — the
+     * drop path is then identical to browse-upload by construction. */
+    var dt = new DataTransfer();
+    good.forEach(function (f) { dt.items.add(f); });
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  /* Click anywhere on the zone (except the input/label themselves,
+   * whose native behaviour already opens the file dialog) browses. */
+  dz.addEventListener('click', function (e) {
+    if (e.target === input || (e.target && e.target.tagName === 'LABEL')) { return; }
+    input.click();
+  });
+  dz.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+  });
+  ['dragover', 'dragenter'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) { feedFiles(e.dataTransfer.files); }
+  });
+  /* Paste is document-level: a paste lands on the focused element, not
+   * necessarily on #dz. Skipped inside text fields so typing/pasting
+   * text is never hijacked; only clipboard FILES are taken. */
+  document.addEventListener('paste', function (e) {
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    var cd = e.clipboardData;
+    if (cd && cd.files && cd.files.length) { feedFiles(cd.files); }
+  });
+  /* An unhandled drop anywhere on the page would navigate the browser
+   * away from the tool (dropping a file on a bare page loads it).
+   * Block that for the whole document; #dz still handles its own drops. */
+  document.addEventListener('dragover', function (e) { e.preventDefault(); });
+  document.addEventListener('drop', function (e) { e.preventDefault(); });
+})();
