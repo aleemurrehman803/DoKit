@@ -145,8 +145,14 @@ h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 12px;font-family:v
 h2{font-size:clamp(24px,3.5vw,32px);line-height:1.2;margin:0 0 14px;font-family:var(--font-display);letter-spacing:-.02em}
 h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-display);letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
-.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);box-shadow:0 10px 34px rgba(23,20,46,.10);transition:transform .15s,border-color .15s,box-shadow .15s}
+.card:hover{transform:translateY(-6px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.22)}
+/* N04 (Phase C): a revealed card's .reveal.in{transform:none} (0,2,0)
+ * ties .card:hover (0,2,0) but sits later in the file, so it used to
+ * swallow the hover lift on every .reveal card (the homepage tool
+ * cards). This higher-specificity rule restores the -6px lift on a
+ * revealed card; border + shadow already came through on hover. */
+.card.reveal.in:hover{transform:translateY(-6px)}
 .card:active{transform:translateY(-1px)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
@@ -252,10 +258,15 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * answers can contain long source URLs), the referral link
  * (#ref-link, a long URL in <code>), and the read-only profile email
  * fields. No global rule: headings/nav must keep their normal wrapping. */
-.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--bg);overflow-wrap:anywhere}
+/* N07 (Phase C): Doki chat bubbles follow the design (§06) — the user
+ * bubble is violet with white text and the bottom-right corner
+ * tightened; the bot bubble (below) is surface2 with the bottom-left
+ * corner tightened. The old bot left-border is gone: the background
+ * colour now distinguishes bot from user (the design has no border). */
+.msg{margin:8px 0;padding:10px 12px;border-radius:14px 14px 4px 14px;background:var(--violet);color:var(--on-accent);overflow-wrap:anywhere}
 #ref-link{overflow-wrap:anywhere}
 #acct-email-ro,#prof-email-ro{overflow-wrap:anywhere}
-.msg.bot{border-left:3px solid var(--violet)}
+.msg.bot{background:var(--surface2);color:var(--text);border-radius:14px 14px 14px 4px}
 #chat-form{display:flex;gap:4px;padding:12px 10px;border-top:1px solid var(--line)}
 #chat-form input{flex:1;min-width:0;padding:12px 8px}
 /* T031: the Send button used the global .btn padding (12px 22px, ~137px
@@ -283,12 +294,12 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
   #chat-panel{right:12px;max-width:calc(100vw - 24px)}
   #chat-log{max-height:38vh}
 }
-.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
+.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;transition:transform .15s,border-color .15s,color .15s}
 /* B54: quick-search chips under the homepage search field (same .chip
  * component as /tools/; the row is a plain <p> so it wraps on mobile). */
 .search-chips{margin:12px 0 0}.search-chips .chip{margin:3px 3px 3px 0}
-.chip:hover{border-color:var(--amber);color:var(--amber)}
-.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
+.chip:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
 .passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
@@ -866,3 +877,23 @@ footer.site .logo{display:flex;align-items:center;gap:10px}
 .hero .stats span{font-size:11.5px;color:#B9B3E0}
 /* Glow drift (design): violet 14s, amber 18s, gentle translate only. */
 @keyframes drift{from{transform:translate(0,0)}to{transform:translate(28px,18px)}}
+
+/* =====================================================================
+ * N03 + N07 (Phase C — Design Alignment, design file §04/§05):
+ * shared design-system deltas that apply site-wide. VISUAL ONLY.
+ * ------------------------------------------------------------------ */
+/* N07: content links get the design's underline sweep (left -> right
+ * on hover). Scoped to links inside <p> / <li> in <main> only — nav,
+ * buttons (.btn) and whole-card links (.cardlink) keep their own
+ * styles. The violet colour still identifies links at rest (the
+ * sweep replaces the static underline, it does not add a second one). */
+main p a:not(.btn):not(.cardlink),main li a:not(.btn):not(.cardlink){text-decoration:none;background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s}
+main p a:not(.btn):not(.cardlink):hover,main li a:not(.btn):not(.cardlink):hover{background-size:100% 2px}
+/* N03: the pricing Pro card is raised with an amber "Most popular"
+ * marker (design §04 pricing wireframe). The "Coming soon" tag stays
+ * — Pro is genuinely not on sale yet. The raised card lifts a little
+ * more on hover; the base .card hover lift (-6px, N04) still applies
+ * to the other cards. */
+.card.popular{transform:translateY(-8px);border-color:var(--violet);box-shadow:0 18px 40px rgba(var(--violet-rgb),.28)}
+.card.popular:hover{transform:translateY(-10px)}
+.card .tag.popular-tag{background:var(--amber);color:var(--ink);border-color:var(--amber)}

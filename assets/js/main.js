@@ -87,6 +87,15 @@ try{
   });
 }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 // reveal on scroll
+// N08 (Phase C): stagger the reveal 60ms per item within its parent
+// (design §05), capped at 300ms so long lists do not trail absurdly.
+// The delay is set once here; the observer (or the fallback below)
+// only adds .in — the CSS transition does the rest.
+document.querySelectorAll('.reveal').forEach(function(el){
+  var sibs = el.parentElement ? el.parentElement.querySelectorAll('.reveal') : [];
+  var idx = Array.prototype.indexOf.call(sibs, el);
+  if(idx > 0){ el.style.transitionDelay = (Math.min(idx, 5) * 60) + 'ms'; }
+});
 if('IntersectionObserver' in window && !reduced){
   var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold: .12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
