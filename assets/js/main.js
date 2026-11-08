@@ -1681,21 +1681,53 @@ function dokiMicStop(){
     window.syncHeroH1 = sync;
     sync();
   })();
-  // Notify-me forms (coming-soon, TypeFight hub, API docs): the form
-  // opens the visitor's own mail app with a prefilled message to the
-  // site contact — honestly labeled, because no list is saved on
-  // DoKit until the backend arrives in Phase 3.
+  // Notify-me forms (coming-soon, TypeFight hub, API docs) + the guides
+  // newsletter strip: Q1 (Phase D) decided the destination — notify-me
+  // forms write to the `notify` collection, the guides strip to
+  // `newsletter` (data-collection). Both live rules (df3ef92c) allow a
+  // public create with EXACTLY {email, createdAt} (email 4-120 chars),
+  // so the topic is deliberately NOT stored and no rules change was
+  // needed. Success is shown ONLY on a confirmed write (never on
+  // failure — the old dead code confirmed falsely); on failure the form
+  // stays usable and shows the error note with the contact mailto.
   document.querySelectorAll('.notify-form').forEach(function (f) {
     f.addEventListener('submit', function (e) {
       e.preventDefault();
-      var email = f.querySelector('input[type="email"]');
-      var addr = email ? email.value.trim() : '';
-      var topic = f.getAttribute('data-topic') || 'DoKit updates';
-      var subject = encodeURIComponent(dkT('rsv_1030', 'Notify me: ') + topic);
-      var body = encodeURIComponent(dkT('rsv_1031', 'Please notify me about ') + topic + dkT('rsv_1056', '.\nMy email: ') + addr);
-      window.location.href = 'mailto:malikjalil014@gmail.com?subject=' + subject + '&body=' + body;
-      var note = f.querySelector('.notify-sent');
-      if (note) { note.hidden = false; }
+      var emailEl = f.querySelector('input[type="email"]');
+      var addr = emailEl ? emailEl.value.trim() : '';
+      var sent = f.querySelector('.notify-sent');
+      var err = f.querySelector('.notify-error');
+      var btn = f.querySelector('button[type="submit"]');
+      if (err) { err.hidden = true; }
+      // WHY (rules): email must be 4-120 chars; the browser's own
+      // type=email check already ran (required + type=email) — this
+      // guards the rules' length bound before any write is attempted.
+      if (addr.length < 4 || addr.length > 120 || addr.indexOf('@') < 1) {
+        if (err) { err.hidden = false; }
+        return;
+      }
+      var db = null;
+      try { db = (window.DKA && window.DKA.db) ? window.DKA.db() : null; } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'main.js'); }
+      if (!db || !window.firebase || !firebase.firestore) {
+        if (err) { err.hidden = false; }
+        return;
+      }
+      // WHY (rules): only these two collections allow a public create
+      // with this shape; the attribute is allow-listed, never trusted.
+      var col = f.getAttribute('data-collection') || 'notify';
+      if (col !== 'notify' && col !== 'newsletter') { col = 'notify'; }
+      if (btn) { btn.disabled = true; }
+      db.collection(col).add({
+        email: addr,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function () {
+        if (sent) { sent.hidden = false; }
+        if (emailEl) { emailEl.disabled = true; }
+      }, function (e3) {
+        window.dkSwallow && window.dkSwallow(e3, 'main.js');
+        if (err) { err.hidden = false; }
+        if (btn) { btn.disabled = false; }
+      });
     });
   });
 
@@ -1902,6 +1934,55 @@ function dokiMicStop(){
   } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
+/* PAYLOAD-OPT (Phase D): referrals.js is 264 KB and 237 KB of it is
+ * unused on the homepage — only renderHomepageShoutout /
+ * renderHomepageFeatured run there — yet both homepage loaders injected
+ * it eagerly at page load. This ONE shared helper schedules the single
+ * injection for idle time instead: the script still always loads
+ * (requestIdleCallback with a 3s timeout, else a 1s timer), just after
+ * the critical path, and every registered onload callback still runs.
+ * One scheduled flag + one callback list, so two loaders can never
+ * inject twice. The wallet loader is untouched: the wallet page needs
+ * DKREF immediately for its claim button, so it keeps its eager load.
+ * The src is resolved at schedule time (document.currentScript is only
+ * valid while main.js itself is executing). */
+var __dkRefCallbacks = null;
+function dkLoadReferralsIdle(onload) {
+  if (window.DKREF) { try { if (onload) { onload(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } return; }
+  if (onload) {
+    if (__dkRefCallbacks) { __dkRefCallbacks.push(onload); return; }
+    __dkRefCallbacks = [onload];
+  } else if (!__dkRefCallbacks) { __dkRefCallbacks = []; }
+  if (window.__dkRefScheduled) { return; }
+  window.__dkRefScheduled = true;
+  var base = '';
+  try {
+    var cur = (document.currentScript && document.currentScript.src) || '';
+    var marker = 'assets/js/main.js';
+    var at = cur ? cur.indexOf(marker) : -1;
+    if (at >= 0) { base = cur.slice(0, at); }
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  function fire() {
+    var cbs = __dkRefCallbacks || []; __dkRefCallbacks = null;
+    cbs.forEach(function (cb) { try { cb(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } });
+  }
+  function inject() {
+    try {
+      if (window.DKREF) { fire(); return; }
+      var existing = document.querySelector('script[src$="assets/js/referrals.js"]');
+      if (existing) { existing.addEventListener('load', fire); return; }
+      if (!base) { return; }
+      var sc = document.createElement('script');
+      sc.src = base + 'assets/js/referrals.js';
+      sc.defer = true;
+      sc.onload = fire;
+      document.head.appendChild(sc);
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  }
+  if (window.requestIdleCallback) { window.requestIdleCallback(inject, { timeout: 3000 }); }
+  else { setTimeout(inject, 1000); }
+}
+
 /* Homepage shoutout slot (item #55): the homepage does not list
  * referrals.js, so this loader (same pattern as the wallet loader
  * above) creates the slot right after the hero section — never
@@ -1930,18 +2011,9 @@ function dokiMicStop(){
       section.appendChild(slot);
       hero.parentNode.insertBefore(section, hero.nextSibling);
     }
-    var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-    var marker = 'assets/js/main.js';
-    var at = src ? src.indexOf(marker) : -1;
-    if (at < 0) { return; }
-    var s = document.createElement('script');
-    s.src = src.slice(0, at) + 'assets/js/referrals.js';
-    s.defer = true;
-    s.onload = function () {
+    dkLoadReferralsIdle(function () {
       try { if (window.DKREF && window.DKREF.renderHomepageShoutout) { window.DKREF.renderHomepageShoutout(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-    };
-    document.head.appendChild(s);
+    });
   } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
@@ -1984,30 +2056,9 @@ function dokiMicStop(){
         hero.parentNode.insertBefore(section, hero.nextSibling);
       }
     }
-    if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); return; }
-    var existing = document.querySelector('script[src$="assets/js/referrals.js"]');
-    if (existing) {
-      /* The script is already loading (injected by the shoutout
-       * loader just above) — hook render to its load instead of
-       * returning silently. If it had already finished, DKREF would
-       * be present and the branch above would have run. */
-      try { existing.addEventListener('load', function () {
-        try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-      }); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-      return;
-    }
-    var src = '';
-    try { src = (document.currentScript && document.currentScript.src) || ''; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-    var marker = 'assets/js/main.js';
-    var at = src ? src.indexOf(marker) : -1;
-    if (at < 0) { return; }
-    var s = document.createElement('script');
-    s.src = src.slice(0, at) + 'assets/js/referrals.js';
-    s.defer = true;
-    s.onload = function () {
+    dkLoadReferralsIdle(function () {
       try { if (window.DKREF && window.DKREF.renderHomepageFeatured) { window.DKREF.renderHomepageFeatured(); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
-    };
-    document.head.appendChild(s);
+    });
   } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 })();
 
