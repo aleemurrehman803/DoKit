@@ -49,6 +49,11 @@
 - [How to convert text case](https://aleemurrehman803.github.io/DoKit/guides/convert-case/): Fix ALL-CAPS headings, lowercase SHOUTING, and format titles perfectly — six case styles, one click each.
 - [How to convert image formats](https://aleemurrehman803.github.io/DoKit/guides/convert-images/): Switch any image between JPG, PNG and WebP in seconds — smaller files, wider compatibility, zero uploads.
 - [How to count words](https://aleemurrehman803.github.io/DoKit/guides/count-words/): Instant word counts, reading time and keyword stats for essays, articles, captions and scripts.
+- [How to learn touch typing](https://aleemurrehman803.github.io/DoKit/guides/typing-lessons/): Touch typing is a skill, not a talent: short daily lessons, accuracy first, speed follows.
+- [How to make a QR code](https://aleemurrehman803.github.io/DoKit/guides/qr-generator/): Turn a link, a message, or your contact details into a QR code anyone can scan — free, in seconds.
+- [How to convert units](https://aleemurrehman803.github.io/DoKit/guides/unit-converter/): Convert length, weight, temperature and more in seconds — type a number, pick your units, done.
+- [How to make a strong password](https://aleemurrehman803.github.io/DoKit/guides/password-generator/): A password you can remember easily is usually a password someone else can guess. Make a strong one instead — it takes ten seconds.
+- [How to make a board photo](https://aleemurrehman803.github.io/DoKit/guides/board-photo/): Pick your board, upload a photo, and get it in the exact size and file size the form wants — no studio visit.
 
 ## More
 
