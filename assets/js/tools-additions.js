@@ -96,6 +96,20 @@
     for (var si = 0; si < socialBtns.length; si++) {
       (function (btn) {
         btn.addEventListener('click', function () {
+          /* B67 width-only preset (data-ta-w-only): set the width and
+           * let the aspect lock derive the height from the loaded
+           * image — dispatch 'input' so tools.js's lock handler runs.
+           * With no image loaded, or the lock off, the height is
+           * left as-is (the user still presses Resize). */
+          var wOnly = btn.getAttribute('data-ta-w-only');
+          if (wOnly) {
+            rzW.value = wOnly;
+            var ev;
+            try { ev = new Event('input', { bubbles: true }); }
+            catch (e) { ev = document.createEvent('Event'); ev.initEvent('input', true, false); }
+            rzW.dispatchEvent(ev);
+            return;
+          }
           rzW.value = btn.getAttribute('data-ta-w');
           rzH.value = btn.getAttribute('data-ta-h');
         });
