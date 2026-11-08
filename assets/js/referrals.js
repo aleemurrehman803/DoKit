@@ -421,11 +421,28 @@
      * uses for grant / pause / resume. */
     var st = normalizeStatus(row);
     var coins = (typeof row._coins === 'number') ? row._coins : 0;
+    /* E-04 (Phase E) — the Grant button must reflect the AUTHORITATIVE
+     * row state, not just the click guard. It used to render enabled
+     * for every row, so after a grant (and a reload, which re-fetched
+     * the now-active row) "Grant reward" was clickable again on an
+     * Active row. DKREF.adminGrant already refuses non-pending rows,
+     * so this was UI-only — but an enabled button on a granted row is
+     * a standing invitation to double-pay. Grantable ONLY while
+     * pending (the exact condition adminGrant enforces): an active row
+     * shows a disabled "Granted" button, a paused row a disabled
+     * Grant button (resume first — adminGrant would refuse it too).
+     * Plain English labels, no new dkT key: the i18n gate requires
+     * every key in all 10 languages, and this is admin-only chrome. */
+    var grantBtn = (st === 'pending')
+      ? ' <button class="btn ghost" type="button" data-adm="ref-grant">' + esc(T('ref_admin_grant', 'Grant reward')) + '</button>'
+      : (st === 'active'
+        ? ' <button class="btn ghost" type="button" data-adm="ref-grant" disabled>Granted</button>'
+        : ' <button class="btn ghost" type="button" data-adm="ref-grant" disabled>' + esc(T('ref_admin_grant', 'Grant reward')) + '</button>');
     var html = '<div class="adm-row" data-id="' + esc(row._id || '') + '">'
       + esc(memberLabel(row, names)) + ' · '
       + esc(T('ref_table_col_joined', 'Joined')) + ' ' + esc(fmtDate(row.createdAt)) + ' · '
       + esc(statusLabel(st)) + ' · ' + esc(String(coins)) + ' coins'
-      + ' <button class="btn ghost" type="button" data-adm="ref-grant">' + esc(T('ref_admin_grant', 'Grant reward')) + '</button>'
+      + grantBtn
       + (st === 'paused'
         ? ' <button class="btn ghost" type="button" data-adm="ref-resume">' + esc(T('ref_admin_resume', 'Resume')) + '</button>'
         : ' <button class="btn ghost" type="button" data-adm="ref-pause">' + esc(T('ref_admin_pause', 'Pause')) + '</button>')
@@ -2703,16 +2720,43 @@
     });
     return out;
   }
-  function computeUnverifiedList(users) {
+  function computeUnverifiedList(users, referrals) {
     /* Referred users only (a referrerId exists) who lack
      * emailVerifiedAt — organic users without a referrer are not an
-     * admin follow-up list for the referral programme. */
+     * admin follow-up list for the referral programme.
+     *
+     * E-05 (Phase E) — WHY granted users stay on this list: the filter
+     * is EMAIL verification (users.emailVerifiedAt), which is a
+     * completely separate fact from the referral reward. Granting a
+     * referral writes referrals.status/rewarded — it never touches
+     * emailVerifiedAt, and signup never sends a verification email
+     * (only the user-facing "Send verification email" button in
+     * renderVerification does), so a granted invitee correctly
+     * remains "email unverified" until they verify. The old label
+     * ("Unverified referred users") hid that distinction and read as
+     * if the REFERRAL were unverified. The filter is therefore right
+     * and the LABEL was wrong — fixed in renderAdminQueue. Each entry
+     * now also carries its referral row status (second arg, optional)
+     * so the admin can see at a glance that a listed user may already
+     * be granted. Never invents verification: referralStatus comes
+     * from the real referrals row, or 'none' when no row exists. */
+    var byInvitee = {};
+    (referrals || []).forEach(function (r) {
+      if (!r) { return; }
+      var key = r._id || r.inviteeUid;
+      if (key) { byInvitee[key] = r; }
+    });
     var out = [];
     usersList(users).forEach(function (u) {
       if (!u) { return; }
       var uid = u.uid || u._id;
       if (!uid || !u.referrerId || u.emailVerifiedAt) { return; }
-      out.push({ uid: uid, referrerId: u.referrerId });
+      var refRow = byInvitee[uid] || null;
+      out.push({
+        uid: uid, referrerId: u.referrerId,
+        referralStatus: refRow ? normalizeStatus(refRow) : 'none',
+        referralRewarded: refRow ? (refRow.rewarded === true) : false
+      });
     });
     return out;
   }
@@ -2804,7 +2848,7 @@
         reactivationCandidates: computeReactivationCandidates(users, Date.now()),
         deviceClusters: deviceDuplicateMap(users),
         freezeList: computeFreezeList(users, Date.now()),
-        unverifiedList: computeUnverifiedList(users),
+        unverifiedList: computeUnverifiedList(users, refs),
         qrJoins: qr, rulesPending: denied
       };
     });
@@ -4347,6 +4391,37 @@
               linkText = linkText.slice(chunk);
               y += 44;
             }
+            /* E-01 (Phase E): QR code in the poster's empty lower half.
+             * WHY: the poster bitmap is 1080x1350 but all text ends by
+             * ~y=670, so the bottom ~50% was bare gradient — the live
+             * Task C agent saw exactly that empty half and reported the
+             * preview "blank", and no QR was ever drawn anywhere on the
+             * poster. The QR encodes the SAME referral link already
+             * printed as text above, so preview and download stay the
+             * same content (one canvas feeds both). HOW: the vendored
+             * qrcodejs library (assets/js/vendor/qrcode.min.js — the
+             * same library the QR Generator tool already uses, loaded
+             * on this page before referrals.js) renders the QR into an
+             * offscreen element; its canvas bitmap is drawn onto the
+             * poster inside a white panel (quiet zone). WHY the guard:
+             * QR failure must never break the poster — if the library
+             * is absent or throws, the poster stays exactly as before
+             * (gradient + text) and the download still works. */
+            try {
+              if (typeof root.QRCode !== 'undefined') {
+                var qrBox = document.createElement('div');
+                new root.QRCode(qrBox, { text: link, width: 440, height: 440, correctLevel: root.QRCode.CorrectLevel.M });
+                var qrCanvas = qrBox.querySelector('canvas');
+                if (qrCanvas) {
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(60, 740, 560, 560);
+                  ctx.drawImage(qrCanvas, 130, 770, 440, 440);
+                  ctx.fillStyle = '#111827';
+                  ctx.font = 'bold 36px ' + FONT_STACK;
+                  ctx.fillText('Scan to join DoKit', 130, 1265);
+                }
+              }
+            } catch (qrErr) { window.dkSwallow && window.dkSwallow(qrErr, 'referrals.js'); }
           }
         }
       } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
@@ -4704,6 +4779,22 @@
     if (hoursLeft <= 0) { return 'SLA OVERDUE'; }
     return 'SLA: ' + hoursLeft + 'h left';
   }
+  /* E-03 (Phase E) — tell account.js its sections are stale. The queue
+   * lives inside #adm-referrals, but a settle/grant also changes the
+   * dashboard counts (#adm-counts) and the Users coin balances
+   * (#adm-users), which account.js admLoad only ever fetched ONCE at
+   * sign-in — so both stayed stale until a manual reload. account.js
+   * exposes window.DKADM.refreshCountsAndUsers for exactly this; the
+   * guard keeps the queue working when account.js is absent (or the
+   * hook is missing), and the queue itself still re-renders via
+   * refresh(). No full-page reload, no polling, no new listener. */
+  function notifyAdminSections() {
+    try {
+      if (root.DKADM && typeof root.DKADM.refreshCountsAndUsers === 'function') {
+        root.DKADM.refreshCountsAndUsers();
+      }
+    } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
+  }
   function renderAdminQueue(containerEl, adminUid) {
     if (typeof document === 'undefined' || !containerEl) { return Promise.resolve(false); }
     var queueEl = null;
@@ -4826,13 +4917,26 @@
         });
         html.push('</ul>');
       }
-      var unverifiedTitle = 'Unverified referred users';
+      /* E-05 (Phase E) — the old title "Unverified referred users"
+       * read as if the REFERRAL were unverified, so granted codes
+       * looked wrongly listed. The list is (and stays) EMAIL
+       * verification: referred users with no emailVerifiedAt. A grant
+       * never changes that, so granted users remain here until they
+       * verify their email — by design, not a bug. The title now says
+       * what the list is, the note states the criterion, and each row
+       * shows the referral's own status so a granted row is visible
+       * as granted instead of looking unverified. */
+      var unverifiedTitle = 'Referred users with unverified email';
       html.push('<h4>' + esc(unverifiedTitle) + '</h4>');
+      html.push('<p>' + esc('Email verification only — a referral that was already granted stays here until that user verifies their email. Reward status is shown on the referral row above.') + '</p>');
       if (!q.unverifiedList.length) { var noneText7 = 'None.'; html.push('<p>' + esc(noneText7) + '</p>'); }
       else {
         html.push('<ul>');
         q.unverifiedList.forEach(function (u) {
-          html.push('<li>' + esc(u.uid) + ' · ' + esc(u.referrerId || '') + '</li>');
+          var refState = (u.referralStatus && u.referralStatus !== 'none')
+            ? ' · referral: ' + statusLabel(u.referralStatus) + (u.referralRewarded ? ' · reward granted' : '')
+            : ' · referral: none';
+          html.push('<li>' + esc(u.uid) + ' · ' + esc(u.referrerId || '') + esc(refState) + '</li>');
         });
         html.push('</ul>');
       }
@@ -4877,7 +4981,7 @@
       refxBind(queueEl, function (btn) {
         var action = btn.getAttribute('data-refx-action');
         var id = btn.getAttribute('data-refx-id');
-        function refresh() { renderAdminQueue(containerEl, adminUid); }
+        function refresh() { renderAdminQueue(containerEl, adminUid); notifyAdminSections(); }
         function fail(err) {
           var msg = (err && err.message) ? err.message : pendingText;
           refxNote(queueEl, msg);

@@ -969,6 +969,62 @@
       + '<p class="adm-muted">Page text lives in the site files — edit the file and redeploy. '
       + 'A database-backed content editor needs an owner decision on the CMS architecture.</p>';
   }
+  /* E-03 (Phase E) — dashboard counts + Users list, factored out of
+   * admLoad so they can be re-fetched on demand. WHY they exist as
+   * functions: admLoad runs its reads ONCE at admin sign-in, and the
+   * referral admin queue (referrals.js renderAdminQueue) settles
+   * reward_claims without ever re-running admLoad — so after a settle
+   * the "Pending claims" count and the Users coin balances stayed
+   * stale until a manual page reload. The queue now calls
+   * window.DKADM.refreshCountsAndUsers() after every successful
+   * mutation, which re-runs exactly these two sections (no full-page
+   * reload, no re-fetch of the other ~13 admin sections).
+   *
+   * WHY reward_claims for "Pending claims": the count used to read
+   * coin_claims (daily coin claims) while the queue the admin actually
+   * settles from lists reward_claims (achievement claims, via
+   * DKREF.adminListClaims('pending')) — so the dashboard read 0 while
+   * a reward claim was pending and the queue was accurate. The count
+   * now reads the SAME collection as the queue; the daily-claims
+   * figure is kept as its own "Pending daily claims" number so no
+   * information is lost. */
+  function admLoadCounts(){
+    var db = DKA.db();
+    if (!db) { return; }
+    // Counts (admin list reads; a failure shows the generic error note in the section).
+    Promise.all([
+      db.collection('users').get(),
+      db.collection('deposits').where('status', '==', 'pending').get(),
+      db.collection('withdrawals').where('status', '==', 'pending').get(),
+      db.collection('coin_claims').where('status', '==', 'pending').get(),
+      db.collection('reward_claims').where('status', '==', 'pending').get(),
+      db.collection('contact_messages').get(),
+      db.collection('certificates').get()
+    ]).then(function (r) {
+      var html = '<p>Users: ' + r[0].size + ' · Pending deposits: ' + r[1].size
+        + ' · Pending withdrawals: ' + r[2].size + ' · Pending claims: ' + r[4].size
+        + ' · Pending daily claims: ' + r[3].size
+        + ' · Inbox: ' + r[5].size + ' · Certificates: ' + r[6].size + '</p>'
+        + '<p><button class="btn ghost" type="button" data-adm="export-json">Export users (JSON)</button> '
+        + '<button class="btn ghost" type="button" data-adm="export-csv">Export deposits (CSV)</button></p>'
+       ;
+      admSetHtml('adm-counts', html);
+    }).catch(function () { admLoadError('adm-counts'); });
+  }
+  function admLoadUsers(){
+    var db = DKA.db();
+    if (!db) { return; }
+    db.collection('users').get().then(function (snap) {
+      admRender('adm-users', snap, function (id, d) {
+        var susp = d.suspended ? 'suspended' : 'active';
+        return '<div class="adm-row" data-uid="' + escHtml(id) + '"><b>' + escHtml(d.email || id) + '</b> '
+          + escHtml(d.displayName || '') + ' · ' + (typeof d.coins === 'number' ? d.coins : 0) + ' coins · ' + susp
+          + ' <input type="number" min="1" value="10" style="width:80px"> '
+          + '<button class="btn ghost" type="button" data-adm="give">Give coins</button> '
+          + '<button class="btn ghost" type="button" data-adm="' + (d.suspended ? 'unsuspend' : 'suspend') + '">' + (d.suspended ? 'Unsuspend' : 'Suspend') + '</button></div>';
+      });
+    }).catch(function () { admLoadError('adm-users'); });
+  }
   function admLoad(user){
     var g = $('adm-gate');
     if (g) { g.hidden = true; }
@@ -980,33 +1036,11 @@
     if (pn) { pn.hidden = true; }
     if (!DKA.db()) { return; }
     var db = DKA.db();
-    // Counts (admin list reads; a failure shows the generic error note in the section).
-    Promise.all([
-      db.collection('users').get(),
-      db.collection('deposits').where('status', '==', 'pending').get(),
-      db.collection('withdrawals').where('status', '==', 'pending').get(),
-      db.collection('coin_claims').where('status', '==', 'pending').get(),
-      db.collection('contact_messages').get(),
-      db.collection('certificates').get()
-    ]).then(function (r) {
-      var html = '<p>Users: ' + r[0].size + ' · Pending deposits: ' + r[1].size
-        + ' · Pending withdrawals: ' + r[2].size + ' · Pending claims: ' + r[3].size
-        + ' · Inbox: ' + r[4].size + ' · Certificates: ' + r[5].size + '</p>'
-        + '<p><button class="btn ghost" type="button" data-adm="export-json">Export users (JSON)</button> '
-        + '<button class="btn ghost" type="button" data-adm="export-csv">Export deposits (CSV)</button></p>'
-       ;
-      admSetHtml('adm-counts', html);
-    }).catch(function () { admLoadError('adm-counts'); });
-    db.collection('users').get().then(function (snap) {
-      admRender('adm-users', snap, function (id, d) {
-        var susp = d.suspended ? 'suspended' : 'active';
-        return '<div class="adm-row" data-uid="' + escHtml(id) + '"><b>' + escHtml(d.email || id) + '</b> '
-          + escHtml(d.displayName || '') + ' · ' + (typeof d.coins === 'number' ? d.coins : 0) + ' coins · ' + susp
-          + ' <input type="number" min="1" value="10" style="width:80px"> '
-          + '<button class="btn ghost" type="button" data-adm="give">Give coins</button> '
-          + '<button class="btn ghost" type="button" data-adm="' + (d.suspended ? 'unsuspend' : 'suspend') + '">' + (d.suspended ? 'Unsuspend' : 'Suspend') + '</button></div>';
-      });
-    }).catch(function () { admLoadError('adm-users'); });
+    /* E-03: counts + Users list are the two sections the admin queue
+     * can make stale (see admLoadCounts); they load here on first
+     * paint exactly as before, and refresh on demand afterwards. */
+    admLoadCounts();
+    admLoadUsers();
     db.collection('deposits').where('status', '==', 'pending').get().then(function (snap) {
       admRender('adm-deposits', snap, function (id, d) {
         // Item 79: show the grant the admin is about to approve (live
@@ -1159,6 +1193,14 @@
     renderAdmContent();
     admForms();
   }
+  /* E-03: the refresh hook the admin queue (referrals.js) calls after
+   * a successful settle/grant/etc. Re-fetches ONLY the two sections a
+   * queue mutation can stale (dashboard counts + Users coins); the
+   * queue re-renders itself. Exposed once at script load so the queue
+   * can find it without account.js knowing about the queue. */
+  window.DKADM = {
+    refreshCountsAndUsers: function () { admLoadCounts(); admLoadUsers(); }
+  };
   function admForms(){
     // Admin forms are built here (not in HTML) so no new HTML keys are
     // needed; labels are plain owner-tool text in built strings.
@@ -1436,6 +1478,22 @@
        * first click, re-enabled only on failure). Pause/resume flip
        * the admin-only paused flag on the row. */
       if (!id || !window.DKREF) { return; }
+      if (act === 'ref-grant') {
+        /* E-04 (Phase E) — stale-frontend guard: the row cached by the
+         * last admLoad may already be granted (status 'active' /
+         * rewarded true) or paused, in which case DKREF.adminGrant
+         * would refuse it anyway ("no longer pending"). Refuse it HERE
+         * instead, with an honest message, so a double-click or a
+         * reloaded-but-stale list can never even send the grant. The
+         * backend re-read is unchanged and remains the authority. */
+        var cached = null;
+        (admData.referrals || []).forEach(function (r) { if (r && r._id === id) { cached = r; } });
+        if (cached && (cached.status === 'active' || cached.rewarded === true
+            || cached.status === 'paused' || cached.paused === true)) {
+          showMsg('adm-msg', 'Referral is no longer pending — the reward was already granted or the row is paused.', true);
+          return;
+        }
+      }
       b.disabled = true;
       var refJob;
       if (act === 'ref-grant') {
