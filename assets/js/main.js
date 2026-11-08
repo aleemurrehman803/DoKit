@@ -77,16 +77,112 @@ if('IntersectionObserver' in window && !reduced){
   var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold: .12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
 } else { document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); }); }
-// tool search filter
+// B53: live tool search — filter + results listbox + Enter routing.
+// The registry is the page's own .tool-card elements (one source, shared
+// with the /tools/ page): name from data-name, keywords from
+// data-keywords, description from the card text. Routing uses ONLY the
+// card's own link (allow-list) — the query text is never used as a URL,
+// so javascript:/protocol-relative input can never navigate off-site.
 var s = document.getElementById('tool-search');
 if(s){
-  s.addEventListener('input', function(){
-    var q = s.value.trim().toLowerCase();
+  var resultsBox = document.getElementById('tool-search-results');
+  var emptyBox = document.getElementById('tool-search-empty');
+  var clearBtn = document.getElementById('tool-search-clear');
+  var activeOpt = -1; // index into the current visible matches
+  function norm(t){ return String(t || '').toLowerCase().replace(/-/g, ' '); }
+  // All cards on this page, with their link + searchable text, in DOM order.
+  function toolEntries(){
+    var out = [];
     document.querySelectorAll('.tool-card').forEach(function(c){
-      var name = (c.getAttribute('data-name') || '').toLowerCase();
-      c.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+      var link = c.querySelector('a.cardlink');
+      if(!link) { return; }
+      out.push({ card: c, link: link, name: (c.getAttribute('data-name') || '').trim(),
+        hay: norm((c.getAttribute('data-name') || '') + ' ' + (c.getAttribute('data-keywords') || '') + ' ' + c.textContent) });
     });
+    return out;
+  }
+  function currentMatches(q){
+    if(!q) { return []; }
+    return toolEntries().filter(function(e){ return e.hay.indexOf(q) !== -1; });
+  }
+  function hideBoxes(){
+    if(resultsBox){ resultsBox.hidden = true; resultsBox.innerHTML = ''; }
+    if(emptyBox){ emptyBox.hidden = true; }
+    s.setAttribute('aria-expanded', 'false');
+    activeOpt = -1;
+  }
+  function markActive(list){
+    var opts = resultsBox ? resultsBox.querySelectorAll('[role="option"]') : [];
+    opts.forEach(function(o, i){
+      var on = (i === activeOpt);
+      o.classList.toggle('active', on);
+      o.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if(list && list[activeOpt]) { s.setAttribute('aria-activedescendant', 'opt-' + activeOpt); }
+    else { s.removeAttribute('aria-activedescendant'); }
+  }
+  function goTo(entry){
+    if(!entry) { return; }
+    // Same-origin by construction: the href comes from a card on this page.
+    window.location.href = new URL(entry.link.getAttribute('href'), window.location.href).href;
+  }
+  s.addEventListener('input', function(){
+    var q = norm(s.value.trim());
+    var entries = toolEntries();
+    entries.forEach(function(e){
+      e.card.style.display = (!q || e.hay.indexOf(q) !== -1) ? '' : 'none';
+    });
+    if(!resultsBox && !emptyBox) { return; } // /tools/ page: filter only
+    var matches = currentMatches(q);
+    activeOpt = -1;
+    if(!q){ hideBoxes(); return; }
+    if(matches.length === 0){
+      if(resultsBox){ resultsBox.hidden = true; resultsBox.innerHTML = ''; }
+      if(emptyBox){ emptyBox.hidden = false; }
+      s.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    if(emptyBox){ emptyBox.hidden = true; }
+    if(resultsBox){
+      resultsBox.innerHTML = '';
+      matches.forEach(function(e, i){
+        var b = document.createElement('button');
+        b.type = 'button'; b.setAttribute('role', 'option'); b.id = 'opt-' + i;
+        b.setAttribute('aria-selected', 'false'); b.textContent = e.name;
+        // mousedown (not click): fires before the input blur that hides the box.
+        b.addEventListener('mousedown', function(ev){ ev.preventDefault(); goTo(e); });
+        resultsBox.appendChild(b);
+      });
+      resultsBox.hidden = false;
+      s.setAttribute('aria-expanded', 'true');
+    }
   });
+  s.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ s.value = ''; s.dispatchEvent(new Event('input', { bubbles: true })); s.blur(); return; }
+    var matches = currentMatches(norm(s.value.trim()));
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      if(!resultsBox || resultsBox.hidden || matches.length === 0) { return; }
+      e.preventDefault();
+      activeOpt = e.key === 'ArrowDown'
+        ? Math.min(activeOpt + 1, matches.length - 1)
+        : Math.max(activeOpt - 1, 0);
+      markActive(matches);
+      return;
+    }
+    if(e.key === 'Enter'){
+      if(matches.length === 0) { return; } // empty state: never navigate
+      e.preventDefault();
+      goTo(activeOpt >= 0 ? matches[activeOpt] : matches[0]);
+    }
+  });
+  document.addEventListener('click', function(e){
+    if(resultsBox && !resultsBox.hidden && !e.target.closest('.search-field')) { hideBoxes(); }
+  });
+  if(clearBtn){
+    clearBtn.addEventListener('click', function(){
+      s.value = ''; s.dispatchEvent(new Event('input', { bubbles: true })); s.focus();
+    });
+  }
 }
 // T046 (P5-DES-22): pause infinite animations while the tab is hidden.
 // visibilitychange toggles .dk-paused on <html>; the CSS rule freezes

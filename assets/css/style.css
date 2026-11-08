@@ -79,6 +79,15 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 #type-rotator{color:var(--amber);font-weight:800;border-right:3px solid var(--amber);padding-right:4px}
 .searchbox{margin:22px 0;display:flex;gap:10px;max-width:560px}
 .searchbox input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:13px 16px;font-size:16px}
+/* B53: homepage search results — the listbox and empty state sit under
+ * the input (inside .search-field, so they track the input's width);
+ * option buttons are full-width rows, keyboard-highlighted via .active. */
+.search-field{position:relative;flex:1;display:flex;min-width:0}
+.search-field input{flex:1;min-width:0}
+#tool-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(0,0,0,.4);overflow:hidden}
+#tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
+#tool-search-results [role="option"].active,#tool-search-results [role="option"]:hover{background:var(--surface2);color:var(--amber)}
+#tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
 .float-card{position:absolute;background:rgba(29,25,51,.9);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.35);animation:floaty 5s ease-in-out infinite}
 .float-card.a{right:6%;top:18%}.float-card.b{right:16%;top:52%;animation-delay:1.2s}.float-card.c{right:3%;top:68%;animation-delay:2.1s}
 /* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */

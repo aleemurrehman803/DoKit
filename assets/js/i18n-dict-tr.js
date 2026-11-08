@@ -29,6 +29,7 @@ window.DK_I18N_DICT["tr"] = {
     "rsv_1401": "örn. you@example.com",
     "rsv_1402": "Size nasıl yardımcı olabileceğimizi söyleyin…",
     "rsv_1403": "Eski sertifikalar Firestore kayıtlarına göre doğrulanır. Çevrimdışı doğrulama desteklenmez.",
+    "rsv_1405": "Aramanızla eşleşen araç yok.",
     "rsv_1380": "Saydam",
     "rsv_1381": "Düz renk",
     "rsv_1372": "Döndür",
