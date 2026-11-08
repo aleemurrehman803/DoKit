@@ -910,6 +910,65 @@
     if (rows.length > 50) { rows.length = 50; }
     admSetHtml(id, rows.length ? rows.join('') : '<p>No entries.</p>');
   }
+  /* B99 — Content panel: a live inventory of the site's static
+   * content (10 tools, 10 guides, 10 FAQ questions) with links.
+   * Pages are files, not database rows, so this panel lists what
+   * exists rather than pretending to edit it: page text is edited
+   * in the site files and redeployed, and a Firestore-backed content
+   * editor needs an owner decision on the CMS architecture. No blog
+   * section: the blog was removed by owner decision (commit b77be45);
+   * a blog CMS needs a reversal decision first. Titles are the
+   * pages' own H1s / FAQ summaries, links are relative from /admin/. */
+  function renderAdmContent(){
+    var el = $('adm-content');
+    if (!el) { return; }
+    var tools = [
+      ['Image Resizer', '../tools/image-resizer/'],
+      ['Image Compressor', '../tools/image-compressor/'],
+      ['Image Converter', '../tools/image-converter/'],
+      ['Word Counter', '../tools/word-counter/'],
+      ['Case Converter', '../tools/case-converter/'],
+      ['Typing School', '../typing/'],
+      ['Board Photo', '../tools/board-photo/'],
+      ['Password Generator', '../tools/password-generator/'],
+      ['Unit Converter', '../tools/unit-converter/'],
+      ['QR Generator', '../tools/qr-generator/']
+    ];
+    var guides = [
+      ['How to resize an image without losing quality', '../guides/how-to-resize-image-without-losing-quality/'],
+      ['How to compress an image to 100KB', '../guides/how-to-compress-image-to-100kb/'],
+      ['How to convert image formats', '../guides/convert-images/'],
+      ['How to convert text case', '../guides/convert-case/'],
+      ['How to count words', '../guides/count-words/'],
+      ['How to learn touch typing', '../guides/typing-lessons/'],
+      ['How to make a board photo', '../guides/board-photo/'],
+      ['How to make a strong password', '../guides/password-generator/'],
+      ['How to make a QR code', '../guides/qr-generator/'],
+      ['How to convert units', '../guides/unit-converter/']
+    ];
+    var faqs = [
+      'Is DoKit free?', 'Where do my files go?', 'Do I need an account?',
+      'Which browsers are supported?', 'Is there a mobile app?',
+      'What is the typing tutor?', 'How do I earn coins?',
+      'What payment methods do you accept?', 'Is my data safe?',
+      'How do I contact support?'
+    ];
+    function links(rows){
+      var out = '<ul>';
+      rows.forEach(function (r) {
+        out += '<li><a href="' + r[1] + '">' + escHtml(r[0]) + '</a></li>';
+      });
+      return out + '</ul>';
+    }
+    el.innerHTML = '<p>' + tools.length + ' tools · ' + guides.length + ' guides · ' + faqs.length + ' FAQ questions</p>'
+      + '<h3>Tools</h3>' + links(tools)
+      + '<h3>Guides</h3>' + links(guides)
+      + '<p><a href="../guides/">Guides index</a></p>'
+      + '<h3>FAQ</h3><ul>' + faqs.map(function (q) { return '<li>' + escHtml(q) + '</li>'; }).join('') + '</ul>'
+      + '<p><a href="../faq/">FAQ page</a></p>'
+      + '<p class="adm-muted">Page text lives in the site files — edit the file and redeploy. '
+      + 'A database-backed content editor needs an owner decision on the CMS architecture.</p>';
+  }
   function admLoad(user){
     var g = $('adm-gate');
     if (g) { g.hidden = true; }
@@ -1088,6 +1147,16 @@
         return '<div class="adm-row"><b>' + escHtml(d.name || '') + '</b></div>';
       });
     }).catch(function () { admLoadError('adm-exp'); });
+    db.collection('ai_knowledge').orderBy('updatedAt', 'desc').limit(100).get().then(function (snap) {
+      /* B99: KB list — newest first (updatedAt desc), 100 read, 50
+       * rendered (admRender cap). Delete button per row, wired in
+       * admClick as kb-del. */
+      admRender('adm-kb', snap, function (id, d) {
+        return '<div class="adm-row" data-id="' + escHtml(id) + '"><b>' + escHtml(d.q || '') + '</b> · ' + escHtml(d.cat || 'general') + '<p>' + escHtml(String(d.a || '').slice(0, 300)) + '</p>'
+          + ' <button class="btn ghost" type="button" data-adm="kb-del">Delete</button></div>';
+      });
+    }).catch(function () { admLoadError('adm-kb'); });
+    renderAdmContent();
     admForms();
   }
   function admForms(){
@@ -1165,6 +1234,65 @@
       '<label for="adm-ename">Name</label><input id="adm-ename" name="ename" type="text" required>',
       function (f) { return {name: f.ename.value.trim()}; },
       'adm-exp', function () { admLoad(currentUser); });
+    /* B99 — Knowledge-base add form (ai_knowledge). Adapted from the
+     * unloaded js/pages/admin-plus.js KB code (same doc shape, same
+     * length caps, same audit events) but built with the live admin's
+     * own build()/showMsg()/admAudit() helpers — the dead file stays
+     * unloaded (it also carries stale blog URLs and an unreviewed
+     * page list). Rules already allow admin writes to ai_knowledge
+     * (firestore.rules: read public, write admin-only); no rules
+     * change. Not routed through addForm: that helper's AUD-067
+     * allow-list covers only the four collections it serves, and the
+     * KB write needs keywords + updatedBy + an audit event, which
+     * addForm does not carry. */
+    build('adm-kb-form', '<form class="toolbox"><label for="adm-kbq">Question</label><input id="adm-kbq" name="kbq" type="text" maxlength="160" required><label for="adm-kba">Answer</label><textarea id="adm-kba" name="kba" rows="3" maxlength="2000" required></textarea><label for="adm-kbc">Category</label><input id="adm-kbc" name="kbc" type="text" maxlength="40" placeholder="general"><p><button class="btn" type="submit">Add entry</button></p></form>', function (ev) {
+      ev.preventDefault();
+      var f = ev.target;
+      var q = (f.kbq.value || '').trim().slice(0, 160);
+      var a = (f.kba.value || '').trim().slice(0, 2000);
+      var cat = (f.kbc.value || '').trim().slice(0, 40) || 'general';
+      if (!q || !a) { return; }
+      var kws = (q + ' ' + cat).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2; });
+      DKA.db().collection('ai_knowledge').add({q: q, a: a, cat: cat, keywords: kws, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: (currentUser && currentUser.uid) || ''}).then(function () {
+        admAudit('kb_added', cat, q.slice(0, 60));
+        showMsg('adm-msg', (window.dkT ? window.dkT('acct_saved', 'Saved.') : 'Saved.'), false);
+        f.reset();
+        admLoad(currentUser);
+      }).catch(function (err) { showMsg('adm-msg', friendlyError(err), true); });
+    });
+    /* B99 — KB test: asks the stored entries the admin's question and
+     * shows the best whole-word match (the same rule the Doki matcher
+     * uses), so the admin sees what Doki would answer from the KB. */
+    build('adm-kb-test', '<form class="toolbox"><label for="adm-kbtq">Test a question</label><input id="adm-kbtq" name="kbtq" type="text" maxlength="160"><p><button class="btn" type="submit">Test</button></p></form><div id="adm-kb-testout" aria-live="polite"></div>', function (ev) {
+      ev.preventDefault();
+      var f = ev.target;
+      var q = (f.kbtq.value || '').trim();
+      var out = $('adm-kb-testout');
+      if (!q) { if (out) { out.innerHTML = '<p>Ask something first.</p>'; } return; }
+      if (out) { out.innerHTML = '<p>Searching…</p>'; }
+      /* Generic words must not match on their own (the same rule the
+       * Doki matcher uses): "What is the capital of France?" must not
+       * match "What is the typing tutor?" on the word "what" alone. */
+      var stop = ['what', 'how', 'does', 'your', 'the', 'can', 'with', 'where', 'when', 'which', 'this', 'that', 'there', 'here', 'please'];
+      var qt = q.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2 && stop.indexOf(w) === -1; });
+      if (!qt.length) { if (out) { out.innerHTML = '<p>Ask something more specific.</p>'; } return; }
+      DKA.db().collection('ai_knowledge').limit(200).get().then(function (snap) {
+        var best = null, bestScore = 0;
+        snap.forEach(function (doc) {
+          var e = doc.data() || {};
+          var et = ((e.q || '') + ' ' + (e.keywords || []).join(' ') + ' ' + (e.cat || '')).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/);
+          var qt2 = (e.q || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/);
+          var score = 0;
+          qt.forEach(function (w) { if (et.indexOf(w) !== -1) { score += (qt2.indexOf(w) !== -1 ? 3 : 1); } });
+          if (score > bestScore) { bestScore = score; best = e; }
+        });
+        if (out) {
+          out.innerHTML = best
+            ? '<p><b>Matched:</b> ' + escHtml(best.q || '') + '</p><p>' + escHtml(best.a || '') + '</p>'
+            : '<p>No keyword match — Doki would fall back to its built-in answers.</p>';
+        }
+      }).catch(function (err) { if (out) { out.innerHTML = '<p>Search failed: ' + escHtml(friendlyError(err)) + '</p>'; } });
+    });
   }
   function admClick(ev){
     var b = ev.target && ev.target.closest ? ev.target.closest('[data-adm]') : null;
@@ -1320,6 +1448,12 @@
       if (!id) { return; }
       if (!window.confirm((window.dkT ? window.dkT('acct_adm_confirm_delete', 'Delete this message?') : 'Delete this message?'))) { return; }
       db.collection('contact_messages').doc(id).delete().then(function () { admAudit(act, id); done(); }).catch(fail);
+    } else if (act === 'kb-del') {
+      /* B99: delete a knowledge-base entry (admin-only by rules).
+       * Audit-logged; list reloads via done() -> admLoad. */
+      if (!id) { return; }
+      if (!window.confirm('Delete this knowledge entry?')) { return; }
+      db.collection('ai_knowledge').doc(id).delete().then(function () { admAudit('kb_deleted', id); done(); }).catch(fail);
     } else if (act === 'wall-approve') {
       if (!id) { return; }
       db.collection('testimonials').doc(id).update({approved: true}).then(function () { admAudit(act, id); done(); }).catch(fail);
