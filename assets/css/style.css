@@ -12,7 +12,7 @@
  * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
  * 24px (spacious form/tool panels). Every card-family surface uses
  * one of these three; the unexplained 16px/18px values are gone. */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-display:"Sora",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -39,7 +39,7 @@ button.linklike:hover{color:var(--amber)}
 .container--narrow{max-width:720px}
 header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;gap:20px;padding:12px 0}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font-weight:800;font-size:22px;letter-spacing:.2px;font-family:var(--font-display)}
 .logo svg{flex:0 0 auto}
 .logo span em{font-style:normal;color:var(--amber)}
 .navlinks{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
@@ -61,14 +61,14 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 /* T001 (P5-VIS-01): login/signup form buttons span the full form width, matching the inputs */
 #acct-login-form .btn,#acct-signup-form .btn{display:block;width:100%;margin:0 0 10px}
 .hero{position:relative;overflow:hidden;padding:72px 0 56px}
-#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
-.glow{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
-.glow.a{width:420px;height:420px;background:var(--violet);top:-120px;right:-80px}
-.glow.b{width:340px;height:340px;background:var(--amber);opacity:.28;bottom:-140px;left:-60px}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;pointer-events:none}
+.glow.a{width:520px;height:520px;background:var(--violet);top:-220px;left:-120px;animation:drift 14s ease-in-out infinite alternate}
+.glow.b{width:420px;height:420px;background:var(--amber);opacity:.2;bottom:-240px;right:-80px;animation:drift 18s ease-in-out infinite alternate-reverse}
 .hero-inner{position:relative}
 .eyebrow{color:var(--amber);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:13px}
-.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.05;margin:10px 0 14px}
-.hero h1 .grad{background:linear-gradient(90deg,var(--violet2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1{font-size:clamp(40px,6vw,68px);line-height:1.04;letter-spacing:-.03em;margin:10px 0 14px}
+.hero h1 .grad{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* T053 (P5-DES-29): fallback if background-clip:text is unsupported
  * (else color:transparent leaves "you'll ever need" invisible).
  * The `or` form keeps the gradient in prefixed-only browsers;
@@ -88,11 +88,21 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 #tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
 #tool-search-results [role="option"].active,#tool-search-results [role="option"]:hover{background:var(--surface2);color:var(--amber)}
 #tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
-.float-card{position:absolute;background:rgba(29,25,51,.9);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;box-shadow:0 14px 30px rgba(0,0,0,.35);animation:floaty 5s ease-in-out infinite}
-.float-card.a{right:6%;top:18%}.float-card.b{right:16%;top:52%;animation-delay:1.2s}.float-card.c{right:3%;top:68%;animation-delay:2.1s}
-/* WHY cards hide in RTL: they sit on the right, where the RTL hero heading STARTS, so they cover the heading's first words (seen in ur/ar screenshots); mirroring them left would cover the heading's tail instead on long headings. Same precedent as mobile (hidden <=900px): decorative only, tools stay linked elsewhere. */
-[dir="rtl"] .float-card{display:none}
-@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.float-card{position:absolute;background:rgba(29,25,51,.92);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13px;font-weight:700;box-shadow:0 16px 34px rgba(0,0,0,.35);animation:floaty 5.5s ease-in-out infinite;white-space:nowrap}
+/* DA-01 (Phase C): the float-cards live in the .orbit row below the
+ * search chips (design §01), not pinned to the hero's right edge.
+ * Positions / rotations / delays are the design's; --rot is consumed
+ * by the floaty keyframes below. */
+.float-card.fc1{left:4%;top:8px;--rot:-2deg}
+.float-card.fc2{left:26%;top:52px;--rot:1.5deg;animation-delay:.7s}
+.float-card.fc3{left:50%;top:2px;--rot:-1deg;animation-delay:1.3s}
+.float-card.fc4{right:22%;top:56px;--rot:2deg;animation-delay:.4s}
+.float-card.fc5{right:3%;top:6px;--rot:-1.5deg;animation-delay:1.8s}
+/* WHY the RTL hide is gone: the old right-edge cards covered the RTL
+ * hero heading's first words, so they were hidden in RTL. The orbit
+ * sits BELOW the heading in normal flow, so it cannot cover it — the
+ * cards show in RTL too. */
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--rot,0deg))}50%{transform:translateY(-11px) rotate(var(--rot,0deg))}}
 /* B59: tools marquee strip (moved here from css/polish.css §31, which no
  * page loads — the dead copy there is removed, so exactly one live copy
  * exists). CSS transform only, no JS ticker. The track holds two
@@ -125,12 +135,24 @@ section.block{padding:44px 0}
  * and below the hero h1 floor (40px); the Excel's suggested 32px would
  * have equalled h2, so the value is adjusted per its own allowance.
  * .hero h1 keeps its clamp (higher specificity). */
-h1{font-size:36px;line-height:1.15;margin:0 0 12px}
-h2{font-size:32px;line-height:1.2;margin:0 0 14px}
-h3{font-size:21px;margin:22px 0 8px}
+/* N01 (Phase C) + design §02: fluid heading scale. Desktop maxima are
+ * UNCHANGED (36/32/21px — the same values as before, so desktop is
+ * pixel-identical); the clamp floors shrink headings on small screens
+ * where fixed 36px was oversized. Display type uses the Sora stack
+ * (name only — Sora is self-hosted in Phase 2, no external request;
+ * renders as system-ui until then). Letter-spacing per design §02. */
+h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 12px;font-family:var(--font-display);letter-spacing:-.02em}
+h2{font-size:clamp(24px,3.5vw,32px);line-height:1.2;margin:0 0 14px;font-family:var(--font-display);letter-spacing:-.02em}
+h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-display);letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);transition:transform .15s,border-color .15s,box-shadow .15s}
-.card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.25)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);box-shadow:0 10px 34px rgba(23,20,46,.10);transition:transform .15s,border-color .15s,box-shadow .15s}
+.card:hover{transform:translateY(-6px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.22)}
+/* N04 (Phase C): a revealed card's .reveal.in{transform:none} (0,2,0)
+ * ties .card:hover (0,2,0) but sits later in the file, so it used to
+ * swallow the hover lift on every .reveal card (the homepage tool
+ * cards). This higher-specificity rule restores the -6px lift on a
+ * revealed card; border + shadow already came through on hover. */
+.card.reveal.in:hover{transform:translateY(-6px)}
 .card:active{transform:translateY(-1px)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
@@ -230,8 +252,21 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 @keyframes dkthink{0%,100%{opacity:.25;transform:none}50%{opacity:1;transform:translateY(-2px)}}
 #chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
 #chat-log{padding:14px 18px;max-height:280px;overflow:auto}
-.msg{margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--bg)}
-.msg.bot{border-left:3px solid var(--violet)}
+/* N14 (Phase C): long unbroken strings (URLs, emails) wrap instead of
+ * overflowing their container. Targeted only — the three places that
+ * render user-controlled long strings: Doki chat bubbles (.msg, whose
+ * answers can contain long source URLs), the referral link
+ * (#ref-link, a long URL in <code>), and the read-only profile email
+ * fields. No global rule: headings/nav must keep their normal wrapping. */
+/* N07 (Phase C): Doki chat bubbles follow the design (§06) — the user
+ * bubble is violet with white text and the bottom-right corner
+ * tightened; the bot bubble (below) is surface2 with the bottom-left
+ * corner tightened. The old bot left-border is gone: the background
+ * colour now distinguishes bot from user (the design has no border). */
+.msg{margin:8px 0;padding:10px 12px;border-radius:14px 14px 4px 14px;background:var(--violet);color:var(--on-accent);overflow-wrap:anywhere}
+#ref-link{overflow-wrap:anywhere}
+#acct-email-ro,#prof-email-ro{overflow-wrap:anywhere}
+.msg.bot{background:var(--surface2);color:var(--text);border-radius:14px 14px 14px 4px}
 #chat-form{display:flex;gap:4px;padding:12px 10px;border-top:1px solid var(--line)}
 #chat-form input{flex:1;min-width:0;padding:12px 8px}
 /* T031: the Send button used the global .btn padding (12px 22px, ~137px
@@ -259,12 +294,12 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
   #chat-panel{right:12px;max-width:calc(100vw - 24px)}
   #chat-log{max-height:38vh}
 }
-.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer}
+.chip{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:5px 11px;margin:3px;text-decoration:none;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;transition:transform .15s,border-color .15s,color .15s}
 /* B54: quick-search chips under the homepage search field (same .chip
  * component as /tools/; the row is a plain <p> so it wraps on mobile). */
 .search-chips{margin:12px 0 0}.search-chips .chip{margin:3px 3px 3px 0}
-.chip:hover{border-color:var(--amber);color:var(--amber)}
-.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
+.chip:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
 .passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
@@ -285,7 +320,14 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * four stats; each .pg-stat keeps its number glued to its label. */
 .pg-stats-row{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}
 .pg-stat{white-space:nowrap}
-@media(max-width:900px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}.grid{grid-template-columns:repeat(2,1fr)}.float-card{display:none}.footgrid{grid-template-columns:1fr}}
+@media(max-width:1000px){.navlinks{display:none;flex-direction:column;width:100%}.navlinks.open{display:flex}.navtoggle{display:block}}
+/* N05 (Phase C): the hamburger band moved 900px -> 1000px. The header
+ * nav ("Referral Earnings" last) fits on one line only at >=1000px even
+ * after the profile-menu nesting fix; below that the full nav wraps to
+ * two lines, so the hamburger (same links, same menu) takes over.
+ * The grid / float-card / footgrid rules stay at 900px — they are
+ * content layout, not navigation, and must not move with the nav. */
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.footgrid{grid-template-columns:1fr}}
 /* T036 (P5-DES-08): the hero clamp's 40px floor is too large at 320-360px
  * (3 lines with "need" widowed). At <=600px the floor drops to 32px
  * (9vw: 32px at 360px, 35px at 390px, capped at 40px above ~444px). */
@@ -502,7 +544,7 @@ input,select,textarea{background:#fff!important;color:#000!important}
  * Finger zones are tinted subtly so the learner can see which hand
  * owns each key; .next is the strong highlight for the current key. */
 .kb { display: flex; flex-direction: column; gap: 4px; max-width: 640px; }
-.kb-row { display: flex; gap: 4px; }
+.kb-row { display: flex; gap: 4px; min-width: 0; }
 .kb .key {
   flex: 1 1 0; min-width: 0; text-align: center; padding: 8px 2px;
   border: 1px solid var(--line); border-radius: 6px;
@@ -510,6 +552,18 @@ input,select,textarea{background:#fff!important;color:#000!important}
 }
 .kb .key.wide { flex-grow: 2; }
 .kb .key.space { flex-grow: 8; }
+/* N20 (Phase C / REG-003): the keyboard fits small screens. The row's
+ * min-width:0 (above) lets it shrink below its 389px min-content; at
+ * <=480px the keys also get smaller so the long word labels
+ * (Backspace/Enter/Shift) fit their share — wide keys take 3 shares
+ * instead of 2, and any residual label overflow clips cleanly inside
+ * the key (ellipsis) instead of spilling out of it. The key layout,
+ * order, finger zones and behaviour are unchanged. */
+@media(max-width:480px){
+  .kb .key{font-size:.8rem;padding:8px 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kb .key.wide{flex-grow:3}
+  .kb-row{gap:3px}
+}
 /* Finger-zone fills live in the F1 block below (surface vs surface2) —
  * the pale literals here were dead (superseded by source order) and
  * are removed, not restyled. T032 (P5-DES-02). */
@@ -659,7 +713,7 @@ main.dk-enter-short{animation:dkpagein .2s ease-out}
 .nav{gap:12px}
 .navlinks{gap:2px}
 .navlinks a{padding:8px 10px}
-@media(max-width:1100px) and (min-width:901px){.navlinks a{padding:8px 8px;font-size:15px}.logo{font-size:19px}}
+@media(max-width:1100px) and (min-width:1001px){.navlinks a{padding:8px 8px;font-size:15px}.logo{font-size:19px}}
 .prof-sep{border:0;border-top:1px solid var(--line);margin:8px 0}
 .prof-menu .lang-btn{width:100%;justify-content:flex-start;text-align:left;border-radius:10px}
 .prof-menu .lang-menu{position:static;box-shadow:none;border:0;background:transparent;padding:4px 0 0;min-width:0}
@@ -750,3 +804,96 @@ transition:none!important}`), so these animations are covered. */
  * box touched the "DoKit" wordmark (measured gap 0px vs 10px in the header).
  * Restore flex + the same 10px gap for the footer logo only. */
 footer.site .logo{display:flex;align-items:center;gap:10px}
+
+/* =====================================================================
+ * DA-01 (Phase C — Design Alignment, design file §01): homepage hero
+ * rebuilt to the Phase 1 design. VISUAL ONLY — no markup IDs, classes,
+ * data attributes, i18n keys, links or JS behaviour change here (the
+ * DOM reorder + two extra cards live in index.html; the particle
+ * constellation lives in assets/js/main.js). This block is APPENDED at
+ * the end of the file on purpose: every rule here must beat the
+ * light-theme overrides mid-file ([data-theme="light"] ...) on equal
+ * specificity, because the hero is ALWAYS DARK in both themes.
+ * The new animations (drift, pulse, caretBlink, floaty) are covered by
+ * the two existing mechanisms — html.dk-paused (Pause button, style
+ * line ~329) pauses them, and the prefers-reduced-motion rule (~324)
+ * kills them outright — so no extra motion handling is needed here.
+ * ------------------------------------------------------------------ */
+/* Always-dark hero: scope the dark tokens onto .hero so the light
+ * theme's [data-theme="light"] vars do not leak in. Values are the
+ * live dark tokens from :root (not invented). */
+.hero{background:#12101F;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;color:#F4F2FF}
+/* The light theme swaps the H1 gradient to violet->gold (readable on
+ * light). The hero is always dark now, so that swap must not apply:
+ * same selector as the light rule, later in the file, so it wins.
+ * NOTE: the `background` shorthand resets background-clip to
+ * border-box, so the clip + transparent colour must be re-asserted
+ * in this same rule — without them the gradient renders as a solid
+ * block and the text turns invisible (seen in the light screenshot). */
+[data-theme="light"] .hero h1 .grad{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* Centred hero body, design max-width 860px. */
+.hero .hero-inner{max-width:860px;margin:0 auto;text-align:center}
+/* Eyebrow -> pill (design tag). The pulse dot is a ::before, NOT
+ * markup: data-i18n wipes the eyebrow's children on language change. */
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,76,241,.22);border:1px solid rgba(139,116,255,.45);color:#B7A6FF;border-radius:999px;padding:6px 14px;font-size:12.5px;letter-spacing:1.5px}
+.hero .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:#FFC531;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+/* Typed line (design): display font, white, min-height so the line
+ * does not jump as words change length; the caret blinks (design 1s). */
+.hero .type-line{font-family:var(--font-display);font-size:clamp(20px,3.2vw,30px);font-weight:700;color:#F4F2FF;min-height:1.35em;margin:14px 0 0}
+.hero .type-line #type-rotator{color:#F4F2FF;border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite}
+@keyframes caretBlink{0%,49%{border-right-color:var(--amber)}50%,100%{border-right-color:transparent}}
+/* Lead (design): smaller, centred, 600px. */
+.hero p.lead{font-size:16.5px;max-width:600px;margin:12px auto 0;color:#B9B3E0}
+/* Searchbox -> glass (design). Scoped to .hero so the FAQ searchbox
+ * (same class, theme-aware) is untouched. The input is transparent
+ * and borderless; focus is shown by the :focus-within ring. */
+.hero .searchbox{margin:22px auto 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:7px;backdrop-filter:blur(8px)}
+.hero .searchbox:focus-within{border-color:#8B74FF;box-shadow:0 0 0 4px rgba(108,76,241,.28)}
+.hero .searchbox .search-field input{background:transparent;border:0;color:#F4F2FF;font-size:15px;padding:11px 12px;border-radius:10px}
+.hero .searchbox .search-field input::placeholder{color:#9B94C4}
+.hero .searchbox .search-field input:focus{outline:0;box-shadow:none}
+.hero .searchbox .btn{padding:11px 18px;flex:none}
+.hero .searchbox .btn.ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+/* Search chips -> glass (design), centred row, amber hover + lift. */
+.hero .search-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:16px 0 0}
+.hero .search-chips .chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#F4F2FF;font-size:12.5px;padding:6px 12px}
+.hero .search-chips .chip:hover{background:rgba(255,197,49,.16);border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+/* Orbit row (design): the float-cards sit in normal flow below the
+ * chips, so they can never cover the heading (this is what lets the
+ * RTL hide and the <=900px hide be removed). Height 118px, 96px on
+ * small screens with the two middle cards hidden. */
+.orbit{position:relative;height:118px;margin-top:30px}
+@media(max-width:760px){.orbit{height:96px}.float-card.fc2,.float-card.fc4{display:none}}
+/* At phone widths the three remaining cards (fc1/fc3/fc5, each
+ * ~170-220px wide with their preview line) cannot sit side by side
+ * in a ~350px orbit without overlapping, so they stack vertically
+ * instead (preview hidden, so each card is just icon + name). */
+@media(max-width:480px){.orbit{height:auto;display:flex;flex-direction:column;align-items:center;gap:8px}.orbit .float-card{position:static}.orbit .float-card .float-preview{display:none}}
+/* Stats -> glass hstat (design). Content unchanged (B56: no counts). */
+.hero .stats{margin-top:26px;justify-content:center;flex-wrap:wrap;gap:12px}
+.hero .stats>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 18px}
+.hero .stats b{display:block;font-size:19px;color:#F4F2FF}
+.hero .stats span{font-size:11.5px;color:#B9B3E0}
+/* Glow drift (design): violet 14s, amber 18s, gentle translate only. */
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(28px,18px)}}
+
+/* =====================================================================
+ * N03 + N07 (Phase C — Design Alignment, design file §04/§05):
+ * shared design-system deltas that apply site-wide. VISUAL ONLY.
+ * ------------------------------------------------------------------ */
+/* N07: content links get the design's underline sweep (left -> right
+ * on hover). Scoped to links inside <p> / <li> in <main> only — nav,
+ * buttons (.btn) and whole-card links (.cardlink) keep their own
+ * styles. The violet colour still identifies links at rest (the
+ * sweep replaces the static underline, it does not add a second one). */
+main p a:not(.btn):not(.cardlink),main li a:not(.btn):not(.cardlink){text-decoration:none;background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s}
+main p a:not(.btn):not(.cardlink):hover,main li a:not(.btn):not(.cardlink):hover{background-size:100% 2px}
+/* N03: the pricing Pro card is raised with an amber "Most popular"
+ * marker (design §04 pricing wireframe). The "Coming soon" tag stays
+ * — Pro is genuinely not on sale yet. The raised card lifts a little
+ * more on hover; the base .card hover lift (-6px, N04) still applies
+ * to the other cards. */
+.card.popular{transform:translateY(-8px);border-color:var(--violet);box-shadow:0 18px 40px rgba(var(--violet-rgb),.28)}
+.card.popular:hover{transform:translateY(-10px)}
+.card .tag.popular-tag{background:var(--amber);color:var(--ink);border-color:var(--amber)}

@@ -66,7 +66,8 @@ function closeAllMenus(exceptMenuId){
   });
   // T039 (P5-DES-13): #nav-links is an ancestor of the nav dropdowns,
   // so the ancestor rule above applies here too — closing the mobile
-  // nav would hide the dropdown being opened (<=900px hamburger band).
+  // nav would hide the dropdown being opened (<=1000px hamburger band,
+  // N05 Phase C: band moved 900px -> 1000px).
   if (exceptMenuId !== 'nav-links') {
     var navLinks = document.getElementById('nav-links');
     if (!(exceptEl && navLinks && navLinks.contains(exceptEl))) { dkCloseNavLinks(); }
@@ -86,6 +87,15 @@ try{
   });
 }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 // reveal on scroll
+// N08 (Phase C): stagger the reveal 60ms per item within its parent
+// (design §05), capped at 300ms so long lists do not trail absurdly.
+// The delay is set once here; the observer (or the fallback below)
+// only adds .in — the CSS transition does the rest.
+document.querySelectorAll('.reveal').forEach(function(el){
+  var sibs = el.parentElement ? el.parentElement.querySelectorAll('.reveal') : [];
+  var idx = Array.prototype.indexOf.call(sibs, el);
+  if(idx > 0){ el.style.transitionDelay = (Math.min(idx, 5) * 60) + 'ms'; }
+});
 if('IntersectionObserver' in window && !reduced){
   var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold: .12});
   document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
@@ -216,20 +226,39 @@ var framePending = false;
 if(cv){
   var ctx = cv.getContext('2d'), W, H, parts = [];
   function size(){ var r = cv.parentElement.getBoundingClientRect(); W = cv.width = r.width; H = cv.height = r.height; }
-  function mk(){ parts = []; var n = Math.min(70, Math.floor(W / 14));
-    for(var i = 0; i < n; i++){ parts.push({x: Math.random()*W, y: Math.random()*H, r: 1 + Math.random()*2.2, vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, c: Math.random() < .8 ? '108,76,241' : '255,197,49'}); } }
-  function draw(){
+  // DA-01 (Phase C): the hero particles are the design's constellation
+  // (§01) — violet-only dots (rgba(185,170,255,.8), r .6-2.4, at most
+  // 70, one per 16px of width) joined by faint lines when two dots are
+  // closer than d^2 < 11000. The line alpha fades with distance.
+  function mk(){ parts = []; var n = Math.min(70, Math.floor(W / 16));
+    for(var i = 0; i < n; i++){ parts.push({x: Math.random()*W, y: Math.random()*H, r: .6 + Math.random()*1.8, vx: (Math.random()-.5)*.35, vy: (Math.random()-.5)*.35, c: '185,170,255'}); } }
+  // paint() draws one frozen frame (lines + dots) at the current
+  // positions; draw() moves the dots first, then paints. The two
+  // static spots below (resize-while-paused, reduced-motion) call
+  // paint() so a frozen canvas looks like a paused animation, not a
+  // different picture — and so the line logic exists exactly once.
+  function paint(){
     ctx.clearRect(0, 0, W, H);
+    var i, j, a, b, dx, dy, d2;
+    for(i = 0; i < parts.length; i++){ for(j = i + 1; j < parts.length; j++){
+      a = parts[i]; b = parts[j]; dx = a.x - b.x; dy = a.y - b.y; d2 = dx*dx + dy*dy;
+      if(d2 < 11000){ ctx.strokeStyle = 'rgba(139,116,255,' + ((1 - d2/11000)*.35).toFixed(3) + ')'; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    } }
+    parts.forEach(function(p){
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(' + p.c + ',.8)'; ctx.fill();
+    });
+  }
+  function draw(){
     parts.forEach(function(p){
       p.x += p.vx; p.y += p.vy;
       if(p.x < 0 || p.x > W) p.vx *= -1; if(p.y < 0 || p.y > H) p.vy *= -1;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = 'rgba(' + p.c + ',.8)'; ctx.fill();
     });
+    paint();
     framePending = false;
     if(!paused && !reduced && !tabHidden){ framePending = true; requestAnimationFrame(draw); }
   }
   size(); mk(); draw();
-  window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); } });
+  window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ paint(); } });
   var pb = document.getElementById('pause-motion');
   if(pb){
     // B58: keep the label via its data-i18n key (not a bare textContent
@@ -255,7 +284,7 @@ if(cv){
     tabHidden = document.visibilityState === 'hidden';
     if(!tabHidden && !paused && !reduced && !framePending){ framePending = true; requestAnimationFrame(draw); }
   });
-  if(reduced){ ctx.clearRect(0,0,W,H); parts.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba('+p.c+',.8)'; ctx.fill(); }); }
+  if(reduced){ paint(); }
 }
 // WHY (i18n): JS-rendered strings (rotator words, chat link labels)
 // must translate like tagged HTML. dkT() reads the deployed dict via
