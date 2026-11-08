@@ -379,6 +379,11 @@ body.has-sticky-cta{padding-bottom:84px}
 .tour-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:420px;width:calc(100vw - 40px);z-index:96}
 /* Tool filter chips + picker chips (shared active state). */
 .chip.active{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
+/* B78: in-page typing sub-nav — the same .chip component as /tools/
+ * (B62), not a new component. The current mode reuses .chip.active +
+ * aria-current="page". The strip is the in-page complement to the
+ * header Typing dropdown, which it does not duplicate. */
+.typing-subnav{display:flex;flex-wrap:wrap;margin:0 0 16px}
 .pick.sel{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
 /* Typing finger keyboard: zones tint the key's bottom edge; the
    active key (current character) gets the amber fill. */
