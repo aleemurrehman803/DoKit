@@ -169,6 +169,8 @@ input[type=file]{width:100%;padding:10px 0}
  * .guides-grid only; the shared .grid is untouched. */
 .guides-grid{grid-auto-rows:1fr}
 .guides-grid .card{height:100%}
+/* B84: reading-time label on guide cards + articles — small muted line. */
+.guide-readtime{font-size:14px;margin:6px 0 0}
 /* T090 (P5-VIS-15): the native file-input button renders white in Chromium's
  * dark mode — the only white control on the dark tool pages (the "empty white
  * box" on the resizer). Style it like the site's ghost buttons. */
