@@ -245,6 +245,18 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
 .statnum{font-size:26px;font-weight:800}
+/* B77: accuracy dial — an SVG ring around the live accuracy % (r=15.9155
+ * makes the circumference exactly 100, so stroke-dashoffset = 100-acc).
+ * The % text stays beside the ring, so colour is never the only signal.
+ * Thresholds reuse the brand tokens: >=95% good (green), 90-94% warn
+ * (amber), <90% bad (red). Reduced-motion users get a static ring: the
+ * global reduced-motion rule already kills the transition. */
+.acc-ring{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
+.acc-ring-svg{width:30px;height:30px;flex:none}
+.acc-ring-bg{fill:none;stroke:var(--line);stroke-width:3}
+.acc-ring-fg{fill:none;stroke:var(--good);stroke-width:3;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:0;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .2s,stroke .2s}
+.acc-ring[data-acc=warn] .acc-ring-fg{stroke:var(--amber)}
+.acc-ring[data-acc=bad] .acc-ring-fg{stroke:var(--bad)}
 /* T027 (P5-VIS-04) — progress stats row: flex with a real gap between the
  * four stats; each .pg-stat keeps its number glued to its label. */
 .pg-stats-row{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline}

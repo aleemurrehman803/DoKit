@@ -45,7 +45,20 @@ function stats(){
   // show them side by side without inventing either value.
   var gross = elapsedOk && mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
   var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
-  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; return {wpm: wpm, acc: acc, correct: correct, gross: gross};
+  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; syncAccRing(acc); return {wpm: wpm, acc: acc, correct: correct, gross: gross};
+}
+/* B77: accuracy dial — the ring fills in proportion to the same live
+ * acc value, on the same keystroke cadence as the text (stats() is
+ * called per keystroke by T085, and reset() calls this too). The %
+ * text stays beside the ring, so colour is never the only signal.
+ * Thresholds: >=95 good (green), 90-94 warn (amber), <90 bad (red) —
+ * the existing --good/--amber/--bad tokens, no new colours. */
+function syncAccRing(acc){
+  var ring = document.getElementById('ty-acc-ring'), arc = document.getElementById('ty-acc-arc');
+  if(!ring || !arc){ return; }
+  arc.style.strokeDashoffset = String(100 - acc);
+  ring.setAttribute('aria-valuenow', String(acc));
+  ring.setAttribute('data-acc', acc >= 95 ? 'good' : (acc >= 90 ? 'warn' : 'bad'));
 }
 // HOOKS (referral-complete §7): stamp the signed-in user's doc with
 // lastTestAt and, when set, clear coinsFrozen (a finished test proves
@@ -211,7 +224,7 @@ function finish(){
 function reset(newPassage){
   if(newPassage) passage = newPassage;
   typed = ''; started = false; done = false; pasted = false; clearInterval(timer); left = limit;
-  input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%';
+  input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%'; syncAccRing(100);
   resEl.innerHTML = ''; render(); input.focus();
 }
 // HOOKS (referral-complete §7): pasting is allowed in the typing
