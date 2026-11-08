@@ -232,12 +232,9 @@ body, .site-header, .site-footer, .card, .tool-card, .faq-item, .btn {
 }
 
 /* ============ 31. Logo marquee ============ */
-.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.marquee-track { display: flex; gap: var(--sp-8, 2rem); inline-size: max-content; animation: dk-marquee 28s linear infinite; align-items: center; }
-.marquee:hover .marquee-track { animation-play-state: paused; }
-@keyframes dk-marquee { to { transform: translateX(-50%); } }
-[dir="rtl"] .marquee-track { animation-name: dk-marquee-rtl; }
-@keyframes dk-marquee-rtl { to { transform: translateX(50%); } }
+/* B59: marquee rules MOVED to assets/css/style.css (the loaded
+   stylesheet) — this file is loaded by 0 pages, so the copy here was
+   dead. Do not re-add marquee rules here; style.css is the one copy. */
 
 /* ============ 32. Click ripple ============ */
 .ripple-ink {
@@ -440,7 +437,7 @@ mark.search-hit { background: #ffe58a; color: inherit; border-radius: 2px; paddi
 
 /* ============ Reduced motion: kill all polish animation ============ */
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track, .anim-gradient, .float-shape, .skeleton-shimmer::after, .skeleton::after,
+  .anim-gradient, .float-shape, .skeleton-shimmer::after, .skeleton::after,
   .typewriter-caret, .spinner-ring, .check-anim circle, .check-anim path {
     animation: none !important;
   }
