@@ -27,6 +27,21 @@
     if (n < 1048576) { return (n / 1024).toFixed(1) + ' KB'; }
     return (n / 1048576).toFixed(2) + ' MB';
   }
+  /* B74 savings: percentage change from original to output bytes,
+   * computed from the ACTUAL blobs, never estimates. Negative
+   * savings (output larger than the original) are shown plainly,
+   * never clamped to 0% or hidden. */
+  function savingsPct(orig, out) {
+    if (!orig || orig <= 0) { return 0; }
+    return Math.round((orig - out) / orig * 100);
+  }
+  function savingsText(orig, out) {
+    var pct = savingsPct(orig, out);
+    var word = pct >= 0
+      ? (window.dkT ? window.dkT('rsv_1415', 'smaller') : 'smaller')
+      : (window.dkT ? window.dkT('rsv_1416', 'larger') : 'larger');
+    return Math.abs(pct) + '% ' + word;
+  }
   function downloadBlob(blob, name) {
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -153,8 +168,16 @@
           cpResult.innerHTML = '';
           var p = document.createElement('p');
           p.textContent = (window.dkT ? window.dkT('rsv_1197', 'Manual quality') : 'Manual quality') + ' ' + Math.round(cpQuality() * 100)
-            + '%: ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(file.size) + ')';
+            + '%: ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(file.size) + ', ' + savingsText(file.size, blob.size) + ')';
           cpResult.appendChild(p);
+          /* B74 gotcha fix: the manual slider can silently ENLARGE a
+           * file (a small flat PNG re-encoded as JPEG). Say so. */
+          if (blob.size > file.size) {
+            var w = document.createElement('p');
+            w.className = 'err';
+            w.textContent = (window.dkT ? window.dkT('rsv_1418', 'Warning: the output is larger than the original.') : 'Warning: the output is larger than the original.');
+            cpResult.appendChild(w);
+          }
           var d = document.createElement('button');
           d.className = 'btn'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download');
           d.addEventListener('click', function () {
@@ -257,10 +280,10 @@
          * "Closest possible" line — rsv_0937/rsv_0940). */
         function finish(blob, extra) {
           if (!blob) { fail(window.dkT ? window.dkT('rsv_1211', '\u2014 failed.') : '\u2014 failed.'); return; }
-          item.blob = blob; item.done = true;
+          item.blob = blob; item.outSize = blob.size; item.done = true;
           li.innerHTML = '';
           var sp2 = document.createElement('span');
-          sp2.textContent = f.name + ' \u2192 ' + fmt(blob.size) + (extra || '') + ' ';
+          sp2.textContent = f.name + ' \u2192 ' + fmt(blob.size) + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(f.size) + ', ' + savingsText(f.size, blob.size) + ')' + (extra || '') + ' ';
           item.sp = sp2;
           var d = document.createElement('button');
           d.className = 'btn ghost'; d.textContent = (window.dkT ? window.dkT('rsv_0972', 'Download') : 'Download');
@@ -314,9 +337,22 @@
    * hook B70 calls after every queue change. */
   var cpZipBtn = $('ta-cp-zip');
   function cpBatchAfterChange() {
-    if (!cpZipBtn) { return; }
-    var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
-    cpZipBtn.hidden = done.length < 2;
+    if (cpZipBtn) {
+      var done = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      cpZipBtn.hidden = done.length < 2;
+    }
+    /* B74 batch total: sums the ACTUAL bytes of finished items, and
+     * the per-file savings above. Empty / no finished items yet:
+     * the line stays blank. */
+    var totalEl = $('ta-cp-batch-total');
+    if (totalEl) {
+      var fin = cpBatchItems.filter(function (it) { return it.done && it.blob; });
+      if (!fin.length) { totalEl.textContent = ''; return; }
+      var oTot = 0, uTot = 0;
+      fin.forEach(function (it) { oTot += it.origSize || 0; uTot += it.outSize || 0; });
+      totalEl.textContent = (window.dkT ? window.dkT('rsv_1417', 'Batch total') : 'Batch total') + ': ' + fmt(uTot)
+        + ' (' + (window.dkT ? window.dkT('rsv_1204', 'original') : 'original') + ' ' + fmt(oTot) + ', ' + savingsText(oTot, uTot) + ')';
+    }
   }
   if (cpZipBtn) {
     cpZipBtn.addEventListener('click', function () {
