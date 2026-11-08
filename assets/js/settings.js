@@ -183,9 +183,18 @@
       });
     });
 
-    /* Profile + Account need sign-in; guests get the note + disabled forms. */
-    whenReady(function () {
-      var user = currentUser();
+    /* Profile + Account need sign-in; guests get the note + disabled forms.
+     * WHY a listener, not a one-time check: DKA.ready() means only "the
+     * Firebase SDK is initialised" (firebase.apps.length), NOT "the auth
+     * state has resolved". Session restore takes seconds, so a one-time
+     * currentUser() read here is null even for a signed-in user — and
+     * the password form stayed disabled forever (live C18, Nov 8 2026:
+     * "Sign in to change these settings" while signed in). Listening to
+     * onAuthStateChanged re-runs this the moment auth resolves (and
+     * again on sign-out), so the form enables for signed-in users and
+     * stays disabled for guests. */
+    var authStateBound = false;
+    function applyAuthState(user) {
       var guest = !user;
       if (guestBox) { guestBox.hidden = !guest; }
       setFormDisabled(nameForm, guest);
@@ -209,6 +218,19 @@
       } catch (e) {
         if (nameInput) { nameInput.value = user.displayName || ''; }
       }
+    }
+    whenReady(function () {
+      applyAuthState(currentUser());
+      /* Re-apply when auth resolves or changes: the one-time read above
+       * can still be null for a signed-in user whose session has not
+       * restored yet. Single subscription, guarded. */
+      try {
+        var a = (window.DKA && window.DKA.auth()) || null;
+        if (a && typeof a.onAuthStateChanged === 'function' && !authStateBound) {
+          authStateBound = true;
+          a.onAuthStateChanged(function (user) { applyAuthState(user); });
+        }
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
     });
 
     if (nameForm) {
