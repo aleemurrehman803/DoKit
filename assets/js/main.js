@@ -191,6 +191,21 @@ window.dkCloseAllMenus = closeAllMenus;
 // mobile nav
 var t = document.getElementById('nav-toggle'), l = document.getElementById('nav-links');
 if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) { closeAllMenus('nav-links'); } }); }
+// F32 (rec 32): the mobile nav previously closed ONLY via its toggle
+// (or by opening another menu) — an outside tap or Escape left it open
+// over the page. It now joins the central menu registry (so opening any
+// other menu still closes it, via closeAllMenus) AND gets the same two
+// closers every bindMenu menu has: an outside-click closer (ignoring
+// clicks on the toggle itself and inside the nav, so the dropdown
+// carets keep working) and an Escape closer that returns focus to the
+// toggle, mirroring bindMenu's returnFocus pattern.
+if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu('nav-links', dkCloseNavLinks); }
+document.addEventListener('click', function (e) {
+  if (l && l.classList.contains('open') && !l.contains(e.target) && e.target !== t && !t.contains(e.target)) { dkCloseNavLinks(); }
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && l && l.classList.contains('open')) { dkCloseNavLinks(); if (t) { t.focus(); } }
+});
 // active nav
 try{
   var here = new URL(window.location.href).pathname.replace(/\/index\.html$/, '/');

@@ -1270,3 +1270,63 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
  * crop — the canvas corners stay exactly as drawn). */
 #refx-poster-holder{transition:transform var(--dur-std) ease,box-shadow var(--dur-std) ease}
 #refx-poster-holder:hover{transform:scale(1.01);box-shadow:0 12px 32px rgba(0,0,0,.45)}
+
+/* F31 — Complete Responsive Grid Refinement (rec 31).
+ * WHY these bands, appended late so they win over the legacy 900/600
+ * breakpoints at equal specificity: the prompt's matrix is 320-479: 1
+ * col / 480-767: 1-2 / 768-1023: 2-3 / 1024-1439: 3-4 / 1440+: 4+.
+ * The old rules gave 1 col through 600px and capped desktop at 3 —
+ * the matrix is met everywhere except 1440+ (was 3, now 4). The
+ * .footgrid rule inside the legacy <=900px block is untouched. The All
+ * Tools panel grid drops to 2 cols on small phones so its tiles stay
+ * tappable; .ref-grid (auto-fit minmax 180px) already follows the
+ * matrix on its own and is left alone. */
+@media(min-width:1440px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:1023px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:479px){.grid{grid-template-columns:1fr}.app-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* F32 — Mobile Navigation Optimization (rec 32).
+ * WHY the min-height lives in the <=1000px band, not the global rule:
+ * desktop nav links must stay compact — only the stacked mobile menu
+ * gets 44px rows. The links become flex rows so the label centres
+ * vertically in its 44px row. (The outside-tap + Escape closers are
+ * the JS half of this item, in main.js next to the navtoggle binding.) */
+@media(max-width:1000px){.navlinks a{min-height:44px;display:flex;align-items:center}}
+
+/* F34 — Dashboard Mobile Table Adaptation (rec 34).
+ * WHY this one rule: every static table on the site already sits in a
+ * .tablewrap (overflow-x:auto) — verified. The ONE exception is the
+ * admin-plus tables (js/pages/admin-plus.js), which render into
+ * .adm-tablewrap — a class with NO CSS rule at all, so those tables
+ * overflowed the page at 390px with no way to scroll. This gives them
+ * the same controlled horizontal scroll (plus iOS momentum scrolling).
+ * No columns or data are hidden — the table scrolls inside its wrapper
+ * and the page itself never scrolls sideways. */
+.adm-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* F35 — Safe-Area & Touch Target Optimization (rec 35).
+ * WHY min-height/min-width, not padding: the visual design (padding,
+ * type, spacing) stays exactly as designed — only the hit area grows
+ * to ~44px. The sizes below are LIVE measurements at 390px, not CSS
+ * estimates (the map's 51.2px .btn estimate was wrong — the real .btn
+ * is 41px; the real .navtoggle is 42x40). The FAQ summary grows via
+ * symmetric padding instead of min-height so its disclosure triangle
+ * survives (display:flex would hide the marker). Safe-area: the
+ * env(safe-area-inset-bottom) offsets already exist on the sticky CTA,
+ * .dkf-sticky-action and the FAB/panel (verified in code — headless
+ * Chromium cannot emulate a device safe-area, so that half is a code
+ * proof, not a rendered check). EXEMPT by design: inline text links
+ * (.cardlink 24px, footer links 32px, .footbase links) — 24px+ already
+ * meets WCAG 2.2 AA for inline links, and 44px rows would wreck card
+ * and footer typography; the hidden-until-focused .skip link; the
+ * 43px float-card (a whole-card target, 1px short of the aim). The
+ * header icon buttons (.app-btn, .dk-avatarbtn, .nav-drop-caret) get
+ * min-height ONLY, not min-width: the desktop header has under 6px of
+ * slack at 1440px (bisect-proven — a 44px width on the two nav carets
+ * wrapped the whole nav to two lines, nav 43px -> 89px). Their 42px
+ * width already passes WCAG 2.2 AA (24px) and is 2px short of the aim;
+ * breaking the desktop header for 2px would be the wrong trade. */
+.btn,.chip,.pick,.navtoggle,.app-btn,.dk-avatarbtn,.lang-btn,.theme-btn,.nav-drop-caret,.tab-btn,.fav-star,.foot-lang button,.lang-menu li,.prof-menu a,.prof-menu button.prof-row{min-height:44px}
+.navtoggle,.fav-star,.lang-btn,.theme-btn{min-width:44px}
+.faq summary{padding-top:9px;padding-bottom:9px}
+.logo{min-height:44px}
