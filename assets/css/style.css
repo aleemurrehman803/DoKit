@@ -1098,3 +1098,85 @@ button:not(.btn):active svg{transform:scale(.94)}
 .st-paid{background:rgba(139,116,255,.18);color:var(--violet2)}
 [data-theme="light"] .st-pending{color:var(--gold-text)}
 [data-theme="light"] .st-paid{color:var(--violet)}
+
+/* F14 — Aurora Hero Background (rec 14).
+ * WHY add, not recolour: the violet (.a) + amber (.b) glows are the
+ * accepted DA-01 look — the aurora's missing third tone (cyan) is added
+ * as .glow.c instead of repainting .b. Same drift language (22s,
+ * alternate-reverse), low opacity so the headline + CTAs keep full
+ * contrast. Mobile (<=600px): all glows go static + lighter (the
+ * prompt's lighter/static mobile version). The hero stays always-dark,
+ * so no light-theme change is needed. */
+.glow.c{width:380px;height:380px;background:#22D3EE;opacity:.16;top:30%;right:-100px;animation:drift 22s ease-in-out infinite alternate-reverse}
+@media(max-width:600px){.glow{animation:none}.glow.a{opacity:.3}.glow.b{opacity:.15}.glow.c{opacity:.1;animation:none}}
+
+/* F15 — Subtle Star Particle Background (rec 15) — VERIFIED, one hardening.
+ * The constellation already meets the spec (main.js: <=70 particles, one
+ * per 16px of width, drift +-0.175px/frame, violet dots + faint lines,
+ * static frame when reduced-motion, Pause button + tab-hidden auto-pause,
+ * aria-hidden canvas). The only gap was implicit: the canvas had no
+ * pointer-events rule, so the guarantee "never interferes with
+ * interaction" rested on DOM order alone. This makes it explicit. */
+#hero-canvas{pointer-events:none}
+
+/* F16 — Gradient Heading Typography (rec 16).
+ * WHY a class + two selectors: the hero H1 already gradients selected
+ * words (.grad, DA-01 — FROZEN, untouched). The remaining scope is the
+ * Tools section titles (#tools h2 on the homepage; .grad-text on the
+ * /tools/ H1) and the Typing result highlights (#ty-wpm / #ty-acc
+ * numbers). Same 92deg violet->amber gradient as the hero. Light theme:
+ * the amber end is unreadable on light, so it becomes --gold-text
+ * (mirrors the hero's light handling). No-clip fallback: solid violet2
+ * (readable in both themes). display:inline-block on the numbers so the
+ * clip + background apply cleanly to the inline <span>s. */
+.grad-text,#tools h2,#ty-wpm,#ty-acc{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ty-wpm,#ty-acc{display:inline-block}
+[data-theme="light"] .grad-text,[data-theme="light"] #tools h2,[data-theme="light"] #ty-wpm,[data-theme="light"] #ty-acc{background:linear-gradient(92deg,#6C4CF1,#8B74FF,var(--gold-text));-webkit-background-clip:text;background-clip:text;color:transparent}
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){.grad-text,#tools h2,#ty-wpm,#ty-acc{color:var(--violet2)}}
+
+/* F17 — Floating Gradient Orbs (rec 17).
+ * WHY ::before on #tools: the hero orbs already meet the spec (2 orbs,
+ * .glow, blur 90px, drift 14s/18s, pointer-events:none — verified), and
+ * section headers need an orb without new markup. One blurred violet
+ * orb, top-right of the Tools section, very slow drift (20s). Mobile:
+ * static + dimmer. Reduced-motion: the global rule kills the drift. */
+#tools{position:relative}
+#tools::before{content:"";position:absolute;top:-60px;right:4%;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(139,116,255,.16),transparent 70%);filter:blur(40px);pointer-events:none;animation:drift 20s ease-in-out infinite alternate}
+@media(max-width:600px){#tools::before{animation:none;opacity:.6}}
+
+/* F18 — Text Shimmer Highlight (rec 18).
+ * WHY two background layers: layer 1 is the resting look (hero gradient
+ * / solid text colour), layer 2 is a translucent white band that sweeps
+ * across once per 6s cycle (idle 0-70%, sweep 70-100%, then an invisible
+ * jump back — both end positions hide the band off-element, so the loop
+ * has no visible snap). Scoped to the hero .grad keyword + the first
+ * (featured) tool-card heading only — never every heading. The whole
+ * block sits inside @supports so browsers without background-clip:text
+ * keep the static gradient (hero fallback) / plain text (tool heading)
+ * instead of invisible text. Reduced-motion kills the sweep. */
+@supports ((background-clip:text) or (-webkit-background-clip:text)){
+.hero h1 .grad{background-image:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%),linear-gradient(100deg,transparent 42%,rgba(255,255,255,.65) 50%,transparent 58%);background-size:100% auto,200% auto;background-position:0 0,200% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:dkShimmer 6s ease-in-out infinite}
+[data-theme="light"] .hero h1 .grad{background-image:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%),linear-gradient(100deg,transparent 42%,rgba(255,255,255,.65) 50%,transparent 58%);background-size:100% auto,200% auto;background-position:0 0,200% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:dkShimmer 6s ease-in-out infinite}
+#tools .tool-card:first-child h3 a{background-image:linear-gradient(var(--text),var(--text)),linear-gradient(100deg,transparent 42%,rgba(255,197,49,.55) 50%,transparent 58%);background-size:100% auto,200% auto;background-position:0 0,200% 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:dkShimmer 6s ease-in-out infinite}
+}
+@keyframes dkShimmer{0%,70%{background-position:0 0,200% 0}100%{background-position:0 0,-200% 0}}
+
+/* F19 — Gradient Section Dividers (rec 19).
+ * WHY real divs, not section borders: a divider is content-adjacent
+ * decoration, and the homepage sections have no ids to hook per-section
+ * rules onto (except #tools, which already uses ::before for the F17
+ * orb). Three .sec-div divs sit in index.html (after hero, #tools,
+ * guides) — a 1px gradient line (violet->amber, fading at both ends)
+ * with a soft centre glow. No new sections, no layout change (1px). */
+.sec-div{height:1px;max-width:1120px;margin:0 auto;background:linear-gradient(90deg,transparent,rgba(139,116,255,.55) 20%,rgba(255,197,49,.55) 50%,rgba(139,116,255,.55) 80%,transparent);position:relative}
+.sec-div::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:220px;height:12px;background:radial-gradient(ellipse at center,rgba(255,197,49,.18),transparent 70%);pointer-events:none}
+
+/* F20 — Premium Footer Finish (rec 20).
+ * WHY so small: the top separator (gradient .footbase::before bar that
+ * widens on hover) and the link hover underline (F03 sweep) already
+ * exist and were verified. The remaining gap was the footer language
+ * buttons: they snapped with no transition. Now they fade + tint on
+ * hover like the rest of the footer. All links, legal text and content
+ * are untouched. */
+.foot-lang button{transition:background-color .15s,color .15s,border-color .15s}
+.foot-lang button:hover{background:rgba(255,197,49,.08)}
