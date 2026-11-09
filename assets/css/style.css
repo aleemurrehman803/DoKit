@@ -146,13 +146,13 @@ h2{font-size:clamp(24px,3.5vw,32px);line-height:1.2;margin:0 0 14px;font-family:
 h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-display);letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);box-shadow:0 10px 34px rgba(23,20,46,.10);transition:transform .15s,border-color .15s,box-shadow .15s}
-.card:hover{transform:translateY(-6px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.22)}
+.card:hover{transform:translateY(-3px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.22)}
 /* N04 (Phase C): a revealed card's .reveal.in{transform:none} (0,2,0)
  * ties .card:hover (0,2,0) but sits later in the file, so it used to
  * swallow the hover lift on every .reveal card (the homepage tool
  * cards). This higher-specificity rule restores the -6px lift on a
  * revealed card; border + shadow already came through on hover. */
-.card.reveal.in:hover{transform:translateY(-6px)}
+.card.reveal.in:hover{transform:translateY(-3px)}
 .card:active{transform:translateY(-1px)}
 .card h3{margin-top:0}.card p{color:var(--muted)}
 .card a.cardlink{color:var(--text);text-decoration:none}.card a.cardlink:hover{color:var(--amber)}
@@ -778,7 +778,7 @@ transition:none!important}`), so these animations are covered. */
 .ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
 .ref-grid .ref-stat:nth-child(4){animation-delay:.14s}
-.ref-stat:hover{transform:translateY(-4px) scale(1.04);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
+.ref-stat:hover{transform:translateY(-3px) scale(1.02);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-stat:active{transform:translateY(-1px)}
 .ref-stat b{color:var(--amber);font-size:1.25em}
 @keyframes refFadeIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -1017,3 +1017,84 @@ button:not(.btn):active svg{transform:scale(.94)}
 @keyframes dkmenuoutScale{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px) scale(.97)}}
 .lang-menu,.prof-menu,.app-panel,.nav-drop-menu{animation:dkmenuinScale .15s ease-out}
 .lang-menu.closing,.prof-menu.closing,.app-panel.closing,.nav-drop-menu.closing{animation:dkmenuoutScale .15s ease-out;pointer-events:none}
+
+/* F07 — Subtle 3D Tilt Tool Cards (rec 07).
+ * WHY the transform carries the hover lift too: the tilt writes
+ * rotateX/rotateY through the SAME transform as the hover lift, so the
+ * two never overwrite each other (a separate `rotate` property holds
+ * only one axis). --rx/--ry are set by dkPointerFX in main.js (fine
+ * pointers only, max 3deg, reset on leave — the .15s transform
+ * transition smooths the return). .tool-card has no .reveal class, so
+ * the tilt never fights the scroll-reveal rise. The .tag gets a small
+ * translateZ for icon depth (preserve-3d on the card). Touch +
+ * reduced-motion: no tilt (JS never sets the vars; the global rule
+ * kills the transition anyway). */
+.tool-card{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d}
+.tool-card:hover{transform:perspective(900px) translateY(-3px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+.tool-card .tag{transform:translateZ(24px)}
+
+/* F08 — Controlled Glassmorphism Cards (rec 08).
+ * WHY rgba, not color-mix: the translucent surface must work in every
+ * browser the site supports; rgba(29,25,51,.72) IS --surface at 72%.
+ * Applied to the selected cards only — dashboard .ref-stat and featured
+ * .card.popular. backdrop-filter blurs whatever sits behind the card;
+ * on flat page backgrounds the effect reads as a lighter translucent
+ * surface, which is the honest result. Mobile (<=768px) reduces the
+ * blur to 6px (cheaper on low-end devices); the hero's existing glass
+ * (searchbox, stats) is untouched. */
+.ref-stat,.card.popular{background:rgba(29,25,51,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+[data-theme="light"] .ref-stat,[data-theme="light"] .card.popular{background:rgba(255,255,255,.72)}
+@media(max-width:768px){.ref-stat,.card.popular{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
+
+/* F09 — Mouse Spotlight Effect (rec 09).
+ * WHY ::after: .card.popular and .ref-stat already use ::before for the
+ * F02 gradient border, so the spotlight takes the free ::after. One
+ * shared pointer handler (dkPointerFX) sets --mx/--my on the hovered
+ * card — no per-card listeners. The radial light (240px, violet .14)
+ * fades in on hover only and never intercepts the pointer
+ * (pointer-events:none). .card needs position:relative for the overlay;
+ * it has no absolutely-positioned children that this would disturb. */
+.card{position:relative}
+.card::after,.ref-stat::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),rgba(139,116,255,.14),transparent 70%);opacity:0;transition:opacity .2s ease}
+.card:hover::after,.ref-stat:hover::after{opacity:1}
+
+/* F11 — Gradient Icon Containers (rec 11).
+ * WHY .app-tile svg: tool cards carry NO icon element (verified — 10/10
+ * cards on the homepage and 10/10 on /tools/ have no <svg>), so the
+ * existing tool-icon set is the All Tools panel tiles (.app-tile svg,
+ * 26px). The gradient + padding on the svg itself renders as a rounded
+ * gradient tile behind the glyph — no markup change. White glyphs
+ * (currentColor forced to #fff) so the icon reads on violet in both
+ * themes; hover glow via box-shadow. Account shortcuts / admin stats
+ * have no icon elements either (verified) — nothing to containerise
+ * there. */
+.app-tile svg{background:linear-gradient(135deg,var(--violet),#38BDF8);border-radius:10px;padding:5px;color:#fff}
+.app-tile:hover svg{box-shadow:0 6px 16px rgba(var(--violet-rgb),.4)}
+
+/* F12 — Premium Number Highlight (rec 12).
+ * WHY a class + keyframes, not a transition: the flash is a one-shot
+ * pulse on a genuine value change (coin badge, typing finish, referral
+ * stats). Callers add .num-flash AFTER writing the real value and only
+ * when it changed (see window.dkFlashNum in main.js); initial renders
+ * never flash. inline-block so the scale transform applies to <b>/<span>
+ * numbers; transform-only, so no layout shift. Reduced-motion kills it
+ * via the global rule. */
+@keyframes dkNumFlash{0%{color:var(--amber);transform:scale(1.12)}100%{color:currentColor;transform:scale(1)}}
+.num-flash{display:inline-block;animation:dkNumFlash .6s ease-out}
+
+/* F13 — Premium Status Badges (rec 13).
+ * WHY tinted backgrounds + a dot + always-present text: the status must
+ * be identifiable through text, never colour alone (rec 38). The dot
+ * (::before, currentColor) is the "small icon"; the text is the status.
+ * Colours reuse the brand tokens. Light-theme overrides: amber text on
+ * a light tint fails contrast, so pending uses --gold-text there (the
+ * same fix as rec 38); paid violet2 darkens to --violet. */
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;line-height:1.6;white-space:nowrap}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.st-pending{background:rgba(255,197,49,.16);color:var(--amber)}
+.st-active,.st-approved{background:rgba(62,207,142,.16);color:var(--good)}
+.st-paused,.st-unknown{background:rgba(185,179,224,.16);color:var(--muted)}
+.st-rejected{background:rgba(255,107,107,.16);color:var(--bad)}
+.st-paid{background:rgba(139,116,255,.18);color:var(--violet2)}
+[data-theme="light"] .st-pending{color:var(--gold-text)}
+[data-theme="light"] .st-paid{color:var(--violet)}

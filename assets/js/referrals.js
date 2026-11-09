@@ -194,6 +194,21 @@
     var hit = map[status] || map.pending;
     return T(hit[0], hit[1]);
   }
+  function statusBadge(status) {
+    /* Phase F F13 (rec 13): one consistent badge for every status label.
+     * The text is ALWAYS present (a status must never be colour-only,
+     * rec 38); the class only adds colour + a small dot. Unknown statuses
+     * fall back to the neutral .st-unknown badge with the raw text —
+     * never dropped, never invented. Returns HTML (label escaped inside),
+     * so call sites use it WITHOUT an outer esc(). */
+    var known = { pending: 1, active: 1, paused: 1, approved: 1, rejected: 1, paid: 1 };
+    var key = status || 'pending';
+    var cls = known[key] ? ('st-' + key) : 'st-unknown';
+    var label = (key === 'pending' || key === 'active' || key === 'paused')
+      ? statusLabel(key)
+      : String(status || 'pending');
+    return '<span class="badge ' + cls + '">' + esc(label) + '</span>';
+  }
 
   /* ---------- rank + reward math (pure; unit-tested by simulation) ------ */
   function rankFor(activeCount) {
@@ -359,8 +374,15 @@
   }
 
   /* ---------- shared renderers (all sections use these, none re-derive) - */
+  /* Phase F F12 (rec 12): previous referral stats, so renderStats can
+   * flash earnings / active-friends only when the genuine value changed
+   * since the last render (never on first render). */
+  var prevRenderStats = null;
   function renderStats(idOrEl, summary) {
     var s = (summary && summary.stats) || computeStats([], []);
+    var flashEarn = !!(prevRenderStats && prevRenderStats.totalEarnings !== s.totalEarnings);
+    var flashFriends = !!(prevRenderStats && prevRenderStats.active !== s.active);
+    prevRenderStats = { totalEarnings: s.totalEarnings, active: s.active };
     /* Task 9 display additions (Part 2 header): this-month earnings and
      * friends-remaining to the next rank. Built in their own statements
      * as plain variables (no new dkT keys — the gate requires every key
@@ -369,9 +391,9 @@
     var monthlyText = 'This month: ' + (s.monthlyEarnings || 0);
     var remainingText = s.nextRank ? (s.rankRemaining + ' more to ' + s.nextRank) : '';
     var html = '<p><b>' + esc(T('ref_stat_earnings', 'Total earnings')) + ':</b> '
-      + esc(String(s.totalEarnings)) + ' · ' + esc(monthlyText)
+      + '<span' + (flashEarn ? ' class="num-flash"' : '') + '>' + esc(String(s.totalEarnings)) + '</span> · ' + esc(monthlyText)
       + ' · <b>' + esc(T('ref_stat_friends', 'Active friends')) + ':</b> '
-      + esc(String(s.active)) + ' · <b>' + esc(T('ref_stat_rank', 'Rank')) + ':</b> '
+      + '<span' + (flashFriends ? ' class="num-flash"' : '') + '>' + esc(String(s.active)) + '</span> · <b>' + esc(T('ref_stat_rank', 'Rank')) + ':</b> '
       + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending rewards')) + ':</b> '
       + esc(String(s.pending)) + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
       + esc(String(s.rankProgress)) + '%'
@@ -441,7 +463,7 @@
     var html = '<div class="adm-row" data-id="' + esc(row._id || '') + '">'
       + esc(memberLabel(row, names)) + ' · '
       + esc(T('ref_table_col_joined', 'Joined')) + ' ' + esc(fmtDate(row.createdAt)) + ' · '
-      + esc(statusLabel(st)) + ' · ' + esc(String(coins)) + ' coins'
+      + statusBadge(st) + ' · ' + esc(String(coins)) + ' coins'
       + grantBtn
       + (st === 'paused'
         ? ' <button class="btn ghost" type="button" data-adm="ref-resume">' + esc(T('ref_admin_resume', 'Resume')) + '</button>'
@@ -462,7 +484,7 @@
         + esc(T('ref_table_col_coins', 'Coins')) + '</th></tr></thead><tbody>');
       rows.forEach(function (r) {
         parts.push('<tr><td>' + esc(memberLabel(r, opts.names)) + '</td><td>' + esc(fmtDate(r.createdAt))
-          + '</td><td>' + esc(statusLabel(normalizeStatus(r))) + '</td><td>'
+          + '</td><td>' + statusBadge(normalizeStatus(r)) + '</td><td>'
           + esc(String((stats.perInvitee && stats.perInvitee[r._id]) || 0)) + '</td></tr>');
       });
       parts.push('</tbody></table>');
@@ -2253,7 +2275,7 @@
       else {
         html.push('<ul>');
         claims.forEach(function (c) {
-          html.push('<li>' + esc(c.kind || '') + ' · ' + esc(String(c.amount)) + ' · ' + esc(c.status || '') + ' · ' + esc(fmtDate(c.createdAt)) + (c.rejectReason ? ' · ' + esc(c.rejectReason) : '') + '</li>');
+          html.push('<li>' + esc(c.kind || '') + ' · ' + esc(String(c.amount)) + ' · ' + statusBadge(c.status) + ' · ' + esc(fmtDate(c.createdAt)) + (c.rejectReason ? ' · ' + esc(c.rejectReason) : '') + '</li>');
         });
         html.push('</ul>');
       }
@@ -3558,7 +3580,7 @@
           var isParty = c.fromUid === uid || c.toUid === uid;
           var ownDone = (c.fromUid === uid && c.fromDone === true) || (c.toUid === uid && c.toDone === true);
           var bothDone = c.fromDone === true && c.toDone === true;
-          html.push('<li>' + esc(c.fromUid || '') + ' · ' + esc(c.status || '') + ' · ' + esc(String(c.fromDone)) + ' · ' + esc(String(c.toDone)));
+          html.push('<li>' + esc(c.fromUid || '') + ' · ' + statusBadge(c.status) + ' · ' + esc(String(c.fromDone)) + ' · ' + esc(String(c.toDone)));
           if (c.status === 'pending' && c.fromUid !== uid && (c.toUid === '' || c.toUid === uid)) {
             html.push(' <button class="btn ghost" type="button" data-refx-action="challenge-accept" data-refx-id="' + esc(c._id || '') + '">' + esc(acceptText) + '</button>');
           }
@@ -5114,6 +5136,7 @@
     RANK_THRESHOLDS: RANK_THRESHOLDS,
     normalizeStatus: normalizeStatus,
     statusLabel: statusLabel,
+    statusBadge: statusBadge,
     rankFor: rankFor,
     rewardForLevel: rewardForLevel,
     chainRewardTotal: chainRewardTotal,

@@ -177,6 +177,11 @@ function finish(){
     return;
   }
   var st = stats();
+  /* Phase F F12 (rec 12): flash the FINAL WPM/accuracy once. The live
+   * stats() calls during typing do NOT flash — a flash per keystroke
+   * would be constant noise. Only the finished, authoritative result
+   * gets the short highlight. */
+  if (window.dkFlashNum) { window.dkFlashNum(wpmEl); window.dkFlashNum(accEl); }
   resEl.innerHTML = '';
   var p = document.createElement('p');
   p.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');

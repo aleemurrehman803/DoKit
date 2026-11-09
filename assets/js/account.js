@@ -623,7 +623,11 @@
         badge.style.marginLeft = '8px';
         drop.appendChild(badge);
       }
+      var prevCoins = badge.textContent;
       badge.textContent = '🪙 ' + doc.coins;
+      /* Phase F F12 (rec 12): flash only when the genuine balance changed
+       * (never on first render — prevCoins is empty then). */
+      if (prevCoins && prevCoins !== badge.textContent && window.dkFlashNum) { window.dkFlashNum(badge); }
       badge.title = (window.dkT ? window.dkT('prof.coins', 'Coins') : 'Coins');
     }
   }

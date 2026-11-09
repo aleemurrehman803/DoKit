@@ -50,36 +50,77 @@ function dkSyncPaused(){ document.documentElement.classList.toggle('dk-paused', 
   var fine = false;
   try { fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { /* assume coarse */ }
   if (!fine) { return; }
-  var lastBtn = null, rafId = 0, pendingEvt = null;
+  var lastBtn = null, lastCard = null, rafId = 0, pendingEvt = null;
   function resetBtn(btn){
     if (!btn) { return; }
     btn.style.setProperty('--tx', '0px');
     btn.style.setProperty('--ty', '0px');
   }
+  function resetCard(card){
+    if (!card) { return; }
+    card.style.setProperty('--rx', '0deg');
+    card.style.setProperty('--ry', '0deg');
+  }
   function apply(evt){
     rafId = 0;
     if (document.documentElement.classList.contains('dk-paused')) { return; }
-    var btn = evt.target && evt.target.closest ? evt.target.closest('.btn') : null;
+    var t = (evt.target && evt.target.closest) ? evt.target : null;
+    var btn = t ? t.closest('.btn') : null;
     if (lastBtn && lastBtn !== btn) { resetBtn(lastBtn); }
     lastBtn = btn;
-    if (!btn) { return; }
-    var r = btn.getBoundingClientRect();
-    if (!r.width || !r.height) { return; }
-    var x = evt.clientX - r.left, y = evt.clientY - r.top;
-    btn.style.setProperty('--mx', x + 'px');
-    btn.style.setProperty('--my', y + 'px');
-    /* Magnetic nudge: at most 4px toward the cursor, proportional to how
-     * far the pointer is from the button centre. */
-    var tx = Math.max(-4, Math.min(4, ((x / r.width) - 0.5) * 8));
-    var ty = Math.max(-4, Math.min(4, ((y / r.height) - 0.5) * 8));
-    btn.style.setProperty('--tx', tx.toFixed(1) + 'px');
-    btn.style.setProperty('--ty', ty.toFixed(1) + 'px');
+    if (btn) {
+      var r = btn.getBoundingClientRect();
+      if (r.width && r.height) {
+        var x = evt.clientX - r.left, y = evt.clientY - r.top;
+        btn.style.setProperty('--mx', x + 'px');
+        btn.style.setProperty('--my', y + 'px');
+        /* Magnetic nudge: at most 4px toward the cursor, proportional to how
+         * far the pointer is from the button centre. */
+        var tx = Math.max(-4, Math.min(4, ((x / r.width) - 0.5) * 8));
+        var ty = Math.max(-4, Math.min(4, ((y / r.height) - 0.5) * 8));
+        btn.style.setProperty('--tx', tx.toFixed(1) + 'px');
+        btn.style.setProperty('--ty', ty.toFixed(1) + 'px');
+      }
+    }
+    /* Phase F F07/F09 (recs 07, 09): the same pointer position drives the
+     * card spotlight (--mx/--my, every .card/.ref-stat) and the tool-card
+     * tilt (--rx/--ry, .tool-card only, max 3deg). One handler, no
+     * per-card listeners (rec 45). */
+    var card = t ? t.closest('.card, .ref-stat') : null;
+    if (lastCard && lastCard !== card) { resetCard(lastCard); }
+    lastCard = card;
+    if (card) {
+      var cr = card.getBoundingClientRect();
+      if (cr.width && cr.height) {
+        var cx = evt.clientX - cr.left, cy = evt.clientY - cr.top;
+        card.style.setProperty('--mx', cx + 'px');
+        card.style.setProperty('--my', cy + 'px');
+        if (card.classList.contains('tool-card')) {
+          var rx = Math.max(-3, Math.min(3, ((cy / cr.height) - 0.5) * -6));
+          var ry = Math.max(-3, Math.min(3, ((cx / cr.width) - 0.5) * 6));
+          card.style.setProperty('--rx', rx.toFixed(1) + 'deg');
+          card.style.setProperty('--ry', ry.toFixed(1) + 'deg');
+        }
+      }
+    }
   }
   document.addEventListener('pointermove', function (evt){
     pendingEvt = evt;
     if (!rafId) { rafId = requestAnimationFrame(function(){ apply(pendingEvt); }); }
   }, { passive: true });
 })();
+/* Phase F F12 (rec 12): flash a number element once when its genuine
+ * value changes. The .num-flash animation (style.css) is a short amber
+ * + scale pulse; reduced-motion kills it via the global rule. Callers
+ * must only call this AFTER writing the real value, and only when the
+ * value actually changed — never on initial render, never with a
+ * fabricated value. */
+window.dkFlashNum = function (el) {
+  if (!el || !el.classList) { return; }
+  el.classList.remove('num-flash');
+  void el.offsetWidth; /* restart the animation */
+  el.classList.add('num-flash');
+};
 // T030 (P5-VIS-07): one header menu open at a time. Each menu binder
 // registers its OWN existing close function here; closeAllMenus(except)
 // runs every other registered closer, so opening any menu closes all the
