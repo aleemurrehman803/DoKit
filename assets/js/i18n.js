@@ -317,10 +317,21 @@
         if (willOpen && typeof window.dkCloseAllMenus === 'function') { window.dkCloseAllMenus(menuId); }
         menu.hidden = !willOpen;
         btn.setAttribute('aria-expanded', String(willOpen));
+        // F36: a keyboard-opened menu (Enter/Space on the button,
+        // detail 0) moves focus to the selected language so arrow
+        // keys work immediately; a mouse click leaves focus alone.
+        if (willOpen && ev.detail === 0) {
+          var sel = menu.querySelector('li[aria-selected="true"]') || menu.querySelector('li[data-lang]');
+          if (sel) { sel.focus(); }
+        }
       });
       document.addEventListener('click', close);
       document.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Escape') close();
+        // F36: Escape returns focus to the language button that
+        // opened the menu (previously focus was left wherever it
+        // was). Guarded on open — an Escape anywhere else on the
+        // page must not yank focus to this button.
+        if (ev.key === 'Escape' && !menu.hidden) { close(); btn.focus(); }
       });
       function pick(item) {
         if (!item) return;
@@ -332,6 +343,22 @@
         pick(item);
       });
       menu.addEventListener('keydown', function (ev) {
+        // F36: arrow-key navigation between languages (the options
+        // are focusable listbox options); Home/End jump to the ends.
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Home' || ev.key === 'End') {
+          var items = menu.querySelectorAll('li[data-lang]');
+          if (!items.length) { return; }
+          var at = -1;
+          items.forEach(function (li, idx) { if (li === document.activeElement) { at = idx; } });
+          var next = at;
+          if (ev.key === 'ArrowDown') { next = (at + 1) % items.length; }
+          else if (ev.key === 'ArrowUp') { next = (at - 1 + items.length) % items.length; }
+          else if (ev.key === 'Home') { next = 0; }
+          else if (ev.key === 'End') { next = items.length - 1; }
+          ev.preventDefault();
+          items[next].focus();
+          return;
+        }
         if (ev.key !== 'Enter' && ev.key !== ' ') return;
         var item = ev.target.closest ? ev.target.closest('li[data-lang]') : null;
         if (item) { ev.preventDefault(); pick(item); }

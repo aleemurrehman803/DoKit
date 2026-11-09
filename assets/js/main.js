@@ -33,6 +33,119 @@ var paused = false;
 var tabHidden = document.visibilityState === 'hidden';
 try{ if(!reduced && localStorage.getItem('dokit_motion_paused') === '1'){ paused = true; } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 function dkSyncPaused(){ document.documentElement.classList.toggle('dk-paused', paused || tabHidden); }
+/* Phase F F01 (rec 01) + shared pointer-effects handler (recs 07/09, 45):
+ * ONE delegated pointermove for all cursor-responsive effects (button
+ * glow + magnetic nudge now; card tilt + spotlight hook in here later),
+ * rAF-throttled, so N buttons never mean N listeners. WHY the gates:
+ * fine-pointer only (touch gets native :active feedback, no hover glow),
+ * reduced-motion off (the global CSS rule cannot stop JS-set custom
+ * properties), and paused off (consistent with the canvas + rotator,
+ * which also stop while html.dk-paused). The magnetic nudge writes the
+ * standalone `translate` property (--tx/--ty), never `transform`, so it
+ * composes with the existing :hover lift instead of overwriting it.
+ * Without JS (or without a fine pointer) every button is exactly the
+ * old .btn — the glow/magnetism are progressive enhancement only. */
+(function dkPointerFX(){
+  if (reduced) { return; }
+  var fine = false;
+  try { fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { /* assume coarse */ }
+  if (!fine) { return; }
+  var lastBtn = null, lastCard = null, rafId = 0, pendingEvt = null;
+  function resetBtn(btn){
+    if (!btn) { return; }
+    btn.style.setProperty('--tx', '0px');
+    btn.style.setProperty('--ty', '0px');
+  }
+  function resetCard(card){
+    if (!card) { return; }
+    card.style.setProperty('--rx', '0deg');
+    card.style.setProperty('--ry', '0deg');
+  }
+  function apply(evt){
+    rafId = 0;
+    if (document.documentElement.classList.contains('dk-paused')) { return; }
+    var t = (evt.target && evt.target.closest) ? evt.target : null;
+    var btn = t ? t.closest('.btn') : null;
+    if (lastBtn && lastBtn !== btn) { resetBtn(lastBtn); }
+    lastBtn = btn;
+    if (btn) {
+      var r = btn.getBoundingClientRect();
+      if (r.width && r.height) {
+        var x = evt.clientX - r.left, y = evt.clientY - r.top;
+        btn.style.setProperty('--mx', x + 'px');
+        btn.style.setProperty('--my', y + 'px');
+        /* Magnetic nudge: at most 4px toward the cursor, proportional to how
+         * far the pointer is from the button centre. */
+        var tx = Math.max(-4, Math.min(4, ((x / r.width) - 0.5) * 8));
+        var ty = Math.max(-4, Math.min(4, ((y / r.height) - 0.5) * 8));
+        btn.style.setProperty('--tx', tx.toFixed(1) + 'px');
+        btn.style.setProperty('--ty', ty.toFixed(1) + 'px');
+      }
+    }
+    /* Phase F F07/F09 (recs 07, 09): the same pointer position drives the
+     * card spotlight (--mx/--my, every .card/.ref-stat) and the tool-card
+     * tilt (--rx/--ry, .tool-card only, max 3deg). One handler, no
+     * per-card listeners (rec 45). */
+    var card = t ? t.closest('.card, .ref-stat') : null;
+    if (lastCard && lastCard !== card) { resetCard(lastCard); }
+    lastCard = card;
+    if (card) {
+      var cr = card.getBoundingClientRect();
+      if (cr.width && cr.height) {
+        var cx = evt.clientX - cr.left, cy = evt.clientY - cr.top;
+        card.style.setProperty('--mx', cx + 'px');
+        card.style.setProperty('--my', cy + 'px');
+        if (card.classList.contains('tool-card')) {
+          var rx = Math.max(-3, Math.min(3, ((cy / cr.height) - 0.5) * -6));
+          var ry = Math.max(-3, Math.min(3, ((cx / cr.width) - 0.5) * 6));
+          card.style.setProperty('--rx', rx.toFixed(1) + 'deg');
+          card.style.setProperty('--ry', ry.toFixed(1) + 'deg');
+        }
+      }
+    }
+  }
+  document.addEventListener('pointermove', function (evt){
+    pendingEvt = evt;
+    if (!rafId) { rafId = requestAnimationFrame(function(){ apply(pendingEvt); }); }
+  }, { passive: true });
+})();
+/* Phase F F12 (rec 12): flash a number element once when its genuine
+ * value changes. The .num-flash animation (style.css) is a short amber
+ * + scale pulse; reduced-motion kills it via the global rule. Callers
+ * must only call this AFTER writing the real value, and only when the
+ * value actually changed — never on initial render, never with a
+ * fabricated value. */
+window.dkFlashNum = function (el) {
+  if (!el || !el.classList) { return; }
+  el.classList.remove('num-flash');
+  void el.offsetWidth; /* restart the animation */
+  el.classList.add('num-flash');
+};
+/* Phase F F26 (rec 26): window.dkToast — the toast system the
+ * certificate page's DKUI.toast call sites were reaching for (DKUI was
+ * never defined, so those PDF-failure notices were dead no-ops). One
+ * toast at a time: a new call replaces the old one; role="status" so
+ * screen readers announce it; auto-dismiss after 3.5s with a fade-out
+ * (.dk-toast-out, style.css). The message is set via textContent, so
+ * no caller can inject HTML through it. DKUI.toast points at the same
+ * function, so the existing guarded certificate.js call sites come
+ * alive with no edits there. */
+var dkToastEl = null, dkToastTimer = null;
+window.dkToast = function (msg) {
+  if (!msg) { return; }
+  if (dkToastTimer) { clearTimeout(dkToastTimer); dkToastTimer = null; }
+  if (dkToastEl) { dkToastEl.remove(); dkToastEl = null; }
+  var t = document.createElement('div');
+  t.className = 'dk-toast'; t.setAttribute('role', 'status');
+  t.textContent = String(msg);
+  document.body.appendChild(t);
+  dkToastEl = t;
+  dkToastTimer = setTimeout(function () {
+    if (dkToastEl === t) { t.classList.add('dk-toast-out'); }
+    setTimeout(function () { if (dkToastEl === t) { t.remove(); dkToastEl = null; } }, 250);
+  }, 3500);
+};
+window.DKUI = window.DKUI || {}; window.DKUI.toast = window.dkToast;
 // T030 (P5-VIS-07): one header menu open at a time. Each menu binder
 // registers its OWN existing close function here; closeAllMenus(except)
 // runs every other registered closer, so opening any menu closes all the
@@ -78,6 +191,21 @@ window.dkCloseAllMenus = closeAllMenus;
 // mobile nav
 var t = document.getElementById('nav-toggle'), l = document.getElementById('nav-links');
 if(t && l){ t.addEventListener('click', function(){ var open = l.classList.toggle('open'); t.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) { closeAllMenus('nav-links'); } }); }
+// F32 (rec 32): the mobile nav previously closed ONLY via its toggle
+// (or by opening another menu) — an outside tap or Escape left it open
+// over the page. It now joins the central menu registry (so opening any
+// other menu still closes it, via closeAllMenus) AND gets the same two
+// closers every bindMenu menu has: an outside-click closer (ignoring
+// clicks on the toggle itself and inside the nav, so the dropdown
+// carets keep working) and an Escape closer that returns focus to the
+// toggle, mirroring bindMenu's returnFocus pattern.
+if (typeof window.dkRegisterMenu === 'function') { window.dkRegisterMenu('nav-links', dkCloseNavLinks); }
+document.addEventListener('click', function (e) {
+  if (l && l.classList.contains('open') && !l.contains(e.target) && e.target !== t && !t.contains(e.target)) { dkCloseNavLinks(); }
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && l && l.classList.contains('open')) { dkCloseNavLinks(); if (t) { t.focus(); } }
+});
 // active nav
 try{
   var here = new URL(window.location.href).pathname.replace(/\/index\.html$/, '/');
@@ -258,7 +386,21 @@ if(cv){
     if(!paused && !reduced && !tabHidden){ framePending = true; requestAnimationFrame(draw); }
   }
   size(); mk(); draw();
-  window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ paint(); } });
+  /* F45 (rec 45): resize fires continuously during a window drag and
+   * size()+mk() rebuilds the whole particle field per event — throttle
+   * to one rebuild per animation frame (same tick pattern as the scroll
+   * listeners elsewhere in this file; those are already rAF + passive).
+   * The admin tab-indicator resize re-measure is a single cheap read
+   * and the pointer handler is already one delegated rAF handler. */
+  var cvResizeTick = false;
+  window.addEventListener('resize', function(){
+    if(cvResizeTick){ return; }
+    cvResizeTick = true;
+    requestAnimationFrame(function(){
+      cvResizeTick = false;
+      size(); mk(); if(paused || reduced){ paint(); }
+    });
+  });
   var pb = document.getElementById('pause-motion');
   if(pb){
     // B58: keep the label via its data-i18n key (not a bare textContent
@@ -302,6 +444,47 @@ function dkT(key, fallback){
   return fallback;
 }
 window.dkT = dkT;
+/* F39 (rec 39): shared accessible form-error helper. Marks the field
+ * invalid, links it to its message element (aria-describedby), shows
+ * the message, and moves focus to the field — the three things the
+ * site's showMsg-only pattern never did. The message element may be
+ * passed as an id string or an element (notify forms use a classed
+ * <p> with no id — one is generated so the link can point at it);
+ * when message is null the element's existing text is kept (the
+ * notify error already carries its own text + mailto, and the auth
+ * catch paths already wrote theirs via showMsg). A showMsg-style
+ * message element (class note/err) also gets the err class so the
+ * error reads as an error, not a note. The invalid flag clears as
+ * soon as the user starts fixing the field. Exposed on window so
+ * account.js / settings.js share it (main.js loads first
+ * everywhere). Callers keep their own message wording via dkT
+ * fallbacks, exactly like the showMsg calls they replace. */
+var dkFailCounter = 0;
+window.dkFailField = function (inputEl, errEl, message) {
+  if (!inputEl) { return false; }
+  inputEl.setAttribute('aria-invalid', 'true');
+  var err = (typeof errEl === 'string') ? document.getElementById(errEl) : errEl;
+  if (err) {
+    if (message) { err.textContent = message; }
+    if (!err.id) { dkFailCounter += 1; err.id = 'dk-err-' + dkFailCounter; }
+    var described = inputEl.getAttribute('aria-describedby') || '';
+    if (described.split(/\s+/).indexOf(err.id) === -1) {
+      inputEl.setAttribute('aria-describedby', (described ? described + ' ' : '') + err.id);
+    }
+    if (!err.getAttribute('aria-live')) { err.setAttribute('aria-live', 'polite'); }
+    if (err.classList && (err.classList.contains('note') || err.classList.contains('err'))) {
+      err.classList.remove('note');
+      err.classList.add('err');
+    }
+    if (err.hidden) { err.hidden = false; }
+  }
+  if (!inputEl.dataset.dkFailBound) {
+    inputEl.dataset.dkFailBound = '1';
+    inputEl.addEventListener('input', function () { inputEl.removeAttribute('aria-invalid'); });
+  }
+  try { inputEl.focus(); } catch (e) { /* old browsers: focus stays put */ }
+  return true;
+};
 // typing headline rotator (words as [dict key, English fallback] so the
 // headline translates; Board Photo falls back to English outside ur,
 // exactly as the old site left it untranslated in 8 languages).
@@ -358,6 +541,25 @@ var fab = document.getElementById('chat-fab'), panel = document.getElementById('
 // - idle blink (below) swaps to the sleep photo ~150ms every ~5s,
 //   idle state only, never during thinking/sleep/mic/greeting/success.
 var DOKI_STATES = ['doki--idle','doki--working','doki--greeting','doki--thinking','doki--success','doki--sleep','doki--error','doki--mic'];
+/* F48 (rec 48): the avatar now has srcset derivatives (96w/192w/400w).
+ * A src-only swap would leave srcset pointing at the other variant, so
+ * the browser would render the wrong (awake/asleep) photo from srcset.
+ * Swap both, by the same 'doki-photo' <-> 'doki-photo-sleep' rename —
+ * the derivative names keep the same prefix, so one rename covers all
+ * sizes. The awake->sleep rename uses a negative lookahead so an
+ * already-sleep URL is never double-renamed. */
+function dokiSwapPhoto(img, sleep){
+  if(!img) return;
+  if(sleep){
+    if(img.src) img.src = img.src.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep');
+    var ss = img.getAttribute('srcset');
+    if(ss) img.setAttribute('srcset', ss.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep'));
+  } else {
+    if(img.src) img.src = img.src.replace(/doki-photo-sleep/g, 'doki-photo');
+    var ss2 = img.getAttribute('srcset');
+    if(ss2) img.setAttribute('srcset', ss2.replace(/doki-photo-sleep/g, 'doki-photo'));
+  }
+}
 function dokiSet(el, state){
   if(!el) return;
   DOKI_STATES.forEach(function(s){ el.classList.remove(s); });
@@ -367,11 +569,7 @@ function dokiSet(el, state){
   // open-eye photo (this also ends a mid-blink swap cleanly).
   var img = el.querySelector('.doki-photo');
   if(img && img.src){
-    if(state === 'doki--sleep'){
-      if(/doki-photo\.png$/.test(img.src)) img.src = img.src.replace('doki-photo.png', 'doki-photo-sleep.png');
-    } else {
-      img.src = img.src.replace('doki-photo-sleep.png', 'doki-photo.png');
-    }
+    dokiSwapPhoto(img, state === 'doki--sleep');
   }
 }
 function dokiHead(){ return document.querySelector('#chat-panel .chead .doki'); }
@@ -425,6 +623,27 @@ if(fab && panel){ fab.addEventListener('click', function(){
   // extra Tab stops through the page behind the panel.
   if(opened){ var ci = document.getElementById('chat-input'); if(ci){ ci.focus(); } }
 }); }
+/* F42 (rec 42): the panel-head Doki photo is loading="lazy" (it lives
+ * in #chat-panel, display:none until opened, so the browser would not
+ * fetch it until first open — and the open would show a missing avatar
+ * until the photo arrived). Prefetch on intent: pointer hover, keyboard
+ * focus, or touch press on the FAB starts the fetch before the click,
+ * so first open is instant on hover/keyboard. Touch without hover still
+ * fetches on open (the prefetch and the click are milliseconds apart
+ * there — documented limitation). Setting loading="eager" on the
+ * already-parsed img triggers the fetch. */
+if(fab && panel){
+  var dokiHeadImg = document.querySelector('#chat-panel .chead .doki-photo');
+  var dokiHeadPrefetched = false;
+  function dokiHeadPrefetch(){
+    if(dokiHeadPrefetched || !dokiHeadImg) return;
+    dokiHeadPrefetched = true;
+    dokiHeadImg.loading = 'eager';
+  }
+  fab.addEventListener('pointerenter', dokiHeadPrefetch);
+  fab.addEventListener('focusin', dokiHeadPrefetch);
+  fab.addEventListener('pointerdown', dokiHeadPrefetch);
+}
 // AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
 // (bindNavDrop): close on Escape and return focus to the launcher
 // (here the FAB). The panel is non-modal; this only adds the close.
@@ -436,6 +655,35 @@ if(fab && panel){ document.addEventListener('keydown', function(e){
     fab.focus();
   }
 }); }
+/* F36 (rec 36): the chat log is a live region — new bot/user messages
+ * are announced politely. Set here in JS (one place) instead of
+ * editing the shared chrome in 71 pages. */
+(function () {
+  var log = document.getElementById('chat-log');
+  if (log && !log.getAttribute('aria-live')) { log.setAttribute('aria-live', 'polite'); }
+})();
+/* F36 (rec 36): the chat panel had no close button — keyboard and
+ * touch users could only close it with Escape or the FAB toggle.
+ * The button is created here in JS (one place) instead of editing
+ * the shared chrome in 71 pages; it uses the same animated close
+ * path as the FAB toggle and returns focus to the FAB. */
+if (fab && panel) {
+  var chead = panel.querySelector('.chead');
+  if (chead && !document.getElementById('chat-close-btn')) {
+    var chatCloseBtn = document.createElement('button');
+    chatCloseBtn.type = 'button';
+    chatCloseBtn.id = 'chat-close-btn';
+    chatCloseBtn.className = 'chat-close';
+    chatCloseBtn.setAttribute('aria-label', dkT('rsv_0960', 'Close'));
+    chatCloseBtn.textContent = '×';
+    chatCloseBtn.addEventListener('click', function () {
+      dkAnimateClose(panel, function(){ panel.classList.remove('open'); });
+      dokiSleepClear();
+      fab.focus();
+    });
+    chead.appendChild(chatCloseBtn);
+  }
+}
 if(panel){ panel.addEventListener('click', dokiWake); panel.addEventListener('input', dokiWake); }
 // ---- Doki idle blink (photo pass, Oct 25) ----
 // WHY a JS swap, not CSS: a photo cannot blink by itself. The closed
@@ -451,22 +699,37 @@ function dokiPhotoImgs(){
 }
 (function dokiPreloadBlink(){
   var imgs = dokiPhotoImgs();
-  if(imgs.length && imgs[0].src){
-    var pre = new Image();
-    pre.src = imgs[0].src.replace('doki-photo.png', 'doki-photo-sleep.png');
-  }
+  if(!imgs.length || !imgs[0].src) return;
+  /* F48 (rec 48): preload the SLEEP variant the blink swaps to — the
+   * dpr-appropriate derivative from the img's own srcset (96w at dpr<=1.5,
+   * 192w above), so the 150ms blink frame is cached at the size actually
+   * rendered. Was: the 400w sleep photo (118 KB) on every page load. */
+  var ss = imgs[0].getAttribute('srcset') || '';
+  var cands = ss.split(',').map(function(p){ return p.trim().split(/\s+/); });
+  var want = (window.devicePixelRatio || 1) > 1.5 ? '192w' : '96w';
+  var pick = null;
+  cands.forEach(function(c){ if(c[1] === want) pick = c[0]; });
+  var url = pick || imgs[0].src.replace('doki-photo.png', 'doki-photo-sleep.png');
+  var pre = new Image();
+  pre.src = url.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep');
 })();
 function dokiBlinkTick(){
+  // F37 (rec 37): reduced-motion / paused users never get the idle
+  // blink — the photo swap is motion, and the global CSS rule cannot
+  // reach this JS image swap. The 150ms restore below still runs if
+  // a blink was already mid-flight when the user paused, so the
+  // open-eye photo is always restored.
+  if (reduced || paused) { return; }
   var head = dokiHead();
   if(!head || !head.classList.contains('doki--idle')) return;
   var imgs = dokiPhotoImgs();
   imgs.forEach(function(img){
-    if(/doki-photo\.png$/.test(img.src)) img.src = img.src.replace('doki-photo.png', 'doki-photo-sleep.png');
+    if(/doki-photo\.png$/.test(img.src)) dokiSwapPhoto(img, true);
   });
   setTimeout(function(){
     var h = dokiHead();
     if(h && h.classList.contains('doki--idle')){
-      imgs.forEach(function(img){ img.src = img.src.replace('doki-photo-sleep.png', 'doki-photo.png'); });
+      imgs.forEach(function(img){ dokiSwapPhoto(img, false); });
     }
   }, 150);
 }
@@ -1173,6 +1436,32 @@ function dokiMicStop(){
   // on button click, close on outside click or Escape. returnFocus
   // (launcher only): on Escape, return focus to the button — never
   // on outside-click, which would yank focus mid-task.
+  /* F36 (rec 36): arrow-key navigation for dropdown menus. Menus are
+   * plain navigation links (NOT role="menu" — that role is for
+   * application menus; these are site navigation, so links keep
+   * their link semantics and arrow keys are an added convenience,
+   * not a replacement for Tab). ArrowDown/ArrowUp move between the
+   * menu's visible links/buttons (wrapping); Home/End jump to the
+   * ends. Attached to the menu element, so it only fires while
+   * focus is inside an open menu. */
+  function dkMenuArrows(menu){
+    menu.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') { return; }
+      var items = [];
+      menu.querySelectorAll('a[href], button').forEach(function (el) {
+        if (!el.hidden && !el.disabled && el.offsetParent !== null) { items.push(el); }
+      });
+      if (!items.length) { return; }
+      var at = items.indexOf(document.activeElement);
+      var next = at;
+      if (e.key === 'ArrowDown') { next = (at + 1) % items.length; }
+      else if (e.key === 'ArrowUp') { next = (at - 1 + items.length) % items.length; }
+      else if (e.key === 'Home') { next = 0; }
+      else if (e.key === 'End') { next = items.length - 1; }
+      e.preventDefault();
+      items[next].focus();
+    });
+  }
   function bindMenu(btnId, menuId, onPick, returnFocus){
     var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
     if (!btn || !menu) { return; }
@@ -1206,13 +1495,17 @@ function dokiMicStop(){
         if (returnFocus) { btn.focus(); }
       }
     });
+    dkMenuArrows(menu); // F36: arrow-key navigation between menu items.
     if (onPick) { menu.addEventListener('click', onPick); }
   }
   // Language selector: owned entirely by i18n.js (it toggles the
   // menu and applies the choice). main.js must NOT also bind it —
   // two toggles on one click would open then immediately close it.
   // Profile avatar menu: links only, no balance shown (no real source).
-  bindMenu('dkProfBtn', 'profMenu', null);
+  // F36: the profile menu now returns focus on Escape too (it was the
+  // only bindMenu call without returnFocus — keyboard users lost
+  // their place when closing it).
+  bindMenu('dkProfBtn', 'profMenu', null, true);
   // Header menus: guest/auth rows (items 99/103). Rows carry
   // data-menu="guest" (Login/Sign up) or "auth" (Dashboard/Settings/
   // Notifications/...). account.js owns the auth truth (Firebase) and
@@ -1301,6 +1594,7 @@ function dokiMicStop(){
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !menu.hidden) { close(); caret.focus(); }
     });
+    dkMenuArrows(menu); // F36: arrow-key navigation between dropdown links.
   }
   bindNavDrop('pricingDrop', 'pricingCaret', 'pricingMenu');
   bindNavDrop('typingDrop', 'typingCaret', 'typingMenu');
@@ -1482,7 +1776,11 @@ function dokiMicStop(){
       [dkT('rsv_1028', 'Typing school'), dkT('rsv_1029', 'Lessons, practice, games and Urdu typing live under Typing.')],
       [dkT('rsv_1024', 'Your data stays yours'), dkT('rsv_1025', 'Results and favorites save only on this device.')]
     ];
-    var i = 0, back = null, card = null;
+    var i = 0, back = null, card = null, closeGen = 0;
+    // F24 (rec 24): closeGen guards the delayed exit removal —
+    // a fast re-open bumps it, so a pending timeout can never
+    // remove the live tour. Without it, Tour -> Close -> Tour
+    // within 180ms would delete the tour mid-show.
     function show() {
       if (!back) {
         back = document.createElement('div'); back.className = 'tour-backdrop';
@@ -1490,9 +1788,14 @@ function dokiMicStop(){
         card = document.createElement('div'); card.className = 'tour-card';
         document.body.appendChild(back); document.body.appendChild(card);
       }
+      back.classList.remove('closing'); card.classList.remove('closing'); closeGen++; // F24: cancel any pending exit removal
       back.classList.add('open');
       document.body.classList.add('dk-tour-open'); // T050: hide the sticky bar while the tour is open.
       card.innerHTML = '';
+      // F36 (rec 36): the tour card is a dialog — label it with the
+      // current step title so screen readers announce the step.
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-label', steps[i][0]);
       var h = document.createElement('h3'); h.textContent = steps[i][0]; card.appendChild(h);
       var p = document.createElement('p'); p.textContent = steps[i][1]; card.appendChild(p);
       var row = document.createElement('p');
@@ -1507,9 +1810,37 @@ function dokiMicStop(){
       var done = document.createElement('button'); done.className = 'btn ghost'; done.textContent = dkT('rsv_0960', 'Close');
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
+      // F36: show() rebuilds the card's buttons every step, which
+      // would drop keyboard focus to <body> — land it on Next/Done.
+      try { next.focus(); } catch (e) { /* old browsers: focus stays put */ }
     }
-    function close() { document.body.classList.remove('dk-tour-open'); if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
+    // F24 (rec 24): real exit animation, not an instant removal.
+    // .closing fades the backdrop + scales the card out (180ms, Fast
+    // token); the nodes leave the DOM only after it finishes. The
+    // generation guard stops a stale timeout from removing a tour
+    // that was re-opened in the meantime.
+    function close() {
+      // F36: focus returns to the Tour button the moment the tour
+      // closes (Escape, backdrop, Done or Close) — the keyboard
+      // user is never left on a removed node.
+      try { btn.focus(); } catch (e) { /* old browsers: focus stays put */ }
+      document.body.classList.remove('dk-tour-open');
+      var b = back, c = card, gen = ++closeGen; i = 0;
+      if (b) { b.classList.remove('open'); b.classList.add('closing'); }
+      if (c) { c.classList.add('closing'); }
+      setTimeout(function () {
+        if (gen !== closeGen) { return; }
+        if (b) { b.remove(); } if (c) { c.remove(); }
+        if (back === b) { back = null; } if (card === c) { card = null; }
+      }, 180);
+    }
     btn.addEventListener('click', show);
+    // F36: Escape closes the tour (the card previously had no
+    // keyboard handling at all); close() returns focus to the button.
+    // The card-null guard means this only fires while a tour is open.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && card) { close(); }
+    });
   })();
   // Dismissible tip banner on the home page (dismissal remembered).
   (function tip(){
@@ -1703,7 +2034,12 @@ function dokiMicStop(){
       // type=email check already ran (required + type=email) — this
       // guards the rules' length bound before any write is attempted.
       if (addr.length < 4 || addr.length > 120 || addr.indexOf('@') < 1) {
+        // F39: the format error now lands on the email field itself
+        // (focus + aria-invalid). The message element keeps its own
+        // static text (with the contact mailto), so no message is
+        // passed — dkFailField only links and focuses it.
         if (err) { err.hidden = false; }
+        if (window.dkFailField && emailEl) { window.dkFailField(emailEl, err, null); }
         return;
       }
       var db = null;

@@ -239,7 +239,14 @@
         var user = currentUser();
         if (!user) { return; }
         var name = (nameInput ? nameInput.value : '').trim();
-        if (!name) { return; } /* empty submit clears nothing: no-op */
+        /* F39: a whitespace-only submit used to vanish silently (the
+         * native `required` blocks a truly empty field, but spaces
+         * pass it). Say so, on the field, instead. */
+        if (!name) {
+          if (window.dkFailField) { window.dkFailField(nameInput, 'set-name-msg', dkT('acct_err_name', 'Please enter your name.')); }
+          else { setMsg(nameMsg, dkT('acct_err_name', 'Please enter your name.')); }
+          return;
+        }
         var jobs = [];
         try { jobs.push(user.updateProfile({ displayName: name }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); })); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'settings.js'); }
         try {
@@ -265,8 +272,12 @@
         var user = currentUser();
         if (!user) { return; }
         var np = passInput ? passInput.value : '';
-        if (np.length < 6) {
-          setMsg(passMsg, dkT('acct_err_pw', 'Password must be at least 6 characters.'));
+        /* F39: the short-password error now lands on the field itself
+         * (focus + aria-invalid), not just in the message line. A
+         * spaces-only password is rejected the same way. */
+        if (np.length < 6 || !np.trim()) {
+          if (window.dkFailField) { window.dkFailField(passInput, 'set-pass-msg', dkT('acct_err_pw', 'Password must be at least 6 characters.')); }
+          else { setMsg(passMsg, dkT('acct_err_pw', 'Password must be at least 6 characters.')); }
           return;
         }
         /* Same pattern as account.js: recent sign-in required, else the
