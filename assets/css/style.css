@@ -923,3 +923,97 @@ main p a:not(.btn):not(.cardlink):hover,main li a:not(.btn):not(.cardlink):hover
 .card.popular{transform:translateY(-8px);border-color:var(--violet);box-shadow:0 18px 40px rgba(var(--violet-rgb),.28)}
 .card.popular:hover{transform:translateY(-10px)}
 .card .tag.popular-tag{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+
+/* =====================================================================
+ * Phase F (9 Nov 2026) — 50 Premium UI/UX & Frontend Enhancements.
+ * One section, numbered F01–F50 to match the Master Prompt. Appended at
+ * the end on purpose: these rules must win over earlier equal-specificity
+ * rules. Visual-only unless a rule's comment says otherwise. Every new
+ * motion respects the global prefers-reduced-motion rule and the
+ * html.dk-paused mechanism (both kill/pause CSS animation + transition).
+ * ------------------------------------------------------------------ */
+
+/* F01 — Premium Magnetic Glow Buttons (Master Prompt rec 01).
+ * WHY ::after + the `translate` property: the glow must be clipped to the
+ * rounded button (overflow:hidden) and sit above the gradient fill, while
+ * the magnetic nudge must NOT fight the existing :hover lift (which uses
+ * `transform`). The standalone `translate` property composes with
+ * `transform`, so hover lift + magnetic nudge add up instead of
+ * overwriting each other. --mx/--my/--tx/--ty are set by dkPointerFX in
+ * main.js (fine pointers only, never reduced-motion); without JS the
+ * button is exactly the old .btn (graceful no-op). */
+.btn{position:relative;overflow:hidden}
+.btn::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.28),transparent 70%);opacity:0;transition:opacity .2s ease}
+.btn:hover::after{opacity:1}
+.btn{translate:var(--tx,0px) var(--ty,0px)}
+.btn:active{transform:translateY(0) scale(.98)}
+/* Amber + ghost keep their own fills; the white glow reads on both. */
+.btn.amber::after{background:radial-gradient(120px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.45),transparent 70%)}
+
+/* F02 — Animated Gradient Borders (rec 02).
+ * WHY the ::before + mask-composite trick: a gradient cannot be a border
+ * colour, and border-image cannot transition. The ::before ring (1px,
+ * gradient, mask punches the middle out) fades in on hover via opacity
+ * only — no layout, no repaint of the card. inset:-1px puts the ring
+ * exactly where the plain border is, so it replaces it on hover.
+ * Applied to selected cards only (featured .card.popular, dashboard
+ * .ref-stat) and the primary amber CTA (.btn.amber, inset:0 because
+ * .btn is overflow:hidden from F01 — the ring draws just inside its edge).
+ * .card/.ref-stat have no ::before today (verified), .btn::before is free. */
+.card.popular,.ref-stat{position:relative}
+.card.popular::before,.ref-stat::before,.btn.amber::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,#8B74FF,#38BDF8,#22D3EE);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .2s ease;pointer-events:none}
+.btn.amber::before{inset:0}
+.card.popular:hover::before,.ref-stat:hover::before,.btn.amber:hover::before{opacity:1}
+
+/* F03 — Smart Navigation Hover Underline (rec 03).
+ * WHY background-size instead of text-decoration: the sweep (0→100%
+ * width, left→right) needs an animatable property. The N07 content-link
+ * sweep is the pattern; this extends it to nav + footer links. NOTE the
+ * :hover rules re-state background-image: the earlier .navlinks a:hover
+ * uses the `background` shorthand, which would reset the image to none.
+ * Active page: persistent full-width underline (in addition to the violet
+ * background); on mobile (<=1000px, hamburger column) the active link
+ * also gets an amber side bar, since a bottom underline is less visible
+ * in a stacked menu. */
+.navlinks a{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:left bottom;transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s,background-size .2s ease}
+.navlinks a:hover{background-color:var(--surface2);color:var(--amber);box-shadow:0 0 0 1px var(--violet);background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px}
+.navlinks a.active{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px}
+@media(max-width:1000px){.navlinks a.active{box-shadow:inset 3px 0 0 var(--amber)}}
+.footgrid a{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s ease,color .15s}
+.footgrid a:hover{text-decoration:none;background-size:100% 2px}
+.footbase a{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s ease,color .18s,transform .18s}
+.footbase a:hover{text-decoration:none;background-size:100% 2px}
+
+/* F04 — Smooth Active Tab Indicator (rec 04).
+ * WHY nowrap + scroll: the admin row holds ~25 tabs, so it wraps to
+ * several rows — a single sliding bar cannot sit under the active tab
+ * on a wrapped row. The prompt allows horizontal scrolling as the
+ * alternative, so .tabs becomes one scrollable row and the bar tracks
+ * the active button's offsetLeft/offsetWidth (set by admin.js). The
+ * .active pill stays as the no-JS / reduced-motion fallback (the global
+ * reduced-motion rule kills the slide, the bar just jumps). */
+.tabs{position:relative;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:6px}
+.tab-indicator{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));border-radius:99px;transition:transform .2s ease,width .2s ease;pointer-events:none}
+
+/* F05 — Icon Button Micro-interactions (rec 05).
+ * WHY scoped to button svg: copy/download/share/close/refresh/edit
+ * controls are all <button>s with an inline svg (or glyph). A small
+ * scale on the icon + a pressed shrink on the button reads as feedback
+ * without moving layout. .btn keeps its own :active (F01); the generic
+ * button press below excludes it. */
+button svg{transition:transform .15s ease}
+button:hover svg{transform:scale(1.12)}
+button:not(.btn):active{transform:scale(.96)}
+button:not(.btn):active svg{transform:scale(.94)}
+
+/* F06 — Premium Dropdown Animation (rec 06).
+ * WHY a scoped keyframe instead of extending dkmenuin: dkmenuin is
+ * shared with the chat panel, tab panels and page entrance — adding
+ * scale there would change all of them. Dropdowns (profile, language,
+ * app panel, nav-drop) get their own fade + scale (.97→1) entrance and
+ * a matching scale exit; everything else keeps dkmenuin. Outside-click,
+ * Escape and focus behaviour are untouched (main.js bindMenu/bindNavDrop). */
+@keyframes dkmenuinScale{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes dkmenuoutScale{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px) scale(.97)}}
+.lang-menu,.prof-menu,.app-panel,.nav-drop-menu{animation:dkmenuinScale .15s ease-out}
+.lang-menu.closing,.prof-menu.closing,.app-panel.closing,.nav-drop-menu.closing{animation:dkmenuoutScale .15s ease-out;pointer-events:none}

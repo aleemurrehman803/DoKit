@@ -33,6 +33,53 @@ var paused = false;
 var tabHidden = document.visibilityState === 'hidden';
 try{ if(!reduced && localStorage.getItem('dokit_motion_paused') === '1'){ paused = true; } }catch(e){ window.dkSwallow && window.dkSwallow(e, 'main.js'); }
 function dkSyncPaused(){ document.documentElement.classList.toggle('dk-paused', paused || tabHidden); }
+/* Phase F F01 (rec 01) + shared pointer-effects handler (recs 07/09, 45):
+ * ONE delegated pointermove for all cursor-responsive effects (button
+ * glow + magnetic nudge now; card tilt + spotlight hook in here later),
+ * rAF-throttled, so N buttons never mean N listeners. WHY the gates:
+ * fine-pointer only (touch gets native :active feedback, no hover glow),
+ * reduced-motion off (the global CSS rule cannot stop JS-set custom
+ * properties), and paused off (consistent with the canvas + rotator,
+ * which also stop while html.dk-paused). The magnetic nudge writes the
+ * standalone `translate` property (--tx/--ty), never `transform`, so it
+ * composes with the existing :hover lift instead of overwriting it.
+ * Without JS (or without a fine pointer) every button is exactly the
+ * old .btn — the glow/magnetism are progressive enhancement only. */
+(function dkPointerFX(){
+  if (reduced) { return; }
+  var fine = false;
+  try { fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { /* assume coarse */ }
+  if (!fine) { return; }
+  var lastBtn = null, rafId = 0, pendingEvt = null;
+  function resetBtn(btn){
+    if (!btn) { return; }
+    btn.style.setProperty('--tx', '0px');
+    btn.style.setProperty('--ty', '0px');
+  }
+  function apply(evt){
+    rafId = 0;
+    if (document.documentElement.classList.contains('dk-paused')) { return; }
+    var btn = evt.target && evt.target.closest ? evt.target.closest('.btn') : null;
+    if (lastBtn && lastBtn !== btn) { resetBtn(lastBtn); }
+    lastBtn = btn;
+    if (!btn) { return; }
+    var r = btn.getBoundingClientRect();
+    if (!r.width || !r.height) { return; }
+    var x = evt.clientX - r.left, y = evt.clientY - r.top;
+    btn.style.setProperty('--mx', x + 'px');
+    btn.style.setProperty('--my', y + 'px');
+    /* Magnetic nudge: at most 4px toward the cursor, proportional to how
+     * far the pointer is from the button centre. */
+    var tx = Math.max(-4, Math.min(4, ((x / r.width) - 0.5) * 8));
+    var ty = Math.max(-4, Math.min(4, ((y / r.height) - 0.5) * 8));
+    btn.style.setProperty('--tx', tx.toFixed(1) + 'px');
+    btn.style.setProperty('--ty', ty.toFixed(1) + 'px');
+  }
+  document.addEventListener('pointermove', function (evt){
+    pendingEvt = evt;
+    if (!rafId) { rafId = requestAnimationFrame(function(){ apply(pendingEvt); }); }
+  }, { passive: true });
+})();
 // T030 (P5-VIS-07): one header menu open at a time. Each menu binder
 // registers its OWN existing close function here; closeAllMenus(except)
 // runs every other registered closer, so opening any menu closes all the
