@@ -1737,4 +1737,7 @@ window.DK_I18N_DICT["de"] = {
     "acct_err_name": "Bitte geben Sie Ihren Namen ein.",
     "acct_err_pass_req": "Bitte geben Sie Ihr Passwort ein.",
     "typing_too_fast": "Ergebnis nicht gewertet: Der Test endete zu schnell für einen zeitgesteuerten Tipptest. Bitte tippen Sie den Text selbst und versuchen Sie es erneut.",
+    "tool_pw_name": "Passwort-Generator",
+    "tool_qr_name": "QR-Code-Generator",
+    "tool_unit_name": "Einheitenumrechner",
   };

@@ -1737,4 +1737,7 @@ window.DK_I18N_DICT["es"] = {
     "acct_err_name": "Introduce tu nombre.",
     "acct_err_pass_req": "Introduce tu contraseña.",
     "typing_too_fast": "Resultado no contabilizado: la prueba terminó demasiado rápido para ser una prueba de mecanografía cronometrada. Escribe el pasaje tú mismo e inténtalo de nuevo.",
+    "tool_pw_name": "Generador de contraseñas",
+    "tool_qr_name": "Generador de códigos QR",
+    "tool_unit_name": "Convertidor de unidades",
   };

@@ -1737,4 +1737,7 @@ window.DK_I18N_DICT["tr"] = {
     "acct_err_name": "Lütfen adınızı girin.",
     "acct_err_pass_req": "Lütfen şifrenizi girin.",
     "typing_too_fast": "Sonuç sayılmadı: test, süreli bir yazma testi sayılamayacak kadar hızlı bitti. Lütfen metni kendiniz yazıp tekrar deneyin.",
+    "tool_pw_name": "Şifre Oluşturucu",
+    "tool_qr_name": "QR Kodu Oluşturucu",
+    "tool_unit_name": "Birim Dönüştürücü",
   };

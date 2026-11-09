@@ -1737,4 +1737,7 @@ window.DK_I18N_DICT["fr"] = {
     "acct_err_name": "Veuillez saisir votre nom.",
     "acct_err_pass_req": "Veuillez saisir votre mot de passe.",
     "typing_too_fast": "Résultat non comptabilisé : le test s'est terminé trop vite pour être un test de frappe chronométré. Veuillez taper le passage vous-même et réessayer.",
+    "tool_pw_name": "Générateur de mot de passe",
+    "tool_qr_name": "Générateur de code QR",
+    "tool_unit_name": "Convertisseur d'unités",
   };
