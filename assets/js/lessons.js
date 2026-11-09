@@ -70,7 +70,22 @@
         sessionId: sessionId, contentId: contentId, verified: !pasted };
     }
     function finish() {
-      if (done) { return; }
+      if (done) { return false; }
+      // WP-4 TYPE-04 (C2, Architecture §8.6; paper §6): the shared
+      // sub-second rule — a finish below 1000 ms is REJECTED, not
+      // scored. Nothing is saved, no lesson is marked done, no XP is
+      // awarded. WHY reset instead of locking: the rejection means
+      // "that finish does not count" — the user retypes the same
+      // passage immediately. The paste flag is reset too, so a
+      // genuine retype after a paste gets a fair verified stamp.
+      var elapsedMs = started ? (Date.now() - startTime) : 0;
+      if (window.DKScoring ? window.DKScoring.isSubSecond(elapsedMs) : elapsedMs < 1000) {
+        opts.resultEl.textContent = (window.dkT ? window.dkT('typing_too_fast', 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.') : 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.');
+        typed = ''; started = false; pasted = false;
+        opts.inputEl.value = ''; opts.inputEl.disabled = false;
+        render(); opts.inputEl.focus();
+        return false;
+      }
       done = true;
       var st = stats();
       // WHY st.typed for "out of N typed": the v2 result text counts
@@ -81,13 +96,17 @@
         (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') +
         st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
       if (opts.onFinish) { opts.onFinish(st); }
+      return true;
     }
     opts.inputEl.addEventListener('input', function (ev) {
       if (done) { return; }
       if (ev && ev.inputType === 'insertFromPaste') { pasted = true; }
       typed = opts.inputEl.value;
       if (!started && typed.length > 0) { started = true; startTime = Date.now(); }
-      if (typed.length >= passage.length) { finish(); opts.inputEl.disabled = true; }
+      // WHY finish() returns a boolean: on a sub-second rejection the
+      // engine has already reset for a retry — disabling the input
+      // here would lock the user out of that retry.
+      if (typed.length >= passage.length) { if (finish()) { opts.inputEl.disabled = true; } }
       render();
     });
     return {

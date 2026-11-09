@@ -116,7 +116,22 @@
   }
 
   function finish(lesson) {
-    if (finished) { return; }
+    if (finished) { return false; }
+    // WP-4 TYPE-04 (C2, Architecture §8.6; paper §6): the shared
+    // sub-second rule — a finish below 1000 ms is REJECTED, not
+    // scored. Nothing is marked done and no XP is awarded. WHY reset
+    // instead of locking: the rejection means "that finish does not
+    // count" — the user retypes the same lesson immediately.
+    var elapsedMs = started ? (Date.now() - startTime) : 0;
+    if (window.DKScoring ? window.DKScoring.isSubSecond(elapsedMs) : elapsedMs < 1000) {
+      if (resultEl) {
+        resultEl.textContent = (window.dkT ? window.dkT('typing_too_fast', 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.') : 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.');
+      }
+      typed = ''; started = false;
+      if (inputEl) { inputEl.value = ''; inputEl.disabled = false; inputEl.focus(); }
+      renderPassage();
+      return false;
+    }
     finished = true;
     var st = stats();
     if (resultEl) {
@@ -135,6 +150,7 @@
       window.DK2.afterActivity('lesson', st, { lessonId: 'ur-' + lesson.id, beginnerIds: [] });
     }
     refreshDone(lesson);
+    return true;
   }
 
   function loadLesson(index) {
@@ -192,7 +208,10 @@
         if (!started && typed.length > 0) { started = true; startTime = Date.now(); }
         renderPassage();
         stats();
-        if (typed.length >= passage.length) { finish(lessons[n - 1]); inputEl.disabled = true; }
+        // WHY finish() returns a boolean: on a sub-second rejection
+        // the viewer has already reset for a retry — disabling the
+        // input here would lock the user out of that retry.
+        if (typed.length >= passage.length) { if (finish(lessons[n - 1])) { inputEl.disabled = true; } }
       });
     }
     loadLesson(n);

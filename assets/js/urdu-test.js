@@ -174,10 +174,28 @@
     if (done) { return; }
     done = true;
     clearInterval(timer);
-    // NOTE (TYPE-04 owns this line): the Math.max(1, ...) floor below is
-    // the pre-v2 behaviour kept for this commit only — TYPE-04 replaces
-    // it with the shared sub-second REJECTION gate. Do not "fix" it here.
-    var secs = started ? Math.max(1, (Date.now() - t0) / 1000) : minutes * 60;
+    // WP-4 TYPE-04 (C2, Architecture §8.6; paper §6): the shared
+    // sub-second rule — the English rejection gate, applied here.
+    // A run finishing below 1000 ms is REJECTED, not scored: nothing
+    // is saved, no result is shown as a score, no XP/referral/
+    // lastTestAt/challenge side-effect runs. The old Math.max(1, …)
+    // floor is gone as a scoring path — flooring would turn a paste
+    // into a ~120 WPM score. Retry (restartBtn/retryBtn) starts a
+    // fresh session; the rejection is not a lockout.
+    var elapsedMs = started ? (Date.now() - t0) : 0;
+    if (window.DKScoring ? window.DKScoring.isSubSecond(elapsedMs) : elapsedMs < 1000) {
+      $('resWpm').textContent = '0';
+      $('resAcc').textContent = '0%';
+      $('resChars').textContent = '0';
+      $('resTime').textContent = fmt(0);
+      // WHY the dict key (not a literal): the same anti-cheat message
+      // the English test shows, translated by the active display
+      // language (EN + UR translations exist).
+      $('resVerdict').textContent = (window.dkT ? window.dkT('typing_too_fast', 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.') : 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.');
+      show('done');
+      return;
+    }
+    var secs = elapsedMs / 1000;
     var st;
     if (window.DKScoring) {
       st = window.DKScoring.score(target, typed, secs * 1000, 'ur');
