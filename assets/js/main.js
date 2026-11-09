@@ -386,7 +386,21 @@ if(cv){
     if(!paused && !reduced && !tabHidden){ framePending = true; requestAnimationFrame(draw); }
   }
   size(); mk(); draw();
-  window.addEventListener('resize', function(){ size(); mk(); if(paused || reduced){ paint(); } });
+  /* F45 (rec 45): resize fires continuously during a window drag and
+   * size()+mk() rebuilds the whole particle field per event — throttle
+   * to one rebuild per animation frame (same tick pattern as the scroll
+   * listeners elsewhere in this file; those are already rAF + passive).
+   * The admin tab-indicator resize re-measure is a single cheap read
+   * and the pointer handler is already one delegated rAF handler. */
+  var cvResizeTick = false;
+  window.addEventListener('resize', function(){
+    if(cvResizeTick){ return; }
+    cvResizeTick = true;
+    requestAnimationFrame(function(){
+      cvResizeTick = false;
+      size(); mk(); if(paused || reduced){ paint(); }
+    });
+  });
   var pb = document.getElementById('pause-motion');
   if(pb){
     // B58: keep the label via its data-i18n key (not a bare textContent
@@ -527,6 +541,25 @@ var fab = document.getElementById('chat-fab'), panel = document.getElementById('
 // - idle blink (below) swaps to the sleep photo ~150ms every ~5s,
 //   idle state only, never during thinking/sleep/mic/greeting/success.
 var DOKI_STATES = ['doki--idle','doki--working','doki--greeting','doki--thinking','doki--success','doki--sleep','doki--error','doki--mic'];
+/* F48 (rec 48): the avatar now has srcset derivatives (96w/192w/400w).
+ * A src-only swap would leave srcset pointing at the other variant, so
+ * the browser would render the wrong (awake/asleep) photo from srcset.
+ * Swap both, by the same 'doki-photo' <-> 'doki-photo-sleep' rename —
+ * the derivative names keep the same prefix, so one rename covers all
+ * sizes. The awake->sleep rename uses a negative lookahead so an
+ * already-sleep URL is never double-renamed. */
+function dokiSwapPhoto(img, sleep){
+  if(!img) return;
+  if(sleep){
+    if(img.src) img.src = img.src.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep');
+    var ss = img.getAttribute('srcset');
+    if(ss) img.setAttribute('srcset', ss.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep'));
+  } else {
+    if(img.src) img.src = img.src.replace(/doki-photo-sleep/g, 'doki-photo');
+    var ss2 = img.getAttribute('srcset');
+    if(ss2) img.setAttribute('srcset', ss2.replace(/doki-photo-sleep/g, 'doki-photo'));
+  }
+}
 function dokiSet(el, state){
   if(!el) return;
   DOKI_STATES.forEach(function(s){ el.classList.remove(s); });
@@ -536,11 +569,7 @@ function dokiSet(el, state){
   // open-eye photo (this also ends a mid-blink swap cleanly).
   var img = el.querySelector('.doki-photo');
   if(img && img.src){
-    if(state === 'doki--sleep'){
-      if(/doki-photo\.png$/.test(img.src)) img.src = img.src.replace('doki-photo.png', 'doki-photo-sleep.png');
-    } else {
-      img.src = img.src.replace('doki-photo-sleep.png', 'doki-photo.png');
-    }
+    dokiSwapPhoto(img, state === 'doki--sleep');
   }
 }
 function dokiHead(){ return document.querySelector('#chat-panel .chead .doki'); }
@@ -594,6 +623,27 @@ if(fab && panel){ fab.addEventListener('click', function(){
   // extra Tab stops through the page behind the panel.
   if(opened){ var ci = document.getElementById('chat-input'); if(ci){ ci.focus(); } }
 }); }
+/* F42 (rec 42): the panel-head Doki photo is loading="lazy" (it lives
+ * in #chat-panel, display:none until opened, so the browser would not
+ * fetch it until first open — and the open would show a missing avatar
+ * until the photo arrived). Prefetch on intent: pointer hover, keyboard
+ * focus, or touch press on the FAB starts the fetch before the click,
+ * so first open is instant on hover/keyboard. Touch without hover still
+ * fetches on open (the prefetch and the click are milliseconds apart
+ * there — documented limitation). Setting loading="eager" on the
+ * already-parsed img triggers the fetch. */
+if(fab && panel){
+  var dokiHeadImg = document.querySelector('#chat-panel .chead .doki-photo');
+  var dokiHeadPrefetched = false;
+  function dokiHeadPrefetch(){
+    if(dokiHeadPrefetched || !dokiHeadImg) return;
+    dokiHeadPrefetched = true;
+    dokiHeadImg.loading = 'eager';
+  }
+  fab.addEventListener('pointerenter', dokiHeadPrefetch);
+  fab.addEventListener('focusin', dokiHeadPrefetch);
+  fab.addEventListener('pointerdown', dokiHeadPrefetch);
+}
 // AUD-052: chat-panel Escape-close, mirroring the nav-drop pattern
 // (bindNavDrop): close on Escape and return focus to the launcher
 // (here the FAB). The panel is non-modal; this only adds the close.
@@ -649,10 +699,19 @@ function dokiPhotoImgs(){
 }
 (function dokiPreloadBlink(){
   var imgs = dokiPhotoImgs();
-  if(imgs.length && imgs[0].src){
-    var pre = new Image();
-    pre.src = imgs[0].src.replace('doki-photo.png', 'doki-photo-sleep.png');
-  }
+  if(!imgs.length || !imgs[0].src) return;
+  /* F48 (rec 48): preload the SLEEP variant the blink swaps to — the
+   * dpr-appropriate derivative from the img's own srcset (96w at dpr<=1.5,
+   * 192w above), so the 150ms blink frame is cached at the size actually
+   * rendered. Was: the 400w sleep photo (118 KB) on every page load. */
+  var ss = imgs[0].getAttribute('srcset') || '';
+  var cands = ss.split(',').map(function(p){ return p.trim().split(/\s+/); });
+  var want = (window.devicePixelRatio || 1) > 1.5 ? '192w' : '96w';
+  var pick = null;
+  cands.forEach(function(c){ if(c[1] === want) pick = c[0]; });
+  var url = pick || imgs[0].src.replace('doki-photo.png', 'doki-photo-sleep.png');
+  var pre = new Image();
+  pre.src = url.replace(/doki-photo(?!-sleep)/g, 'doki-photo-sleep');
 })();
 function dokiBlinkTick(){
   // F37 (rec 37): reduced-motion / paused users never get the idle
@@ -665,12 +724,12 @@ function dokiBlinkTick(){
   if(!head || !head.classList.contains('doki--idle')) return;
   var imgs = dokiPhotoImgs();
   imgs.forEach(function(img){
-    if(/doki-photo\.png$/.test(img.src)) img.src = img.src.replace('doki-photo.png', 'doki-photo-sleep.png');
+    if(/doki-photo\.png$/.test(img.src)) dokiSwapPhoto(img, true);
   });
   setTimeout(function(){
     var h = dokiHead();
     if(h && h.classList.contains('doki--idle')){
-      imgs.forEach(function(img){ img.src = img.src.replace('doki-photo-sleep.png', 'doki-photo.png'); });
+      imgs.forEach(function(img){ dokiSwapPhoto(img, false); });
     }
   }, 150);
 }

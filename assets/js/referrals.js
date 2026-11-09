@@ -404,13 +404,14 @@
      * sat at width:0 forever — this text line is the ONLY place
      * rankProgress is rendered, and it never touched the bar. The bar
      * now shows the same real rankProgress (clamped 0-100) with its
-     * aria-valuenow kept in sync; the .3s width transition (Panel band)
-     * animates the fill. Pages without the bar (dashboard/profile)
-     * simply skip it. */
+     * aria-valuenow kept in sync; the .3s transform transition (F41:
+     * scaleX via --p, not width — a width% update would re-layout on
+     * every render) animates the fill. Pages without the bar
+     * (dashboard/profile) simply skip it. */
     var refBar = (typeof document !== 'undefined') ? document.querySelector('.ref-progress span') : null;
     if (refBar) {
       var refPct = Math.max(0, Math.min(100, Number(s.rankProgress) || 0));
-      refBar.style.width = refPct + '%';
+      refBar.style.setProperty('--p', (refPct / 100).toFixed(3));
       if (refBar.parentElement) { refBar.parentElement.setAttribute('aria-valuenow', String(Math.round(refPct))); }
     }
     return setHtml(idOrEl, html);

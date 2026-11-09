@@ -32,7 +32,7 @@ button.linklike:hover{color:var(--amber)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
 /* WHY clip instead of left:-9999px: the -9999px offset breaks paint on RTL pages in Chromium (blank frame) and can explode the scroll area; the clip pattern hides the link identically for sighted users while keeping it keyboard-focusable. */
 .skip{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.skip:focus{position:fixed;left:12px;top:12px;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;background:var(--amber);color:var(--ink);padding:8px 12px;z-index:100}
-.container{max-width:1120px;margin:0 auto;padding:0 20px}
+.container{max-width:1120px;margin:0 auto;padding:0 var(--pad-card)}
 /* T037 (P5-DES-11): narrow container for auth/form/settings pages —
  * forms read as forms, not stretched lines. Used on the main
  * container only (header nav + footer keep the full 1120px). */
@@ -47,7 +47,7 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .navlinks a:hover{background:var(--surface2);color:var(--amber);box-shadow:0 0 0 1px var(--violet)}
 .navlinks a.active{background:var(--violet);color:var(--on-accent)}
 .navtoggle{display:none;margin-left:auto;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
-.btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:var(--on-accent)!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn{display:inline-block;background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:var(--on-accent)!important;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:var(--r-md);border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(var(--violet-rgb),.45);color:var(--on-accent)}
 .btn:active{transform:translateY(0)}
 .btn.amber{background:var(--amber);color:var(--ink)!important}
@@ -78,17 +78,17 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .type-line{font-size:20px;margin:18px 0}
 #type-rotator{color:var(--amber);font-weight:800;border-right:3px solid var(--amber);padding-right:4px}
 .searchbox{margin:22px 0;display:flex;gap:10px;max-width:560px}
-.searchbox input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:13px 16px;font-size:16px}
+.searchbox input{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:var(--r-md);padding:13px 16px;font-size:16px}
 /* B53: homepage search results — the listbox and empty state sit under
  * the input (inside .search-field, so they track the input's width);
  * option buttons are full-width rows, keyboard-highlighted via .active. */
 .search-field{position:relative;flex:1;display:flex;min-width:0}
 .search-field input{flex:1;min-width:0}
-#tool-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(0,0,0,.4);overflow:hidden}
-#tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
+#tool-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 14px 30px rgba(0,0,0,.4);overflow:hidden}
+#tool-search-results [role="option"]{display:block;width:100%;text-align:left;background:none;border:0;padding:10px var(--pad-compact);font:inherit;color:var(--text);cursor:pointer;text-transform:capitalize}
 #tool-search-results [role="option"].active,#tool-search-results [role="option"]:hover{background:var(--surface2);color:var(--amber)}
-#tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted)}
-.float-card{position:absolute;background:rgba(29,25,51,.92);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13px;font-weight:700;box-shadow:0 16px 34px rgba(0,0,0,.35);animation:floaty 5.5s ease-in-out infinite;white-space:nowrap}
+#tool-search-empty{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px var(--pad-compact);color:var(--muted)}
+.float-card{position:absolute;background:rgba(29,25,51,.92);border:1px solid var(--line);border-radius:14px;padding:10px var(--pad-compact);font-size:13px;font-weight:700;box-shadow:0 16px 34px rgba(0,0,0,.35);animation:floaty 5.5s ease-in-out infinite;white-space:nowrap}
 /* DA-01 (Phase C): the float-cards live in the .orbit row below the
  * search chips (design §01), not pinned to the hero's right edge.
  * Positions / rotations / delays are the design's; --rot is consumed
@@ -114,7 +114,7 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(18,16,31,.92);backd
 .tools-marquee .marquee-track{display:flex;width:max-content;animation:dk-marquee 28s linear infinite;align-items:center}
 .tools-marquee:hover .marquee-track{animation-play-state:paused}
 .mq-half{display:flex;align-items:center}
-.mq-item{white-space:nowrap;padding:10px 14px;color:var(--muted);font-weight:700}
+.mq-item{white-space:nowrap;padding:10px var(--pad-compact);color:var(--muted);font-weight:700}
 .mq-sep{color:var(--amber);padding:0 2px}
 @keyframes dk-marquee{to{transform:translateX(-50%)}}
 [dir="rtl"] .marquee-track{animation-name:dk-marquee-rtl}
@@ -145,7 +145,7 @@ h1{font-size:clamp(28px,4vw,36px);line-height:1.15;margin:0 0 12px;font-family:v
 h2{font-size:clamp(24px,3.5vw,32px);line-height:1.2;margin:0 0 14px;font-family:var(--font-display);letter-spacing:-.02em}
 h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-display);letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);box-shadow:0 10px 34px rgba(23,20,46,.10);transition:transform .15s,border-color .15s,box-shadow .15s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--pad-card);box-shadow:0 10px 34px rgba(23,20,46,.10);transition:transform .15s,border-color .15s,box-shadow .15s}
 .card:hover{transform:translateY(-3px);border-color:var(--violet);box-shadow:0 14px 30px rgba(var(--violet-rgb),.22)}
 /* N04 (Phase C): a revealed card's .reveal.in{transform:none} (0,2,0)
  * ties .card:hover (0,2,0) but sits later in the file, so it used to
@@ -182,7 +182,7 @@ h3{font-size:clamp(18px,2.5vw,21px);margin:22px 0 8px;font-family:var(--font-dis
 .dropzone .dz-hint{margin:0 0 10px;color:var(--muted);font-size:14px}
 .dropzone input[type=file]{max-width:100%}
 label{font-weight:700;display:block;margin:14px 0 6px}
-input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px}
+input[type=text],input[type=number],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:var(--r-md);padding:12px var(--pad-compact);font-size:16px}
 textarea{min-height:160px;resize:vertical}
 input[type=file]{width:100%;padding:10px 0}
 /* T090 (P5-VIS-15): equal-height guide cards — the guides grid rows sized
@@ -196,13 +196,13 @@ input[type=file]{width:100%;padding:10px 0}
 /* B93: About-page Doki figure — the site's own mascot photo (already published in the chat panel on every page), floated beside
  * "Our story" on desktop, centred and stacked on small screens. */
 .about-doki{float:right;width:200px;margin:6px 0 16px 24px;text-align:center}
-.about-doki img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
+.about-doki img{width:100%;height:auto;border-radius:var(--r-lg);border:1px solid var(--line)}
 .about-doki figcaption{font-size:14px;color:var(--muted);margin-top:6px}
 @media(max-width:600px){.about-doki{float:none;width:180px;margin:0 auto 16px}}
 /* T090 (P5-VIS-15): the native file-input button renders white in Chromium's
  * dark mode — the only white control on the dark tool pages (the "empty white
  * box" on the resizer). Style it like the site's ghost buttons. */
-input[type=file]::file-selector-button,input[type=file]::-webkit-file-upload-button{background:transparent;border:1.5px solid var(--line);color:var(--text);border-radius:8px;padding:8px 14px;margin-right:10px;font:inherit;cursor:pointer}
+input[type=file]::file-selector-button,input[type=file]::-webkit-file-upload-button{background:transparent;border:1.5px solid var(--line);color:var(--text);border-radius:var(--r-sm);padding:8px var(--pad-compact);margin-right:10px;font:inherit;cursor:pointer}
 input[type=range]{width:100%}
 /* T042 (P5-DES-17): range/checkbox/radio inputs match the site palette.
  * accent-color tints the native checked box / slider thumb violet;
@@ -215,11 +215,11 @@ input[type=range]:hover{border-color:var(--amber)}
 .note{background:var(--surface2);border-left:4px solid var(--amber);border-radius:10px;padding:var(--pad-compact) var(--pad-card);color:var(--muted)}
 .note b{color:var(--text)}
 .ok{color:var(--good);font-weight:700}.err{color:var(--bad);font-weight:700}
-.result{margin-top:16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
+.result{margin-top:16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--pad-card)}
 .result img{max-width:100%;height:auto;border-radius:10px}
 .filelist{list-style:none;padding:0}.filelist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden}
-th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--r-md);overflow:hidden}
+th,td{padding:12px var(--pad-compact);border-bottom:1px solid var(--line);text-align:left}
 th{background:var(--surface2)}
 .tablewrap{overflow-x:auto}
 footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
@@ -229,7 +229,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .footgrid a{color:var(--muted);text-decoration:none;display:block;padding:3px 0}
 .footgrid a:hover{color:var(--amber);text-decoration:underline}
 .footbase{color:var(--muted);font-size:14px;margin-top:24px}
-.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:var(--pad-compact) var(--pad-card);margin:10px 0}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--pad-compact) var(--pad-card);margin:10px 0}
 .faq summary{font-weight:700;cursor:pointer}
 #chat-fab{position:fixed;right:20px;bottom:20px;z-index:90;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--violet-deep));border:0;color:var(--on-accent);font-size:26px;cursor:pointer;box-shadow:0 12px 28px rgba(var(--violet-rgb),.5);transition:transform .15s}
 #chat-fab:hover{transform:translateY(-2px)}
@@ -244,14 +244,14 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
  * ellipsises instead of ever running under the button. */
 .chat-mode{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line)}
 .chat-mode span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:14px}
-.chat-mode .btn{flex:none;padding:10px 14px}
+.chat-mode .btn{flex:none;padding:10px var(--pad-compact)}
 .dk-thinking{display:inline-flex;gap:4px;align-items:center}
 .dk-thinking i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4;animation:dkthink 1s infinite}
 .dk-thinking i:nth-child(2){animation-delay:.15s}
 .dk-thinking i:nth-child(3){animation-delay:.3s}
 @keyframes dkthink{0%,100%{opacity:.25;transform:none}50%{opacity:1;transform:translateY(-2px)}}
-#chat-panel .chead{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
-#chat-log{padding:14px 18px;max-height:280px;overflow:auto}
+#chat-panel .chead{padding:var(--pad-compact) 18px;border-bottom:1px solid var(--line);font-weight:800;display:flex;align-items:center;gap:10px}
+#chat-log{padding:var(--pad-compact) 18px;max-height:280px;overflow:auto}
 /* N14 (Phase C): long unbroken strings (URLs, emails) wrap instead of
  * overflowing their container. Targeted only — the three places that
  * render user-controlled long strings: Doki chat bubbles (.msg, whose
@@ -301,7 +301,7 @@ footer.site{border-top:1px solid var(--line);margin-top:40px;padding:36px 0}
 .chip:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
 .reveal.in{opacity:1;transform:none}
-.passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:var(--pad-card)}
+.passage{font-size:19px;line-height:2;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--pad-card)}
 .passage span.ok{color:var(--good)}.passage span.bad{color:var(--bad);text-decoration:underline}.passage span.cur{background:var(--surface2);border-radius:4px}
 .statnum{font-size:26px;font-weight:800}
 /* B77: accuracy dial — an SVG ring around the live accuracy % (r=15.9155
@@ -347,7 +347,7 @@ html.dk-paused *{animation-play-state:paused!important}
    .active class admin.js toggles had no visible state). Styled as pills
    matching .chip; .active copies the established .chip.active pattern
    (violet background, white text) so the selected tab is obvious. */
-.tab-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.tab-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px var(--pad-compact);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
 .tab-btn:hover{border-color:var(--violet)}
 .tab-btn.active{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
 .tab-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
@@ -359,16 +359,16 @@ html.dk-paused *{animation-play-state:paused!important}
 /* On-screen keyboard (Urdu page): rows of tappable letter keys. */
 .kb{margin:14px 0}
 .kb-row{display:flex;gap:6px;flex-wrap:wrap;margin:5px 0}
-.key{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer}
+.key{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px var(--pad-compact);font-size:18px;cursor:pointer}
 .key:hover{border-color:var(--amber);color:var(--amber)}
 /* Word Fall play area: fixed height so falling words stay inside. */
-.game-area{position:relative;height:260px;overflow:hidden;background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.game-area{position:relative;height:260px;overflow:hidden;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md)}
 .fall-word{position:absolute;left:50%;transform:translateX(-50%);font-size:26px;font-weight:800;color:var(--amber);white-space:nowrap}
 /* Brand swatches for the design-system page (real token colours). */
-.swatch{display:inline-block;width:56px;height:56px;border-radius:12px;border:1px solid var(--line);vertical-align:middle;margin-right:10px}
+.swatch{display:inline-block;width:56px;height:56px;border-radius:var(--r-md);border:1px solid var(--line);vertical-align:middle;margin-right:10px}
 .sw-violet{background:var(--violet)}.sw-amber{background:var(--amber)}.sw-ink{background:var(--ink)}.sw-bg{background:var(--bg)}.sw-surface{background:var(--surface)}.sw-violet2{background:var(--violet2)}.sw-violet-deep{background:var(--violet-deep)}
 /* SAMPLE badge for certificate previews (never a real certificate). */
-.sample-badge{display:inline-block;border:2px solid var(--amber);color:var(--amber);border-radius:8px;padding:4px 10px;font-weight:800;letter-spacing:2px}
+.sample-badge{display:inline-block;border:2px solid var(--amber);color:var(--amber);border-radius:var(--r-sm);padding:4px 10px;font-weight:800;letter-spacing:2px}
 
 
 /* ---- Restore additions (audit gap restore — one place, shared) ---- */
@@ -377,11 +377,11 @@ html.dk-paused *{animation-play-state:paused!important}
 .prof-drop{position:relative}
 .lang-btn,.theme-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 12px;font-size:15px;font-weight:600;cursor:pointer}
 .lang-btn:hover,.theme-btn:hover,.navtoggle:hover{border-color:var(--amber);color:var(--amber)}
-.lang-menu,.prof-menu,.app-panel{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
-.lang-menu li{padding:8px 10px;border-radius:8px;cursor:pointer}
+.lang-menu,.prof-menu,.app-panel{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
+.lang-menu li{padding:8px 10px;border-radius:var(--r-sm);cursor:pointer}
 .lang-menu li:hover{background:var(--surface2);color:var(--amber)}
 .lang-menu li[aria-selected="true"]{color:var(--amber);font-weight:700}
-.prof-menu a,.prof-menu button.prof-row{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text)}
+.prof-menu a,.prof-menu button.prof-row{display:block;padding:8px 10px;border-radius:var(--r-sm);text-decoration:none;color:var(--text)}
 .prof-menu a:hover,.prof-menu button.prof-row:hover,.app-tile:hover{background:var(--surface2);color:var(--amber)}
 .dk-avatarbtn,.app-btn{background:var(--surface2);border:1px solid var(--line);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer}
 .dk-avatarbtn:hover,.app-btn:hover{border-color:var(--amber);color:var(--amber)}
@@ -430,7 +430,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
  * (90, stays clickable on top) and above the sticky CTA (40); on
  * phones the toast sits above the FAB (bottom:92px) so it never covers
  * it or the sticky CTA bar. */
-.install-banner,.site-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 32px);max-width:560px;z-index:85;display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0;flex-wrap:wrap;box-shadow:0 16px 34px rgba(0,0,0,.4)}
+.install-banner,.site-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 32px);max-width:560px;z-index:85;display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 16px;margin:0;flex-wrap:wrap;box-shadow:0 16px 34px rgba(0,0,0,.4)}
 @media(max-width:760px){.install-banner,.site-banner{bottom:92px}}
 /* Sticky CTA (home page only) + dismissible tip banner on the home page.
  * P5-VIS-02: the pill used to be an unconditional sticky bar that covered
@@ -457,7 +457,7 @@ body.has-sticky-cta{padding-bottom:84px}
 /* Guided tour overlay (opened only by the Tour button, never auto). */
 .tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:95;display:none}
 .tour-backdrop.open{display:block}
-.tour-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:420px;width:calc(100vw - 40px);z-index:96}
+.tour-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:var(--pad-roomy);max-width:420px;width:calc(100vw - 40px);z-index:96}
 /* Tool filter chips + picker chips (shared active state). */
 .chip.active{background:var(--violet);color:var(--on-accent);border-color:var(--violet)}
 /* B78: in-page typing sub-nav — the same .chip component as /tools/
@@ -550,7 +550,7 @@ input,select,textarea{background:#fff!important;color:#000!important}
 /* Urdu pages: right-aligned inputs under RTL. */
 [dir="rtl"] input[type=text],[dir="rtl"] textarea{text-align:right}
 
-.pick{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;margin:3px}
+.pick{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:8px var(--pad-compact);font-size:15px;font-weight:600;color:var(--text);cursor:pointer;margin:3px}
 /* DoKit — on-screen keyboard styles (companion to keyboard.js).
  * INTEGRATION: copy these rules into phase2/assets/css/style.css
  * (do NOT load this as a separate per-page stylesheet, and do NOT
@@ -584,7 +584,7 @@ input,select,textarea{background:#fff!important;color:#000!important}
  * are removed, not restyled. T032 (P5-DES-02). */
 
 /* How-to steps panels (restored old saas-steps pattern, new design tokens). */
-.saas-steps{display:flex;gap:12px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:20px;position:relative;flex-wrap:wrap}
+.saas-steps{display:flex;gap:12px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 16px;margin-bottom:20px;position:relative;flex-wrap:wrap}
 .saas-step{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .saas-step-n{display:inline-flex;align-items:center;justify-content:center;width:1.6rem;height:1.6rem;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:12px}
 .saas-step.done{color:var(--text)}
@@ -719,8 +719,8 @@ main.dk-enter-short{animation:dkpagein .2s ease-out}
 .nav-drop{position:relative;display:flex;align-items:center}
 .nav-drop-caret{background:transparent;border:0;color:var(--text);cursor:pointer;padding:8px 2px;font-size:14px;line-height:1}
 .nav-drop-caret:hover{color:var(--amber)}
-.nav-drop-menu{position:absolute;left:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:12px;list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
-.nav-drop-menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text);font-weight:400}
+.nav-drop-menu{position:absolute;left:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);list-style:none;margin:0;padding:8px;min-width:190px;box-shadow:0 14px 30px rgba(0,0,0,.4);z-index:60}
+.nav-drop-menu a{display:block;padding:8px 10px;border-radius:var(--r-sm);text-decoration:none;color:var(--text);font-weight:400}
 .nav-drop-menu a:hover{background:var(--surface2);color:var(--amber);box-shadow:none}
 
 /* F11 (Oct 25): dead selectors pruned — .tabbtn/.tabpanel/.key.active/.key[data-finger] had 0 uses in HTML/JS. */
@@ -733,7 +733,7 @@ main.dk-enter-short{animation:dkpagein .2s ease-out}
 .prof-menu .lang-btn{width:100%;justify-content:flex-start;text-align:left;border-radius:10px}
 .prof-menu .lang-menu{position:static;box-shadow:none;border:0;background:transparent;padding:4px 0 0;min-width:0}
 .prof-menu .lang-menu li{padding:8px 10px}
-.prof-theme{width:100%;display:flex;gap:10px;align-items:center;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:17px;font-weight:600;cursor:pointer;text-align:left}
+.prof-theme{width:100%;display:flex;gap:10px;align-items:center;padding:8px 10px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--text);font-size:17px;font-weight:600;cursor:pointer;text-align:left}
 .prof-theme:hover{background:var(--surface2);color:var(--amber)}
 @media(max-width:600px){.prof-menu #langCur{display:inline}}
 /* ---- Oct 26 waffle wow: panel entrance + staggered tiles + hover lift ---- */
@@ -758,8 +758,8 @@ main.dk-enter-short{animation:dkpagein .2s ease-out}
 /* ---- Oct 26 footer base: centered + entrance animation + hover ---- */
 .footbase{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--line);position:relative;animation:footBaseIn .6s ease-out}
 @keyframes footBaseIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.footbase::before{content:"";position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:120px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
-.footbase:hover::before{width:220px}
+.footbase::before{content:"";position:absolute;top:-1px;left:50%;transform:translateX(-50%) scaleX(.545);width:220px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--amber));transition:transform .3s ease}
+.footbase:hover::before{transform:translateX(-50%) scaleX(1)} /* F41 (rec 41): was width 120px->220px (layout per frame); now scaleX on the fixed 220px bar — same visual, compositor-only. .545 = 120/220. */
 .footbase a{display:inline-block;padding:2px 4px;border-radius:6px;transition:color .18s,transform .18s}
 .footbase a:hover{color:var(--amber);text-decoration:underline;transform:translateY(-1px)}
 /* ---- Referral Phase 1 (Oct 26): page-scoped .ref-* styles ONLY ----
@@ -777,7 +777,7 @@ prefers-reduced-motion (verified: `*{animation:none!important;
 transition:none!important}`), so these animations are covered. */
 .ref-section{margin-top:28px}
 .ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
+.ref-stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--pad-card);margin:0;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;animation:refFadeIn .4s ease-out backwards}
 .ref-grid .ref-stat:nth-child(1){animation-delay:.02s}
 .ref-grid .ref-stat:nth-child(2){animation-delay:.06s}
 .ref-grid .ref-stat:nth-child(3){animation-delay:.10s}
@@ -789,9 +789,9 @@ transition:none!important}`), so these animations are covered. */
 .ref-card{animation:refFadeIn .4s ease-out backwards}
 .ref-card:hover{transform:translateY(-4px);border-color:var(--violet);box-shadow:0 10px 22px rgba(var(--violet-rgb),.35)}
 .ref-card:active{transform:translateY(-1px)}
-.ref-progress{height:12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
-.ref-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber));transition:width .3s ease}
-.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--pad-card);margin:12px 0;animation:refFadeIn .4s ease-out backwards}
+.ref-progress{height:12px;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.ref-progress span{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--violet),var(--amber));transform:scaleX(var(--p,0));transform-origin:left center;transition:transform .3s ease} /* F41 (rec 41): was width:0 + width% from JS (layout per update); now scaleX(var(--p)) set by renderStats — same fill, compositor-only. Container keeps its fixed 12px height, so no shift. */
+.ref-level{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--pad-card);margin:12px 0;animation:refFadeIn .4s ease-out backwards}
 .ref-level:nth-of-type(1){animation-delay:.05s}
 .ref-level:nth-of-type(2){animation-delay:.10s}
 .ref-level:nth-of-type(3){animation-delay:.15s}
@@ -858,12 +858,12 @@ footer.site .logo{display:flex;align-items:center;gap:10px}
 .hero .hero-inner{max-width:860px;margin:0 auto;text-align:center}
 /* Eyebrow -> pill (design tag). The pulse dot is a ::before, NOT
  * markup: data-i18n wipes the eyebrow's children on language change. */
-.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,76,241,.22);border:1px solid rgba(139,116,255,.45);color:#B7A6FF;border-radius:999px;padding:6px 14px;font-size:12.5px;letter-spacing:1.5px}
-.hero .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:#FFC531;animation:pulse 1.6s ease-in-out infinite}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,76,241,.22);border:1px solid rgba(139,116,255,.45);color:#B7A6FF;border-radius:var(--r-pill);padding:6px var(--pad-compact);font-size:12.5px;letter-spacing:1.5px}
+.hero .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 /* Typed line (design): display font, white, min-height so the line
  * does not jump as words change length; the caret blinks (design 1s). */
-.hero .type-line{font-family:var(--font-display);font-size:clamp(20px,3.2vw,30px);font-weight:700;color:#F4F2FF;min-height:1.35em;margin:14px 0 0}
+.hero .type-line{font-family:var(--font-display);font-size:clamp(20px,3.2vw,30px);font-weight:700;color:var(--text);min-height:1.35em;margin:14px 0 0}
 /* CLS-F01 (Phase D): the rotator types one character at a time, so a
  * plain inline span changes width on every keystroke and the centred
  * "Try: …" line re-centres, shifting the "Try:" text on every tick
@@ -871,23 +871,23 @@ footer.site .logo{display:flex;align-items:center;gap:10px}
  * English word is "Password Generator", 18 chars) keeps the line width
  * constant, so typing moves nothing. min-width, not width, so a longer
  * translation can still grow instead of wrapping. */
-.hero .type-line #type-rotator{color:#F4F2FF;border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite;display:inline-block;min-width:19ch;text-align:left}
+.hero .type-line #type-rotator{color:var(--text);border-right:3px solid var(--amber);padding-right:4px;animation:caretBlink 1s steps(1) infinite;display:inline-block;min-width:19ch;text-align:left}
 @keyframes caretBlink{0%,49%{border-right-color:var(--amber)}50%,100%{border-right-color:transparent}}
 /* Lead (design): smaller, centred, 600px. */
-.hero p.lead{font-size:16.5px;max-width:600px;margin:12px auto 0;color:#B9B3E0}
+.hero p.lead{font-size:16.5px;max-width:600px;margin:12px auto 0;color:var(--muted)}
 /* Searchbox -> glass (design). Scoped to .hero so the FAQ searchbox
  * (same class, theme-aware) is untouched. The input is transparent
  * and borderless; focus is shown by the :focus-within ring. */
-.hero .searchbox{margin:22px auto 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:7px;backdrop-filter:blur(8px)}
+.hero .searchbox{margin:22px auto 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:var(--r-lg);padding:7px;backdrop-filter:blur(8px)}
 .hero .searchbox:focus-within{border-color:#8B74FF;box-shadow:0 0 0 4px rgba(108,76,241,.28)}
-.hero .searchbox .search-field input{background:transparent;border:0;color:#F4F2FF;font-size:15px;padding:11px 12px;border-radius:10px}
+.hero .searchbox .search-field input{background:transparent;border:0;color:var(--text);font-size:15px;padding:11px 12px;border-radius:10px}
 .hero .searchbox .search-field input::placeholder{color:#9B94C4}
 .hero .searchbox .search-field input:focus{outline:0;box-shadow:none}
 .hero .searchbox .btn{padding:11px 18px;flex:none}
 .hero .searchbox .btn.ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
 /* Search chips -> glass (design), centred row, amber hover + lift. */
 .hero .search-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:16px 0 0}
-.hero .search-chips .chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#F4F2FF;font-size:12.5px;padding:6px 12px}
+.hero .search-chips .chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--text);font-size:12.5px;padding:6px 12px}
 .hero .search-chips .chip:hover{background:rgba(255,197,49,.16);border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
 /* Orbit row (design): the float-cards sit in normal flow below the
  * chips, so they can never cover the heading (this is what lets the
@@ -902,9 +902,9 @@ footer.site .logo{display:flex;align-items:center;gap:10px}
 @media(max-width:480px){.orbit{height:auto;display:flex;flex-direction:column;align-items:center;gap:8px}.orbit .float-card{position:static}.orbit .float-card .float-preview{display:none}}
 /* Stats -> glass hstat (design). Content unchanged (B56: no counts). */
 .hero .stats{margin-top:26px;justify-content:center;flex-wrap:wrap;gap:12px}
-.hero .stats>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 18px}
-.hero .stats b{display:block;font-size:19px;color:#F4F2FF}
-.hero .stats span{font-size:11.5px;color:#B9B3E0}
+.hero .stats>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-md);padding:10px 18px}
+.hero .stats b{display:block;font-size:19px;color:var(--text)}
+.hero .stats span{font-size:11.5px;color:var(--muted)}
 /* Glow drift (design): violet 14s, amber 18s, gentle translate only. */
 @keyframes drift{from{transform:translate(0,0)}to{transform:translate(28px,18px)}}
 
@@ -1147,7 +1147,7 @@ button:not(.btn):active svg{transform:scale(.94)}
  * clip + background apply cleanly to the inline <span>s. */
 .grad-text,#tools h2,#ty-wpm,#ty-acc{background:linear-gradient(92deg,#B7A6FF 0%,#8B74FF 45%,var(--amber) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 #ty-wpm,#ty-acc{display:inline-block}
-[data-theme="light"] .grad-text,[data-theme="light"] #tools h2,[data-theme="light"] #ty-wpm,[data-theme="light"] #ty-acc{background:linear-gradient(92deg,#6C4CF1,#8B74FF,var(--gold-text));-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-theme="light"] .grad-text,[data-theme="light"] #tools h2,[data-theme="light"] #ty-wpm,[data-theme="light"] #ty-acc{background:linear-gradient(92deg,var(--violet2),#8B74FF,var(--gold-text));-webkit-background-clip:text;background-clip:text;color:transparent}
 @supports not ((background-clip:text) or (-webkit-background-clip:text)){.grad-text,#tools h2,#ty-wpm,#ty-acc{color:var(--violet2)}}
 
 /* F17 — Floating Gradient Orbs (rec 17).
@@ -1264,7 +1264,7 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
  * the tour (96) so an error is never hidden behind a modal. DKUI.toast
  * is wired to the same function so the existing certificate.js call
  * sites come alive with no edits there. */
-.dk-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:120;max-width:min(420px,calc(100vw - 40px));background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-size:15px;animation:dkToastIn var(--dur-panel) ease-out}
+.dk-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:120;max-width:min(420px,calc(100vw - 40px));background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-size:15px;animation:dkToastIn var(--dur-panel) ease-out}
 .dk-toast-out{opacity:0;transition:opacity .25s ease}
 @keyframes dkToastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 
@@ -1284,7 +1284,7 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
  * (E-01). A 1% scale + soft shadow on the holder gives the preview
  * a lift without touching the poster artwork itself (no radius, no
  * crop — the canvas corners stay exactly as drawn). */
-#refx-poster-holder{transition:transform var(--dur-std) ease,box-shadow var(--dur-std) ease}
+#refx-poster-holder{aspect-ratio:4/5;transition:transform var(--dur-std) ease,box-shadow var(--dur-std) ease} /* F46 (rec 46): reserve the poster's 1080x1350 ratio before the canvas exists — the canvas is appended in the same JS block, so the normal path never shifts; the ratio covers the failure path (canvas creation throws -> empty holder would collapse to 0 and the download button below would jump). Rendered canvas height = width x 1.25 = this ratio exactly. */
 #refx-poster-holder:hover{transform:scale(1.01);box-shadow:0 12px 32px rgba(0,0,0,.45)}
 
 /* F31 — Complete Responsive Grid Refinement (rec 31).
@@ -1351,7 +1351,7 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
  * place, instead of editing the shared chrome in 71 pages). Sits
  * at the end of the panel header (.chead is flex, so margin-left
  * pushes it right); 44px touch target per F35; muted until hover. */
-.chat-close{margin-left:auto;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
+.chat-close{margin-left:auto;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:var(--r-sm);color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
 .chat-close:hover{color:var(--text)}
 
 /* F38 (rec 38): light-theme amber text. Amber #FFC531 measures 1.45:1
@@ -1372,3 +1372,30 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
 [data-theme="light"] a:hover,[data-theme="light"] button.linklike:hover,[data-theme="light"] .navlinks a:hover,[data-theme="light"] #tool-search-results [role="option"].active,[data-theme="light"] #tool-search-results [role="option"]:hover,[data-theme="light"] .mq-sep,[data-theme="light"] .float-card .sample-tag,[data-theme="light"] .card a.cardlink:hover,[data-theme="light"] .tag,[data-theme="light"] .footgrid a:hover,[data-theme="light"] .chip:hover,[data-theme="light"] .key:hover,[data-theme="light"] .lang-btn:hover,[data-theme="light"] .theme-btn:hover,[data-theme="light"] .navtoggle:hover,[data-theme="light"] .lang-menu li:hover,[data-theme="light"] .prof-menu a:hover,[data-theme="light"] .prof-menu button.prof-row:hover,[data-theme="light"] .app-tile:hover,[data-theme="light"] .dk-avatarbtn:hover,[data-theme="light"] .app-btn:hover,[data-theme="light"] .sticky-cta__close:hover,[data-theme="light"] .fav-star.on,[data-theme="light"] .nav-drop-menu a.active,[data-theme="light"] .fav-star:hover,[data-theme="light"] .saas-steps-x:hover,[data-theme="light"] .pick:not(.sel):hover,[data-theme="light"] .nav-drop-caret:hover,[data-theme="light"] .nav-drop-menu a:hover,[data-theme="light"] .prof-theme:hover,[data-theme="light"] .footbase a:hover,[data-theme="light"] .ref-stat b,[data-theme="light"] .foot-lang button:hover,[data-theme="light"] .foot-lang button[aria-current="true"],[data-theme="light"] .hero .search-chips .chip:hover,[data-theme="light"] .faq details[open] summary{color:var(--gold-text)}
 [data-theme="light"] .float-card .sample-tag,[data-theme="light"] .chip:hover,[data-theme="light"] .key:hover,[data-theme="light"] .lang-btn:hover,[data-theme="light"] .theme-btn:hover,[data-theme="light"] .navtoggle:hover,[data-theme="light"] .dk-avatarbtn:hover,[data-theme="light"] .app-btn:hover,[data-theme="light"] .sticky-cta__close:hover,[data-theme="light"] .foot-lang button:hover,[data-theme="light"] .foot-lang button[aria-current="true"],[data-theme="light"] .pick:not(.sel):hover,[data-theme="light"] .hero .search-chips .chip:hover{border-color:var(--gold-text)}
 [data-theme="light"] .btn.ghost:hover{color:var(--gold-text)!important}
+
+/* F41 — CSS-First Animation Optimization (rec 41). Audit 9 Nov 2026:
+ * every @keyframes animates transform/opacity only (caretBlink animates
+ * border-color, dkShimmer background-position — both paint-only, no
+ * layout). Only 3 width transitions existed; 2 converted above
+ * (footbase::before -> scaleX, .ref-progress span -> scaleX via --p).
+ * The 3rd, .tab-indicator (transition:transform .2s,width .2s), is KEPT
+ * deliberately: it is an absolutely-positioned 3px leaf whose width
+ * change lays out only itself, once per tab switch (200ms, user action)
+ * — converting it to scaleX would need max-tab-width bookkeeping for
+ * zero measurable gain. No other layout-triggering animation exists. */
+
+/* F50 — Unified Design System (rec 50). Token consolidation 9 Nov 2026
+ * (56 value-identical substitutions, all verified by count before/after):
+ * colours 9 (hero .eyebrow/.type-line/#type-rotator/lead/input/chips/
+ * stats -> var(--amber)/var(--text)/var(--muted); light gradient stop
+ * #6C4CF1 -> var(--violet2)); radii 31 (12px->--r-md, 8px->--r-sm,
+ * 16px->--r-lg, 999px->--r-pill); padding 16 (24px->--pad-roomy,
+ * 14px->--pad-compact, 0 20px->0 var(--pad-card)).
+ * DELIBERATELY LEFT literal: the .hero block's dark-token re-declarations
+ * (the hero stays dark in light theme — those ARE definitions, not uses);
+ * the [data-theme="light"] token block; the @media print cert-sheet
+ * padding:24px; border-radius:10px/18px (no --r-* token exists for them);
+ * .15s transitions (150ms != the 140ms --dur-fast token — changing the
+ * value would alter the feel, and F30 already classes .15s as Fast);
+ * px margins/gaps (the --sp-* tokens are rem — not value-identical if
+ * the root font size ever changes). */
