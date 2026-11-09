@@ -23,10 +23,14 @@
  *   on screen and nothing is written. A quit test is never saved: quitting
  *   is not a result, and saving it would fake a completed test.
  *
- * NOT PORTED (flagged in README): the old on-screen Urdu keyboard and
- *   next-key highlight depended on the UrduKeyboard module and the layout
- *   picker. This test works with the system/physical Urdu keyboard; the
- *   parent can re-attach a keyboard later without changing this file's IDs.
+ * PORTED (WP-5 TYPE-11, C4; Architecture §5.5): the on-screen Urdu
+ *   keyboard + next-key highlight from the old page now live in this
+ *   test — window.UrduKB (js/urdu-keyboard.js, canonical map from WP-3)
+ *   renders into #ur-test-kb, attaches to the typing area on Start,
+ *   and detaches on quit/finish. Users without a physical Urdu keyboard
+ *   type Roman letters and get Urdu (the page's stated model). If
+ *   UrduKB failed to load, the test keeps working with the physical
+ *   keyboard — the port is guarded, never a hard dependency.
  *
  * IDs must match urdu-test-controls.html exactly (setup, active, done,
  *   durRow, passRow, startTestBtn, activeTitle, statWpm, statAcc, statTime,
@@ -54,6 +58,11 @@
   var minutes = 1, passIndex = 0; // current choices (defaults match the old page)
   var target = '', words = [], typed = '', started = false, done = false,
       t0 = 0, timer = null;
+  // WP-5 TYPE-11 (C4): the on-screen keyboard container. Looked up once
+  // here (after the setup/active/done guard above, so the element is
+  // known to exist on this page); kbAttach/kbDetach below guard on
+  // window.UrduKB, so a failed keyboard load never breaks the test.
+  var kbEl = $('ur-test-kb');
   // WP-4 TYPE-02: session id (dedup key, paper §7) + paste flag for
   // the verified stamp (paper §5). newSid() falls back to a
   // Date+random id when DKScoring failed to load; it never throws.
@@ -145,6 +154,40 @@
     updateLive(el);
   }
 
+  // -- Virtual keyboard (WP-5 TYPE-11, C4; Architecture §5.5) -------------
+  // WHY the port, not a new keyboard: the old page already shipped this
+  // keyboard + next-key highlight; the live test just never loaded it.
+  // The port reuses window.UrduKB (canonical map, WP-3) — no second map,
+  // no new keyboard code, no layout picker in this port (the keyboard
+  // defaults to the saved layout, phonetic; a picker is a WP-7 UX item).
+  // WHY attach/detach per attempt: UrduKB attaches to exactly one
+  // element; attaching on start() and detaching on quit/finish returns
+  // the textarea to normal typing and never leaks the listener.
+  // WHY the highlight follows typed.length: the next expected character
+  // is target[typed.length] — the same rule the old controller used
+  // (js/pages/urdu-typing.js:384-391), so a digraph's second letter
+  // highlights after its first is typed.
+  function kbHighlight() {
+    if (!window.UrduKB || !kbEl) { return; }
+    var pos = typed.length, nextCh = pos < target.length ? target[pos] : null;
+    if (nextCh === ' ') { window.UrduKB.highlightKey('Space', false); }
+    else if (nextCh) {
+      var f = window.UrduKB.findKeyFor(nextCh);
+      window.UrduKB.highlightKey(f ? f.key : null, f ? f.shift : false);
+    } else { window.UrduKB.highlightKey(null); }
+  }
+  function kbAttach() {
+    if (!window.UrduKB || !kbEl) { return; }
+    window.UrduKB.renderKeyboard(kbEl);
+    window.UrduKB.attach($('typeArea'));
+    kbHighlight();
+  }
+  function kbDetach() {
+    if (!window.UrduKB) { return; }
+    try { window.UrduKB.highlightKey(null); } catch (e) { /* highlight is cosmetic; never break finish/quit */ }
+    window.UrduKB.detach();
+  }
+
   // -- Input handling: timer starts on the FIRST keystroke -------------------
   // WHY paste is tracked: a pasted test is not a verified one (paper
   // §5) — the paste event and the insertFromPaste input type both set
@@ -167,6 +210,9 @@
       }
     }
     markWords(Math.min(yw.length - 1, words.length - 1), states);
+    // WP-5 TYPE-11: the next-key highlight follows every keystroke
+    // (physical or on-screen — both flow through this input handler).
+    kbHighlight();
   }
 
   // -- Finish: show results; save on-device ONLY if DK2 exists ---------------
@@ -174,6 +220,10 @@
     if (done) { return; }
     done = true;
     clearInterval(timer);
+    // WP-5 TYPE-11: detach the keyboard on finish (both exits below) —
+    // the attempt is over, so transliteration stops and the highlight
+    // clears; a retry re-attaches in start().
+    kbDetach();
     // WP-4 TYPE-04 (C2, Architecture §8.6; paper §6): the shared
     // sub-second rule — the English rejection gate, applied here.
     // A run finishing below 1000 ms is REJECTED, not scored: nothing
@@ -252,9 +302,12 @@
     renderTarget();
     show('active');
     $('typeArea').focus();
+    // WP-5 TYPE-11: render + attach the on-screen keyboard for this
+    // attempt (guarded: without UrduKB the test is physical-only).
+    kbAttach();
   }
   // Quit discards the attempt: no result is shown and nothing is saved.
-  function quit() { clearInterval(timer); done = true; show('setup'); }
+  function quit() { clearInterval(timer); done = true; kbDetach(); show('setup'); }
 
   // -- Picker wiring -----------------------------------------------------------
   function renderPassagePicker() {
