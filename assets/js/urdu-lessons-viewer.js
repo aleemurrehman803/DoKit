@@ -11,14 +11,19 @@
  *   old controller (js/pages/urdu-typing.js) documented this as CRITICAL, and
  *   this viewer keeps it: whole words get ok/bad/cur classes, never letters.
  *
- * WHY completion is a plain localStorage flag: the task requires mark-complete
- *   saved to localStorage only. There is deliberately NO pass/fail gate here:
- *   the old unlock-by-pass system (WPM/accuracy targets, locked lessons) is
- *   NOT ported — targets are preserved in the data file for the parent to
- *   re-add if wanted, but this viewer never invents a score and never locks
- *   a lesson. Finishing the passage also marks complete, mirroring the new
- *   English viewer's onFinish behaviour; the button lets the user mark it
- *   without finishing. Nothing is sent anywhere; there is no backend call.
+ * WHY a pass/fail gate (WP-5 TYPE-10, C5; Architecture §7.3): the old
+ *   controller (js/pages/urdu-typing.js) enforced pass + sequential
+ *   unlock, and the live viewer dropped it — targets sat unused in the
+ *   data file and Mark-complete marked done without typing. The gate is
+ *   restored here: a lesson counts as complete only when a typed
+ *   finish meets BOTH of its targets (targetWpm/targetAcc, 8–35 WPM /
+ *   90–96%), scored through DKScoring (v2 net WPM, D-2); the next
+ *   lesson unlocks only then. Pre-gate completions are grandfathered
+ *   (TYPE-15): ids already marked done stay done and keep unlocking.
+ *   Mark-complete only works after a typed pass in this session (or
+ *   when the lesson is already done). The gate messages live in the
+ *   dicts (ur_gate_*), EN + UR translated, other locales English
+ *   fallback. Nothing is sent anywhere; there is no backend call.
  *
  * DATA: prefers window.URDU_LESSONS (parent may inline the JSON as a script);
  *   otherwise fetches "urdu-lessons-data.json" from the same directory.
@@ -59,7 +64,26 @@
 
   // -- Typing state ----------------------------------------------------------
   var lessons = [], n = 1, passage = '', typed = '', started = false,
-      startTime = 0, finished = false;
+      startTime = 0, finished = false, passedThisSession = false,
+      locked = false;
+
+  // -- Gate + unlock (WP-5 TYPE-10, C5; Architecture §7.3) -----------------
+  // WHY index-based: lesson ids are the sequential numbers 1..25 and the
+  // viewer addresses lessons by position (?n=), so lesson n is unlocked
+  // when lesson n-1 is done; lesson 1 is always unlocked.
+  // WHY isDone (not a separate passed flag): DK2 stores only the id, and
+  // a done id means the lesson was passed (post-gate) or grandfathered
+  // (pre-gate, TYPE-15) — both unlock the next lesson.
+  function isUnlocked(index) {
+    if (index <= 1) { return true; }
+    return isDone(lessons[index - 2].id);
+  }
+  // WHY the dkT key (not a literal): the target line is UI text — it
+  // reads the existing target_wpm dict key (all 10 locales), so the
+  // gate never renders a raw literal (js-gate.py).
+  function targetText(lesson) {
+    return (window.dkT ? window.dkT('target_wpm', 'Target WPM') : 'Target WPM') + ': ' + lesson.targetWpm + ' / ' + lesson.targetAcc + '%';
+  }
 
   // Render the passage as whole-word spans (Nastaliq-safe, see header).
   function renderPassage() {
@@ -132,15 +156,34 @@
       renderPassage();
       return false;
     }
-    finished = true;
     var st = stats();
+    // WP-5 TYPE-10 (C5): the pass/fail gate. A typed finish counts only
+    // when it meets BOTH targets (v2 net WPM + accuracy, D-2). A failed
+    // finish marks nothing, awards no XP, and resets for an immediate
+    // retry — the same reset shape as the sub-second rejection above.
+    // A lesson without targets (defensive; all 25 carry them) passes on
+    // any typed finish, preserving the old behaviour.
+    var hasTargets = (typeof lesson.targetWpm === 'number' && typeof lesson.targetAcc === 'number');
+    var passed = !hasTargets || (st.wpm >= lesson.targetWpm && st.acc >= lesson.targetAcc);
+    if (!passed) {
+      if (resultEl) {
+        resultEl.textContent = (window.dkT ? window.dkT('ur_gate_failed', 'Not yet — target not met. Try again.') : 'Not yet — target not met. Try again.') + ' ' + targetText(lesson);
+      }
+      typed = ''; started = false;
+      if (inputEl) { inputEl.value = ''; inputEl.disabled = false; inputEl.focus(); }
+      renderPassage();
+      return false;
+    }
+    finished = true;
+    passedThisSession = true;
     if (resultEl) {
       // WHY st.typed for "out of N typed": the v2 result text counts
       // the same units the score counted (paper §2).
       var typedCount = (typeof st.typed === 'number') ? st.typed : typed.length;
       resultEl.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc +
         (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') +
-        typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
+        typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.') + ' ' +
+        (window.dkT ? window.dkT('ur_gate_passed', 'Passed! Lesson complete.') : 'Passed! Lesson complete.');
     }
     markDone(lesson.id);
     // Gamification (Task 5): lesson XP + badges, once per lesson.
@@ -158,19 +201,44 @@
     if (!lesson) { return; }
     n = index;
     passage = lesson.lines ? lesson.lines.join(' ') : lesson.text;
-    typed = ''; started = false; finished = false;
+    typed = ''; started = false; finished = false; passedThisSession = false;
+    // WP-5 TYPE-10: a locked lesson renders read-only (passage visible,
+    // input + Mark-complete disabled) with the lock message + target, so
+    // the user can see what is ahead but cannot type or complete it.
+    locked = !isUnlocked(index);
     if (titleEl) { titleEl.textContent = lesson.title; }
     if (keysEl) { keysEl.textContent = (window.dkT ? window.dkT('rsv_0981', 'Keys: ') : 'Keys: ') + lesson.keys; }
     // Objective is shown only if the body provides an ls-objective element;
     // it is Roman-Urdu text from the old data, never translated here.
     if (objectiveEl) { objectiveEl.textContent = lesson.objective || ''; }
-    if (prevEl) { prevEl.href = n > 1 ? '?n=' + (n - 1) : '?n=1'; }
-    if (nextEl) { nextEl.href = n < lessons.length ? '?n=' + (n + 1) : '?n=' + lessons.length; }
+    if (prevEl) {
+      // T078 (same rule as the English viewer): at the ends the link is
+      // disabled, not a self-link.
+      if (n > 1) { prevEl.href = '?n=' + (n - 1); prevEl.removeAttribute('aria-disabled'); }
+      else { prevEl.removeAttribute('href'); prevEl.setAttribute('aria-disabled', 'true'); }
+    }
+    if (nextEl) {
+      if (n < lessons.length) { nextEl.href = '?n=' + (n + 1); nextEl.removeAttribute('aria-disabled'); }
+      else { nextEl.removeAttribute('href'); nextEl.setAttribute('aria-disabled', 'true'); }
+    }
     if (selectEl) { selectEl.value = String(n); }
-    if (inputEl) { inputEl.value = ''; inputEl.disabled = false; inputEl.focus(); }
+    if (inputEl) {
+      inputEl.value = '';
+      inputEl.disabled = locked;
+      if (!locked) { inputEl.focus(); }
+    }
+    if (completeBtn) { completeBtn.disabled = locked; }
     if (wpmEl) { wpmEl.textContent = '0'; }
     if (accEl) { accEl.textContent = '100%'; }
-    if (resultEl) { resultEl.textContent = ''; }
+    if (resultEl) {
+      // WHY the target line on load: the old controller showed the
+      // target per lesson (🎯 WPM • %), so the user always knows what
+      // a pass needs before typing; a locked lesson shows the lock
+      // message in front of the same target.
+      resultEl.textContent = locked
+        ? (window.dkT ? window.dkT('ur_gate_locked', 'Locked — pass the previous lesson first.') : 'Locked — pass the previous lesson first.') + ' ' + targetText(lesson)
+        : targetText(lesson);
+    }
     renderPassage();
     refreshDone(lesson);
   }
@@ -183,11 +251,15 @@
     if (n > lessons.length) { n = lessons.length; }
     // Dropdown built from the same list, so it can never point at a lesson
     // that does not exist (same DRY rule as the new English viewer).
+    // WP-5 TYPE-10: locked lessons are disabled options — the dropdown
+    // can never jump ahead of the unlock chain (Next still navigates to
+    // a locked lesson's read-only view).
     if (selectEl) {
       lessons.forEach(function (ls, i) {
         var o = document.createElement('option');
         o.value = i + 1;
         o.textContent = (i + 1) + '. ' + ls.title + ' (' + ls.keys + ')';
+        if (!isUnlocked(i + 1)) { o.disabled = true; }
         if (i + 1 === n) { o.selected = true; }
         selectEl.appendChild(o);
       });
@@ -197,8 +269,17 @@
     }
     if (completeBtn) {
       completeBtn.addEventListener('click', function () {
-        markDone(lessons[n - 1].id);
-        refreshDone(lessons[n - 1]);
+        // WP-5 TYPE-10: Mark-complete requires a typed pass. A lesson
+        // already done (passed earlier or grandfathered) refreshes as
+        // complete; a lesson passed in this session marks now; anything
+        // else is refused with the target reminder — the button never
+        // marks a lesson done without typing.
+        var lesson = lessons[n - 1];
+        if (isDone(lesson.id)) { refreshDone(lesson); return; }
+        if (passedThisSession) { markDone(lesson.id); refreshDone(lesson); return; }
+        if (resultEl) {
+          resultEl.textContent = (window.dkT ? window.dkT('ur_gate_pass_first', 'Type the lesson and meet the target first.') : 'Type the lesson and meet the target first.') + ' ' + targetText(lesson);
+        }
       });
     }
     if (inputEl) {
