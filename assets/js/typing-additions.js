@@ -320,6 +320,14 @@
         timeSel.appendChild(o);
       }
     });
+    /* WP-5 TYPE-09 (C6): the appended 180/300/600 s options start
+     * enabled; re-apply the passage validity from typing.js so a
+     * duration the current passage cannot fill is disabled, not
+     * offered. Guarded: typing.js always loads first on this page,
+     * but a missing DKTyping must never break the durations. */
+    if (window.DKTyping && window.DKTyping.applyDurationValidity) {
+      window.DKTyping.applyDurationValidity();
+    }
     /* Re-sync when the language changes or the async engine arrives
      * (same race as the keyboard labels: this file runs before the
      * dict + engine finish loading, so the first render is English).
