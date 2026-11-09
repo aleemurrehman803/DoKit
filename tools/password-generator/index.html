@@ -44,7 +44,7 @@
 <input id="pg-len" type="range" min="8" max="64" value="16">
 <p><label><input type="checkbox" id="pg-upper" checked> <span data-i18n="rsv_1135">Uppercase (A-Z)</span></label> &nbsp; <label><input type="checkbox" id="pg-lower" checked> <span data-i18n="rsv_1130">Lowercase (a-z)</span></label> &nbsp; <label><input type="checkbox" id="pg-digits" checked> <span data-i18n="rsv_1129">Digits (0-9)</span></label> &nbsp; <label><input type="checkbox" id="pg-symbols" checked> <span data-i18n="rsv_1134">Symbols (!@#$)</span></label> &nbsp; <label><input type="checkbox" id="pg-noamb"> <span data-i18n="rsv_1131">No confusing characters (I, l, 1, O, 0)</span></label></p>
 <p><button class="btn" id="pg-gen" data-i18n="rsv_0282">Generate password</button></p>
-<p id="pg-out" class="result" data-i18n="rsv_0714">Your password appears here</p>
+<p id="pg-out" class="result">Your password appears here</p><!-- NO data-i18n on this box: it is owned by tools-extra.js generate(), and the i18n engine replaces textContent — it was wiping the generated password ~200ms after load (live pass 9 Nov 2026). -->
 <p><button class="btn ghost" id="pg-copy" data-i18n="rsv_0190">Copy password</button> <span id="pg-bits"></span></p>
 </div>
 </div></section></main>
