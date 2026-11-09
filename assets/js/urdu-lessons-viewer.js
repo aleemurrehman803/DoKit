@@ -81,19 +81,30 @@
     });
   }
 
-  // Live stats use CORRECT characters (new-site viewer formula), not the old
+  // Live stats use CORRECT graphemes (new-site viewer formula), not the old
   // timed-test formula: a lesson is practice, so only correct typing counts.
+  // WP-4 TYPE-02: scored through the ONE shared service (dk-scoring.js,
+  // docs/scoring-metrics-v2.md §1-2). The pre-v2 UTF-16 computation is
+  // kept ONLY as the fallback when DKScoring failed to load.
   function stats() {
-    var correct = 0, i;
-    for (i = 0; i < typed.length; i++) {
-      if (typed[i] === passage[i]) { correct++; }
+    var elapsedMs = started ? (Date.now() - startTime) : 0;
+    var st;
+    if (window.DKScoring) {
+      st = window.DKScoring.score(passage, typed, elapsedMs, 'ur');
+    } else {
+      var correct = 0, i;
+      for (i = 0; i < typed.length; i++) {
+        if (typed[i] === passage[i]) { correct++; }
+      }
+      var mins = elapsedMs / 60000;
+      st = { wpm: mins > 0 ? Math.round((correct / 5) / mins) : 0,
+        acc: typed.length ? Math.round(correct / typed.length * 100) : 100,
+        correct: correct, typed: typed.length };
     }
-    var mins = started ? (Date.now() - startTime) / 60000 : 0;
-    var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
-    var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
+    var wpm = st.wpm, acc = st.acc;
     if (wpmEl) { wpmEl.textContent = wpm; }
     if (accEl) { accEl.textContent = acc + '%'; }
-    return { wpm: wpm, acc: acc, correct: correct };
+    return { wpm: wpm, acc: acc, correct: st.correct, typed: st.typed };
   }
 
   function refreshDone(lesson) {
@@ -109,9 +120,12 @@
     finished = true;
     var st = stats();
     if (resultEl) {
+      // WHY st.typed for "out of N typed": the v2 result text counts
+      // the same units the score counted (paper §2).
+      var typedCount = (typeof st.typed === 'number') ? st.typed : typed.length;
       resultEl.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc +
         (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') +
-        typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
+        typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
     }
     markDone(lesson.id);
     // Gamification (Task 5): lesson XP + badges, once per lesson.

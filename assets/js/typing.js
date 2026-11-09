@@ -11,6 +11,16 @@ var PASSAGES = {
   pangram: 'Pack my box with five dozen liquor jugs and watch how fast the quick brown fox can jump over the lazy dog near the river bank today.'
 };
 var passage = PASSAGES.home, typed = '', started = false, startTime = 0, timer = null, limit = 60, left = 60, done = false;
+// WP-4 TYPE-02: one scoring service (dk-scoring.js, docs/scoring-metrics-v2.md).
+// sessionId is unique per session start (the dedup key, paper §7);
+// passageKey identifies the content (paper §4). Both are stamped on
+// the saved result. newSid() falls back to a Date+random id when
+// DKScoring failed to load, so dedup still works — it never throws.
+var sessionId = null, passageKey = 'home';
+function newSid(){
+  return window.DKScoring ? window.DKScoring.newSessionId()
+    : ('s-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 0xFFFFFF).toString(16));
+}
 // WPM0 FIX (28 Oct 2026, local only): minimum elapsed time for a
 // finish to count as a scored test. This is a REJECTION gate, never
 // a scoring floor/divisor — see the guard inside finish().
@@ -29,8 +39,23 @@ function render(){
   }
 }
 function stats(){
-  var correct = 0; for(var i = 0; i < typed.length; i++){ if(typed[i] === passage[i]) correct++; }
-  var mins = (Date.now() - startTime) / 60000;
+  // WP-4 TYPE-02: score through the ONE shared service (dk-scoring.js,
+  // docs/scoring-metrics-v2.md §1-2) — grapheme-aware net WPM from v2.
+  // The pre-v2 UTF-16 computation below is kept ONLY as the fallback
+  // when DKScoring failed to load, so a failed script load never
+  // breaks typing. Both paths return the same shape.
+  var elapsedMs = started ? (Date.now() - startTime) : 0;
+  var st = null;
+  if(window.DKScoring){ st = window.DKScoring.score(passage, typed, elapsedMs, 'en'); }
+  else{
+    var correct = 0; for(var i = 0; i < typed.length; i++){ if(typed[i] === passage[i]) correct++; }
+    var mins = elapsedMs / 60000;
+    st = {correct: correct, typed: typed.length,
+      wpm: mins > 0 ? Math.round((correct / 5) / mins) : 0,
+      gross: mins > 0 ? Math.round((typed.length / 5) / mins) : 0,
+      acc: typed.length ? Math.round(correct / typed.length * 100) : 100,
+      metricVersion: 'v1-net-utf16', graphemeVersion: 'utf16', language: 'en'};
+  }
   /* T085 (P5-VIS-10): WPM is 0 until a full second has elapsed — with
    * elapsed near 0 the division would flash an absurd WPM (thousands) on
    * the live display. This is a DISPLAY clamp only, not a scoring floor:
@@ -38,14 +63,16 @@ function stats(){
    * 1s interval's first tick is at >= 1s, so scoring is exactly as before
    * (see the WPM0 FIX comment in finish()). Accuracy needs no clamp: it
    * is exact from the first keystroke. */
-  var elapsedOk = mins >= 1 / 60;
-  var wpm = elapsedOk && mins > 0 ? Math.round((correct / 5) / mins) : 0;
-  // Net WPM counts correct characters only; gross WPM counts every typed
-  // character. Both use the same elapsed time, so the certificate can
+  var elapsedOk = elapsedMs >= 1000;
+  // Net WPM counts correct graphemes only; gross WPM counts every typed
+  // grapheme. Both use the same elapsed time, so the certificate can
   // show them side by side without inventing either value.
-  var gross = elapsedOk && mins > 0 ? Math.round((typed.length / 5) / mins) : 0;
-  var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
-  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; syncAccRing(acc); return {wpm: wpm, acc: acc, correct: correct, gross: gross};
+  var wpm = elapsedOk ? st.wpm : 0;
+  var gross = elapsedOk ? st.gross : 0;
+  var acc = st.acc;
+  wpmEl.textContent = wpm; accEl.textContent = acc + '%'; syncAccRing(acc);
+  return {wpm: wpm, acc: acc, correct: st.correct, gross: gross, typed: st.typed,
+    metricVersion: st.metricVersion, graphemeVersion: st.graphemeVersion};
 }
 /* B77: accuracy dial — the ring fills in proportion to the same live
  * acc value, on the same keystroke cadence as the text (stats() is
@@ -187,7 +214,11 @@ function finish(){
   if (window.dkFlashNum) { window.dkFlashNum(wpmEl); window.dkFlashNum(accEl); }
   resEl.innerHTML = '';
   var p = document.createElement('p');
-  p.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
+  // WHY st.typed (grapheme count) for "out of N typed": the v2 result
+  // text must count the same units the score counted (paper §2). For
+  // plain ASCII it equals typed.length exactly.
+  var typedCount = (typeof st.typed === 'number') ? st.typed : typed.length;
+  p.textContent = (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') + st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
   resEl.appendChild(p);
   // Phase 2b: record the finished test on this device
   // (only if the shared store loaded; never crash).
@@ -198,7 +229,11 @@ function finish(){
       // results are never rewritten (DK2.saveResult stores the
       // object as given, so the flag persists for the speed-
       // milestone check, which counts verified-only results).
-      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,verified:!pasted});
+      // WP-4 TYPE-02: v2 tags (paper §4) — metricVersion,
+      // graphemeVersion, sessionId (dedup key), contentId, mode.
+      // chars stays the UTF-16 length (the historical field, kept
+      // for diagnostics); graphemes is the v2 count.
+      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,graphemes:st.typed,verified:!pasted,metricVersion:st.metricVersion,graphemeVersion:st.graphemeVersion,sessionId:sessionId,contentId:'en-test:'+passageKey,mode:'timed'});
     }
   }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Referral activation (silent): first consented test only; never breaks typing.
@@ -229,8 +264,13 @@ function finish(){
     }
   }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
 }
-function reset(newPassage){
+function reset(newPassage, key){
   if(newPassage) passage = newPassage;
+  if(key) passageKey = key;
+  // WHY a fresh session id per reset: a reset starts a new attempt —
+  // the old session's id must never be reused, or dedup (paper §7)
+  // would drop the new attempt as a re-submission of the old one.
+  sessionId = newSid();
   typed = ''; started = false; done = false; pasted = false; clearInterval(timer); left = limit;
   input.value = ''; input.disabled = false; timeEl.textContent = left + 's'; wpmEl.textContent = '0'; accEl.textContent = '100%'; syncAccRing(100);
   resEl.innerHTML = ''; render(); input.focus();
@@ -246,6 +286,9 @@ input.addEventListener('input', function(ev){
   typed = input.value;
   if(!started && typed.length > 0){
     started = true; startTime = Date.now(); left = limit;
+    // WHY generate here as well as in reset(): a page load never calls
+    // reset(), so the first keystroke is the session start.
+    if(!sessionId) sessionId = newSid();
     timer = setInterval(function(){
       left--; timeEl.textContent = left + 's';
       if(started) stats();
@@ -267,8 +310,9 @@ var rb = document.getElementById('ty-restart');
 if(rb){ rb.addEventListener('click', function(){ reset(); }); }
 document.querySelectorAll('[data-lesson]').forEach(function(b){
   b.addEventListener('click', function(){
-    var p = PASSAGES[b.getAttribute('data-lesson')] || PASSAGES.home;
-    reset(p);
+    var k = b.getAttribute('data-lesson');
+    var p = PASSAGES[k] || PASSAGES.home;
+    reset(p, k);
   });
 });
 render();

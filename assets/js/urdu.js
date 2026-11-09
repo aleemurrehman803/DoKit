@@ -110,9 +110,17 @@
       wpmEl: document.getElementById('ur-wpm'),
       accEl: document.getElementById('ur-acc'),
       resultEl: document.getElementById('ur-result'),
+      // WP-4 TYPE-02: Urdu is the scoring language here (Segmenter
+      // locale 'ur'); the engine scores grapheme-aware from v2.
+      language: 'ur',
       onFinish: function (st) {
+        // WP-4 TYPE-02: v2 tags (paper §4) on the saved result.
         if (window.DK2) {
-          window.DK2.saveResult({ type: 'urdu', wpm: st.wpm, acc: st.acc });
+          window.DK2.saveResult({ type: 'urdu', wpm: st.wpm, acc: st.acc,
+            graphemes: st.typed, verified: st.verified,
+            metricVersion: st.metricVersion, graphemeVersion: st.graphemeVersion,
+            sessionId: st.sessionId, contentId: st.contentId,
+            mode: 'practice', language: 'ur' });
         }
       }
     });
@@ -124,10 +132,11 @@
         urSelect.appendChild(o);
       });
       urSelect.addEventListener('change', function () {
-        urEngine.load(PRACTICE[parseInt(urSelect.value, 10)]);
+        var ui = parseInt(urSelect.value, 10);
+        urEngine.load(PRACTICE[ui], 'urdu-practice:' + (ui + 1));
       });
     }
-    urEngine.load(PRACTICE[0]);
+    urEngine.load(PRACTICE[0], 'urdu-practice:1');
   }
   // Restore: Urdu page tabs (Converter / Lessons / Test) — plain
   // visibility switching, no data. The EN/UR toggle beside the tabs

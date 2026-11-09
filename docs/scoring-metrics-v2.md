@@ -50,13 +50,22 @@ path; its historical records keep their tags (§4).
 - **Normalization:** NFC on passage **and** typed input before compare,
   once, at the scoring-service boundary. The normalized form is what is
   scored; stored passage text is not rewritten.
-- **Digraphs (Urdu):** a digraph output (`بھ`, `تھ`, `پھ`, `جھ`, `دھ`,
-  `ڑھ` — two UTF-16 units, one visible grapheme) counts as **one**
-  grapheme.
-- **ZWNJ (U+200C):** counts as **one grapheme** when it is a required
-  character in the passage (it must be typed to match). It is never
-  silently stripped or inserted, and it never joins a neighbouring
-  cluster in the fallback.
+- **Digraphs (Urdu):** under UAX #29 (`Intl.Segmenter`, the normative
+  primitive) a digraph output (`بھ`, `تھ`, `پھ`, `جھ`, `دھ`, `ڑھ`)
+  segments as **two** grapheme clusters — both letters are ordinary
+  letters, not combining marks. Architecture §6.1 prose says "one
+  visible grapheme"; that does not match Segmenter behaviour, so it is
+  recorded as open decision **O-8** (§8) and the formula (§6.3,
+  "Segmenter-segmented") governs: digraphs count 2, exactly as UTF-16
+  did. The v2 fix for Urdu is the diacritic / ZWNJ / astral counting,
+  not the digraph count.
+- **ZWNJ (U+200C):** under Segmenter it attaches to the **preceding**
+  cluster (`ی‌` is one cluster with `ی`); a ZWNJ with no preceding
+  character is its own cluster. It is never silently stripped or
+  inserted, and it must be typed to match. Architecture §6.1 prose
+  ("counts as one grapheme") is likewise recorded under **O-8** — the
+  count a ZWNJ contributes is 0 when it follows a character, 1 when
+  it starts a cluster.
 - **Joining is display, not scoring:** Urdu word-level display
   (whole-word `ok`/`bad` spans, Nastaliq-safe) is unchanged; scoring
   counts graphemes. A word is judged only once its trailing space is
@@ -148,6 +157,7 @@ result (no error, no second row). Records without a `sessionId`
 | O-5 | Trend-chart split by `metricVersion` (Arch §6.2/§9.2). | Not implemented in WP-4. | WP-7 shared services (TEST-01): the chart must split/annotate when it moves onto the shared scoring service. |
 | O-6 | Legacy Urdu controller (`js/pages/urdu-typing.js:412-414`) has the same `Math.max(1, …)` floor and gross formula as the live UR test had. | **Not changed in WP-4** (legacy surface; WP-9 owns its disposition). Live stack only. | WP-9 / owner: apply the same gate if the legacy page stays live, or retire the page. |
 | O-7 | Lesson/passage `contentVersion` (§4). | Omitted where content carries no version (no value invented). | WP-5 content work: version the lesson/passage stores per Arch §7.1. |
+| O-8 | **Architecture §6.1 prose vs Segmenter (found by TYPE-02 testing, 9 Nov 2026):** §6.1 says a digraph output counts as one grapheme and ZWNJ counts as one grapheme — but `Intl.Segmenter` (UAX #29, the §6.3 formula's own primitive) segments `تھ`/`بھ` as **two** clusters and attaches ZWNJ to the preceding cluster (0 additional clusters). The two rules cannot both hold. | **Implemented: Segmenter literally** (both paths agree; the corpus test proves it). Digraphs count 2, ZWNJ contributes 0 after a character / 1 at cluster start. | Owner/coordinator: either accept Segmenter behaviour (close O-8, amend §6.1 prose) or define a language-specific cluster-merge rule on top of Segmenter (digraph/ZWNJ merging) with its own fixtures. Until then, no code merges clusters. |
 
 ## 9. Files that implement this paper
 
