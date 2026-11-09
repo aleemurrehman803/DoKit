@@ -403,16 +403,20 @@ select{appearance:none;-webkit-appearance:none;background-image:url("data:image/
 [data-theme="light"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235A5470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
 /* T033 (P5-DES-03): light theme had dark leftovers + unreadable
  * accent text. Sticky bar mirrors the light header bg; glows soften
- * to the amber glow's level (.28); the hero gradient's amber end
- * becomes --gold (3.25:1, fine for a 68px display heading); persistent
- * amber text (rotator, logo "Kit", falling game word, selected
- * language, sample badge) becomes --gold-text (6.06:1 on white).
- * Hover-only amber text is left alone (transient feedback, and every
- * hover also changes background/border). --amber itself is NOT
+ * to the amber glow's level (.28); the hero gradient's gold end
+ * becomes --gold-text (5.57:1 on the light page bg — F38 measured
+ * --gold at 2.99:1 there, just under the 3:1 large-text bar, so the
+ * old --gold choice was corrected); persistent amber text (rotator,
+ * logo "Kit", falling game word, selected language, sample badge)
+ * becomes --gold-text (6.06:1 on white). Hover-only amber text used
+ * to be left alone (transient feedback, and every hover also
+ * changes background/border); F38 (rec 38) fixes it to --gold-text
+ * anyway (5.57:1) because 1.45:1 fails even transiently — see the
+ * F38 override at the end of this file. --amber itself is NOT
  * overridden: .btn.amber keeps its amber fill + ink text (11.30:1). */
 [data-theme="light"] .dkf-sticky-action{background:rgba(246,244,255,.94)}
 [data-theme="light"] .glow{opacity:.28}
-[data-theme="light"] .hero h1 .grad{background:linear-gradient(90deg,var(--violet),var(--gold));-webkit-background-clip:text;background-clip:text}
+[data-theme="light"] .hero h1 .grad{background:linear-gradient(90deg,var(--violet),var(--gold-text));-webkit-background-clip:text;background-clip:text}
 [data-theme="light"] #type-rotator,[data-theme="light"] .logo span em,[data-theme="light"] .fall-word,[data-theme="light"] .lang-menu li[aria-selected="true"]{color:var(--gold-text)}
 [data-theme="light"] .sample-badge{color:var(--gold-text);border-color:var(--gold-text)}
 /* PWA install banner + site announcement banner (both hidden unless set).
@@ -492,9 +496,9 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .cert-sheet.cert-premium{position:relative;border:4px double var(--gold);outline:2px solid var(--violet);outline-offset:6px;border-radius:4px;padding:45px 32px;text-align:center;background:var(--cert-paper);color:var(--ink);font-family:var(--font-serif)}
 .cert-sheet.cert-premium .cert-authority{margin:0 150px 10px;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--violet)}
 .cert-sheet.cert-premium .cert-qr{position:absolute;top:24px;left:24px;margin:0}
-.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--gold);transform:rotate(-12deg);text-align:center}
+.cert-sheet.cert-premium .cert-seal{position:absolute;top:24px;right:24px;width:80px;height:80px;border:3px solid var(--cert-gold-ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:var(--cert-gold-ink);transform:rotate(-12deg);text-align:center}
 .cert-sheet.cert-premium .cert-photo{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--violet);background:var(--cert-photo-bg)}
-.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on-accent);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.cert-sheet.cert-premium .cert-grade{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);padding:8px 30px;border-radius:30px;font-size:14px;letter-spacing:2px;text-transform:uppercase}
 /* B80: example-certificate SAMPLE badge — sits where the real sheet's QR
  * code sits (top-left), so the sample can never be mistaken for an
  * issued certificate. The sample carries no ids, so certificate.js
@@ -540,7 +544,7 @@ input,select,textarea{background:#fff!important;color:#000!important}
 .cert-sheet.cert-premium .cert-sig{text-align:center;width:200px}
 .cert-sheet.cert-premium .cert-sig-line{border-top:2px solid var(--cert-sig-line);min-height:28px}
 .cert-sheet.cert-premium .cert-sig-title{font-size:12px;color:var(--cert-muted);text-transform:uppercase;letter-spacing:1px}
-.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:var(--gold);font-weight:600}
+.cert-sheet.cert-premium .cert-sig-desig{font-size:13px;color:var(--cert-gold-ink);font-weight:600}
 @media print{.cert-sheet.cert-premium{border:4px double var(--gold);outline:none;border-radius:4px;background:#fff;color:#000}}
 @media print{@page{size:A4 landscape;margin:12mm}.cert-sheet.cert-premium{max-width:250mm;margin-left:auto;margin-right:auto}}
 /* Urdu pages: right-aligned inputs under RTL. */
@@ -971,13 +975,18 @@ main p a:not(.btn):not(.cardlink):hover,main li a:not(.btn):not(.cardlink):hover
  * sweep is the pattern; this extends it to nav + footer links. NOTE the
  * :hover rules re-state background-image: the earlier .navlinks a:hover
  * uses the `background` shorthand, which would reset the image to none.
+ * The same shorthand ALSO resets background-repeat (to repeat) and
+ * background-position (to 0% 0%): without re-stating no-repeat + left
+ * bottom HERE, the 2px amber gradient tiles down the whole link and
+ * the hovered link renders as a solid amber pill (caught by pixel
+ * sampling 9 Nov 2026 — computed background-size alone looked right).
  * Active page: persistent full-width underline (in addition to the violet
  * background); on mobile (<=1000px, hamburger column) the active link
  * also gets an amber side bar, since a bottom underline is less visible
  * in a stacked menu. */
 .navlinks a{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:left bottom;transition:background-color .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s,background-size .2s ease}
-.navlinks a:hover{background-color:var(--surface2);color:var(--amber);box-shadow:0 0 0 1px var(--violet);background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px}
-.navlinks a.active{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px}
+.navlinks a:hover{background-color:var(--surface2);color:var(--amber);box-shadow:0 0 0 1px var(--violet);background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px;background-repeat:no-repeat;background-position:left bottom}
+.navlinks a.active{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:100% 2px;background-repeat:no-repeat;background-position:left bottom}
 @media(max-width:1000px){.navlinks a.active{box-shadow:inset 3px 0 0 var(--amber)}}
 .footgrid a{background-image:linear-gradient(90deg,var(--amber),var(--amber));background-size:0 2px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s ease,color .15s}
 .footgrid a:hover{text-decoration:none;background-size:100% 2px}
@@ -1095,9 +1104,16 @@ button:not(.btn):active svg{transform:scale(.94)}
 .st-active,.st-approved{background:rgba(62,207,142,.16);color:var(--good)}
 .st-paused,.st-unknown{background:rgba(185,179,224,.16);color:var(--muted)}
 .st-rejected{background:rgba(255,107,107,.16);color:var(--bad)}
-.st-paid{background:rgba(139,116,255,.18);color:var(--violet2)}
+/* F38 (rec 38): the paid badge's violet2 text measured 3.63:1 on its
+ * tint (dark) — below the 4.5:1 bar for 12px bold text. #B7A6FF
+ * measures 6.32:1 on the same tint. */
+.st-paid{background:rgba(139,116,255,.18);color:#B7A6FF}
 [data-theme="light"] .st-pending{color:var(--gold-text)}
-[data-theme="light"] .st-paid{color:var(--violet)}
+[data-theme="light"] .st-paid{color:var(--violet-deep)}
+/* F38 (rec 38): light-theme rejected measured 4.10:1 (below 4.5:1);
+ * #B42318 measures 5.58:1 on the same tint. The light paid badge
+ * above also moved violet -> violet-deep (4.34:1 -> 6.40:1). */
+[data-theme="light"] .st-rejected{color:#B42318}
 
 /* F14 — Aurora Hero Background (rec 14).
  * WHY add, not recolour: the violet (.a) + amber (.b) glows are the
@@ -1330,3 +1346,29 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
 .navtoggle,.fav-star,.lang-btn,.theme-btn{min-width:44px}
 .faq summary{padding-top:9px;padding-bottom:9px}
 .logo{min-height:44px}
+
+/* F36 (rec 36): chat-panel close button (created by main.js, one
+ * place, instead of editing the shared chrome in 71 pages). Sits
+ * at the end of the panel header (.chead is flex, so margin-left
+ * pushes it right); 44px touch target per F35; muted until hover. */
+.chat-close{margin-left:auto;min-width:44px;min-height:44px;padding:0;background:transparent;border:0;border-radius:8px;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
+.chat-close:hover{color:var(--text)}
+
+/* F38 (rec 38): light-theme amber text. Amber #FFC531 measures 1.45:1
+ * on the light page bg (#F6F4FF) — every amber text below failed the
+ * 4.5:1 bar in both themes' light variant, hover-only and persistent
+ * alike. --gold-text (#7a5f00) measures 5.57:1 on the same bg and is
+ * the token T033 already uses for persistent amber text, so the fix
+ * reuses it instead of inventing a new token. This block sits at the
+ * end of the file so it wins every tie, and the [data-theme="light"]
+ * prefix outranks each base selector. The second rule covers the
+ * subset whose base rule also paints an amber border (a 1.45:1 border
+ * fails the 3:1 non-text bar too). Deliberately NOT touched: .btn.amber
+ * (amber fill + ink text, 11.30:1), .card .tag.popular-tag (same),
+ * the dkNumFlash keyframe (a 140ms transient flash, not persistent
+ * text), the caret blink (border, not text), and the gradient-text
+ * middle stop #8B74FF at 3.20:1 (large display text only — h2/numbers
+ * — so the 3:1 large-text bar applies and it passes). */
+[data-theme="light"] a:hover,[data-theme="light"] button.linklike:hover,[data-theme="light"] .navlinks a:hover,[data-theme="light"] #tool-search-results [role="option"].active,[data-theme="light"] #tool-search-results [role="option"]:hover,[data-theme="light"] .mq-sep,[data-theme="light"] .float-card .sample-tag,[data-theme="light"] .card a.cardlink:hover,[data-theme="light"] .tag,[data-theme="light"] .footgrid a:hover,[data-theme="light"] .chip:hover,[data-theme="light"] .key:hover,[data-theme="light"] .lang-btn:hover,[data-theme="light"] .theme-btn:hover,[data-theme="light"] .navtoggle:hover,[data-theme="light"] .lang-menu li:hover,[data-theme="light"] .prof-menu a:hover,[data-theme="light"] .prof-menu button.prof-row:hover,[data-theme="light"] .app-tile:hover,[data-theme="light"] .dk-avatarbtn:hover,[data-theme="light"] .app-btn:hover,[data-theme="light"] .sticky-cta__close:hover,[data-theme="light"] .fav-star.on,[data-theme="light"] .nav-drop-menu a.active,[data-theme="light"] .fav-star:hover,[data-theme="light"] .saas-steps-x:hover,[data-theme="light"] .pick:not(.sel):hover,[data-theme="light"] .nav-drop-caret:hover,[data-theme="light"] .nav-drop-menu a:hover,[data-theme="light"] .prof-theme:hover,[data-theme="light"] .footbase a:hover,[data-theme="light"] .ref-stat b,[data-theme="light"] .foot-lang button:hover,[data-theme="light"] .foot-lang button[aria-current="true"],[data-theme="light"] .hero .search-chips .chip:hover,[data-theme="light"] .faq details[open] summary{color:var(--gold-text)}
+[data-theme="light"] .float-card .sample-tag,[data-theme="light"] .chip:hover,[data-theme="light"] .key:hover,[data-theme="light"] .lang-btn:hover,[data-theme="light"] .theme-btn:hover,[data-theme="light"] .navtoggle:hover,[data-theme="light"] .dk-avatarbtn:hover,[data-theme="light"] .app-btn:hover,[data-theme="light"] .sticky-cta__close:hover,[data-theme="light"] .foot-lang button:hover,[data-theme="light"] .foot-lang button[aria-current="true"],[data-theme="light"] .pick:not(.sel):hover,[data-theme="light"] .hero .search-chips .chip:hover{border-color:var(--gold-text)}
+[data-theme="light"] .btn.ghost:hover{color:var(--gold-text)!important}

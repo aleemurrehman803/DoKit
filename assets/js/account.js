@@ -901,10 +901,23 @@
     // AUD-026: a failed admin list read must not leave the section
     // silently empty. Show the file's generic error wording (the same
     // string as the acct_err_unknown fallback), in the same <p> shape
-    // as admRender's 'No entries.' empty state. No retry button: the
-    // admin re-loads the section by revisiting the panel (open
-    // question: per-section retry — see the task report).
-    admSetHtml(id, '<p>Something went wrong. Please try again.</p>');
+    // as admRender's 'No entries.' empty state.
+    // F40 (rec 40): the per-section Retry button resolves the open
+    // question in the AUD-026 note (the admin used to re-load by
+    // revisiting the panel). A retry re-runs the whole admLoad (all
+    // sections): the failed section's loader is an inline query
+    // inside admLoad with no named handle, and a full reload also
+    // refreshes the counts + Users list a queue mutation can stale
+    // (E-03). admLoad's user argument is unused by its body, so the
+    // retry passes the module's currentUser.
+    admSetHtml(id, '<p>Something went wrong. Please try again.</p><p><button class="btn ghost" type="button" data-adm-retry="1">Retry</button></p>');
+    var box = $(id);
+    var retryBtn = box ? box.querySelector('[data-adm-retry]') : null;
+    if (retryBtn) {
+      retryBtn.addEventListener('click', function () {
+        if (currentUser) { admLoad(currentUser); }
+      });
+    }
   }
   function admRender(id, snap, rowFn){
     // One innerHTML assignment per section; row literals live in the
@@ -1707,6 +1720,15 @@
       vf.addEventListener('submit', function (ev) {
         ev.preventDefault();
         var idIn = $('vf-id');
+        /* F39: an empty Verify submit used to vanish silently
+         * (vfLookup returns false on an empty id with no message).
+         * Say so, on the field, instead. */
+        if (!vfNorm(idIn ? idIn.value : '')) {
+          var vfMsg = (window.dkT ? window.dkT('acct_cert_enter', 'Please enter a certificate number.') : 'Please enter a certificate number.');
+          if (window.dkFailField && idIn) { window.dkFailField(idIn, 'vf-err', vfMsg); }
+          else { showMsg('vf-err', vfMsg, true); }
+          return;
+        }
         vfLookup(idIn ? idIn.value : '');
       });
       // Auto-verify when opened via a certificate QR code / link.
@@ -1867,6 +1889,21 @@
         var email = ($('acct-email') || {}).value || '';
         var pass = ($('acct-pass') || {}).value || '';
         showMsg('acct-err', '', false);
+        /* F39: native `required` blocks a truly empty field, but a
+         * whitespace-only value passes it — catch it here with the
+         * field-level error instead of a Firebase round-trip. */
+        if (!email.trim()) {
+          var loginEmailMsg = (window.dkT ? window.dkT('acct_err_email', 'Please enter your email address.') : 'Please enter your email address.');
+          if (window.dkFailField) { window.dkFailField($('acct-email'), 'acct-err', loginEmailMsg); }
+          else { showMsg('acct-err', loginEmailMsg, true); }
+          return;
+        }
+        if (!pass.trim()) {
+          var loginPassMsg = (window.dkT ? window.dkT('acct_err_pass_req', 'Please enter your password.') : 'Please enter your password.');
+          if (window.dkFailField) { window.dkFailField($('acct-pass'), 'acct-err', loginPassMsg); }
+          else { showMsg('acct-err', loginPassMsg, true); }
+          return;
+        }
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
         a.signInWithEmailAndPassword(email.trim(), pass).then(function(cred){
@@ -1875,6 +1912,12 @@
           location.href = '../dashboard/';
         }).catch(function(err){
           showMsg('acct-err', DKA.friendlyError(err), true);
+          /* F39: focus the field the error is about — the email for
+           * unknown/invalid addresses, the password otherwise. */
+          if (window.dkFailField) {
+            var loginBadEmail = err && (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email');
+            window.dkFailField(loginBadEmail ? $('acct-email') : $('acct-pass'), 'acct-err', null);
+          }
         });
       });
     }
@@ -1887,6 +1930,27 @@
         var email = ($('acct-email') || {}).value || '';
         var pass = ($('acct-pass') || {}).value || '';
         showMsg('acct-err', '', false);
+        /* F39: native `required` blocks a truly empty field, but a
+         * whitespace-only value passes it — catch it here with the
+         * field-level error instead of a Firebase round-trip. */
+        if (!email.trim()) {
+          var signupEmailMsg = (window.dkT ? window.dkT('acct_err_email', 'Please enter your email address.') : 'Please enter your email address.');
+          if (window.dkFailField) { window.dkFailField($('acct-email'), 'acct-err', signupEmailMsg); }
+          else { showMsg('acct-err', signupEmailMsg, true); }
+          return;
+        }
+        if (!pass.trim()) {
+          var signupPassMsg = (window.dkT ? window.dkT('acct_err_pass_req', 'Please enter your password.') : 'Please enter your password.');
+          if (window.dkFailField) { window.dkFailField($('acct-pass'), 'acct-err', signupPassMsg); }
+          else { showMsg('acct-err', signupPassMsg, true); }
+          return;
+        }
+        if (pass.length < 6) {
+          var signupLenMsg = (window.dkT ? window.dkT('acct_err_pw', 'Password must be at least 6 characters.') : 'Password must be at least 6 characters.');
+          if (window.dkFailField) { window.dkFailField($('acct-pass'), 'acct-err', signupLenMsg); }
+          else { showMsg('acct-err', signupLenMsg, true); }
+          return;
+        }
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
         /* Race fix (live-test 4, Oct 26): hold the auto-redirect
@@ -1931,6 +1995,13 @@
         }).catch(function(err){
           window.__dokitSigningUp = false;
           showMsg('acct-err', DKA.friendlyError(err), true);
+          /* F39: focus the field the error is about — the email for
+           * an address already in use or invalid, the password
+           * otherwise (weak password). */
+          if (window.dkFailField) {
+            var signupBadEmail = err && (err.code === 'auth/email-already-in-use' || err.code === 'auth/invalid-email');
+            window.dkFailField(signupBadEmail ? $('acct-email') : $('acct-pass'), 'acct-err', null);
+          }
         });
       });
     }
@@ -1986,6 +2057,12 @@
         }).catch(function(err){
           window.__dokitSigningUp = false;
           showMsg('acct-err', DKA.friendlyError(err), true);
+          /* F39: Google-signup failures name no password field (a
+           * closed popup has no invalid field), so focus only moves
+           * when the error is about the email address itself. */
+          if (window.dkFailField && err && (err.code === 'auth/email-already-in-use' || err.code === 'auth/account-exists-with-different-credential' || err.code === 'auth/invalid-email')) {
+            window.dkFailField($('acct-email'), 'acct-err', null);
+          }
         });
       });
     }
@@ -2711,8 +2788,13 @@
       pwf.addEventListener('submit', function(e){
         e.preventDefault();
         var np = ($('acct-new-pass') || {}).value || '';
-        if (np.length < 6) {
-          showMsg('acct-err', (window.dkT ? window.dkT('acct_err_pw', 'Password must be at least 6 characters.') : 'Password must be at least 6 characters.'), true);
+        /* F39: the short-password error now lands on the field itself
+         * (focus + aria-invalid). A spaces-only password is rejected
+         * the same way. */
+        if (np.length < 6 || !np.trim()) {
+          var pwChangeMsg = (window.dkT ? window.dkT('acct_err_pw', 'Password must be at least 6 characters.') : 'Password must be at least 6 characters.');
+          if (window.dkFailField) { window.dkFailField($('acct-new-pass'), 'acct-err', pwChangeMsg); }
+          else { showMsg('acct-err', pwChangeMsg, true); }
           return;
         }
         user.updatePassword(np).then(function(){

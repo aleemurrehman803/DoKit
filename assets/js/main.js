@@ -430,6 +430,47 @@ function dkT(key, fallback){
   return fallback;
 }
 window.dkT = dkT;
+/* F39 (rec 39): shared accessible form-error helper. Marks the field
+ * invalid, links it to its message element (aria-describedby), shows
+ * the message, and moves focus to the field — the three things the
+ * site's showMsg-only pattern never did. The message element may be
+ * passed as an id string or an element (notify forms use a classed
+ * <p> with no id — one is generated so the link can point at it);
+ * when message is null the element's existing text is kept (the
+ * notify error already carries its own text + mailto, and the auth
+ * catch paths already wrote theirs via showMsg). A showMsg-style
+ * message element (class note/err) also gets the err class so the
+ * error reads as an error, not a note. The invalid flag clears as
+ * soon as the user starts fixing the field. Exposed on window so
+ * account.js / settings.js share it (main.js loads first
+ * everywhere). Callers keep their own message wording via dkT
+ * fallbacks, exactly like the showMsg calls they replace. */
+var dkFailCounter = 0;
+window.dkFailField = function (inputEl, errEl, message) {
+  if (!inputEl) { return false; }
+  inputEl.setAttribute('aria-invalid', 'true');
+  var err = (typeof errEl === 'string') ? document.getElementById(errEl) : errEl;
+  if (err) {
+    if (message) { err.textContent = message; }
+    if (!err.id) { dkFailCounter += 1; err.id = 'dk-err-' + dkFailCounter; }
+    var described = inputEl.getAttribute('aria-describedby') || '';
+    if (described.split(/\s+/).indexOf(err.id) === -1) {
+      inputEl.setAttribute('aria-describedby', (described ? described + ' ' : '') + err.id);
+    }
+    if (!err.getAttribute('aria-live')) { err.setAttribute('aria-live', 'polite'); }
+    if (err.classList && (err.classList.contains('note') || err.classList.contains('err'))) {
+      err.classList.remove('note');
+      err.classList.add('err');
+    }
+    if (err.hidden) { err.hidden = false; }
+  }
+  if (!inputEl.dataset.dkFailBound) {
+    inputEl.dataset.dkFailBound = '1';
+    inputEl.addEventListener('input', function () { inputEl.removeAttribute('aria-invalid'); });
+  }
+  try { inputEl.focus(); } catch (e) { /* old browsers: focus stays put */ }
+  return true;
+};
 // typing headline rotator (words as [dict key, English fallback] so the
 // headline translates; Board Photo falls back to English outside ur,
 // exactly as the old site left it untranslated in 8 languages).
@@ -564,6 +605,35 @@ if(fab && panel){ document.addEventListener('keydown', function(e){
     fab.focus();
   }
 }); }
+/* F36 (rec 36): the chat log is a live region — new bot/user messages
+ * are announced politely. Set here in JS (one place) instead of
+ * editing the shared chrome in 71 pages. */
+(function () {
+  var log = document.getElementById('chat-log');
+  if (log && !log.getAttribute('aria-live')) { log.setAttribute('aria-live', 'polite'); }
+})();
+/* F36 (rec 36): the chat panel had no close button — keyboard and
+ * touch users could only close it with Escape or the FAB toggle.
+ * The button is created here in JS (one place) instead of editing
+ * the shared chrome in 71 pages; it uses the same animated close
+ * path as the FAB toggle and returns focus to the FAB. */
+if (fab && panel) {
+  var chead = panel.querySelector('.chead');
+  if (chead && !document.getElementById('chat-close-btn')) {
+    var chatCloseBtn = document.createElement('button');
+    chatCloseBtn.type = 'button';
+    chatCloseBtn.id = 'chat-close-btn';
+    chatCloseBtn.className = 'chat-close';
+    chatCloseBtn.setAttribute('aria-label', dkT('rsv_0960', 'Close'));
+    chatCloseBtn.textContent = '×';
+    chatCloseBtn.addEventListener('click', function () {
+      dkAnimateClose(panel, function(){ panel.classList.remove('open'); });
+      dokiSleepClear();
+      fab.focus();
+    });
+    chead.appendChild(chatCloseBtn);
+  }
+}
 if(panel){ panel.addEventListener('click', dokiWake); panel.addEventListener('input', dokiWake); }
 // ---- Doki idle blink (photo pass, Oct 25) ----
 // WHY a JS swap, not CSS: a photo cannot blink by itself. The closed
@@ -585,6 +655,12 @@ function dokiPhotoImgs(){
   }
 })();
 function dokiBlinkTick(){
+  // F37 (rec 37): reduced-motion / paused users never get the idle
+  // blink — the photo swap is motion, and the global CSS rule cannot
+  // reach this JS image swap. The 150ms restore below still runs if
+  // a blink was already mid-flight when the user paused, so the
+  // open-eye photo is always restored.
+  if (reduced || paused) { return; }
   var head = dokiHead();
   if(!head || !head.classList.contains('doki--idle')) return;
   var imgs = dokiPhotoImgs();
@@ -1301,6 +1377,32 @@ function dokiMicStop(){
   // on button click, close on outside click or Escape. returnFocus
   // (launcher only): on Escape, return focus to the button — never
   // on outside-click, which would yank focus mid-task.
+  /* F36 (rec 36): arrow-key navigation for dropdown menus. Menus are
+   * plain navigation links (NOT role="menu" — that role is for
+   * application menus; these are site navigation, so links keep
+   * their link semantics and arrow keys are an added convenience,
+   * not a replacement for Tab). ArrowDown/ArrowUp move between the
+   * menu's visible links/buttons (wrapping); Home/End jump to the
+   * ends. Attached to the menu element, so it only fires while
+   * focus is inside an open menu. */
+  function dkMenuArrows(menu){
+    menu.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') { return; }
+      var items = [];
+      menu.querySelectorAll('a[href], button').forEach(function (el) {
+        if (!el.hidden && !el.disabled && el.offsetParent !== null) { items.push(el); }
+      });
+      if (!items.length) { return; }
+      var at = items.indexOf(document.activeElement);
+      var next = at;
+      if (e.key === 'ArrowDown') { next = (at + 1) % items.length; }
+      else if (e.key === 'ArrowUp') { next = (at - 1 + items.length) % items.length; }
+      else if (e.key === 'Home') { next = 0; }
+      else if (e.key === 'End') { next = items.length - 1; }
+      e.preventDefault();
+      items[next].focus();
+    });
+  }
   function bindMenu(btnId, menuId, onPick, returnFocus){
     var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
     if (!btn || !menu) { return; }
@@ -1334,13 +1436,17 @@ function dokiMicStop(){
         if (returnFocus) { btn.focus(); }
       }
     });
+    dkMenuArrows(menu); // F36: arrow-key navigation between menu items.
     if (onPick) { menu.addEventListener('click', onPick); }
   }
   // Language selector: owned entirely by i18n.js (it toggles the
   // menu and applies the choice). main.js must NOT also bind it —
   // two toggles on one click would open then immediately close it.
   // Profile avatar menu: links only, no balance shown (no real source).
-  bindMenu('dkProfBtn', 'profMenu', null);
+  // F36: the profile menu now returns focus on Escape too (it was the
+  // only bindMenu call without returnFocus — keyboard users lost
+  // their place when closing it).
+  bindMenu('dkProfBtn', 'profMenu', null, true);
   // Header menus: guest/auth rows (items 99/103). Rows carry
   // data-menu="guest" (Login/Sign up) or "auth" (Dashboard/Settings/
   // Notifications/...). account.js owns the auth truth (Firebase) and
@@ -1429,6 +1535,7 @@ function dokiMicStop(){
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !menu.hidden) { close(); caret.focus(); }
     });
+    dkMenuArrows(menu); // F36: arrow-key navigation between dropdown links.
   }
   bindNavDrop('pricingDrop', 'pricingCaret', 'pricingMenu');
   bindNavDrop('typingDrop', 'typingCaret', 'typingMenu');
@@ -1626,6 +1733,10 @@ function dokiMicStop(){
       back.classList.add('open');
       document.body.classList.add('dk-tour-open'); // T050: hide the sticky bar while the tour is open.
       card.innerHTML = '';
+      // F36 (rec 36): the tour card is a dialog — label it with the
+      // current step title so screen readers announce the step.
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-label', steps[i][0]);
       var h = document.createElement('h3'); h.textContent = steps[i][0]; card.appendChild(h);
       var p = document.createElement('p'); p.textContent = steps[i][1]; card.appendChild(p);
       var row = document.createElement('p');
@@ -1640,6 +1751,9 @@ function dokiMicStop(){
       var done = document.createElement('button'); done.className = 'btn ghost'; done.textContent = dkT('rsv_0960', 'Close');
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
+      // F36: show() rebuilds the card's buttons every step, which
+      // would drop keyboard focus to <body> — land it on Next/Done.
+      try { next.focus(); } catch (e) { /* old browsers: focus stays put */ }
     }
     // F24 (rec 24): real exit animation, not an instant removal.
     // .closing fades the backdrop + scales the card out (180ms, Fast
@@ -1647,6 +1761,10 @@ function dokiMicStop(){
     // generation guard stops a stale timeout from removing a tour
     // that was re-opened in the meantime.
     function close() {
+      // F36: focus returns to the Tour button the moment the tour
+      // closes (Escape, backdrop, Done or Close) — the keyboard
+      // user is never left on a removed node.
+      try { btn.focus(); } catch (e) { /* old browsers: focus stays put */ }
       document.body.classList.remove('dk-tour-open');
       var b = back, c = card, gen = ++closeGen; i = 0;
       if (b) { b.classList.remove('open'); b.classList.add('closing'); }
@@ -1658,6 +1776,12 @@ function dokiMicStop(){
       }, 180);
     }
     btn.addEventListener('click', show);
+    // F36: Escape closes the tour (the card previously had no
+    // keyboard handling at all); close() returns focus to the button.
+    // The card-null guard means this only fires while a tour is open.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && card) { close(); }
+    });
   })();
   // Dismissible tip banner on the home page (dismissal remembered).
   (function tip(){
@@ -1851,7 +1975,12 @@ function dokiMicStop(){
       // type=email check already ran (required + type=email) — this
       // guards the rules' length bound before any write is attempted.
       if (addr.length < 4 || addr.length > 120 || addr.indexOf('@') < 1) {
+        // F39: the format error now lands on the email field itself
+        // (focus + aria-invalid). The message element keeps its own
+        // static text (with the contact mailto), so no message is
+        // passed — dkFailField only links and focuses it.
         if (err) { err.hidden = false; }
+        if (window.dkFailField && emailEl) { window.dkFailField(emailEl, err, null); }
         return;
       }
       var db = null;

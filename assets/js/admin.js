@@ -32,6 +32,9 @@
       var on = b.getAttribute('data-atab') === key;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
+      // F36 (rec 36): roving tabindex — only the active tab is in
+      // the Tab order; the rest are reached with arrow keys.
+      b.setAttribute('tabindex', on ? '0' : '-1');
       if (on) { activeBtn = b; }
     });
     document.querySelectorAll('[data-apanel]').forEach(function (p) {
@@ -44,6 +47,24 @@
     b.addEventListener('click', function () {
       show(b.getAttribute('data-atab'));
     });
+  });
+  /* F36 (rec 36): arrow-key tab navigation (ARIA tabs pattern,
+   * automatic activation — moving to a tab opens its panel, so
+   * keyboard users never need a separate Enter). Home/End jump
+   * to the first/last tab. */
+  tabsRow.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') { return; }
+    var at = -1;
+    btns.forEach(function (b, idx) { if (b === document.activeElement) { at = idx; } });
+    if (at === -1) { return; }
+    var next = at;
+    if (e.key === 'ArrowRight') { next = (at + 1) % btns.length; }
+    else if (e.key === 'ArrowLeft') { next = (at - 1 + btns.length) % btns.length; }
+    else if (e.key === 'Home') { next = 0; }
+    else if (e.key === 'End') { next = btns.length - 1; }
+    e.preventDefault();
+    show(btns[next].getAttribute('data-atab'));
+    btns[next].focus();
   });
   /* Re-measure after layout settles (fonts/i18n can change button
    * widths after first paint) and on resize. */
