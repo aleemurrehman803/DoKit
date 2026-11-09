@@ -62,6 +62,35 @@
     } catch (e) { /* storage unavailable: page keeps working, nothing faked */ window.dkSwallow && window.dkSwallow(e, 'urdu-lessons-viewer.js'); }
   }
 
+  // -- Grandfathering (WP-5 TYPE-15; coordinator decision, owner may veto)
+  // WHY a snapshot, not a flag: pre-gate completions were earned under
+  // no gate, so the first gated load records exactly which ur-<id> ids
+  // were already done — the audit record of what the gate inherited.
+  // The unlock chain already treats any done id as passed (TYPE-10),
+  // so the snapshot itself changes no behaviour; it only proves what
+  // the gate inherited.
+  // WHY per-store: DK2 stores are per-account ('dk2:<uid>' signed in,
+  // 'dk2' guest) — a snapshot keyed to the active store covers the
+  // store the user actually used before the gate, and a later sign-in
+  // gets its own first-gated-load snapshot. The fallback key (no DK2)
+  // is used when progress lives in this page's own localStorage key.
+  // WHY isDone (not getLessons): isDone is the one completion read the
+  // viewer already depends on, so the snapshot works with any DK2
+  // shape and with the no-DK2 fallback alike.
+  // WHY once: the key is written only when absent — later completions
+  // are gated passes, not grandfathered ones, and must never be added.
+  var GF_KEY = 'dokit_urdu_grandfathered_v1';
+  function snapshotGrandfathered() {
+    try {
+      var store = (window.DK2 && window.DK2.storeKey) ? window.DK2.storeKey() : 'dokit_urdu_lessons_done';
+      var key = GF_KEY + ':' + store;
+      if (window.localStorage.getItem(key)) { return; }
+      var ids = [];
+      lessons.forEach(function (ls) { if (isDone(ls.id)) { ids.push('ur-' + ls.id); } });
+      window.localStorage.setItem(key, JSON.stringify({ version: 1, at: Date.now(), store: store, ids: ids }));
+    } catch (e) { /* storage unavailable: the gate still works, only the audit record is missing */ window.dkSwallow && window.dkSwallow(e, 'urdu-lessons-viewer.js'); }
+  }
+
   // -- Typing state ----------------------------------------------------------
   var lessons = [], n = 1, passage = '', typed = '', started = false,
       startTime = 0, finished = false, passedThisSession = false,
@@ -245,6 +274,9 @@
 
   function init(data) {
     lessons = data;
+    // WP-5 TYPE-15: snapshot pre-gate completions on the first gated
+    // load (once per store; later loads never overwrite it).
+    snapshotGrandfathered();
     var params = new URLSearchParams(window.location.search);
     n = parseInt(params.get('n'), 10) || 1;
     if (n < 1) { n = 1; }
