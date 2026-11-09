@@ -41,12 +41,15 @@
   'use strict';
 
   // -- Timed-test passages: verbatim from old js/urdu-lessons.js (URDU_TESTS).
+  // WP-5 TYPE-13: test passages carry version: 1 each (store v1);
+  // bump an item's version whenever its text changes. Results stamp
+  // contentVersion 'ur-test:<version>' (paper §4).
   var URDU_TEST_PASSAGES = [
-    { id: 't1', title: 'روزمرہ', titleEn: 'Daily Life',
+    { id: 't1', version: 1, title: 'روزمرہ', titleEn: 'Daily Life',
       text: 'صبح اٹھ کر میں وضو کرتا ہوں اور نماز پڑھتا ہوں۔ پھر ناشتہ کرتا ہوں اور سکول جاتا ہوں۔ سکول میں استاد ہمیں اردو، حساب اور انگریزی پڑھاتے ہیں۔ چھٹی کے بعد میں گھر آ کر کھانا کھاتا ہوں اور کھیلتا ہوں۔ شام کو میں سبق یاد کرتا ہوں۔ رات کو جلدی سو جاتا ہوں تاکہ صبح تازہ دم اٹھوں۔' },
-    { id: 't2', title: 'پاکستان', titleEn: 'Pakistan',
+    { id: 't2', version: 1, title: 'پاکستان', titleEn: 'Pakistan',
       text: 'پاکستان جنوبی ایشیا کا ایک اہم ملک ہے۔ اس کا دارالحکومت اسلام آباد ہے۔ کراچی سب سے بڑا شہر اور معاشی مرکز ہے۔ لاہور ثقافتی دل کہلاتا ہے۔ یہاں اردو قومی زبان ہے۔ پاکستان کے شمال میں دنیا کے بلند ترین پہاڑ ہیں جن میں کے ٹو بھی شامل ہے۔ دریائے سندھ اس ملک کی شہ رگ ہے۔' },
-    { id: 't3', title: 'علم کی اہمیت', titleEn: 'Knowledge',
+    { id: 't3', version: 1, title: 'علم کی اہمیت', titleEn: 'Knowledge',
       text: 'علم وہ روشنی ہے جو جہالت کے اندھیروں کو دور کرتی ہے۔ جو قومیں علم حاصل کرتی ہیں وہ ترقی کرتی ہیں۔ کتاب انسان کی بہترین دوست ہے۔ پڑھنے کی عادت انسان کو دانشمند بناتی ہے۔ ہمیں چاہیے کہ روز کچھ نہ کچھ پڑھیں۔ علم کبھی ضائع نہیں ہوتا۔ محنت اور لگن سے ہر مشکل آسان ہو جاتی ہے۔' }
   ];
 
@@ -278,7 +281,8 @@
         gross: st.gross, graphemes: st.typed, language: 'ur',
         verified: !pasted, metricVersion: st.metricVersion,
         graphemeVersion: st.graphemeVersion, sessionId: sessionId,
-        contentId: 'urdu-test:' + URDU_TEST_PASSAGES[passIndex].id, mode: 'timed' });
+        contentId: 'urdu-test:' + URDU_TEST_PASSAGES[passIndex].id,
+        contentVersion: 'ur-test:' + (URDU_TEST_PASSAGES[passIndex].version || 1), mode: 'timed' });
     }
     show('done');
   }

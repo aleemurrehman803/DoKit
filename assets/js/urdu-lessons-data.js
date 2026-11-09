@@ -1,7 +1,8 @@
-/* DoKit Urdu lessons (restore) — 25 lessons ported verbatim from the old site. */
+/* DoKit Urdu lessons (restore) — 25 lessons ported verbatim from the old site. Content version (WP-5 TYPE-13): store v1 — every lesson carries version 1. Bump an item's version whenever its text changes. */
 var URDU_LESSONS = [
   {
     "id": 1,
+    "version": 1,
     "level": "beginner",
     "title": "Alif, Seen, Daal",
     "titleUr": "ا س د",
@@ -16,6 +17,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 2,
+    "version": 1,
     "level": "beginner",
     "title": "Fay, Gaaf, Hay",
     "titleUr": "ف گ ح",
@@ -30,6 +32,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 3,
+    "version": 1,
     "level": "beginner",
     "title": "Jeem, Kaaf, Laam",
     "titleUr": "ج ک ل",
@@ -44,6 +47,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 4,
+    "version": 1,
     "level": "beginner",
     "title": "Home Row Review",
     "titleUr": "مشق",
@@ -58,6 +62,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 5,
+    "version": 1,
     "level": "beginner",
     "title": "Meem, Noon, Wao",
     "titleUr": "م ن و",
@@ -72,6 +77,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 6,
+    "version": 1,
     "level": "intermediate",
     "title": "Bay, Pay, Tay, Ttay",
     "titleUr": "ب پ ت ٹ",
@@ -86,6 +92,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 7,
+    "version": 1,
     "level": "intermediate",
     "title": "Ray, Zay, Bari Yay",
     "titleUr": "ر ز ے",
@@ -100,6 +107,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 8,
+    "version": 1,
     "level": "intermediate",
     "title": "Special Letters",
     "titleUr": "ی ء ہ ھ ں",
@@ -114,6 +122,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 9,
+    "version": 1,
     "level": "intermediate",
     "title": "Common Words I",
     "titleUr": "عام الفاظ",
@@ -128,6 +137,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 10,
+    "version": 1,
     "level": "intermediate",
     "title": "Common Words II",
     "titleUr": "عام الفاظ",
@@ -142,6 +152,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 11,
+    "version": 1,
     "level": "intermediate",
     "title": "Joining Practice",
     "titleUr": "جوڑ",
@@ -156,6 +167,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 12,
+    "version": 1,
     "level": "intermediate",
     "title": "Noon Ghunna & Do-Chashmi",
     "titleUr": "ں ھ",
@@ -170,6 +182,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 13,
+    "version": 1,
     "level": "advanced",
     "title": "Short Sentences I",
     "titleUr": "جملے",
@@ -184,6 +197,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 14,
+    "version": 1,
     "level": "advanced",
     "title": "Short Sentences II",
     "titleUr": "جملے",
@@ -198,6 +212,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 15,
+    "version": 1,
     "level": "advanced",
     "title": "Paragraph I",
     "titleUr": "پیراگراف",
@@ -212,6 +227,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 16,
+    "version": 1,
     "level": "advanced",
     "title": "Paragraph II",
     "titleUr": "پیراگراف",
@@ -226,6 +242,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 17,
+    "version": 1,
     "level": "advanced",
     "title": "Speed Building",
     "titleUr": "رفتار",
@@ -240,6 +257,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 18,
+    "version": 1,
     "level": "advanced",
     "title": "Mixed Review",
     "titleUr": "اعادہ",
@@ -254,6 +272,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 19,
+    "version": 1,
     "level": "expert",
     "title": "Urdu Numerals",
     "titleUr": "ہندسے",
@@ -268,6 +287,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 20,
+    "version": 1,
     "level": "expert",
     "title": "Numbers + Urdu Mix",
     "titleUr": "ہندسے اور الفاظ",
@@ -282,6 +302,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 21,
+    "version": 1,
     "level": "expert",
     "title": "Punctuation Mastery",
     "titleUr": "اوقاف",
@@ -296,6 +317,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 22,
+    "version": 1,
     "level": "expert",
     "title": "Story I",
     "titleUr": "کہانی",
@@ -310,6 +332,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 23,
+    "version": 1,
     "level": "expert",
     "title": "Story II",
     "titleUr": "کہانی",
@@ -324,6 +347,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 24,
+    "version": 1,
     "level": "expert",
     "title": "Timed Challenge",
     "titleUr": "مقابلہ",
@@ -338,6 +362,7 @@ var URDU_LESSONS = [
   },
   {
     "id": 25,
+    "version": 1,
     "level": "expert",
     "title": "Final Mastery",
     "titleUr": "مہارت",

@@ -88,8 +88,10 @@ work; see §7).
 
 Every `v2` result carries: `metricVersion: 'v2-net-grapheme'`,
 `language` (`'en'` / `'ur'`), `graphemeVersion` (`'segmenter'` or
-`'fallback'`), `contentVersion` (where the content has one; passages
-carry none today, so the field is omitted rather than invented),
+`'fallback'`), `contentVersion` (every lesson/passage store now carries a
+per-item version — WP-5 TYPE-13, §10.1 — stamped as
+'<store>:<version>', e.g. `'en-test:1'`; custom practice text
+carries no version, so the field is omitted there),
 `verified` (boolean, §5), `sessionId` (unique per session, §6),
 `mode` (`'timed'` / `'lesson'` / `'practice'`), `contentId`
 (e.g. `'en-test:home'`, `'urdu-test:t1'`, `'lesson:b-jf'`). Readers
@@ -156,7 +158,7 @@ result (no error, no second row). Records without a `sessionId`
 | O-4 | Referral activation ignores `verified` (§5). | Unchanged in WP-4. | Owner: should a first-test activation require a verified test? |
 | O-5 | Trend-chart split by `metricVersion` (Arch §6.2/§9.2). | Not implemented in WP-4. | WP-7 shared services (TEST-01): the chart must split/annotate when it moves onto the shared scoring service. |
 | O-6 | Legacy Urdu controller (`js/pages/urdu-typing.js:412-414`) has the same `Math.max(1, …)` floor and gross formula as the live UR test had. | **Not changed in WP-4** (legacy surface; WP-9 owns its disposition). Live stack only. | WP-9 / owner: apply the same gate if the legacy page stays live, or retire the page. |
-| O-7 | Lesson/passage `contentVersion` (§4). | Omitted where content carries no version (no value invented). | WP-5 content work: version the lesson/passage stores per Arch §7.1. |
+| O-7 | Lesson/passage `contentVersion` (§4). | **CLOSED (WP-5 TYPE-13, 9 Nov 2026):** every lesson/passage store now carries a per-item `version` (EN lessons v1, a-sym/b-zret v2; UR lessons v1; EN/UR test passages v1; practice v1) and results stamp `contentVersion` as `'<store>:<version>'`. Custom practice text omits the field. | — |
 | O-8 | **Architecture §6.1 prose vs Segmenter (found by TYPE-02 testing, 9 Nov 2026):** §6.1 says a digraph output counts as one grapheme and ZWNJ counts as one grapheme — but `Intl.Segmenter` (UAX #29, the §6.3 formula's own primitive) segments `تھ`/`بھ` as **two** clusters and attaches ZWNJ to the preceding cluster (0 additional clusters). The two rules cannot both hold. | **Implemented: Segmenter literally** (both paths agree; the corpus test proves it). Digraphs count 2, ZWNJ contributes 0 after a character / 1 at cluster start. | Owner/coordinator: either accept Segmenter behaviour (close O-8, amend §6.1 prose) or define a language-specific cluster-merge rule on top of Segmenter (digraph/ZWNJ merging) with its own fixtures. Until then, no code merges clusters. |
 
 ## 9. Files that implement this paper

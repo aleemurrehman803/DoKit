@@ -8,7 +8,11 @@
  * practice page reuses it instead of duplicating the logic. */
 (function () {
   'use strict';
-  var PRACTICE_PASSAGES = [{"id": "easy", "name": "Easy Text", "text": "The cat sat on the warm rug by the door. A dog ran past the big red barn. We had hot soup for lunch and then went out to play in the soft green grass. Mom sang a sweet song while dad read the news in his old brown chair."}, {"id": "medium", "name": "Medium Text", "text": "Learning to type quickly takes patience and daily practice, but the reward is worth every minute you invest. When your fingers know where each key lives, your thoughts can flow straight onto the screen without interruption. Start slowly and focus on accuracy first; speed will follow naturally as your muscle memory grows stronger each week. Many students are surprised by how fast they improve once they stop looking down at their hands. Set a small daily goal, track your words per minute, and celebrate every new personal record you achieve."}, {"id": "hard", "name": "Hard Text", "text": "The expedition set out before dawn, crossing the misty valley toward mountains that rose like silent giants against the brightening sky. Every traveler carried provisions, instruments, and a quiet determination to document whatever wonders the uncharted territory might reveal. By midday the weather shifted unexpectedly; dark clouds gathered overhead and a cold wind swept through the narrow pass, forcing the group to seek shelter beneath an overhanging cliff. While they waited, the expedition leader reviewed their charts, recalculated distances, and encouraged everyone with stories of previous journeys that had survived far worse conditions. When the storm finally passed, sunlight broke through in brilliant shafts, transforming the wet landscape into a glittering panorama that made every hardship feel worthwhile. They pressed onward with renewed energy, reaching the summit just as evening painted the horizon in shades of amber and rose."}];
+  // WP-5 TYPE-13: practice passages carry version: 1 each (store v1);
+  // bump an item's version whenever its text changes. Results stamp
+  // contentVersion 'en-practice:<version>' (paper §4); custom text
+  // carries no version, so its result omits the field.
+  var PRACTICE_PASSAGES = [{"id": "easy", "version": 1, "name": "Easy Text", "text": "The cat sat on the warm rug by the door. A dog ran past the big red barn. We had hot soup for lunch and then went out to play in the soft green grass. Mom sang a sweet song while dad read the news in his old brown chair."}, {"id": "medium", "version": 1, "name": "Medium Text", "text": "Learning to type quickly takes patience and daily practice, but the reward is worth every minute you invest. When your fingers know where each key lives, your thoughts can flow straight onto the screen without interruption. Start slowly and focus on accuracy first; speed will follow naturally as your muscle memory grows stronger each week. Many students are surprised by how fast they improve once they stop looking down at their hands. Set a small daily goal, track your words per minute, and celebrate every new personal record you achieve."}, {"id": "hard", "version": 1, "name": "Hard Text", "text": "The expedition set out before dawn, crossing the misty valley toward mountains that rose like silent giants against the brightening sky. Every traveler carried provisions, instruments, and a quiet determination to document whatever wonders the uncharted territory might reveal. By midday the weather shifted unexpectedly; dark clouds gathered overhead and a cold wind swept through the narrow pass, forcing the group to seek shelter beneath an overhanging cliff. While they waited, the expedition leader reviewed their charts, recalculated distances, and encouraged everyone with stories of previous journeys that had survived far worse conditions. When the storm finally passed, sunlight broke through in brilliant shafts, transforming the wet landscape into a glittering panorama that made every hardship feel worthwhile. They pressed onward with renewed energy, reaching the summit just as evening painted the horizon in shades of amber and rose."}];
 
   // -- Shared engine -------------------------------------------------------
   // opts: passageEl, inputEl, wpmEl, accEl, resultEl, onFinish(result).
@@ -185,7 +189,8 @@
             wpm: st.wpm, acc: st.acc, graphemes: st.typed,
             verified: st.verified, metricVersion: st.metricVersion,
             graphemeVersion: st.graphemeVersion, sessionId: st.sessionId,
-            contentId: 'lesson:' + lesson.id, mode: 'lesson', language: 'en' });
+            contentId: 'lesson:' + lesson.id,
+            contentVersion: 'en-lesson:' + (lesson.version || 1), mode: 'lesson', language: 'en' });
           window.DK2.markLesson(lesson.id);
           // Gamification (Task 5): lesson XP + badges, once per lesson
           // (perfect bonus once, on the first 100% finish). Scholar needs
@@ -217,6 +222,9 @@
   // Passage from a dropdown, or the user's own text. Same engine as above.
   var prPassage = document.getElementById('pr-passage');
   if (prPassage) {
+    // WP-5 TYPE-13: the store passage behind the current practice
+    // run (null for custom text, which carries no version).
+    var prCurrent = PRACTICE_PASSAGES[0];
     var prEngine = createEngine({
       passageEl: prPassage,
       inputEl: document.getElementById('pr-input'),
@@ -226,11 +234,14 @@
       onFinish: function (st) {
         // WP-4 TYPE-02: v2 tags (paper §4) on the saved result.
         if (window.DK2) {
-          window.DK2.saveResult({ type: 'practice',
+          var prRow = { type: 'practice',
             wpm: st.wpm, acc: st.acc, graphemes: st.typed,
             verified: st.verified, metricVersion: st.metricVersion,
             graphemeVersion: st.graphemeVersion, sessionId: st.sessionId,
-            contentId: st.contentId, mode: 'practice', language: 'en' });
+            contentId: st.contentId, mode: 'practice', language: 'en' };
+          // WP-5 TYPE-13: stamp the store version only for store text.
+          if (prCurrent) { prRow.contentVersion = 'en-practice:' + (prCurrent.version || 1); }
+          window.DK2.saveResult(prRow);
           // Gamification (Task 5, historical else-branch): practice
           // touches the streak only — no XP, no badges.
           if (window.DK2.afterActivity) { window.DK2.afterActivity('practice', st, {}); }
@@ -253,13 +264,14 @@
       prSelect.addEventListener('change', function () {
         if (prSelect.value === 'custom') { return; }
         var pi = parseInt(prSelect.value, 10);
+        prCurrent = PRACTICE_PASSAGES[pi];
         prEngine.load(PRACTICE_PASSAGES[pi].text, 'practice:' + PRACTICE_PASSAGES[pi].id);
       });
     }
     if (prUse) {
       prUse.addEventListener('click', function () {
         var text = (prCustom.value || '').replace(/\n/g, ' ').trim();
-        if (text) { prEngine.load(text, 'practice:custom'); }
+        if (text) { prCurrent = null; prEngine.load(text, 'practice:custom'); }
       });
     }
     prEngine.load(PRACTICE_PASSAGES[0].text, 'practice:' + PRACTICE_PASSAGES[0].id);

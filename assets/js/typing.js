@@ -32,6 +32,9 @@ var PASSAGES = {
   "pro-data-entry": "Record 1041: Aisha Khan, ID 88312, order 55021, quantity 14, total $386.40, zip 90210. Record 1042: Marco Ruiz, ID 88313, order 55022, quantity 3, total $89.97, zip 60601. Record 1043: Lena Fischer, ID 88314, order 55023, quantity 27, total $1,204.55, zip 10001. Record 1044: Omar Haddad, ID 88315, order 55024, quantity 8, total $212.80, zip 75001. Record 1045: Yuki Tanaka, ID 88316, order 55025, quantity 19, total $645.22, zip 90012. Record 1046: Sara Novak, ID 88317, order 55026, quantity 5, total $149.50, zip 30301. Record 1047: David Osei, ID 88318, order 55027, quantity 11, total $298.75, zip 20001. Record 1048: Hana Sato, ID 88319, order 55028, quantity 6, total $174.30, zip 94102. Record 1049: Ivan Petrov, ID 88320, order 55029, quantity 22, total $512.16, zip 60602.",
   "pro-support-chat": "Agent: Hello! Thanks for contacting us. How can I help you today? Customer: Hi, my order arrived yesterday but one item is missing. Agent: I am sorry to hear that. Could you please share your order number? Customer: Sure, it is 77410. The missing item is the blue notebook. Agent: Thank you. I can see the order, and I will ship the notebook today at no extra charge. Customer: That is great. How long will delivery take? Agent: It should arrive within three business days. You will receive a tracking link by email. Customer: Perfect, thank you for the quick help! Agent: You are welcome! Customer: One more thing — can I change the delivery address? Agent: Of course. Please type the new address and I will update it right away. Customer: 14 Green Street, Springfield. Agent: Done! Your notebook will go to 14 Green Street, Springfield."
 };
+// WP-5 TYPE-13: every passage carries version: 1 (store v1);
+// bump an item's version whenever its text changes. Results stamp
+// contentVersion 'en-test:<version>' (paper §4).
 var PASSAGE_META = {
   "home": {category: "standard", name: "Home Row Basics", words: 28, version: 1, source: "live typing.js (Phase 2b)", durationValidity: {minSeconds: 30, maxSeconds: 84}},
   "top": {category: "advanced", name: "Top Row Practice", words: 24, version: 1, source: "live typing.js (Phase 2b)", durationValidity: {minSeconds: 30, maxSeconds: 72}},
@@ -356,7 +359,7 @@ function finish(){
       // graphemeVersion, sessionId (dedup key), contentId, mode.
       // chars stays the UTF-16 length (the historical field, kept
       // for diagnostics); graphemes is the v2 count.
-      window.DK2.saveResult({date:new Date().toISOString(),type:'Test',kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,graphemes:st.typed,verified:!pasted,metricVersion:st.metricVersion,graphemeVersion:st.graphemeVersion,sessionId:sessionId,contentId:'en-test:'+passageKey,mode:'timed'});
+      window.DK2.saveResult({date:new Date().toISOString(),type:'Test',kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,graphemes:st.typed,verified:!pasted,metricVersion:st.metricVersion,graphemeVersion:st.graphemeVersion,sessionId:sessionId,contentId:'en-test:'+passageKey,contentVersion:'en-test:'+((PASSAGE_META[passageKey]&&PASSAGE_META[passageKey].version)||1),mode:'timed'});
     }
   }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Referral activation (silent): first consented test only; never breaks typing.
