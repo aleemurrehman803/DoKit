@@ -9,9 +9,12 @@
   audit W2 §3 (formulas as found) and C1/C2/C8/C9/C12.
 - **Decisions applied:** D-2 (net WPM everywhere from `v2`, tag
   `v2-net-grapheme`); TYPE-15 (pre-gate Urdu lesson completions
-  grandfathered — this paper changes no completion record); TYPE-16
+  grandfathered — this paper changes no completion record; DECIDED BY
+  OWNER DELEGATION 9 Nov 2026 ~08:13 PM PKT, veto-able: GRANDFATHER —
+  see §8); TYPE-16
   (exclude `verified:false` from certificate `bestTest` — implemented per
-  the design; owner confirmation still pending, see §7).
+  the design; DECIDED BY OWNER DELEGATION 9 Nov 2026 ~08:13 PM PKT,
+  veto-able: EXCLUDE — see §8).
 - **History rule (non-negotiable):** historical records keep their recorded
   numbers and their tags. No migration recomputes old WPM/accuracy, and
   no UI relabels a gross figure as net. New records only.
@@ -154,7 +157,7 @@ result (no error, no second row). Records without a `sessionId`
 |---|---|---|---|
 | O-1 | Test Center spec §1.5 says dedup applies "within the dedup window" but names no duration. | The implementation checks only the immediately preceding saved result (the architecture's wording, §8.6). No time window is applied. | Owner/coordinator: whether a numeric window (e.g. 60 s) should also dedupe same-session re-saves deeper in history. |
 | O-2 | Arch §8.6 applies the 1000 ms gate to "every mode and every language", but a very short lesson (a few characters) can genuinely finish in < 1 s. | Uniform 1000 ms gate everywhere, with reset-and-retry (no lockout, no XP loss beyond the rejected attempt). | Owner/coordinator: whether short lessons need a lower threshold or a minimum-length exemption. |
-| O-3 | TYPE-16: exclude `verified:false` from `bestTest`. | Implemented per the design (see §5). | Owner confirmation still pending (tracker TYPE-16 BLOCKED). |
+| O-3 | TYPE-16: exclude `verified:false` from `bestTest`. | Implemented per the design (see §5). | DECIDED BY OWNER DELEGATION 9 Nov 2026 ~08:13 PM PKT (veto-able): EXCLUDE. Tracker TYPE-16 DONE — VERIFIED. |
 | O-4 | Referral activation ignores `verified` (§5). | Unchanged in WP-4. | Owner: should a first-test activation require a verified test? |
 | O-5 | Trend-chart split by `metricVersion` (Arch §6.2/§9.2). | Not implemented in WP-4. | WP-7 shared services (TEST-01): the chart must split/annotate when it moves onto the shared scoring service. |
 | O-6 | Legacy Urdu controller (`js/pages/urdu-typing.js:412-414`) has the same `Math.max(1, …)` floor and gross formula as the live UR test had. | **Not changed in WP-4** (legacy surface; WP-9 owns its disposition). Live stack only. | WP-9 / owner: apply the same gate if the legacy page stays live, or retire the page. |
