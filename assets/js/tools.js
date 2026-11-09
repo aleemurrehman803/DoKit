@@ -69,7 +69,28 @@ if(wc){
     });
   });
   var cp = $('wc-copy');
-  if(cp){ cp.addEventListener('click', function(){ if(navigator.clipboard){ navigator.clipboard.writeText(wc.value); } }); }
+  if(cp){ cp.addEventListener('click', function(){
+    // F25 fix (rec 25, live pass 9 Nov 2026): as with the password
+    // generator — the old handler fired writeText and never reported
+    // back, so a click showed nothing at all. Feedback now follows the
+    // real outcome (toast + button flash on success, honest failure
+    // note otherwise; failure text English-only, no dict key exists).
+    var v = wc.value || '';
+    if(!v){ return; }
+    var origLabel = cp.textContent;
+    function done(){
+      if(window.dkToast){ window.dkToast(window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'); }
+      cp.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
+      setTimeout(function(){ cp.textContent = origLabel; }, 1500);
+    }
+    function fail(){
+      if(window.dkToast){ window.dkToast('Copy failed — please select the text and copy it manually.'); }
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(done).catch(fail); }
+      else { fail(); }
+    }catch(e){ fail(); }
+  }); }
   // WHY (i18n): re-render stats on language change so the labels
   // translate without waiting for the next keystroke.
   document.addEventListener('dokit:langchange', function(){ wc.dispatchEvent(new Event('input')); });
@@ -91,9 +112,26 @@ if(cc){
   });
   var cpy = $('cc-copy');
   if(cpy){ cpy.addEventListener('click', function(){
+    // F25 fix (rec 25, live pass 9 Nov 2026): the old handler swallowed
+    // clipboard errors silently and showed nothing on success either.
+    // Feedback now follows the real outcome (toast + button flash on
+    // success, honest failure note otherwise; failure text English-only,
+    // no dict key exists). The execCommand fallback is kept and now
+    // reports its own boolean result instead of failing silently.
     var v = ccOut.value; if(!v) return;
-    if(navigator.clipboard){ navigator.clipboard.writeText(v).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'tools.js'); }); }
-    else { ccOut.select(); try{ document.execCommand('copy'); }catch(e){ window.dkSwallow && window.dkSwallow(e, 'tools.js'); } }
+    var origLabel = cpy.textContent;
+    function done(){
+      if(window.dkToast){ window.dkToast(window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'); }
+      cpy.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
+      setTimeout(function(){ cpy.textContent = origLabel; }, 1500);
+    }
+    function fail(){
+      if(window.dkToast){ window.dkToast('Copy failed — please select the text and copy it manually.'); }
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(done).catch(fail); }
+      else { ccOut.select(); var ok = false; try{ ok = document.execCommand('copy'); }catch(e){ ok = false; } if(ok){ done(); } else { fail(); } }
+    }catch(e){ fail(); }
   }); }
 }
 /* ---------- Resizer parked fixes: stored-ZIP writer + color-based

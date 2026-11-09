@@ -55,9 +55,29 @@
     if (pwGen) { pwGen.addEventListener('click', generate); }
     if (pwCopy) {
       pwCopy.addEventListener('click', function () {
-        if (pwOut.textContent && navigator.clipboard) {
-          navigator.clipboard.writeText(pwOut.textContent);
+        // F25 fix (rec 25, live pass 9 Nov 2026): the old handler fired
+        // writeText and never reported back — no success or failure
+        // feedback at all. Feedback now follows the real outcome: a
+        // toast + button flash only after the write resolves, an honest
+        // failure note otherwise. Failure text is English-only (no dict
+        // key exists for a copy failure; dict-sync follow-up, same class
+        // as the Phase E admin strings and the F25 account.js fix).
+        var text = pwOut.textContent || '';
+        if (!text) { return; }
+        var origLabel = pwCopy.textContent;
+        function done() {
+          if (window.dkToast) { window.dkToast(window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'); }
+          pwCopy.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
+          setTimeout(function () { pwCopy.textContent = origLabel; }, 1500);
         }
+        function fail() {
+          if (window.dkToast) { window.dkToast('Copy failed — please select the password and copy it manually.'); }
+        }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(fail);
+          } else { fail(); }
+        } catch (e) { fail(); }
       });
     }
     generate(); // show a password immediately, so the tool never looks empty

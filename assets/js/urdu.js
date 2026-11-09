@@ -38,11 +38,28 @@
     });
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
+        // F25 fix (rec 25, live pass 9 Nov 2026): the old handler set
+        // "Copied!" on the button unconditionally — even when the
+        // clipboard write failed or the API was missing (false success,
+        // same class as the F25 account.js fix). The label now changes
+        // only after the write resolves; a failed write shows an honest
+        // failure note instead. Failure text is English-only (no dict
+        // key exists for a copy failure; dict-sync follow-up).
         var text = outEl.textContent;
         if (!text) { return; }
-        if (navigator.clipboard) { navigator.clipboard.writeText(text); }
-        copyBtn.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
-        setTimeout(function () { copyBtn.textContent = (window.dkT ? window.dkT('rsv_0189', 'Copy Urdu text') : 'Copy Urdu text'); }, 1500);
+        function done() {
+          if (window.dkToast) { window.dkToast(window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'); }
+          copyBtn.textContent = (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!');
+          setTimeout(function () { copyBtn.textContent = (window.dkT ? window.dkT('rsv_0189', 'Copy Urdu text') : 'Copy Urdu text'); }, 1500);
+        }
+        function fail() {
+          if (window.dkToast) { window.dkToast('Copy failed — please select the text and copy it manually.'); }
+        }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(fail);
+          } else { fail(); }
+        } catch (e) { fail(); }
       });
     }
   }
