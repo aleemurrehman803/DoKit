@@ -400,6 +400,19 @@
       + (s.nextRank ? (' · ' + esc(s.nextRank)) : '')
       + (remainingText ? (' · ' + esc(remainingText)) : '')
       + '</p>';
+    /* Phase F F29 (rec 29): the .ref-progress bar in account/referrals/
+     * sat at width:0 forever — this text line is the ONLY place
+     * rankProgress is rendered, and it never touched the bar. The bar
+     * now shows the same real rankProgress (clamped 0-100) with its
+     * aria-valuenow kept in sync; the .3s width transition (Panel band)
+     * animates the fill. Pages without the bar (dashboard/profile)
+     * simply skip it. */
+    var refBar = (typeof document !== 'undefined') ? document.querySelector('.ref-progress span') : null;
+    if (refBar) {
+      var refPct = Math.max(0, Math.min(100, Number(s.rankProgress) || 0));
+      refBar.style.width = refPct + '%';
+      if (refBar.parentElement) { refBar.parentElement.setAttribute('aria-valuenow', String(Math.round(refPct))); }
+    }
     return setHtml(idOrEl, html);
   }
   function levelList(rows, stats, names) {
@@ -509,11 +522,15 @@
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
         function done() { if (copiedEl) { copiedEl.textContent = T('ref_share_copied', 'Copied!'); } }
+        // F25 (rec 25): as in account.js — done() ran on failure too.
+        // fail() reports the real outcome instead (English-only string,
+        // no dict key exists for a copy failure; dict-sync follow-up).
+        function fail() { if (copiedEl) { copiedEl.textContent = T('ref_share_copy_failed', 'Copy failed — please select the link and copy it manually.'); } }
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(link).then(done).catch(done);
-          } else { done(); }
-        } catch (err) { done(); }
+            navigator.clipboard.writeText(link).then(done).catch(fail);
+          } else { fail(); }
+        } catch (err) { fail(); }
       });
     }
     /* QR: the site already vendors qrcodejs at assets/js/vendor/
@@ -3718,6 +3735,9 @@
     if (!container || !uid) { return Promise.resolve(false); }
     var titleText = 'QR share link';
     var copiedText = 'Copied!';
+    // F25 (rec 25): failure note for the QR-link copy below — the old
+    // code showed 'Copied!' on every path, including a rejected write.
+    var failedText = 'Copy failed — please select the link and copy it manually.';
     var copyText = 'Copy QR link';
     var noJoinsText = 'No QR joins recorded yet.';
     var joinsLabelText = 'QR joins';
@@ -3772,9 +3792,9 @@
       refxBind(container, function (btn) {
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(qrLink).then(function () { refxNote(container, copiedText); });
-          } else { refxNote(container, copiedText); }
-        } catch (err) { refxNote(container, copiedText); }
+            navigator.clipboard.writeText(qrLink).then(function () { refxNote(container, copiedText); }).catch(function () { refxNote(container, failedText); });
+          } else { refxNote(container, failedText); }
+        } catch (err) { refxNote(container, failedText); }
       });
       return true;
     }).catch(function () { return false; });
@@ -4852,6 +4872,8 @@
     var copyText = 'Copy summary';
     var csvText = 'Export CSV';
     var copiedText = 'Copied!';
+    // F25 (rec 25): failure note for the quarter-copy below (same fix).
+    var failedText = 'Copy failed — please select the text and copy it manually.';
     var noTeamsText = 'No battle teams to publish.';
     var quarter = quarterKey(new Date());
     var month = monthKey(new Date());
@@ -5109,8 +5131,8 @@
           if (!lastQuarter) { btn.disabled = false; return; }
           try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(JSON.stringify(lastQuarter)).then(function () { refxNote(queueEl, copiedText); });
-            } else { refxNote(queueEl, copiedText); }
+              navigator.clipboard.writeText(JSON.stringify(lastQuarter)).then(function () { refxNote(queueEl, copiedText); }).catch(function () { refxNote(queueEl, failedText); });
+            } else { refxNote(queueEl, failedText); }
           } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
           btn.disabled = false;
         } else if (action === 'q-quarter-csv') {

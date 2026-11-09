@@ -121,6 +121,31 @@ window.dkFlashNum = function (el) {
   void el.offsetWidth; /* restart the animation */
   el.classList.add('num-flash');
 };
+/* Phase F F26 (rec 26): window.dkToast — the toast system the
+ * certificate page's DKUI.toast call sites were reaching for (DKUI was
+ * never defined, so those PDF-failure notices were dead no-ops). One
+ * toast at a time: a new call replaces the old one; role="status" so
+ * screen readers announce it; auto-dismiss after 3.5s with a fade-out
+ * (.dk-toast-out, style.css). The message is set via textContent, so
+ * no caller can inject HTML through it. DKUI.toast points at the same
+ * function, so the existing guarded certificate.js call sites come
+ * alive with no edits there. */
+var dkToastEl = null, dkToastTimer = null;
+window.dkToast = function (msg) {
+  if (!msg) { return; }
+  if (dkToastTimer) { clearTimeout(dkToastTimer); dkToastTimer = null; }
+  if (dkToastEl) { dkToastEl.remove(); dkToastEl = null; }
+  var t = document.createElement('div');
+  t.className = 'dk-toast'; t.setAttribute('role', 'status');
+  t.textContent = String(msg);
+  document.body.appendChild(t);
+  dkToastEl = t;
+  dkToastTimer = setTimeout(function () {
+    if (dkToastEl === t) { t.classList.add('dk-toast-out'); }
+    setTimeout(function () { if (dkToastEl === t) { t.remove(); dkToastEl = null; } }, 250);
+  }, 3500);
+};
+window.DKUI = window.DKUI || {}; window.DKUI.toast = window.dkToast;
 // T030 (P5-VIS-07): one header menu open at a time. Each menu binder
 // registers its OWN existing close function here; closeAllMenus(except)
 // runs every other registered closer, so opening any menu closes all the
@@ -1570,7 +1595,11 @@ function dokiMicStop(){
       [dkT('rsv_1028', 'Typing school'), dkT('rsv_1029', 'Lessons, practice, games and Urdu typing live under Typing.')],
       [dkT('rsv_1024', 'Your data stays yours'), dkT('rsv_1025', 'Results and favorites save only on this device.')]
     ];
-    var i = 0, back = null, card = null;
+    var i = 0, back = null, card = null, closeGen = 0;
+    // F24 (rec 24): closeGen guards the delayed exit removal —
+    // a fast re-open bumps it, so a pending timeout can never
+    // remove the live tour. Without it, Tour -> Close -> Tour
+    // within 180ms would delete the tour mid-show.
     function show() {
       if (!back) {
         back = document.createElement('div'); back.className = 'tour-backdrop';
@@ -1578,6 +1607,7 @@ function dokiMicStop(){
         card = document.createElement('div'); card.className = 'tour-card';
         document.body.appendChild(back); document.body.appendChild(card);
       }
+      back.classList.remove('closing'); card.classList.remove('closing'); closeGen++; // F24: cancel any pending exit removal
       back.classList.add('open');
       document.body.classList.add('dk-tour-open'); // T050: hide the sticky bar while the tour is open.
       card.innerHTML = '';
@@ -1596,7 +1626,22 @@ function dokiMicStop(){
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
     }
-    function close() { document.body.classList.remove('dk-tour-open'); if (back) { back.classList.remove('open'); } if (card) { card.remove(); card = null; back.remove(); back = null; } i = 0; }
+    // F24 (rec 24): real exit animation, not an instant removal.
+    // .closing fades the backdrop + scales the card out (180ms, Fast
+    // token); the nodes leave the DOM only after it finishes. The
+    // generation guard stops a stale timeout from removing a tour
+    // that was re-opened in the meantime.
+    function close() {
+      document.body.classList.remove('dk-tour-open');
+      var b = back, c = card, gen = ++closeGen; i = 0;
+      if (b) { b.classList.remove('open'); b.classList.add('closing'); }
+      if (c) { c.classList.add('closing'); }
+      setTimeout(function () {
+        if (gen !== closeGen) { return; }
+        if (b) { b.remove(); } if (c) { c.remove(); }
+        if (back === b) { back = null; } if (card === c) { card = null; }
+      }, 180);
+    }
     btn.addEventListener('click', show);
   })();
   // Dismissible tip banner on the home page (dismissal remembered).

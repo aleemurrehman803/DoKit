@@ -12,7 +12,7 @@
  * card), --pad-compact 14px (callout vertical rhythm), --pad-roomy
  * 24px (spacious form/tool panels). Every card-family surface uses
  * one of these three; the unexplained 16px/18px values are gone. */
-:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-display:"Sora",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd}
+:root{--violet:#6C4CF1;--violet2:#8B6FF5;--amber:#FFC531;--ink:#17142E;--bg:#12101F;--surface:#1D1933;--surface2:#26224A;--line:#38336A;--text:#F4F2FF;--muted:#B9B3E0;--good:#3ECF8E;--bad:#FF6B6B;--gold:#b8860b;--gold2:#daa520;--blue:#1a56db;--violet-deep:#4B2FD6;--on-accent:#fff;--violet-rgb:108,76,241;--pad-card:20px;--pad-compact:14px;--pad-roomy:24px;--primary:var(--violet);--accent:var(--amber);--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-display:"Sora",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--font-serif:Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',Times,serif;--font-script:'Segoe Script','Brush Script MT','Lucida Handwriting','Apple Chancery','URW Chancery L',cursive;--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-8:3rem;--sp-10:4rem;--fs-xs:.75rem;--fs-sm:.875rem;--fs-base:1rem;--fs-lg:1.125rem;--fs-xl:1.5rem;--fs-2xl:2rem;--fs-3xl:clamp(2.25rem,5vw,3rem);--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:1.5rem;--r-pill:999px;--cert-paper:#fffdf7;--cert-photo-bg:#f0ebff;--cert-line:#e0d9c8;--cert-gold-ink:#6b5a1e;--cert-ink-soft:#3a3558;--cert-muted:#666;--cert-sig-line:#1a1a2e;--cert-qr-border:#ddd;--dur-fast:140ms;--dur-std:200ms;--dur-panel:280ms}
 *{box-sizing:border-box}
 /* T029 (P5-VIS-06): scroll-padding-top so fragment/anchor jumps land below
  * the sticky header instead of under it. 90px = header (~68px at every
@@ -1180,3 +1180,93 @@ button:not(.btn):active svg{transform:scale(.94)}
  * are untouched. */
 .foot-lang button{transition:background-color .15s,color .15s,border-color .15s}
 .foot-lang button:hover{background:rgba(255,197,49,.08)}
+
+/* F30 — Unified Motion Design Language (rec 30).
+ * WHY tokens + audit, not a mass re-time: the prompt's bands are
+ * Fast 120-160ms / Standard 180-240ms / Panel 240-320ms. The tokens
+ * (--dur-fast/--dur-std/--dur-panel, mid-band values, in :root) are
+ * used by all NEW Phase F motion (F23/F24/F26/F27/F28 below). Legacy
+ * durations were audited, not re-timed: the shared .15s transitions
+ * already sit in Fast; .2s/.25s in Standard/Panel; the .3s progress
+ * width is Panel; the .35s app-tile stagger, .5s reveal, 6s shimmer
+ * and 14-22s orb drifts are Decorative (scroll/ambient entrance,
+ * kept by design). Re-timing working motion would be churn, not
+ * unification — the language is now one set of tokens + one audit. */
+
+/* F22 — Form Input Focus Transition (rec 22).
+ * WHY violet ring, not the amber :focus-visible outline: inputs had NO
+ * focus rule at all (only the hero searchbox had :focus-within). The
+ * ring matches the hero searchbox pattern (violet2 border + 4px soft
+ * ring) so every text field focuses the same way. The box-shadow
+ * transition is already in the shared .15s list (Fast band), so the
+ * ring fades in instead of snapping. The global :focus-visible amber
+ * outline still covers links/buttons — inputs get this stronger ring
+ * because a 1px border change alone is too subtle to notice. */
+input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[type=password]:focus,input[type=url]:focus,select:focus,textarea:focus{border-color:var(--violet2);outline:0;box-shadow:0 0 0 4px rgba(139,116,255,.25)}
+
+/* F23 — FAQ Accordion Motion (rec 23).
+ * WHY animate the answer, not the <details> box: native <details>
+ * cannot transition its own height, but the answer content can fade +
+ * slide in on open (selector only matches while open, so reopening
+ * re-triggers it). The open question also takes the amber accent so
+ * the open state is visible at a glance. .3s Panel token; the global
+ * reduced-motion rule kills the keyframe. */
+.faq details[open] summary{color:var(--amber)}
+.faq details[open]>:not(summary){animation:dkFaqIn var(--dur-panel) ease-out}
+@keyframes dkFaqIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* F24 — Modal Entrance/Exit Animation (rec 24).
+ * WHY two keyframes: the tour card is centred with translate(-50%,-50%),
+ * so its keyframes must carry the centring through the animation; the
+ * #ak-modal show-once key modal is an in-flow div, so it gets a plain
+ * fade + 6px slide (dkFadeSlideIn) with no centring transform. The tour
+ * backdrop fades via opacity (display:none -> block on .open, then the
+ * transition runs). Exit is a real animation, not an instant removal:
+ * close() adds .closing and removes the nodes after 180ms (guarded by
+ * a generation counter in main.js so a fast re-open is never removed).
+ * The ak-modal close clears a secret from the DOM, so it keeps an
+ * entrance-only animation by design — delaying its removal would be a
+ * security mistake, not polish. */
+.tour-backdrop{opacity:0;transition:opacity var(--dur-std) ease}
+.tour-backdrop.open{opacity:1}
+.tour-backdrop.closing{opacity:0}
+.tour-card{animation:dkModalIn var(--dur-panel) ease-out}
+.tour-card.closing{animation:dkModalOut var(--dur-fast) ease-in forwards}
+#ak-modal{animation:dkFadeSlideIn var(--dur-panel) ease-out}
+@keyframes dkModalIn{from{opacity:0;transform:translate(-50%,-48%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes dkModalOut{from{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-52%) scale(.98)}}
+@keyframes dkFadeSlideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* F26 — Toast Notification Motion (rec 26).
+ * WHY build it: certificate.js has three guarded DKUI.toast call sites
+ * (PDF-failure notices) that were dead no-ops — DKUI was never defined
+ * anywhere. window.dkToast (main.js) is the real system: one toast at
+ * a time (a new call replaces the old one), role="status" so screen
+ * readers announce it, slide-up + fade entrance (Panel token),
+ * auto-dismiss after 3.5s with a fade-out. It sits above the FAB
+ * (bottom:92px, same shelf as the chat panel) at z-index 120, above
+ * the tour (96) so an error is never hidden behind a modal. DKUI.toast
+ * is wired to the same function so the existing certificate.js call
+ * sites come alive with no edits there. */
+.dk-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:120;max-width:min(420px,calc(100vw - 40px));background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-size:15px;animation:dkToastIn var(--dur-panel) ease-out}
+.dk-toast-out{opacity:0;transition:opacity .25s ease}
+@keyframes dkToastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* F27 — Tool Card Icon Motion (rec 27).
+ * WHY .app-tile svg: the homepage tool cards carry NO icon element
+ * (verified 10/10 x2 in Group B), so the All Tools panel tiles are the
+ * only tool icons on the site. Hover (and keyboard focus-visible, so
+ * keyboard users get the same feedback) lifts the glyph 14% with a
+ * slight -4deg tilt. The tile's own entrance stagger (appTileIn) is
+ * untouched — this transform is on the <svg>, not the tile. */
+.app-tile svg{transition:transform var(--dur-std) ease}
+.app-tile:hover svg,.app-tile:focus-visible svg{transform:scale(1.14) rotate(-4deg)}
+
+/* F28 — Image/Poster Preview Hover Polish (rec 28).
+ * WHY the holder, not the canvas: the referral poster is a
+ * 1080x1350 canvas drawn by renderPosters into #refx-poster-holder
+ * (E-01). A 1% scale + soft shadow on the holder gives the preview
+ * a lift without touching the poster artwork itself (no radius, no
+ * crop — the canvas corners stay exactly as drawn). */
+#refx-poster-holder{transition:transform var(--dur-std) ease,box-shadow var(--dur-std) ease}
+#refx-poster-holder:hover{transform:scale(1.01);box-shadow:0 12px 32px rgba(0,0,0,.45)}

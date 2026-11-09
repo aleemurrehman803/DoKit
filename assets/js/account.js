@@ -2285,11 +2285,21 @@
         function done(){
           showMsg('acct-err', (window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'), false);
         }
+        // F25 (rec 25): the old code called done() on EVERY path — a
+        // rejected clipboard write, a missing clipboard API, and a
+        // thrown error all reported "Copied!". Feedback now follows
+        // the real outcome: success only after the write resolves,
+        // an honest error note otherwise. The message is English-only
+        // (no dict key exists for a copy failure; translation is a
+        // dict-sync follow-up, same class as the Phase E admin strings).
+        function fail(){
+          showMsg('acct-err', 'Copy failed — please select the link and copy it manually.', true);
+        }
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(link).then(done).catch(done);
-          } else { done(); }
-        } catch (e) { done(); }
+            navigator.clipboard.writeText(link).then(done).catch(fail);
+          } else { fail(); }
+        } catch (e) { fail(); }
       });
     }
     /* Referral Phase 1 — dashboard card + referrals page + profile,
