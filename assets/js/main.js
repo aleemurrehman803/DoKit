@@ -1377,6 +1377,7 @@ function dokiMicStop(){
       function loadEngine(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
+          if (typeof window.syncFavsPanel === 'function') { window.syncFavsPanel(); }
           if (typeof window.syncKeyboards === 'function') { window.syncKeyboards(); }
           if (typeof window.syncDurations === 'function') { window.syncDurations(); }
           if (typeof window.syncTrend === 'function') { window.syncTrend(); }
@@ -1734,6 +1735,9 @@ function dokiMicStop(){
     function set(list) {
       try { localStorage.setItem('dokit_favs', JSON.stringify(list)); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
     }
+    // QA7-D1: one paint() per star, kept so a language change can
+    // re-localise the star aria-labels (same boot freeze as the panel line).
+    var paints = [];
     document.querySelectorAll('.tool-card').forEach(function (card) {
       var link = card.querySelector('a.cardlink'); if (!link) { return; }
       var star = document.createElement('button');
@@ -1743,7 +1747,12 @@ function dokiMicStop(){
       function paint() {
         var on = get().some(function (f) { return f.href === link.getAttribute('href'); });
         star.textContent = on ? '★' : '☆'; star.classList.toggle('on', on);
+        // QA7-D1 (same widget): the aria-label is set once at boot and
+        // freezes in English like the panel line did — refresh it here so
+        // the langchange re-paint below re-localises it too.
+        star.setAttribute('aria-label', dkT('rsv_0976', 'Favorite this tool'));
       }
+      paints.push(paint);
       star.addEventListener('click', function () {
         var list = get(), href = link.getAttribute('href');
         var i = list.findIndex(function (f) { return f.href === href; });
@@ -1766,6 +1775,18 @@ function dokiMicStop(){
       });
     }
     renderPanel();
+    // QA7-D1: the empty-state line is set once at boot, before the locale
+    // dict is applied, so it froze in English. Re-render when the locale
+    // is applied (boot, via window.syncFavsPanel — called by
+    // loadSharedScripts once i18n.js loads) and on every language change.
+    // The star aria-labels freeze the same way (paint() also ran at boot),
+    // so the sync re-paints them too — same widget, same freeze.
+    function syncFavs() {
+      paints.forEach(function (p) { p(); });
+      renderPanel();
+    }
+    document.addEventListener('dokit:langchange', syncFavs);
+    window.syncFavsPanel = syncFavs;
   })();
   // Guided tour: opened only by the Tour button, never automatically.
   (function tour(){
