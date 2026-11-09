@@ -63,7 +63,19 @@
         // key exists for a copy failure; dict-sync follow-up, same class
         // as the Phase E admin strings and the F25 account.js fix).
         var text = pwOut.textContent || '';
-        if (!text) { return; }
+        // Placeholder guard (live pass 9 Nov 2026): before the data-i18n
+        // marker was removed from #pg-out, the i18n engine overwrote the
+        // generated password with the placeholder ~200ms after load — and
+        // Copy then copied the placeholder while reporting "Copied!".
+        // A password never contains spaces, so equalling the placeholder
+        // can only mean no real password is showing: say so honestly
+        // instead of claiming a copy. (rsv_0714 stays referenced here so
+        // the key remains used; the text is compared in the current lang.)
+        var ph = (window.dkT ? window.dkT('rsv_0714', 'Your password appears here') : 'Your password appears here');
+        if (!text || text === ph) {
+          if (window.dkToast) { window.dkToast('Nothing to copy yet — generate a password first.'); }
+          return;
+        }
         var origLabel = pwCopy.textContent;
         function done() {
           if (window.dkToast) { window.dkToast(window.dkT ? window.dkT('rsv_0966', 'Copied!') : 'Copied!'); }
