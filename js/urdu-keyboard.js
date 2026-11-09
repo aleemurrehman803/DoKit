@@ -183,6 +183,10 @@
   var attachedEl = null;
   var attachedHandler = null;
   var osShift = false; // on-screen keyboard shift toggle
+  // F-2: render target the shift toggle was last rendered for. osShift is
+  // preserved across re-renders of the SAME container + layout, and reset
+  // only when the layout changes or a new container renders.
+  var lastRenderContainer = null, lastRenderLayout = null;
 
   /**
    * Switch the active keyboard layout and persist the choice.
@@ -335,6 +339,13 @@
    */
   function onKeyDown(e) {
     if (!attachedEl || e.target !== attachedEl) return;
+    // WHY dead-key guard (F-1): on international layouts (e.g. US-International)
+    // a dead key (' / ^) arrives with e.key === 'Dead'. Dispatching on e.code
+    // would intercept it and insert the mapped character, so the OS dead-key
+    // composition never happens. Return without preventDefault so the OS
+    // composition proceeds; the pending letter is invalidated like any other
+    // non-typing key.
+    if (e.key === 'Dead') { resetPending(); return; }
     // WHY skip with modifiers: Ctrl+C, Alt+Tab etc. must work normally.
     // AltGr on Windows arrives as Ctrl+Alt, so it also passes through to
     // the OS layout here (see KEY-09 evaluation for the modifier record).
@@ -439,7 +450,15 @@
   function renderKeyboard(container, opts) {
     opts = opts || {};
     if (!container) return;
-    osShift = false;
+    // WHY preserve osShift (F-2): the on-screen Shift toggle flips osShift
+    // and immediately re-renders; resetting here made the toggle decorative
+    // (Shift-click then letter-click typed the unshifted character).
+    // Reset only when the layout changed or a new container renders.
+    if (lastRenderContainer !== container || lastRenderLayout !== current) {
+      osShift = false;
+    }
+    lastRenderContainer = container;
+    lastRenderLayout = current;
     var keys = LAYOUTS[current].keys;
     container.innerHTML = "";
     container.className = (container.className || "") + " ukb";
