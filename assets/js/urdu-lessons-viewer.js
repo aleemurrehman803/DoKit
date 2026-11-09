@@ -152,12 +152,16 @@
       var mins = elapsedMs / 60000;
       st = { wpm: mins > 0 ? Math.round((correct / 5) / mins) : 0,
         acc: typed.length ? Math.round(correct / typed.length * 100) : 100,
-        correct: correct, typed: typed.length };
+        correct: correct, typed: typed.length,
+        // WP-5 scoring-wiring: the fallback tags itself v1, like the
+        // other three lesson/test paths, so a v1 row is recognisable.
+        metricVersion: 'v1-net-utf16', graphemeVersion: 'utf16' };
     }
     var wpm = st.wpm, acc = st.acc;
     if (wpmEl) { wpmEl.textContent = wpm; }
     if (accEl) { accEl.textContent = acc + '%'; }
-    return { wpm: wpm, acc: acc, correct: st.correct, typed: st.typed };
+    return { wpm: wpm, acc: acc, correct: st.correct, typed: st.typed,
+      metricVersion: st.metricVersion, graphemeVersion: st.graphemeVersion };
   }
 
   function refreshDone(lesson) {
