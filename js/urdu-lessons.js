@@ -1,3 +1,4 @@
+// WP-5 TYPE-12 (C7) LEGACY MIRROR — canonical sources are assets/js/urdu-lessons-data.js (URDU_LESSONS, 25) and assets/js/urdu-test.js (URDU_TEST_PASSAGES, 3). Do not edit texts here; fix the canonical stores.
 /**
  * DoKit — Urdu Typing Lessons Data
  * ==================================

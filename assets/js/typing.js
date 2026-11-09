@@ -356,7 +356,7 @@ function finish(){
       // graphemeVersion, sessionId (dedup key), contentId, mode.
       // chars stays the UTF-16 length (the historical field, kept
       // for diagnostics); graphemes is the v2 count.
-      window.DK2.saveResult({date:new Date().toISOString(),kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,graphemes:st.typed,verified:!pasted,metricVersion:st.metricVersion,graphemeVersion:st.graphemeVersion,sessionId:sessionId,contentId:'en-test:'+passageKey,mode:'timed'});
+      window.DK2.saveResult({date:new Date().toISOString(),type:'Test',kind:'Test',wpm:Math.round(st.wpm),acc:Math.round(st.acc),gross:Math.round(st.gross),durationSec:limit,language:'en',chars:typed.length,graphemes:st.typed,verified:!pasted,metricVersion:st.metricVersion,graphemeVersion:st.graphemeVersion,sessionId:sessionId,contentId:'en-test:'+passageKey,mode:'timed'});
     }
   }catch(e){ window.dkSwallow && window.dkSwallow(e, 'typing.js'); }
   // Referral activation (silent): first consented test only; never breaks typing.
