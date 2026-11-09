@@ -1733,4 +1733,8 @@ window.DK_I18N_DICT["de"] = {
     "ref_err_notfound": "Empfehlung nicht gefunden.",
     "ref_err_stale": "Die Empfehlung ist nicht mehr ausstehend.",
     "ref_err_incomplete": "Der Empfehlungsdatensatz ist unvollständig.",
+    "acct_cert_enter": "Bitte geben Sie die Zertifikatsnummer ein.",
+    "acct_err_name": "Bitte geben Sie Ihren Namen ein.",
+    "acct_err_pass_req": "Bitte geben Sie Ihr Passwort ein.",
+    "typing_too_fast": "Ergebnis nicht gewertet: Der Test endete zu schnell für einen zeitgesteuerten Tipptest. Bitte tippen Sie den Text selbst und versuchen Sie es erneut.",
   };

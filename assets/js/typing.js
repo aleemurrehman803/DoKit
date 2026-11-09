@@ -172,7 +172,10 @@ function finish(){
   if(elapsedMs < MIN_ELAPSED_MS){
     resEl.innerHTML = '';
     var np = document.createElement('p');
-    np.textContent = 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.';
+    // WHY (LANG-03): the anti-cheat message was a raw English literal —
+    // the i18n gate's last true raw-rendered failure. It now reads the
+    // `typing_too_fast` dict key (EN fallback = the previous literal).
+    np.textContent = (window.dkT ? window.dkT('typing_too_fast', 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.') : 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.');
     resEl.appendChild(np);
     return;
   }

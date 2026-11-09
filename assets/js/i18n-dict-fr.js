@@ -1733,4 +1733,8 @@ window.DK_I18N_DICT["fr"] = {
     "ref_err_notfound": "Parrainage introuvable.",
     "ref_err_stale": "Le parrainage n'est plus en attente.",
     "ref_err_incomplete": "Le dossier de parrainage est incomplet.",
+    "acct_cert_enter": "Veuillez saisir le numéro de certificat.",
+    "acct_err_name": "Veuillez saisir votre nom.",
+    "acct_err_pass_req": "Veuillez saisir votre mot de passe.",
+    "typing_too_fast": "Résultat non comptabilisé : le test s'est terminé trop vite pour être un test de frappe chronométré. Veuillez taper le passage vous-même et réessayer.",
   };

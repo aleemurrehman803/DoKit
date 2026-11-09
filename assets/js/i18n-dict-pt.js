@@ -1733,4 +1733,8 @@ window.DK_I18N_DICT["pt"] = {
     "ref_err_notfound": "Referência não encontrada.",
     "ref_err_stale": "A referência já não está pendente.",
     "ref_err_incomplete": "O registo da referência está incompleto.",
+    "acct_cert_enter": "Introduza o número do certificado.",
+    "acct_err_name": "Introduza o seu nome.",
+    "acct_err_pass_req": "Introduza a sua palavra-passe.",
+    "typing_too_fast": "Resultado não contabilizado: o teste terminou demasiado depressa para ser um teste de digitação cronometrado. Escreva a passagem você mesmo e tente novamente.",
   };

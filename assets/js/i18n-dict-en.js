@@ -1736,4 +1736,8 @@ window.DK_I18N_DICT["en"] = {
     "ref_err_notfound": "Referral not found.",
     "ref_err_stale": "Referral is no longer pending.",
     "ref_err_incomplete": "Referral record is incomplete.",
+    "acct_cert_enter": "Please enter a certificate number.",
+    "acct_err_name": "Please enter your name.",
+    "acct_err_pass_req": "Please enter your password.",
+    "typing_too_fast": "Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.",
   };

@@ -1733,4 +1733,8 @@ window.DK_I18N_DICT["tr"] = {
     "ref_err_notfound": "Yönlendirme bulunamadı.",
     "ref_err_stale": "Yönlendirme artık beklemede değil.",
     "ref_err_incomplete": "Yönlendirme kaydı eksik.",
+    "acct_cert_enter": "Lütfen sertifika numarasını girin.",
+    "acct_err_name": "Lütfen adınızı girin.",
+    "acct_err_pass_req": "Lütfen şifrenizi girin.",
+    "typing_too_fast": "Sonuç sayılmadı: test, süreli bir yazma testi sayılamayacak kadar hızlı bitti. Lütfen metni kendiniz yazıp tekrar deneyin.",
   };
