@@ -34,6 +34,23 @@
       }
       return p;
     }
+    // QA8-DICTSYNC: the entropy line froze in English (same boot-freeze
+    // class as QA7-D1). generate() runs once at boot, before the async
+    // dict/engine arrive, so dkT() falls back to English — and nothing
+    // re-rendered the line afterwards. updateBits() re-renders it from
+    // the stored entropy of the password currently shown (lastBits, not
+    // a recompute: the length/pool settings may have changed since the
+    // password was generated, and the line must describe the password
+    // on screen). Exposed as window.syncPwBits so main.js calls it once
+    // i18n.js loads, and re-run on every dokit:langchange.
+    var lastBits = null;
+    function updateBits() {
+      if (pwBits && lastBits !== null) {
+        pwBits.textContent = (window.dkT ? window.dkT('rsv_0958', 'About ') : 'About ') + lastBits + (window.dkT ? window.dkT('rsv_0946', ' bits of entropy.') : ' bits of entropy.');
+      }
+    }
+    window.syncPwBits = updateBits;
+    document.addEventListener('dokit:langchange', updateBits);
     function generate() {
       var chars = pool();
       var len = parseInt(pwLen.value, 10) || 16;
@@ -44,8 +61,10 @@
       for (var i = 0; i < len; i++) { out += chars[buf[i] % chars.length]; }
       pwOut.textContent = out;
       // Entropy hint: length x log2(pool size), rounded — a guide only.
-      var bits = Math.round(len * Math.log(chars.length) / Math.log(2));
-      if (pwBits) { pwBits.textContent = (window.dkT ? window.dkT('rsv_0958', 'About ') : 'About ') + bits + (window.dkT ? window.dkT('rsv_0946', ' bits of entropy.') : ' bits of entropy.'); }
+      // Stored, not re-rendered inline: updateBits() re-localises this
+      // same number once the engine loads / on language switch.
+      lastBits = Math.round(len * Math.log(chars.length) / Math.log(2));
+      updateBits();
     }
     if (pwLen) {
       pwLen.addEventListener('input', function () {

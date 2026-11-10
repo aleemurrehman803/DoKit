@@ -1378,6 +1378,7 @@ function dokiMicStop(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
           if (typeof window.syncFavsPanel === 'function') { window.syncFavsPanel(); }
+          if (typeof window.syncPwBits === 'function') { window.syncPwBits(); } // QA8-DICTSYNC: entropy line, tools-extra.js
           if (typeof window.syncInstallBanner === 'function') { window.syncInstallBanner(); }
           if (typeof window.syncSiteBanner === 'function') { window.syncSiteBanner(); }
           if (typeof window.syncTourSteps === 'function') { window.syncTourSteps(); }
