@@ -1560,6 +1560,7 @@ window.DK_I18N_DICT["de"] = {
     "acct_err_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
     "acct_err_many": "Zu viele Versuche. Bitte warte kurz und versuche es erneut.",
     "acct_err_net": "Netzwerkfehler. Prüfe deine Verbindung und versuche es erneut.",
+    "auth_checking_signin": "Anmeldung wird geprüft…",
     "acct_err_nouser": "Kein Konto mit dieser E-Mail gefunden.",
     "acct_err_pw": "Das Passwort muss mindestens 6 Zeichen lang sein.",
     "acct_err_unknown": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",

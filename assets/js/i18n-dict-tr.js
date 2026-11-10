@@ -1560,6 +1560,7 @@ window.DK_I18N_DICT["tr"] = {
     "acct_err_email": "Lütfen geçerli bir e-posta adresi girin.",
     "acct_err_many": "Çok fazla deneme yapıldı. Lütfen biraz bekleyin ve yeniden deneyin.",
     "acct_err_net": "Ağ hatası. Bağlantınızı kontrol edin ve yeniden deneyin.",
+    "auth_checking_signin": "Giriş kontrol ediliyor…",
     "acct_err_nouser": "Bu e-postayla eşleşen hesap bulunamadı.",
     "acct_err_pw": "Şifre en az 6 karakter olmalıdır.",
     "acct_err_unknown": "Bir şeyler ters gitti. Lütfen yeniden deneyin.",

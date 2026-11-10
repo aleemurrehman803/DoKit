@@ -1560,6 +1560,7 @@ window.DK_I18N_DICT["fr"] = {
     "acct_err_email": "Veuillez saisir une adresse e-mail valide.",
     "acct_err_many": "Trop de tentatives. Veuillez attendre un peu et réessayer.",
     "acct_err_net": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+    "auth_checking_signin": "Vérification de la connexion…",
     "acct_err_nouser": "Aucun compte trouvé avec cet e-mail.",
     "acct_err_pw": "Le mot de passe doit comporter au moins 6 caractères.",
     "acct_err_unknown": "Une erreur est survenue. Veuillez réessayer.",

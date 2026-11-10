@@ -1563,6 +1563,7 @@ window.DK_I18N_DICT["en"] = {
     "acct_err_email": "Please enter a valid email address.",
     "acct_err_many": "Too many attempts. Please wait a little and try again.",
     "acct_err_net": "Network error. Check your connection and try again.",
+    "auth_checking_signin": "Checking sign-in…",
     "acct_err_nouser": "No account found with this email.",
     "acct_err_pw": "Password must be at least 6 characters.",
     "acct_err_unknown": "Something went wrong. Please try again.",

@@ -123,6 +123,14 @@
     var passMsg = $('set-pass-msg');
     var prefMsg = $('set-pref-msg');
     var guestBox = $('set-guest');
+    var authNote = $('set-auth-note');
+    /* UI-03: while auth has not reported yet, the forms are disabled
+     * (they cannot succeed without a verified session) and the
+     * "Checking sign-in…" note is visible. applyAuthState hides the
+     * note and sets the forms the moment auth reports. If the SDK
+     * never arrives, the note stays — the honest state. */
+    setFormDisabled(nameForm, true);
+    setFormDisabled(passForm, true);
 
     /* Appearance works for everyone (device-local, like the header). */
     applyTheme(getLS('dokit_theme', 'dark'), false);
@@ -196,6 +204,7 @@
     var authStateBound = false;
     function applyAuthState(user) {
       var guest = !user;
+      if (authNote) { authNote.hidden = true; }
       if (guestBox) { guestBox.hidden = !guest; }
       setFormDisabled(nameForm, guest);
       setFormDisabled(passForm, guest);
