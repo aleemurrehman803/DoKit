@@ -29,6 +29,8 @@
 <p data-i18n="stg_guest">Sign in to change these settings.</p>
 <p><a class="btn" href="../account/login/" data-i18n="rsv_1092">Login</a> <a class="btn ghost" href="../account/signup/" data-i18n="rsv_1093">Sign up</a></p>
 </div>
+<!-- UI-03: shown while auth has not reported yet; settings.js hides it the moment auth resolves. -->
+<p id="set-auth-note" class="note" data-i18n="auth_checking_signin">Checking sign-in…</p>
 <section class="card">
 <h3 data-i18n="nav_profile">Profile</h3>
 <form class="auth-form toolbox" id="set-name-form">

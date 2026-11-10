@@ -107,6 +107,17 @@
     if (index <= 1) { return true; }
     return isDone(lessons[index - 2].id);
   }
+  /* UI-04: re-evaluate the dropdown's disabled flags from the CURRENT
+   * stored completions. The options are built once in init(); without
+   * this, a pass in this session never reaches the dropdown until a
+   * reload rebuilds it. Sequential unlocking is unchanged — an option
+   * is enabled exactly when isUnlocked() says so. */
+  function refreshDropdown() {
+    if (!selectEl) { return; }
+    Array.prototype.forEach.call(selectEl.options, function (o, i) {
+      o.disabled = !isUnlocked(i + 1);
+    });
+  }
   // WHY the dkT key (not a literal): the target line is UI text — it
   // reads the existing target_wpm dict key (all 10 locales), so the
   // gate never renders a raw literal (js-gate.py).
@@ -219,6 +230,7 @@
         (window.dkT ? window.dkT('ur_gate_passed', 'Passed! Lesson complete.') : 'Passed! Lesson complete.');
     }
     markDone(lesson.id);
+    refreshDropdown();
     // Gamification (Task 5): lesson XP + badges, once per lesson.
     // Urdu lessons use their own 'ur-' keys (as DK2 does); scholar is
     // the English curriculum only, so no beginner ids are passed.
@@ -311,8 +323,8 @@
         // else is refused with the target reminder — the button never
         // marks a lesson done without typing.
         var lesson = lessons[n - 1];
-        if (isDone(lesson.id)) { refreshDone(lesson); return; }
-        if (passedThisSession) { markDone(lesson.id); refreshDone(lesson); return; }
+        if (isDone(lesson.id)) { refreshDone(lesson); refreshDropdown(); return; }
+        if (passedThisSession) { markDone(lesson.id); refreshDone(lesson); refreshDropdown(); return; }
         if (resultEl) {
           resultEl.textContent = (window.dkT ? window.dkT('ur_gate_pass_first', 'Type the lesson and meet the target first.') : 'Type the lesson and meet the target first.') + ' ' + targetText(lesson);
         }

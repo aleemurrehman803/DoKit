@@ -1378,6 +1378,7 @@ function dokiMicStop(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
           if (typeof window.syncFavsPanel === 'function') { window.syncFavsPanel(); }
+          if (typeof window.syncAuthResolvingRow === 'function') { window.syncAuthResolvingRow(); } // UI-03: resolving row text, once the dict arrives
           if (typeof window.syncPwBits === 'function') { window.syncPwBits(); } // QA8-DICTSYNC: entropy line, tools-extra.js
           if (typeof window.syncInstallBanner === 'function') { window.syncInstallBanner(); }
           if (typeof window.syncSiteBanner === 'function') { window.syncSiteBanner(); }
@@ -1515,13 +1516,55 @@ function dokiMicStop(){
   // Header menus: guest/auth rows (items 99/103). Rows carry
   // data-menu="guest" (Login/Sign up) or "auth" (Dashboard/Settings/
   // Notifications/...). account.js owns the auth truth (Firebase) and
-  // reports it; here we only mirror the last-known flag so menus are
-  // right on pages where account.js never loads (home, tools index).
-  // The flag is UI-only: pages still enforce access via Firebase,
-  // never via this flag. The Logout row (data-menu="auth-action") is
-  // deliberately NOT toggled here — only account.js shows it, because
-  // only account.js can bind the sign-out click.
+  // reports it via window.dkApplyHeaderAuth; main.js loads account.js
+  // on every page (loadAccountModule below), so the stored flag is NOT
+  // the source of truth — it is only a 15-second fallback hint if
+  // Firebase never reports (SDK blocked/unreachable). The Logout row
+  // (data-menu="auth-action") is deliberately NOT toggled here — only
+  // account.js shows it, because only account.js can bind the
+  // sign-out click.
+  // UI-03: a third state — RESOLVING (authed === null). While Firebase
+  // auth has not reported yet, no guest/auth row is shown as fact:
+  // both stay hidden and a neutral "Checking sign-in…" row (no user
+  // data at all) is shown instead. The row is created once here
+  // (main.js runs on every page) and re-localised on dokit:langchange
+  // like the other boot-time rows. On pages without #profMenu
+  // (renderNav pages) the row simply does not exist — no-op.
+  var dkAuthResolvingRow = null;
+  var dkAuthResolved = false;
+  function syncAuthResolvingRow(){
+    if (!dkAuthResolvingRow) { return; }
+    dkAuthResolvingRow.textContent = dkT('auth_checking_signin', 'Checking sign-in…');
+  }
+  window.syncAuthResolvingRow = syncAuthResolvingRow;
+  try {
+    var profMenuEl = document.getElementById('profMenu');
+    if (profMenuEl) {
+      dkAuthResolvingRow = document.createElement('span');
+      dkAuthResolvingRow.className = 'prof-row';
+      dkAuthResolvingRow.setAttribute('data-menu', 'resolving');
+      dkAuthResolvingRow.hidden = true;
+      dkAuthResolvingRow.textContent = dkT('auth_checking_signin', 'Checking sign-in…');
+      profMenuEl.insertBefore(dkAuthResolvingRow, profMenuEl.firstChild);
+      document.addEventListener('dokit:langchange', syncAuthResolvingRow);
+    }
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   function applyHeaderAuth(authed){
+    if (authed === null) {
+      /* Resolving: hide every state row, show only the neutral note. */
+      document.querySelectorAll('#profMenu [data-menu], #appPanel [data-menu]').forEach(function (el) {
+        var kind = el.getAttribute('data-menu');
+        if (kind === 'guest' || kind === 'auth') { el.hidden = true; }
+      });
+      if (dkAuthResolvingRow) { dkAuthResolvingRow.hidden = false; }
+      try {
+        var headR = document.querySelector('#appPanel [data-app-section="account"]');
+        if (headR) { headR.hidden = true; }
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      return;
+    }
+    dkAuthResolved = true;
+    if (dkAuthResolvingRow) { dkAuthResolvingRow.hidden = true; }
     document.querySelectorAll('#profMenu [data-menu], #appPanel [data-menu]').forEach(function (el) {
       var kind = el.getAttribute('data-menu');
       if (kind === 'guest') { el.hidden = authed; }
@@ -1543,7 +1586,17 @@ function dokiMicStop(){
     } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   }
   window.dkApplyHeaderAuth = applyHeaderAuth;
-  try { applyHeaderAuth(localStorage.getItem('dokit_authed') === '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+  /* Boot in RESOLVING, not from the stale flag. If Firebase never
+   * reports within 15s (SDK blocked), fall back to the flag hint —
+   * the next auth report still corrects it. */
+  try {
+    applyHeaderAuth(null);
+    var dkAuthFlagHint = false;
+    try { dkAuthFlagHint = localStorage.getItem('dokit_authed') === '1'; } catch (e) { dkAuthFlagHint = false; }
+    setTimeout(function () {
+      if (!dkAuthResolved) { try { applyHeaderAuth(dkAuthFlagHint); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); } }
+    }, 15000);
+  } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
   // App launcher (item 103): same dropdown behaviour as the profile
   // menu, plus focus return on Escape (keyboard users land back on
   // the launcher button instead of losing their place).
@@ -1704,7 +1757,7 @@ function dokiMicStop(){
       var inst = document.createElement('button'); inst.className = 'btn'; inst.textContent = dkT('rsv_0980', 'Install');
       instBtn = inst;
       inst.addEventListener('click', function () {
-        if (deferred) { deferred.prompt(); deferred = null; }
+        if (deferred && typeof deferred.prompt === 'function') { deferred.prompt(); deferred = null; }
         bar.remove();
       });
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
@@ -1891,6 +1944,37 @@ function dokiMicStop(){
       var done = document.createElement('button'); done.className = 'btn ghost'; done.textContent = dkT('rsv_0960', 'Close');
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
+      // UI-01: in-tour language switcher. The tour backdrop (z-index 95)
+      // covers the header/footer selectors (header z-index 50), and a
+      // real click on one closes the tour instead of switching — so the
+      // switcher lives INSIDE the card (z-index 96), where it is always
+      // reachable. A <select> needs no new menu/focus-trap code (native
+      // keyboard support) and fits the 420px card at 390px viewports.
+      // On change it calls the engine's setLang(); the existing
+      // syncTour/dokit:langchange path re-renders the CURRENT step in the
+      // new language (show() keeps the step index i). Focus after the
+      // re-render lands on Next, per the existing F36 contract below.
+      var langRow = document.createElement('p');
+      langRow.className = 'tour-lang';
+      var langLabel = document.createElement('label');
+      langLabel.setAttribute('for', 'tour-lang');
+      langLabel.textContent = dkT('lang_select_label', 'Language');
+      var langSel = document.createElement('select');
+      langSel.id = 'tour-lang';
+      langSel.setAttribute('aria-label', dkT('lang_select_label', 'Language'));
+      var tourLangs = [['en', 'English'], ['ur', 'اردو'], ['ar', 'العربية'], ['hi', 'हिन्दी'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['tr', 'Türkçe'], ['ru', 'Русский']];
+      var curLang = 'en';
+      try { var eng0 = window.DK_I18N || window.DKI18N; curLang = (eng0 && typeof eng0.getLang === 'function') ? eng0.getLang() : (document.documentElement.lang || 'en'); } catch (e) { curLang = document.documentElement.lang || 'en'; }
+      tourLangs.forEach(function (L) {
+        var opt = document.createElement('option'); opt.value = L[0]; opt.textContent = L[1];
+        if (L[0] === curLang) { opt.selected = true; }
+        langSel.appendChild(opt);
+      });
+      langSel.addEventListener('change', function () {
+        try { var eng = window.DK_I18N || window.DKI18N; if (eng && typeof eng.setLang === 'function') { eng.setLang(langSel.value); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      });
+      langRow.appendChild(langLabel); langRow.appendChild(document.createTextNode(' ')); langRow.appendChild(langSel);
+      card.appendChild(langRow);
       // F36: show() rebuilds the card's buttons every step, which
       // would drop keyboard focus to <body> — land it on Next/Done.
       try { next.focus(); } catch (e) { /* old browsers: focus stays put */ }

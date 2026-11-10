@@ -208,6 +208,12 @@
   I18N.setLang = function (lang) {
     if (I18N.langs.indexOf(lang) < 0) { lang = 'en'; }
     try { window.localStorage.setItem('dokit_lang', lang); } catch (e) { /* private mode */ }
+    /* UI-02B (QA7-D2, ported verbatim from js/i18n-v2.js): ?lang= is the
+     * sticky source of truth for getLang(); move it to the chosen language
+     * (replaceState: no reload, no navigation) so setLang takes effect on
+     * ?lang= pages. Without this, getLang()/t() re-read the stale ?lang=
+     * and the next lookup overwrites the stored choice (see UI12). */
+    try { var u = new URL(window.location.href); u.searchParams.set('lang', lang); window.history.replaceState(null, '', u.toString()); } catch (e2) { /* old browsers / restricted contexts: the stored choice still applies on no-?lang= pages */ }
     fixedApply(lang);
     // Keep the document's lang/dir in sync (mirrors i18n-v2 behavior).
     try {

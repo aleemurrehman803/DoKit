@@ -390,12 +390,14 @@
      * short English label, the same pattern Tasks 3-6 used). */
     var monthlyText = 'This month: ' + (s.monthlyEarnings || 0);
     var remainingText = s.nextRank ? (s.rankRemaining + ' more to ' + s.nextRank) : '';
-    var html = '<p><b>' + esc(T('ref_stat_earnings', 'Total earnings')) + ':</b> '
+    var html = '<p><b>' + esc(T('ref_stat_earnings', 'Referral earnings')) + ':</b> '
       + '<span' + (flashEarn ? ' class="num-flash"' : '') + '>' + esc(String(s.totalEarnings)) + '</span> · ' + esc(monthlyText)
       + ' · <b>' + esc(T('ref_stat_friends', 'Active friends')) + ':</b> '
       + '<span' + (flashFriends ? ' class="num-flash"' : '') + '>' + esc(String(s.active)) + '</span> · <b>' + esc(T('ref_stat_rank', 'Rank')) + ':</b> '
-      + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending rewards')) + ':</b> '
-      + esc(String(s.pending)) + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
+      + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending referrals')) + ':</b> '
+      + esc(String(s.pending))
+      + ((summary && summary.pendingClaims != null) ? (' · <b>' + esc(T('ref_stat_claims_pending', 'Pending claims')) + ':</b> ' + esc(String(summary.pendingClaims))) : '')
+      + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
       + esc(String(s.rankProgress)) + '%'
       + (s.nextRank ? (' · ' + esc(s.nextRank)) : '')
       + (remainingText ? (' · ' + esc(remainingText)) : '')
@@ -631,6 +633,14 @@
     setTxt('dash-ref-active', String(s.active));
     setTxt('dash-ref-pending', String(s.pending));
     setTxt('dash-ref-rank', s.rank);
+    /* UI-05a: the pending-claims count rides on the same summary
+     * object (account.js attaches it before calling here). null
+     * means the count query failed — show "—", never a wrong 0. */
+    if (summary && summary.pendingClaims != null) {
+      setTxt('dash-ref-claims', String(summary.pendingClaims));
+    } else {
+      setTxt('dash-ref-claims', '—');
+    }
     setTxt('dash-ref-count', String(s.total));
     /* Card / profile labels use contract keys only (defensive: the
      * elements exist only where the sibling page task added them). */
@@ -760,183 +770,225 @@
   }
 
   function adminGrant(adminUid, referralId) {
-    /* Admin-only referral grant, mirroring the deposit-approval flow:
-     * 1. LIVE re-read — the row must still be pending (a double-click or
-     *    a reloaded queue must never double-credit).
-     * 2. Idempotency — if a ledger entry for this referral already
-     *    exists, do NOT credit again, just mark the row active.
-     * 3. Credit L1 (20) to the row's referrer ONLY: ledger entry with
-     *    reason 'referral reward' (+ level, inviteeUid, referralId),
-     *    then the users.coins increment, then the row flip to
-     *    active/rewarded. The caller (account.js admClick) adds the
-     *    admin_audit log, as the other admin actions do.
-     * Chain settlement: ONE grant pays the whole chain for THIS
-     * invitee's activation — L1 20 to the row's referrer, L2 5 to
-     * the referrer's referrer, L3 2 to the next link (chain walk
-     * above). Granting a referrer's own row later pays for THAT
-     * row's invitee, never for this one — so rates stay exact. */
+    /* Admin-only referral grant — ATOMIC (E04-OBS-1 fix, 10 Nov 2026).
+     * WHY a transaction: the old code re-read the row, then paid legs
+     * and bonuses, then flipped the row, as separate writes. Two
+     * concurrent grants both passed the pending check and both paid:
+     * referrer 60 vs 30, invitee 20 vs 10 (mock-proven twice,
+     * CQ_E04_RACE_MOCK). The ledger doc-ids hid the double payment
+     * (one L1 entry, two increments). The disabled button was never
+     * a security boundary — two sessions / two admins bypass it.
+     * HOW: ONE db.runTransaction. Every read (row, chain docs, leg /
+     * bonus ledger docs, referrer-row queries for first-bonus,
+     * milestone and streak eligibility) goes through tx.get BEFORE
+     * any write, and every write (coins increments, ledger sets, row
+     * flip) goes through tx.set / tx.update. Firestore retries the
+     * whole function when a concurrent grant touches anything it
+     * read, so the retry re-reads the flipped row and refuses it —
+     * only one Pending -> Granted transition can ever succeed. No
+     * read ever follows a write inside the transaction (Firestore
+     * forbids it). All reads are doc reads or where-queries, the
+     * same shapes the old code used — tx.get(query) is already used
+     * in this codebase (js/pages/admin-full.js ledgerCreditTx).
+     * WHAT is preserved exactly: rates (L1 20 / L2 5 / L3 2, first
+     * bonus 10, welcome 10, milestones 50/150/400/1000), the
+     * multiplier sets (applyMultipliers, festival x2 then streak
+     * x1.5 floor), deterministic ledger doc-ids (rules pin them),
+     * the return value (total coins credited) and the error strings.
+     * The caller (account.js admClick) still adds the admin_audit
+     * log on success. RULES: no change needed — every read/write
+     * here is already admin-permitted under live rules df3ef92c
+     * (see E04_CONCURRENCY_FIX_REPORT.md section 5). If
+     * runTransaction is unavailable the grant is REFUSED, never
+     * run non-atomically. */
     var d = db();
     if (!d || !adminUid || !referralId) { return Promise.reject(new Error(window.dkT ? window.dkT('ref_err_input', 'Missing grant input.') : 'Missing grant input.')); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(new Error(window.dkT ? window.dkT('ref_err_tx_unavailable', 'Referral grant refused: Firestore transactions are unavailable.') : 'Referral grant refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('referrals').doc(referralId);
-    /* Task 9 bonus settlement (doc #4 milestones, #5 first referral,
-     * #38 invitee welcome). Pays BEFORE the row flip, with counts
-     * computed as active + 1, so a failed grant stays pending and
-     * retryable; every bonus first checks the recipient's ledger for
-     * the same reason (and milestone, where applicable), so a retried
-     * grant can never double-pay — the same discipline as the legs. */
-    function payBonuses(l1Uid) {
-      var bonusTotal = 0;
-      function payOnce(uid, amount, entry) {
-        return d.collection('users').doc(uid).collection('coin_ledger')
-          .where('reason', '==', entry.reason).get().then(function (lsnap) {
-            var paid = false;
-            lsnap.forEach(function (doc) {
-              var dd = doc.data() || {};
-              if (entry.milestone != null) {
-                if (dd.milestone === entry.milestone) { paid = true; }
-              } else { paid = true; }
+    return d.runTransaction(function (tx) {
+      var ctx = { legs: [], legPaid: {}, legStreak: {}, welcomePaid: false,
+        welcomeSeen: false, firstPaid: false, firstSeen: false,
+        milestonePaid: {}, milestoneSeen: {}, activeNow: 0, newCount: 0 };
+      /* -- READ 1: the row. The pending gate lives INSIDE the
+       * transaction, so a concurrent grant's flip is visible here. */
+      return tx.get(ref).then(function (snap) {
+        var cur = (snap && snap.exists) ? (snap.data() || {}) : null;
+        if (!cur) { throw new Error(window.dkT ? window.dkT('ref_err_notfound', 'Referral not found.') : 'Referral not found.'); }
+        if (normalizeStatus(cur) !== 'pending') { throw new Error(window.dkT ? window.dkT('ref_err_stale', 'Referral is no longer pending.') : 'Referral is no longer pending.'); }
+        if (!cur.referrerUid) { throw new Error(window.dkT ? window.dkT('ref_err_incomplete', 'Referral record is incomplete.') : 'Referral record is incomplete.'); }
+        /* Task 9 self-row defense: capture already blocks ref == own
+         * uid in two places, but a manually-created self-row must
+         * never pay. Plain variable string (no new dkT key — the gate
+         * requires every key in all 10 languages). Checked before
+         * any payment. */
+        if (cur.referrerUid === referralId) {
+          var selfMsg = 'Self-referral cannot be granted.';
+          throw new Error(selfMsg);
+        }
+        ctx.l1Uid = cur.referrerUid;
+        /* -- READ 2: the chain walk (doc reads only). Leg 1 = the
+         * row's referrer, leg 2 = referrer's referrer, leg 3 = the
+         * next link. A missing doc ends the chain (the member joined
+         * organically, with no referrer); a uid already in the chain
+         * is skipped, so a cycle can never double-pay. */
+        var legs = [{ uid: ctx.l1Uid, level: 1 }];
+        var seen = {};
+        seen[ctx.l1Uid] = true;
+        var nextUid = ctx.l1Uid;
+        var walk = Promise.resolve();
+        [2, 3].forEach(function (level) {
+          walk = walk.then(function () {
+            if (!nextUid) { return; }
+            return tx.get(d.collection('referrals').doc(nextUid)).then(function (s2) {
+              var dd = (s2 && s2.exists) ? (s2.data() || {}) : null;
+              if (dd && dd.referrerUid && dd.referrerUid !== nextUid && !seen[dd.referrerUid]) {
+                legs.push({ uid: dd.referrerUid, level: level });
+                seen[dd.referrerUid] = true;
+                nextUid = dd.referrerUid;
+              } else { nextUid = null; }
             });
-            if (paid) { return 0; }
-            bonusTotal += amount;
-            return d.collection('users').doc(uid).update({
-              coins: root.firebase.firestore.FieldValue.increment(amount)
-            }).then(function () {
-              var rec = { uid: uid, amount: amount, by: adminUid,
-                reason: entry.reason, referralId: referralId,
-                createdAt: serverTimestamp() };
-              if (entry.milestone != null) { rec.milestone = entry.milestone; }
-              if (entry.inviteeUid) { rec.inviteeUid = entry.inviteeUid; }
-              /* Stage 1 (AUD-003): bonus doc-id — welcome/first/milestone
-               * per referral row, matching the rules' entryId checks. */
-              var bonusDocId = referralId + (entry.milestone != null
-                ? '-milestone-' + entry.milestone
-                : (entry.reason === 'first referral bonus' ? '-first' : '-welcome'));
-              return d.collection('users').doc(uid).collection('coin_ledger').doc(bonusDocId).set(rec);
-            }).then(function () { return amount; });
           });
-      }
-      return payOnce(referralId, RATES.WELCOME_BONUS, { reason: 'welcome bonus' })
-        .then(function () {
-          return d.collection('referrals').where('referrerUid', '==', l1Uid).get()
-            .then(snapshotRows);
-        })
-        .then(function (rows) {
+        });
+        return walk.then(function () { return legs; });
+      }).then(function (legs) {
+        ctx.legs = legs;
+        /* -- READ 3: per-leg idempotency + streak rows. One tx.get
+         * per leg ledger doc (deterministic id, rules-pinned) and one
+         * referrer-row query per leg (streak multiplier input). */
+        var reads = Promise.resolve();
+        legs.forEach(function (leg) {
+          reads = reads.then(function () {
+            return tx.get(d.collection('users').doc(leg.uid).collection('coin_ledger').doc(referralId + '-L' + leg.level));
+          }).then(function (lsnap) {
+            ctx.legPaid[leg.level] = !!(lsnap && lsnap.exists);
+            return tx.get(d.collection('referrals').where('referrerUid', '==', leg.uid));
+          }).then(function (qsnap) {
+            ctx.legStreak[leg.level] = streakMultiplierActive(snapshotRows(qsnap));
+          });
+        });
+        return reads;
+      }).then(function () {
+        /* -- READ 4: bonuses. Welcome (invitee) + first / milestone
+         * (L1 referrer): the deterministic ledger docs AND the
+         * reason-wide queries the old code used, so a bonus paid for
+         * an earlier referral (e.g. a row later paused, dropping the
+         * active count back to 0) is never paid twice. */
+        var inviteeLedger = d.collection('users').doc(referralId).collection('coin_ledger');
+        var l1Ledger = d.collection('users').doc(ctx.l1Uid).collection('coin_ledger');
+        return tx.get(inviteeLedger.doc(referralId + '-welcome')).then(function (s) {
+          ctx.welcomePaid = !!(s && s.exists);
+          return tx.get(inviteeLedger.where('reason', '==', 'welcome bonus'));
+        }).then(function (qsnap) {
+          var seenWelcome = false;
+          qsnap.forEach(function () { seenWelcome = true; });
+          ctx.welcomeSeen = seenWelcome;
+          return tx.get(d.collection('referrals').where('referrerUid', '==', ctx.l1Uid));
+        }).then(function (qsnap) {
+          var rows = snapshotRows(qsnap);
           var activeNow = 0;
           rows.forEach(function (r) { if (normalizeStatus(r) === 'active') { activeNow++; } });
-          var newCount = activeNow + 1;
+          ctx.activeNow = activeNow;
+          ctx.newCount = activeNow + 1;
+          return tx.get(l1Ledger.where('reason', '==', 'first referral bonus'));
+        }).then(function (qsnap) {
+          var seenFirst = false;
+          qsnap.forEach(function () { seenFirst = true; });
+          ctx.firstSeen = seenFirst;
+          return tx.get(l1Ledger.doc(referralId + '-first'));
+        }).then(function (s) {
+          ctx.firstPaid = !!(s && s.exists);
           var seq = Promise.resolve();
-          if (newCount === 1) {
-            seq = seq.then(function () {
-              return payOnce(l1Uid, RATES.FIRST_REFERRAL_BONUS,
-                { reason: 'first referral bonus', inviteeUid: referralId });
-            });
-          }
           Object.keys(RATES.MILESTONE_BONUSES).forEach(function (k) {
-            var t = Number(k);
-            if (newCount >= t) {
-              seq = seq.then(function () {
-                return payOnce(l1Uid, RATES.MILESTONE_BONUSES[k],
-                  { reason: 'milestone bonus', milestone: t, inviteeUid: referralId });
-              });
-            }
+            seq = seq.then(function () {
+              return tx.get(l1Ledger.doc(referralId + '-milestone-' + k));
+            }).then(function (ms) {
+              ctx.milestonePaid[k] = !!(ms && ms.exists);
+            });
           });
           return seq;
-        })
-        .then(function () { return bonusTotal; });
-    }
-    return ref.get().then(function (snap) {
-      var cur = (snap && snap.exists) ? (snap.data() || {}) : null;
-      if (!cur) { throw new Error(window.dkT ? window.dkT('ref_err_notfound', 'Referral not found.') : 'Referral not found.'); }
-      if (normalizeStatus(cur) !== 'pending') { throw new Error(window.dkT ? window.dkT('ref_err_stale', 'Referral is no longer pending.') : 'Referral is no longer pending.'); }
-      if (!cur.referrerUid) { throw new Error(window.dkT ? window.dkT('ref_err_incomplete', 'Referral record is incomplete.') : 'Referral record is incomplete.'); }
-      /* Task 9 self-row defense: capture already blocks ref == own uid
-       * in two places, but a manually-created self-row must never pay.
-       * Plain variable string (no new dkT key — the gate requires every
-       * key in all 10 languages). Checked before any payment. */
-      if (cur.referrerUid === referralId) {
-        var selfMsg = 'Self-referral cannot be granted.';
-        throw new Error(selfMsg);
-      }
-      return { cur: cur, referrerUid: cur.referrerUid };
-    }).then(function (ctx) {
-      /* Walk the referrer chain (admin reads all referrals docs, so
-       * this works for L2/L3 where a non-admin could not read them).
-       * Leg 1 = the row's referrer, leg 2 = referrer's referrer,
-       * leg 3 = the next link. A missing doc ends the chain (the
-       * member joined organically, with no referrer); a uid already
-       * in the chain is skipped, so a cycle can never double-pay. */
-      var legs = [{ uid: ctx.referrerUid, level: 1 }];
-      var seen = {};
-      seen[ctx.referrerUid] = true;
-      var nextUid = ctx.referrerUid;
-      var walk = Promise.resolve();
-      [2, 3].forEach(function (level) {
-        walk = walk.then(function () {
-          if (!nextUid) { return; }
-          return d.collection('referrals').doc(nextUid).get().then(function (snap) {
-            var dd = (snap && snap.exists) ? (snap.data() || {}) : null;
-            if (dd && dd.referrerUid && dd.referrerUid !== nextUid && !seen[dd.referrerUid]) {
-              legs.push({ uid: dd.referrerUid, level: level });
-              seen[dd.referrerUid] = true;
-              nextUid = dd.referrerUid;
-            } else { nextUid = null; }
+        }).then(function () {
+          return tx.get(l1Ledger.where('reason', '==', 'milestone bonus'));
+        }).then(function (qsnap) {
+          var seenMilestones = {};
+          qsnap.forEach(function (doc) {
+            var dd = doc.data() || {};
+            if (dd.milestone != null) { seenMilestones[dd.milestone] = true; }
+          });
+          ctx.milestoneSeen = seenMilestones;
+        });
+      }).then(function () {
+        /* -- WRITE PHASE (no tx.get after this point): compute the
+         * payments from the reads above, then write coins increments
+         * (ONE update per user doc, summed across legs + bonuses),
+         * ledger sets and the row flip. A ledger doc that already
+         * exists is never re-set (rules deny ledger updates — the
+         * read above is what makes a retry / resume safe). */
+        var credits = {}; /* uid -> total coins this grant pays */
+        var ledgerWrites = []; /* {uid, docId, rec} */
+        function credit(uid, amount) {
+          if (!(amount > 0)) { return; }
+          credits[uid] = (credits[uid] || 0) + amount;
+        }
+        ctx.legs.forEach(function (leg) {
+          if (ctx.legPaid[leg.level]) { return; }
+          var amount = applyMultipliers(rewardForLevel(leg.level),
+            { festival: festivalActive(Date.now()), streak: ctx.legStreak[leg.level] });
+          if (amount < 1) { return; }
+          credit(leg.uid, amount);
+          ledgerWrites.push({ uid: leg.uid, docId: referralId + '-L' + leg.level, rec: {
+            uid: leg.uid, amount: amount, by: adminUid,
+            reason: 'referral reward', level: leg.level,
+            inviteeUid: referralId, referralId: referralId,
+            createdAt: serverTimestamp()
+          } });
+        });
+        /* Welcome bonus: invitee, once. */
+        if (!ctx.welcomePaid && !ctx.welcomeSeen) {
+          credit(referralId, RATES.WELCOME_BONUS);
+          ledgerWrites.push({ uid: referralId, docId: referralId + '-welcome', rec: {
+            uid: referralId, amount: RATES.WELCOME_BONUS, by: adminUid,
+            reason: 'welcome bonus', referralId: referralId,
+            createdAt: serverTimestamp()
+          } });
+        }
+        /* First-referral bonus: only when this grant makes the
+         * referrer's FIRST active friend, and no first bonus was
+         * ever paid to them. */
+        if (ctx.newCount === 1 && !ctx.firstPaid && !ctx.firstSeen) {
+          credit(ctx.l1Uid, RATES.FIRST_REFERRAL_BONUS);
+          ledgerWrites.push({ uid: ctx.l1Uid, docId: referralId + '-first', rec: {
+            uid: ctx.l1Uid, amount: RATES.FIRST_REFERRAL_BONUS, by: adminUid,
+            reason: 'first referral bonus', inviteeUid: referralId,
+            referralId: referralId, createdAt: serverTimestamp()
+          } });
+        }
+        /* Milestones: paid when the new active count reaches each
+         * threshold, once per threshold per referrer. */
+        Object.keys(RATES.MILESTONE_BONUSES).forEach(function (k) {
+          var t = Number(k);
+          if (ctx.newCount >= t && !ctx.milestonePaid[k] && !(ctx.milestoneSeen && ctx.milestoneSeen[t])) {
+            credit(ctx.l1Uid, RATES.MILESTONE_BONUSES[k]);
+            ledgerWrites.push({ uid: ctx.l1Uid, docId: referralId + '-milestone-' + k, rec: {
+              uid: ctx.l1Uid, amount: RATES.MILESTONE_BONUSES[k], by: adminUid,
+              reason: 'milestone bonus', milestone: t, inviteeUid: referralId,
+              referralId: referralId, createdAt: serverTimestamp()
+            } });
+          }
+        });
+        var total = 0;
+        Object.keys(credits).forEach(function (uid) { total += credits[uid]; });
+        Object.keys(credits).forEach(function (uid) {
+          tx.update(d.collection('users').doc(uid), {
+            coins: root.firebase.firestore.FieldValue.increment(credits[uid])
           });
         });
-      });
-      return walk.then(function () { return legs; });
-    }).then(function (legs) {
-      /* Pay each leg once, resume-safe: a leg already paid for this
-       * referral is skipped, so a retried grant never double-credits.
-       * The row flips to active ONLY after all legs succeed, so a
-       * failed grant stays pending and can be retried. */
-      var chain = Promise.resolve();
-      var total = 0;
-      legs.forEach(function (leg) {
-        chain = chain.then(function () {
-          var amount = rewardForLevel(leg.level);
-          if (amount < 1) { return; }
-          return d.collection('users').doc(leg.uid).collection('coin_ledger')
-            .where('referralId', '==', referralId).get().then(function (lsnap) {
-              var paid = false;
-              lsnap.forEach(function (doc) {
-                if ((doc.data() || {}).level === leg.level) { paid = true; }
-              });
-              if (paid) { return; }
-              /* CORE-1 multipliers (legs ONLY — bonuses below never
-               * pass through applyMultipliers): festival x2 first,
-               * then streak x1.5 floor. Paid legs are NEVER re-paid:
-               * the ledger check above skips them before any
-               * multiplier math runs, so a multiplier change
-               * mid-retry only affects legs still unpaid — it can
-               * never top up a leg that already paid at the old rate. */
-              return d.collection('referrals').where('referrerUid', '==', leg.uid).get()
-                .then(snapshotRows).catch(function () { return []; })
-                .then(function (legRows) {
-                  var legAmount = applyMultipliers(amount, { festival: festivalActive(Date.now()), streak: streakMultiplierActive(legRows) });
-                  total += legAmount;
-                  return d.collection('users').doc(leg.uid).update({
-                    coins: root.firebase.firestore.FieldValue.increment(legAmount)
-                  }).then(function () {
-                    /* Stage 1 (AUD-003): leg doc-id — one entry per
-                     * referral row per level (rules enforce the same). */
-                    return d.collection('users').doc(leg.uid).collection('coin_ledger').doc(referralId + '-L' + leg.level).set({
-                      uid: leg.uid, amount: legAmount, by: adminUid,
-                      reason: 'referral reward', level: leg.level,
-                      inviteeUid: referralId, referralId: referralId,
-                      createdAt: serverTimestamp()
-                    });
-                  });
-                });
-            });
+        ledgerWrites.forEach(function (w) {
+          tx.set(d.collection('users').doc(w.uid).collection('coin_ledger').doc(w.docId), w.rec);
         });
+        tx.update(ref, { status: 'active', rewarded: true, rewardedAt: serverTimestamp(), grantedBy: adminUid });
+        return total;
       });
-      return chain.then(function () {
-        return payBonuses(legs[0].uid);
-      }).then(function (bonusTotal) {
-        total += bonusTotal;
-        return ref.update({ status: 'active', rewarded: true, rewardedAt: serverTimestamp(), grantedBy: adminUid });
-      }).then(function () { return total; });
-    })
+    });
   }
 
   /* ================= CORE-1: referral-complete (pure helpers) ==============
@@ -1470,6 +1522,21 @@
     return d.collection('reward_claims').where('uid', '==', uid).get()
       .then(snapshotRows).catch(function () { return []; });
   }
+  function countPendingClaims(uid) {
+    /* UI-05a: the header "Pending rewards" counts pending REFERRAL
+     * rows only; reward claims live in reward_claims, which the
+     * header never queried. This counts the user's own pending
+     * claims (the same collection the admin settle queue reads).
+     * No rules change: list allows owners their own docs (uid ==
+     * auth), and two equality filters need no composite index.
+     * Returns null on any failure so the UI shows nothing instead
+     * of a wrong 0. */
+    var d = coreDb();
+    if (!d || !uid) { return Promise.resolve(null); }
+    return d.collection('reward_claims').where('uid', '==', uid).where('status', '==', 'pending').get()
+      .then(function (snap) { return snap.size; })
+      .catch(function () { return null; });
+  }
   function adminListClaims(status) {
     var d = coreDb();
     if (!d) { return Promise.resolve([]); }
@@ -1478,77 +1545,96 @@
       .then(snapshotRows).catch(function () { return []; });
   }
   function adminSettleClaim(adminUid, claimId) {
+    /* Admin-only claim settlement — ATOMIC (E04-OBS-1 fix, 10 Nov 2026).
+     * The old code had the same TOCTOU shape as adminGrant: pending
+     * check, then payUser increments, then the approved flip, as
+     * separate writes — two concurrent settles both passed pending
+     * and both incremented (the second ledger .set on the existing
+     * claimId doc is rules-denied, but the increment had already
+     * landed). ONE db.runTransaction now holds the pending gate, the
+     * ledger-doc reads, the coins increment, the plan / badge side
+     * effects and the approved flip. Same contract as before:
+     * resolves with the coins actually paid (0 when the payment
+     * already exists and the claim only needs its flip). Side effects
+     * stay idempotent by construction: clearing a plan twice still
+     * leaves it cleared, and a badge already in badges[] is never
+     * appended twice — so running them on a resume is safe. RULES:
+     * no change needed (see E04_CONCURRENCY_FIX_REPORT.md §5). */
     var d = coreDb();
     var missingMsg = 'Missing claim settlement input.';
     if (!d || !adminUid || !claimId) { return Promise.reject(coreErr(missingMsg)); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr(window.dkT ? window.dkT('claim_err_tx_unavailable', 'Claim settlement refused: Firestore transactions are unavailable.') : 'Claim settlement refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('reward_claims').doc(claimId);
-    return ref.get().then(function (snap) {
-      var claim = (snap && snap.exists) ? (snap.data() || {}) : null;
-      var notFoundMsg = 'Claim not found.';
-      if (!claim) { throw coreErr(notFoundMsg); }
-      var staleMsg = 'Claim is no longer pending.';
-      if (claim.status !== 'pending') { throw coreErr(staleMsg); }
-      return claim;
-    }).then(function (claim) {
-      var isAppeal = claim.kind === 'appeal' || !!(claim.detail && claim.detail.apology);
-      var mainPaid = ledgerHas(d, claim.uid, 'claimId', claimId);
-      var apologyPaid = isAppeal
-        ? d.collection('users').doc(claim.uid).collection('coin_ledger').where('claimId', '==', claimId).get().then(function (snap) {
-          var found = false;
-          snap.forEach(function (doc) { if ((doc.data() || {}).reason === 'claim apology') { found = true; } });
-          return found;
-        })
-        : Promise.resolve(true);
-      return Promise.all([mainPaid, apologyPaid]).then(function (flags) {
-        var paid = 0;
-        var seq = Promise.resolve();
-        if (!flags[0]) {
-          seq = seq.then(function () {
-            return payUser(d, adminUid, claim.uid, Number(claim.amount) || 0,
-              { reason: 'claim settlement', kind: claim.kind, claimId: claimId, docId: claimId });
-          }).then(function () { paid += Number(claim.amount) || 0; });
-        }
-        if (isAppeal && !flags[1]) {
-          seq = seq.then(function () {
-            return payUser(d, adminUid, claim.uid, RATES.APPEAL_APOLOGY,
-              { reason: 'claim apology', kind: claim.kind, claimId: claimId, docId: claimId + '-apology' });
-          }).then(function () { paid += RATES.APPEAL_APOLOGY; });
-        }
-        return seq.then(function () {
-          /* Side effects are idempotent by construction: clearing a
-           * plan twice still leaves it cleared, and a badge already
-           * in badges[] is never appended twice — so running them on
-           * a resume is safe, and skipping them would strand a paid
-           * refund/legendary claim without its effect. */
-          var fx = Promise.resolve();
-          if (claim.kind === 'refund') {
-            fx = fx.then(function () {
-              return d.collection('users').doc(claim.uid).update({ plan: null });
-            });
-          }
-          var badgeId = claim.detail ? (claim.detail.badgeId || claim.detail.badge) : null;
-          /* Coordinator fix-pass (Oct 26): ANY settled claim carrying a
-           * detail.badgeId appends it once (dup-guarded below). The
-           * old kind-gated list (legendary/season-chest only) silently
-           * dropped ambassador badges, whose claims already carried
-           * badgeId as evidence. Admin-only settle, so no user can
-           * self-award; a badge already present is never duplicated. */
-          if (badgeId) {
-            fx = fx.then(function () {
-              return readUserDoc(d, claim.uid).then(function (udoc) {
-                var badges = Array.isArray(udoc.badges) ? udoc.badges.slice() : [];
-                if (badges.indexOf(badgeId) === -1) { badges.push(badgeId); }
-                return d.collection('users').doc(claim.uid).update({ badges: badges });
-              });
-            });
-          }
-          return fx.then(function () {
-            return ref.update({ status: 'approved', reviewedBy: adminUid, reviewedAt: serverTimestamp() });
-          }).then(function () { return paid; });
+    return d.runTransaction(function (tx) {
+      var ctx = {};
+      /* -- READ 1: the claim. The pending gate lives INSIDE the
+       * transaction. Then the ledger docs (deterministic ids the
+       * rules pin) and the user doc (badges / plan side effects). */
+      return tx.get(ref).then(function (snap) {
+        var claim = (snap && snap.exists) ? (snap.data() || {}) : null;
+        var notFoundMsg = 'Claim not found.';
+        if (!claim) { throw coreErr(notFoundMsg); }
+        var staleMsg = 'Claim is no longer pending.';
+        if (claim.status !== 'pending') { throw coreErr(staleMsg); }
+        ctx.claim = claim;
+        ctx.isAppeal = claim.kind === 'appeal' || !!(claim.detail && claim.detail.apology);
+        var ledger = d.collection('users').doc(claim.uid).collection('coin_ledger');
+        return tx.get(ledger.doc(claimId)).then(function (s) {
+          ctx.mainPaid = !!(s && s.exists);
+          if (!ctx.isAppeal) { return null; }
+          return tx.get(ledger.doc(claimId + '-apology'));
+        }).then(function (s) {
+          ctx.apologyPaid = !!(s && s.exists);
+          return tx.get(d.collection('users').doc(claim.uid));
+        }).then(function (usnap) {
+          ctx.user = (usnap && usnap.exists) ? (usnap.data() || {}) : {};
+          ctx.userExists = !!(usnap && usnap.exists);
         });
+      }).then(function () {
+        /* -- WRITE PHASE (no tx.get after this point). */
+        var claim = ctx.claim;
+        var paid = 0;
+        var coins = 0;
+        var ledgerWrites = [];
+        if (!ctx.mainPaid) {
+          var mainAmount = Number(claim.amount) || 0;
+          coins += mainAmount;
+          paid += mainAmount;
+          ledgerWrites.push({ docId: claimId, rec: { uid: claim.uid, amount: mainAmount, by: adminUid, createdAt: serverTimestamp(), reason: 'claim settlement', kind: claim.kind, claimId: claimId } });
+        }
+        if (ctx.isAppeal && !ctx.apologyPaid) {
+          coins += RATES.APPEAL_APOLOGY;
+          paid += RATES.APPEAL_APOLOGY;
+          ledgerWrites.push({ docId: claimId + '-apology', rec: { uid: claim.uid, amount: RATES.APPEAL_APOLOGY, by: adminUid, createdAt: serverTimestamp(), reason: 'claim apology', kind: claim.kind, claimId: claimId } });
+        }
+        /* Side effects ride the SAME user-doc update as the coins
+         * increment, so a failed settle strands nothing. */
+        var userPatch = {};
+        if (coins !== 0) { userPatch.coins = root.firebase.firestore.FieldValue.increment(coins); }
+        if (claim.kind === 'refund') { userPatch.plan = null; }
+        var badgeId = claim.detail ? (claim.detail.badgeId || claim.detail.badge) : null;
+        if (badgeId) {
+          var badges = Array.isArray(ctx.user.badges) ? ctx.user.badges.slice() : [];
+          if (badges.indexOf(badgeId) === -1) { badges.push(badgeId); }
+          userPatch.badges = badges;
+        }
+        if (!ctx.userExists && Object.keys(userPatch).length > 0) {
+          /* No user doc: a tx.update would fail anyway — fail here
+           * with the honest error before writing anything. */
+          throw coreErr('Claim user not found.');
+        }
+        if (Object.keys(userPatch).length > 0) {
+          tx.update(d.collection('users').doc(claim.uid), userPatch);
+        }
+        ledgerWrites.forEach(function (w) {
+          tx.set(d.collection('users').doc(claim.uid).collection('coin_ledger').doc(w.docId), w.rec);
+        });
+        tx.update(ref, { status: 'approved', reviewedBy: adminUid, reviewedAt: serverTimestamp() });
+        return paid;
       });
     });
   }
+
   function adminRejectClaim(adminUid, claimId, reason) {
     var d = coreDb();
     var missingMsg = 'Missing claim rejection input.';
@@ -4416,7 +4502,16 @@
             ctx.fillRect(0, 0, 1080, 1350);
             var ink = '#ffffff';
             ctx.fillStyle = ink;
-            ctx.font = 'bold 72px ' + FONT_STACK;
+            /* UI-05f3: shrink-to-fit — long display names (the owner's
+             * own name measures 1102px at 72px vs 1020px available)
+             * used to overflow the poster's right edge. Shrink in 4px
+             * steps to a 36px floor; short names stay at 72px. */
+            var nameSize = 72;
+            ctx.font = 'bold ' + nameSize + 'px ' + FONT_STACK;
+            while (nameSize > 36 && ctx.measureText(name).width > 1020) {
+              nameSize -= 4;
+              ctx.font = 'bold ' + nameSize + 'px ' + FONT_STACK;
+            }
             ctx.fillText(name, 60, 200);
             ctx.font = '44px ' + FONT_STACK;
             var rankLine = 'Rank: ' + stats.rank;
@@ -4450,6 +4545,7 @@
              * QR failure must never break the poster — if the library
              * is absent or throws, the poster stays exactly as before
              * (gradient + text) and the download still works. */
+            var qrDrawn = false;
             try {
               if (typeof root.QRCode !== 'undefined') {
                 var qrBox = document.createElement('div');
@@ -4462,9 +4558,18 @@
                   ctx.fillStyle = '#111827';
                   ctx.font = 'bold 36px ' + FONT_STACK;
                   ctx.fillText('Scan to join DoKit', 130, 1265);
+                  qrDrawn = true;
                 }
               }
             } catch (qrErr) { window.dkSwallow && window.dkSwallow(qrErr, 'referrals.js'); }
+            if (!qrDrawn) {
+              /* UI-05f2: the QR was silently absent when the library
+               * failed — say so on the poster instead of leaving a
+               * bare gradient, and point at the printed link. */
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '32px ' + FONT_STACK;
+              ctx.fillText('QR unavailable — share the link above', 60, 800);
+            }
           }
         }
       } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
@@ -5194,7 +5299,7 @@
     streakMultiplierActive: streakMultiplierActive, applyMultipliers: applyMultipliers,
     runningBalance: runningBalance, isFrozen: isFrozen,
     ambassadorCounts: ambassadorCounts, deviceDuplicateMap: deviceDuplicateMap,
-    createClaim: createClaim, listMyClaims: listMyClaims, adminListClaims: adminListClaims,
+    createClaim: createClaim, listMyClaims: listMyClaims, countPendingClaims: countPendingClaims, adminListClaims: adminListClaims,
     adminSettleClaim: adminSettleClaim, adminRejectClaim: adminRejectClaim,
     requestPurchase: requestPurchase, adminApprovePurchase: adminApprovePurchase,
     adminRejectPurchase: adminRejectPurchase, requestRefund: requestRefund,
