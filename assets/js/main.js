@@ -1378,6 +1378,10 @@ function dokiMicStop(){
         load('i18n.js', function () {
           if (typeof window.syncHeroH1 === 'function') { window.syncHeroH1(); }
           if (typeof window.syncFavsPanel === 'function') { window.syncFavsPanel(); }
+          if (typeof window.syncInstallBanner === 'function') { window.syncInstallBanner(); }
+          if (typeof window.syncSiteBanner === 'function') { window.syncSiteBanner(); }
+          if (typeof window.syncTourSteps === 'function') { window.syncTourSteps(); }
+          if (typeof window.syncDemoCounts === 'function') { window.syncDemoCounts(); }
           if (typeof window.syncKeyboards === 'function') { window.syncKeyboards(); }
           if (typeof window.syncDurations === 'function') { window.syncDurations(); }
           if (typeof window.syncTrend === 'function') { window.syncTrend(); }
@@ -1759,6 +1763,16 @@ function dokiMicStop(){
       out.textContent = words + dkT('rsv_0954', ' words · ') + chars + dkT('rsv_0947', ' characters');
     }
     ta.addEventListener('input', count); count();
+    // QA8-DEMO: the empty render is re-localised by the engine itself
+    // (#demoCounts carries data-i18n="rsv_0001"), so it never froze — but
+    // once text is typed, count() writes computed counts and the engine's
+    // apply() on a language switch resets the line to the static "0 ..."
+    // template (apply runs before dokit:langchange is dispatched), leaving
+    // stale counts until the next keystroke. Re-run count() when the locale
+    // is applied (boot, via window.syncDemoCounts) and on every language
+    // change (listener runs after apply, so the computed counts win).
+    document.addEventListener('dokit:langchange', count);
+    window.syncDemoCounts = count;
   })();
   // Favorites: star buttons injected into every tool card (device-local
   // list; the panel on the home page renders stored favorites only).
