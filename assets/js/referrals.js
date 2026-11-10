@@ -778,18 +778,45 @@
      * CQ_E04_RACE_MOCK). The ledger doc-ids hid the double payment
      * (one L1 entry, two increments). The disabled button was never
      * a security boundary — two sessions / two admins bypass it.
-     * HOW: ONE db.runTransaction. Every read (row, chain docs, leg /
-     * bonus ledger docs, referrer-row queries for first-bonus,
-     * milestone and streak eligibility) goes through tx.get BEFORE
-     * any write, and every write (coins increments, ledger sets, row
-     * flip) goes through tx.set / tx.update. Firestore retries the
-     * whole function when a concurrent grant touches anything it
-     * read, so the retry re-reads the flipped row and refuses it —
-     * only one Pending -> Granted transition can ever succeed. No
-     * read ever follows a write inside the transaction (Firestore
-     * forbids it). All reads are doc reads or where-queries, the
-     * same shapes the old code used — tx.get(query) is already used
-     * in this codebase (js/pages/admin-full.js ledgerCreditTx).
+     * HOW: ONE db.runTransaction. Every CONSISTENCY-CRITICAL read
+     * (row, chain docs, leg / bonus ledger docs) goes through tx.get
+     * BEFORE any write, and every write (coins increments, ledger
+     * sets, row flip) goes through tx.set / tx.update. Firestore
+     * retries the whole function when a concurrent grant touches
+     * anything it read, so the retry re-reads the flipped row and
+     * refuses it — only one Pending -> Granted transition can ever
+     * succeed. No read ever follows a write inside the transaction
+     * (Firestore forbids it).
+     * ELIGIBILITY QUERIES ARE PLAIN READS (E04 v2, 10 Nov 2026):
+     * Transaction.get() accepts ONLY a DocumentReference — the v1
+     * code called tx.get() with where-queries and EVERY live grant
+     * failed with "Expected type 'Ju', but it was: a custom Yu
+     * object" (Firebase JS SDK 10.12.0, cast() in
+     * util/input_validation.ts; the compat Transaction.get calls
+     * castReference() first). The v1 comment's claim that
+     * "tx.get(query) is already used in this codebase
+     * (js/pages/admin-full.js ledgerCreditTx)" was FALSE comfort:
+     * that legacy file is loaded by NO live page and its own
+     * tx.get(query) calls (lines 102, 1247) would fail the same
+     * way. So the referrer-row / bonus-reason eligibility queries
+     * now run as PLAIN collection reads (.where().get()) inside
+     * the update function — legal inside a transaction function,
+     * and a retry re-runs them with fresh data. They read
+     * latest-committed data, not the transaction snapshot; that is
+     * acceptable here because the safety-critical gate (the pending
+     * check) stays a tx read, and the ANCHOR below forces a retry
+     * whenever a concurrent grant for the same referrer lands
+     * first.
+     * ANCHOR: the transaction tx.get()s users/{L1} (the referrer
+     * doc) and every fresh grant also tx.updates it (coins
+     * increment), so two concurrent grants for the same referrer
+     * contend on that doc: the second retries, re-runs the plain
+     * eligibility queries, and sees the first grant's flip. Without
+     * the anchor, two concurrent grants for DIFFERENT invitees of
+     * the same referrer could both pay the first bonus / same
+     * milestone (the per-referral ledger doc-ids cannot catch
+     * cross-row duplicates, and live rules pin those ids, so no
+     * referrer-scoped id is possible without a rules change).
      * WHAT is preserved exactly: rates (L1 20 / L2 5 / L3 2, first
      * bonus 10, welcome 10, milestones 50/150/400/1000), the
      * multiplier sets (applyMultipliers, festival x2 then streak
@@ -854,14 +881,21 @@
         ctx.legs = legs;
         /* -- READ 3: per-leg idempotency + streak rows. One tx.get
          * per leg ledger doc (deterministic id, rules-pinned) and one
-         * referrer-row query per leg (streak multiplier input). */
-        var reads = Promise.resolve();
+         * PLAIN referrer-row query per leg (streak multiplier input;
+         * plain .get(), NOT tx.get — see the header note).
+         * ANCHOR (first): tx.get(users/{L1}) puts the referrer doc
+         * in the transaction's read set. Every fresh grant for this
+         * referrer also writes it (coins increment in the write
+         * phase), so a concurrent grant for the same referrer bumps
+         * its version, this transaction retries, and the plain
+         * queries below re-run with fresh data. */
+        var reads = tx.get(d.collection('users').doc(ctx.l1Uid));
         legs.forEach(function (leg) {
           reads = reads.then(function () {
             return tx.get(d.collection('users').doc(leg.uid).collection('coin_ledger').doc(referralId + '-L' + leg.level));
           }).then(function (lsnap) {
             ctx.legPaid[leg.level] = !!(lsnap && lsnap.exists);
-            return tx.get(d.collection('referrals').where('referrerUid', '==', leg.uid));
+            return d.collection('referrals').where('referrerUid', '==', leg.uid).get();
           }).then(function (qsnap) {
             ctx.legStreak[leg.level] = streakMultiplierActive(snapshotRows(qsnap));
           });
@@ -869,27 +903,32 @@
         return reads;
       }).then(function () {
         /* -- READ 4: bonuses. Welcome (invitee) + first / milestone
-         * (L1 referrer): the deterministic ledger docs AND the
-         * reason-wide queries the old code used, so a bonus paid for
-         * an earlier referral (e.g. a row later paused, dropping the
-         * active count back to 0) is never paid twice. */
+         * (L1 referrer): the deterministic ledger docs (tx.get) AND
+         * the reason-wide / referrer-row queries the old code used, so
+         * a bonus paid for an earlier referral (e.g. a row later
+         * paused, dropping the active count back to 0) is never paid
+         * twice. The queries run as PLAIN .get() reads inside the
+         * update function (NOT tx.get — Transaction.get rejects
+         * queries; see the header note). A retry re-runs them fresh,
+         * and the L1 anchor (READ 3) forces a retry when a concurrent
+         * grant for this referrer lands first. */
         var inviteeLedger = d.collection('users').doc(referralId).collection('coin_ledger');
         var l1Ledger = d.collection('users').doc(ctx.l1Uid).collection('coin_ledger');
         return tx.get(inviteeLedger.doc(referralId + '-welcome')).then(function (s) {
           ctx.welcomePaid = !!(s && s.exists);
-          return tx.get(inviteeLedger.where('reason', '==', 'welcome bonus'));
+          return inviteeLedger.where('reason', '==', 'welcome bonus').get();
         }).then(function (qsnap) {
           var seenWelcome = false;
           qsnap.forEach(function () { seenWelcome = true; });
           ctx.welcomeSeen = seenWelcome;
-          return tx.get(d.collection('referrals').where('referrerUid', '==', ctx.l1Uid));
+          return d.collection('referrals').where('referrerUid', '==', ctx.l1Uid).get();
         }).then(function (qsnap) {
           var rows = snapshotRows(qsnap);
           var activeNow = 0;
           rows.forEach(function (r) { if (normalizeStatus(r) === 'active') { activeNow++; } });
           ctx.activeNow = activeNow;
           ctx.newCount = activeNow + 1;
-          return tx.get(l1Ledger.where('reason', '==', 'first referral bonus'));
+          return l1Ledger.where('reason', '==', 'first referral bonus').get();
         }).then(function (qsnap) {
           var seenFirst = false;
           qsnap.forEach(function () { seenFirst = true; });
@@ -907,7 +946,7 @@
           });
           return seq;
         }).then(function () {
-          return tx.get(l1Ledger.where('reason', '==', 'milestone bonus'));
+          return l1Ledger.where('reason', '==', 'milestone bonus').get();
         }).then(function (qsnap) {
           var seenMilestones = {};
           qsnap.forEach(function (doc) {
