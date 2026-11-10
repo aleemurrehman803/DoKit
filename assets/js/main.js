@@ -1825,12 +1825,23 @@ function dokiMicStop(){
   // Guided tour: opened only by the Tour button, never automatically.
   (function tour(){
     var btn = document.getElementById('tour-btn'); if (!btn) { return; }
-    var steps = [
-      [dkT('rsv_1022', 'Welcome to DoKit'), dkT('rsv_1023', 'Every tool runs in your browser — no signup, no uploads, no watermark.')],
-      [dkT('rsv_1026', 'Find a tool'), dkT('rsv_1027', 'Use the search box or browse the tool cards below.')],
-      [dkT('rsv_1028', 'Typing school'), dkT('rsv_1029', 'Lessons, practice, games and Urdu typing live under Typing.')],
-      [dkT('rsv_1024', 'Your data stays yours'), dkT('rsv_1025', 'Results and favorites save only on this device.')]
-    ];
+    // QA8-TOUR: the steps were built once at boot, before the locale dict
+    // is applied, so they froze in English. buildSteps() rebuilds them from
+    // the current locale; syncTour() rebuilds on locale application (boot,
+    // via window.syncTourSteps — called by loadSharedScripts once i18n.js
+    // loads) and on every language change, re-rendering the current step
+    // if the tour is open (show() keeps the step index, so a mid-tour
+    // switch stays on the same step). Buttons are created at open time and
+    // were already fine — untouched.
+    function buildSteps() {
+      return [
+        [dkT('rsv_1022', 'Welcome to DoKit'), dkT('rsv_1023', 'Every tool runs in your browser — no signup, no uploads, no watermark.')],
+        [dkT('rsv_1026', 'Find a tool'), dkT('rsv_1027', 'Use the search box or browse the tool cards below.')],
+        [dkT('rsv_1028', 'Typing school'), dkT('rsv_1029', 'Lessons, practice, games and Urdu typing live under Typing.')],
+        [dkT('rsv_1024', 'Your data stays yours'), dkT('rsv_1025', 'Results and favorites save only on this device.')]
+      ];
+    }
+    var steps = buildSteps();
     var i = 0, back = null, card = null, closeGen = 0;
     // F24 (rec 24): closeGen guards the delayed exit removal —
     // a fast re-open bumps it, so a pending timeout can never
@@ -1890,6 +1901,18 @@ function dokiMicStop(){
       }, 180);
     }
     btn.addEventListener('click', show);
+    // QA8-TOUR (continued): rebuild the steps on language change; if the
+    // tour is open, re-render the current step in the new language. If it
+    // is closed, the next open reads the rebuilt steps. The .closing guard
+    // keeps a language switch inside the 180ms exit animation from
+    // resurrecting a tour that is already closing (close() removes the
+    // nodes after the animation; show() would cancel that).
+    function syncTour() {
+      steps = buildSteps();
+      if (card && !card.classList.contains('closing')) { show(); }
+    }
+    document.addEventListener('dokit:langchange', syncTour);
+    window.syncTourSteps = syncTour;
     // F36: Escape closes the tour (the card previously had no
     // keyboard handling at all); close() returns focus to the button.
     // The card-null guard means this only fires while a tour is open.
