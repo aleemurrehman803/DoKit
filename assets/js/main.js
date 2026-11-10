@@ -1670,20 +1670,40 @@ function dokiMicStop(){
   (function installBanner(){
     var dismissed = false;
     try { dismissed = localStorage.getItem('dokit_pwa_dismissed') === '1'; } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+    var deferred = null, bar = null, barText = null, instBtn = null, disBtn = null;
+    // QA8-BANNER: the bar text + buttons are set once when the
+    // beforeinstallprompt event fires, before the locale dict is applied,
+    // so they froze in English. Re-localise the live bar (if any) when the
+    // locale is applied (boot, via window.syncInstallBanner — called by
+    // loadSharedScripts once i18n.js loads) and on every language change.
+    // Safe no-op when no bar exists yet — the bar is only created inside
+    // the beforeinstallprompt handler, and creation-time dkT calls already
+    // use the current locale. Behaviour (install / dismiss) is untouched;
+    // only the text is re-localised.
+    function syncInstall() {
+      if (!bar) { return; }
+      if (barText) { barText.textContent = dkT('rsv_1055', 'Install DoKit on your device for offline use.'); }
+      if (instBtn) { instBtn.textContent = dkT('rsv_0980', 'Install'); }
+      if (disBtn) { disBtn.textContent = dkT('saas.dismiss', 'Dismiss'); }
+    }
+    document.addEventListener('dokit:langchange', syncInstall);
+    window.syncInstallBanner = syncInstall;
     if (dismissed) { return; }
-    var deferred = null;
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault(); deferred = e;
       if (document.getElementById('install-banner')) { return; }
-      var bar = document.createElement('div');
+      bar = document.createElement('div');
       bar.id = 'install-banner'; bar.className = 'install-banner';
       bar.innerHTML = '<span>' + dkT('rsv_1055', 'Install DoKit on your device for offline use.') + '</span>';
+      barText = bar.querySelector('span');
       var inst = document.createElement('button'); inst.className = 'btn'; inst.textContent = dkT('rsv_0980', 'Install');
+      instBtn = inst;
       inst.addEventListener('click', function () {
         if (deferred) { deferred.prompt(); deferred = null; }
         bar.remove();
       });
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
+      disBtn = dis;
       dis.addEventListener('click', function () {
         try { localStorage.setItem('dokit_pwa_dismissed', '1'); } catch (err) { window.dkSwallow && window.dkSwallow(err, 'main.js'); }
         bar.remove();
@@ -1697,14 +1717,28 @@ function dokiMicStop(){
   // (window.DOKIT_BANNER, set by the admin in Phase 3). Empty today,
   // so nothing shows — the mechanism, not a fake announcement.
   (function siteBanner(){
+    var bar = null, disBtn = null;
+    // QA8-BANNER: the Dismiss button is set once at boot, before the locale
+    // dict is applied, so it froze in English. Re-localise it when the
+    // locale is applied (boot, via window.syncSiteBanner — called by
+    // loadSharedScripts once i18n.js loads) and on every language change.
+    // Safe no-op when no banner exists (no message set, or dismissed).
+    // The message itself is admin-set (window.DOKIT_BANNER), not a
+    // translation, so it is left untouched — only the button is re-localised.
+    function syncSite() {
+      if (disBtn) { disBtn.textContent = dkT('saas.dismiss', 'Dismiss'); }
+    }
+    document.addEventListener('dokit:langchange', syncSite);
+    window.syncSiteBanner = syncSite;
     try {
       var msg = window.DOKIT_BANNER || '';
       if (!msg || sessionStorage.getItem('dokit_banner_dismissed') === '1') { return; }
-      var bar = document.createElement('div');
+      bar = document.createElement('div');
       bar.className = 'site-banner';
       bar.innerHTML = '<span></span>';
       bar.querySelector('span').textContent = msg;
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');
+      disBtn = dis;
       dis.addEventListener('click', function () {
         try { sessionStorage.setItem('dokit_banner_dismissed', '1'); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
         bar.remove();
