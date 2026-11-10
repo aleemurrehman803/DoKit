@@ -467,7 +467,15 @@
   document.addEventListener("DOMContentLoaded", function () {
     try { window.DKUI && (DKUI.renderNav("lessons"), DKUI.renderFooter(), DKUI.init()); } catch (e) {}
     try {
-      if (window.UI && UI.renderNav) { UI.renderNav("lessons"); UI.renderFooter(); }
+      /* CQ-002 addendum (10 Nov 2026): `window.UI` is ALWAYS undefined
+       * here — typing/js/ui.js declares `const UI = {...}`, and a const
+       * at top level creates a global lexical binding, NOT a window
+       * property. So this branch never ran: #site-nav and #site-foot
+       * stayed empty and #langToggle was never created (which is also
+       * what made the unguarded langToggle lookup below throw).
+       * `typeof UI !== "undefined"` detects the const-declared object
+       * without throwing when it is absent. */
+      if (typeof UI !== "undefined" && UI.renderNav) { UI.renderNav("lessons"); UI.renderFooter(); }
     } catch (e) {}
 
     applyUiLang();
