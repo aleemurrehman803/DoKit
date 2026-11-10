@@ -106,12 +106,38 @@
     getStore: function () { return load(); },
     saveStore: function (data) { save(data); },
     // Add one result (newest first, capped so storage never grows wild).
+    // WP-4 TYPE-06 (C12; Architecture §8.6; paper §7): idempotency —
+    // a finish identical to the immediately preceding saved result
+    // (same sessionId + same contentId + same metricVersion) is not
+    // appended again. The dedup key is the session id, not a heuristic
+    // on WPM values: two genuinely identical scores from two sessions
+    // are two results; the same session submitted twice is one. The
+    // predicate is DKScoring.isDuplicateOf when the shared service
+    // loaded, else the identical literal check below — so dedup never
+    // breaks when the script is absent. Records without a sessionId
+    // (v1) are never deduped. History is never deleted by dedup; the
+    // 200-result cap is unchanged. Returns the saved result, or the
+    // existing result when the submission was a duplicate (Test Center
+    // spec §1.5: a duplicate submission returns the existing result).
     saveResult: function (r) {
       var data = load();
+      var prev = data.results[0];
+      if (prev) {
+        var dup = false;
+        if (window.DKScoring && window.DKScoring.isDuplicateOf) {
+          dup = window.DKScoring.isDuplicateOf(prev, r);
+        } else {
+          dup = !!(prev.sessionId && prev.sessionId === r.sessionId &&
+            prev.contentId && prev.contentId === r.contentId &&
+            prev.metricVersion && prev.metricVersion === r.metricVersion);
+        }
+        if (dup) { return prev; }
+      }
       r.date = new Date().toISOString();
       data.results.unshift(r);
       if (data.results.length > 200) { data.results.length = 200; }
       save(data);
+      return r;
     },
     getResults: function () { return load().results; },
     // Mark a lesson id complete (no duplicates).

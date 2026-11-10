@@ -8,13 +8,30 @@
  * practice page reuses it instead of duplicating the logic. */
 (function () {
   'use strict';
-  var PRACTICE_PASSAGES = [{"id": "easy", "name": "Easy Text", "text": "The cat sat on the warm rug by the door. A dog ran past the big red barn. We had hot soup for lunch and then went out to play in the soft green grass. Mom sang a sweet song while dad read the news in his old brown chair."}, {"id": "medium", "name": "Medium Text", "text": "Learning to type quickly takes patience and daily practice, but the reward is worth every minute you invest. When your fingers know where each key lives, your thoughts can flow straight onto the screen without interruption. Start slowly and focus on accuracy first; speed will follow naturally as your muscle memory grows stronger each week. Many students are surprised by how fast they improve once they stop looking down at their hands. Set a small daily goal, track your words per minute, and celebrate every new personal record you achieve."}, {"id": "hard", "name": "Hard Text", "text": "The expedition set out before dawn, crossing the misty valley toward mountains that rose like silent giants against the brightening sky. Every traveler carried provisions, instruments, and a quiet determination to document whatever wonders the uncharted territory might reveal. By midday the weather shifted unexpectedly; dark clouds gathered overhead and a cold wind swept through the narrow pass, forcing the group to seek shelter beneath an overhanging cliff. While they waited, the expedition leader reviewed their charts, recalculated distances, and encouraged everyone with stories of previous journeys that had survived far worse conditions. When the storm finally passed, sunlight broke through in brilliant shafts, transforming the wet landscape into a glittering panorama that made every hardship feel worthwhile. They pressed onward with renewed energy, reaching the summit just as evening painted the horizon in shades of amber and rose."}];
+  // WP-5 TYPE-13: practice passages carry version: 1 each (store v1);
+  // bump an item's version whenever its text changes. Results stamp
+  // contentVersion 'en-practice:<version>' (paper §4); custom text
+  // carries no version, so its result omits the field.
+  var PRACTICE_PASSAGES = [{"id": "easy", "version": 1, "name": "Easy Text", "text": "The cat sat on the warm rug by the door. A dog ran past the big red barn. We had hot soup for lunch and then went out to play in the soft green grass. Mom sang a sweet song while dad read the news in his old brown chair."}, {"id": "medium", "version": 1, "name": "Medium Text", "text": "Learning to type quickly takes patience and daily practice, but the reward is worth every minute you invest. When your fingers know where each key lives, your thoughts can flow straight onto the screen without interruption. Start slowly and focus on accuracy first; speed will follow naturally as your muscle memory grows stronger each week. Many students are surprised by how fast they improve once they stop looking down at their hands. Set a small daily goal, track your words per minute, and celebrate every new personal record you achieve."}, {"id": "hard", "version": 1, "name": "Hard Text", "text": "The expedition set out before dawn, crossing the misty valley toward mountains that rose like silent giants against the brightening sky. Every traveler carried provisions, instruments, and a quiet determination to document whatever wonders the uncharted territory might reveal. By midday the weather shifted unexpectedly; dark clouds gathered overhead and a cold wind swept through the narrow pass, forcing the group to seek shelter beneath an overhanging cliff. While they waited, the expedition leader reviewed their charts, recalculated distances, and encouraged everyone with stories of previous journeys that had survived far worse conditions. When the storm finally passed, sunlight broke through in brilliant shafts, transforming the wet landscape into a glittering panorama that made every hardship feel worthwhile. They pressed onward with renewed energy, reaching the summit just as evening painted the horizon in shades of amber and rose."}];
 
   // -- Shared engine -------------------------------------------------------
   // opts: passageEl, inputEl, wpmEl, accEl, resultEl, onFinish(result).
+  // opts.language: typing language for the Segmenter ('en' default).
   // No timer here: lessons and practice finish when the text is done.
   function createEngine(opts) {
     var passage = '', typed = '', started = false, startTime = 0, done = false;
+    // WP-4 TYPE-02: session id (dedup key, paper §7) + content id, one
+    // per load(); paste flag for the verified stamp (paper §5). A load
+    // is a new attempt, so it gets a fresh session id.
+    var sessionId = null, contentId = null, pasted = false;
+    function newSid(){
+      return window.DKScoring ? window.DKScoring.newSessionId()
+        : ('s-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 0xFFFFFF).toString(16));
+    }
+    // WHY paste is tracked here, not just in the timed test: lesson and
+    // practice results carry the same verified flag (paper §5), so a
+    // pasted lesson can never be mistaken for a typed one.
+    opts.inputEl.addEventListener('paste', function(){ pasted = true; });
     // Render every character: correct (green), wrong (red underline),
     // current (highlighted). Rebuilt on each keystroke — simple and clear.
     function render() {
@@ -30,39 +47,77 @@
         opts.passageEl.appendChild(s);
       }
     }
-    // WPM = (correct characters / 5) per minute; accuracy = correct/typed.
+    // WP-4 TYPE-02: WPM = (correct graphemes / 5) per minute; accuracy =
+    // correct/typed graphemes — scored through the ONE shared service
+    // (dk-scoring.js, docs/scoring-metrics-v2.md §1-2). The pre-v2
+    // UTF-16 computation is kept ONLY as the fallback when DKScoring
+    // failed to load, so a failed script load never breaks lessons.
     function stats() {
-      var correct = 0;
-      for (var i = 0; i < typed.length; i++) {
-        if (typed[i] === passage[i]) { correct++; }
+      var elapsedMs = started ? (Date.now() - startTime) : 0;
+      var st = null;
+      if (window.DKScoring) { st = window.DKScoring.score(passage, typed, elapsedMs, opts.language || 'en'); }
+      else {
+        var correct = 0;
+        for (var i = 0; i < typed.length; i++) {
+          if (typed[i] === passage[i]) { correct++; }
+        }
+        var mins = elapsedMs / 60000;
+        st = {correct: correct, typed: typed.length,
+          wpm: mins > 0 ? Math.round((correct / 5) / mins) : 0,
+          acc: typed.length ? Math.round(correct / typed.length * 100) : 100,
+          metricVersion: 'v1-net-utf16', graphemeVersion: 'utf16', language: opts.language || 'en'};
       }
-      var mins = started ? (Date.now() - startTime) / 60000 : 0;
-      var wpm = mins > 0 ? Math.round((correct / 5) / mins) : 0;
-      var acc = typed.length ? Math.round(correct / typed.length * 100) : 100;
-      opts.wpmEl.textContent = wpm;
-      opts.accEl.textContent = acc + '%';
-      return { wpm: wpm, acc: acc, correct: correct };
+      opts.wpmEl.textContent = st.wpm;
+      opts.accEl.textContent = st.acc + '%';
+      return { wpm: st.wpm, acc: st.acc, correct: st.correct, typed: st.typed,
+        gross: st.gross, metricVersion: st.metricVersion, graphemeVersion: st.graphemeVersion,
+        sessionId: sessionId, contentId: contentId, verified: !pasted };
     }
     function finish() {
-      if (done) { return; }
+      if (done) { return false; }
+      // WP-4 TYPE-04 (C2, Architecture §8.6; paper §6): the shared
+      // sub-second rule — a finish below 1000 ms is REJECTED, not
+      // scored. Nothing is saved, no lesson is marked done, no XP is
+      // awarded. WHY reset instead of locking: the rejection means
+      // "that finish does not count" — the user retypes the same
+      // passage immediately. The paste flag is reset too, so a
+      // genuine retype after a paste gets a fair verified stamp.
+      var elapsedMs = started ? (Date.now() - startTime) : 0;
+      if (window.DKScoring ? window.DKScoring.isSubSecond(elapsedMs) : elapsedMs < 1000) {
+        opts.resultEl.textContent = (window.dkT ? window.dkT('typing_too_fast', 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.') : 'Result not counted: the test finished too quickly to be a timed typing test. Please type the passage yourself and try again.');
+        typed = ''; started = false; pasted = false;
+        opts.inputEl.value = ''; opts.inputEl.disabled = false;
+        render(); opts.inputEl.focus();
+        return false;
+      }
       done = true;
       var st = stats();
+      // WHY st.typed for "out of N typed": the v2 result text counts
+      // the same units the score counted (paper §2). For plain ASCII
+      // it equals typed.length exactly.
+      var typedCount = (typeof st.typed === 'number') ? st.typed : typed.length;
       opts.resultEl.textContent =
         (window.dkT ? window.dkT('rsv_1002', 'Result: ') : 'Result: ') + st.wpm + ' WPM, ' + st.acc + (window.dkT ? window.dkT('rsv_0956', '% accuracy, ') : '% accuracy, ') +
-        st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typed.length + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
+        st.correct + (window.dkT ? window.dkT('rsv_0949', ' correct characters out of ') : ' correct characters out of ') + typedCount + (window.dkT ? window.dkT('rsv_0952', ' typed.') : ' typed.');
       if (opts.onFinish) { opts.onFinish(st); }
+      return true;
     }
-    opts.inputEl.addEventListener('input', function () {
+    opts.inputEl.addEventListener('input', function (ev) {
       if (done) { return; }
+      if (ev && ev.inputType === 'insertFromPaste') { pasted = true; }
       typed = opts.inputEl.value;
       if (!started && typed.length > 0) { started = true; startTime = Date.now(); }
-      if (typed.length >= passage.length) { finish(); opts.inputEl.disabled = true; }
+      // WHY finish() returns a boolean: on a sub-second rejection the
+      // engine has already reset for a retry — disabling the input
+      // here would lock the user out of that retry.
+      if (typed.length >= passage.length) { if (finish()) { opts.inputEl.disabled = true; } }
       render();
     });
     return {
       // Load a new passage and reset all state (used by both pages).
-      load: function (text) {
+      load: function (text, cid) {
         passage = text; typed = ''; started = false; done = false;
+        contentId = cid || null; sessionId = newSid(); pasted = false;
         opts.inputEl.value = ''; opts.inputEl.disabled = false;
         opts.wpmEl.textContent = '0'; opts.accEl.textContent = '100%';
         opts.resultEl.textContent = ''; render(); opts.inputEl.focus();
@@ -128,9 +183,14 @@
       resultEl: document.getElementById('ls-result'),
       onFinish: function (st) {
         // Finishing a lesson saves both the result and the completion.
+        // WP-4 TYPE-02: v2 tags (paper §4) on the saved result.
         if (window.DK2) {
           window.DK2.saveResult({ type: 'lesson', lesson: lesson.id,
-            wpm: st.wpm, acc: st.acc });
+            wpm: st.wpm, acc: st.acc, graphemes: st.typed,
+            verified: st.verified, metricVersion: st.metricVersion,
+            graphemeVersion: st.graphemeVersion, sessionId: st.sessionId,
+            contentId: 'lesson:' + lesson.id,
+            contentVersion: 'en-lesson:' + (lesson.version || 1), mode: 'lesson', language: 'en' });
           window.DK2.markLesson(lesson.id);
           // Gamification (Task 5): lesson XP + badges, once per lesson
           // (perfect bonus once, on the first 100% finish). Scholar needs
@@ -154,7 +214,7 @@
         refreshDone();
       });
     }
-    engine.load(lesson.lines.join(' '));
+    engine.load(lesson.lines.join(' '), 'lesson:' + lesson.id);
     refreshDone();
   }
 
@@ -162,6 +222,9 @@
   // Passage from a dropdown, or the user's own text. Same engine as above.
   var prPassage = document.getElementById('pr-passage');
   if (prPassage) {
+    // WP-5 TYPE-13: the store passage behind the current practice
+    // run (null for custom text, which carries no version).
+    var prCurrent = PRACTICE_PASSAGES[0];
     var prEngine = createEngine({
       passageEl: prPassage,
       inputEl: document.getElementById('pr-input'),
@@ -169,9 +232,16 @@
       accEl: document.getElementById('pr-acc'),
       resultEl: document.getElementById('pr-result'),
       onFinish: function (st) {
+        // WP-4 TYPE-02: v2 tags (paper §4) on the saved result.
         if (window.DK2) {
-          window.DK2.saveResult({ type: 'practice',
-            wpm: st.wpm, acc: st.acc });
+          var prRow = { type: 'practice',
+            wpm: st.wpm, acc: st.acc, graphemes: st.typed,
+            verified: st.verified, metricVersion: st.metricVersion,
+            graphemeVersion: st.graphemeVersion, sessionId: st.sessionId,
+            contentId: st.contentId, mode: 'practice', language: 'en' };
+          // WP-5 TYPE-13: stamp the store version only for store text.
+          if (prCurrent) { prRow.contentVersion = 'en-practice:' + (prCurrent.version || 1); }
+          window.DK2.saveResult(prRow);
           // Gamification (Task 5, historical else-branch): practice
           // touches the streak only — no XP, no badges.
           if (window.DK2.afterActivity) { window.DK2.afterActivity('practice', st, {}); }
@@ -193,15 +263,17 @@
       prSelect.appendChild(customOpt);
       prSelect.addEventListener('change', function () {
         if (prSelect.value === 'custom') { return; }
-        prEngine.load(PRACTICE_PASSAGES[parseInt(prSelect.value, 10)].text);
+        var pi = parseInt(prSelect.value, 10);
+        prCurrent = PRACTICE_PASSAGES[pi];
+        prEngine.load(PRACTICE_PASSAGES[pi].text, 'practice:' + PRACTICE_PASSAGES[pi].id);
       });
     }
     if (prUse) {
       prUse.addEventListener('click', function () {
         var text = (prCustom.value || '').replace(/\n/g, ' ').trim();
-        if (text) { prEngine.load(text); }
+        if (text) { prCurrent = null; prEngine.load(text, 'practice:custom'); }
       });
     }
-    prEngine.load(PRACTICE_PASSAGES[0].text);
+    prEngine.load(PRACTICE_PASSAGES[0].text, 'practice:' + PRACTICE_PASSAGES[0].id);
   }
 })();

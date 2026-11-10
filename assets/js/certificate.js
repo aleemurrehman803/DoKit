@@ -45,13 +45,26 @@
   var TF_VERIFY_BASE = 'https://aleemurrehman803.github.io/DoKit/typefight/verify/?id=';
   var TF_VERIFY_PAGE = 'aleemurrehman803.github.io/DoKit/typefight/verify/';
   var TF_QR_API = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=';
+  // WP-4 TYPE-05 (C9, Architecture §8.6; paper §5): a pasted test
+  // (verified:false) can never be a certificate result. The predicate
+  // is DKScoring.isVerifiedEligible when the shared service loaded
+  // (the same rule every other consumer uses); the literal fallback
+  // is identical, so the sheet never breaks when the script is
+  // absent. Records without a verified field (v1, predating the flag)
+  // stay eligible — they must not be retroactively disqualified.
+  // Battle results carry no verified flag and are unaffected.
+  function isCertEligible(r) {
+    if (!r) { return false; }
+    if (kind === 'battle') { return true; }
+    return window.DKScoring ? window.DKScoring.isVerifiedEligible(r) : r.verified !== false;
+  }
   function pick() {
     try {
       if (!window.DK2) { return null; }
       var results = window.DK2.getResults() || [];
       for (var i = 0; i < results.length; i++) {
         var r = results[i];
-        if (kind === 'battle' ? r.type === 'battle' : r.kind === 'Test') { return r; }
+        if ((kind === 'battle' ? r.type === 'battle' : r.kind === 'Test') && isCertEligible(r)) { return r; }
       }
     } catch (e) { window.dkSwallow && window.dkSwallow(e, 'certificate.js'); }
     return null;
@@ -67,7 +80,7 @@
       var bw = 0, ba = -1, any = false;
       for (var i = 0; i < results.length; i++) {
         var r = results[i];
-        if (kind === 'battle' ? r.type === 'battle' : r.kind === 'Test') {
+        if ((kind === 'battle' ? r.type === 'battle' : r.kind === 'Test') && isCertEligible(r)) {
           any = true;
           if (typeof r.wpm === 'number' && r.wpm > bw) { bw = r.wpm; }
           if (typeof r.acc === 'number' && r.acc > ba) { ba = r.acc; }
@@ -88,6 +101,9 @@
       for (var i = 0; i < results.length; i++) {
         var r = results[i];
         if (r.kind !== 'Test') { continue; }
+        // WP-4 TYPE-05: verified:false results are excluded from
+        // certificate eligibility (see isCertEligible above).
+        if (!isCertEligible(r)) { continue; }
         if (!best) { best = r; continue; }
         var bw = (typeof best.wpm === 'number') ? best.wpm : 0;
         var rw = (typeof r.wpm === 'number') ? r.wpm : 0;

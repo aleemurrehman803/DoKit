@@ -254,6 +254,15 @@
     var prev = document.documentElement.lang || current();
     if (!isLang(prev)) prev = 'en';
     try { window.localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* private mode: ignore */ window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
+    /* QA8-NEWENGINE (same design as QA7-D2 in the old engine js/i18n-v2.js):
+     * current() gives ?lang= precedence over the stored choice, so a
+     * localStorage-only setLang() could never take effect on a ?lang= page.
+     * Move the ?lang= parameter to the chosen language via replaceState
+     * (no reload, no navigation) before re-applying, so the sticky source
+     * of truth follows the user's choice. URL-stickiness is PRESERVED:
+     * the URL still wins, it now follows the choice; pages with no
+     * setLang call still render per URL, and shared ?lang= links keep working. */
+    try { var u = new URL(window.location.href); u.searchParams.set('lang', code); window.history.replaceState(null, '', u.toString()); } catch (e2) { /* old browsers / restricted contexts: the stored choice still applies on no-?lang= pages */ window.dkSwallow && window.dkSwallow(e2, 'i18n.js'); }
     if (code === 'en' || (window.DK_I18N_DICT && window.DK_I18N_DICT[code])) {
       apply(code);
       dispatchLangChange(code);
@@ -264,6 +273,11 @@
       dispatchLangChange(code);
     }, function(){
       try { window.localStorage.setItem(STORAGE_KEY, prev); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'i18n.js'); }
+      /* QA8-NEWENGINE: the ?lang= parameter was already moved to the failed
+       * language above — move it back to prev too, or current() would keep
+       * resolving to the failed language and the restore below would be a
+       * no-op on ?lang= pages (same replaceState, no reload). */
+      try { var u2 = new URL(window.location.href); u2.searchParams.set('lang', prev); window.history.replaceState(null, '', u2.toString()); } catch (e2) { window.dkSwallow && window.dkSwallow(e2, 'i18n.js'); }
       apply(prev);
       dispatchLangChange(prev);
     });

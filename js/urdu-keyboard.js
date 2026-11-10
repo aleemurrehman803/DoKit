@@ -9,9 +9,12 @@
  *
  * LAYOUTS (2 supported, user-selectable):
  *   1. "phonetic" (default): InPage-style Roman→Urdu mapping
- *      - a→ا, b→ب, p→پ, t→ت, Shift+t→ٹ (retroflex)
- *      - Shift+h→ھ (do-chashmi for بھ پھ تھ etc.)
+ *      - a→ا, b→ب, p→پ, t→ت, v→ٹ (retroflex), h→ھ (do-chashmi he)
+ *      - Digraphs collapse: "th"→تھ, "bh"→بھ, "kh"→خ, "aa"→آ, etc.
+ *      - Shift+h→ح, Shift+t→ط (letters the canonical map cannot spell)
  *      - Shift+Space→ZWNJ (zero-width non-joiner for نہیں, etc.)
+ *      Mapping source: the shared canonical map (window.DKUrduMap) —
+ *      this file keeps no private Roman→Urdu map (V3 WP-3, KEY-02).
  *   2. "standard": Pakistan XKB "pk" layout (physical Urdu keyboard)
  *      - Letter core verified against OLPC XKB symbol table
  *
@@ -34,34 +37,60 @@
 
   var LS_LAYOUT = "dokit_urdu_layout";
 
-  /* ---- Shared letter core (verified: matches XKB pk unshifted letters) ---- */
-  var LETTERS = {
-    q: { n: "\u0642", s: "\u0652" }, // ق / sukun
-    w: { n: "\u0648", s: "\u0651" }, // و / shadda
-    e: { n: "\u0639", s: "\u0670" }, // ع / superscript alef
-    r: { n: "\u0631", s: "\u0691" }, // ر / ڑ
-    t: { n: "\u062A", s: "\u0679" }, // ت / ٹ
-    y: { n: "\u06D2", s: "\u064E" }, // ے / fatha
-    u: { n: "\u0621", s: "\u0626" }, // ء / ئ
-    i: { n: "\u06CC", s: "\u0650" }, // ی / kasra
-    o: { n: "\u06C1", s: "\u06C3" }, // ہ / ۃ
-    p: { n: "\u067E", s: "\u064F" }, // پ / damma
-    a: { n: "\u0627", s: "\u0622" }, // ا / آ
-    s: { n: "\u0633", s: "\u0635" }, // س / ص
-    d: { n: "\u062F", s: "\u0688" }, // د / ڈ
-    f: { n: "\u0641" },              // ف
-    g: { n: "\u06AF", s: "\u063A" }, // گ / غ
-    h: { n: "\u062D", s: "\u06BE" }, // ح / ھ (do-chashmi he: for بھ پھ تھ...)
-    j: { n: "\u062C", s: "\u0636" }, // ج / ض
-    k: { n: "\u06A9", s: "\u062E" }, // ک / خ
-    l: { n: "\u0644", s: "\u0656" }, // ل / subscript alef
-    z: { n: "\u0632", s: "\u0630" }, // ز / ذ
-    x: { n: "\u0634", s: "\u0698" }, // ش / ژ
-    c: { n: "\u0686", s: "\u062B" }, // چ / ث
-    v: { n: "\u0637", s: "\u0638" }, // ط / ظ
-    b: { n: "\u0628" },              // ب
-    n: { n: "\u0646", s: "\u06BA" }, // ن / ں (noon ghunna)
-    m: { n: "\u0645", s: "\u0658" }  // م / noon-ghunna mark
+  /* ---- Canonical Roman→Urdu map (V3 WP-3, KEY-02, decision D-3) ----
+   * WHY no private map here: the converter (assets/js/urdu.js) and this
+   * keyboard used to carry two conflicting Roman→Urdu maps (C3: h→ھ vs ح,
+   * v→ٹ vs ط, and no digraphs here at all). The map now lives in ONE place,
+   * assets/js/urdu-canonical-map.js (window.DKUrduMap), and both surfaces
+   * read it. A second map definition anywhere is a defect.
+   * Base layer = the canonical SINGLES exactly (h→ھ, v→ٹ, …).
+   * Shift layer = SHIFT_SUPPLEMENT below: ONLY characters with no Roman
+   * transliteration in the canonical map (diacritics and letters the
+   * converter cannot express), plus the two letters displaced from the base
+   * layer (Shift+h→ح, Shift+t→ط — the old Shift+h ھ and Shift+t ٹ moved to
+   * the base layer as h and v). Four shift entries duplicate a canonical
+   * output (Shift+a→آ, Shift+g→غ, Shift+k→خ, Shift+x→ژ) as alternates, so
+   * next-key highlight (findKeyFor) keeps working; they are the same
+   * character, not a conflicting mapping.
+   * The old comment's "verified against XKB" claim is NOT repeated here —
+   * it is UNVERIFIED (no XKB reference table in the repo). */
+  var CANON = window.DKUrduMap || null;
+  if (!CANON) {
+    // WHY fail visible, not silent: without the map there is no correct
+    // mapping, and inventing one here would re-create the C3 conflict.
+    // The map script must load before this file (typing/urdu.html order).
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('DKUrduMap missing — load assets/js/urdu-canonical-map.js before js/urdu-keyboard.js');
+    }
+    CANON = { version: 0, digraphs: {}, singles: {} };
+  }
+  /* Shift-only characters (see block comment above). Unicode escapes match
+   * the file's existing style. f and b have no shift entry, as before. */
+  var SHIFT_SUPPLEMENT = {
+    q: "\u0652", // sukun
+    w: "\u0651", // shadda
+    e: "\u0670", // superscript alef
+    r: "\u0691", // ڑ
+    t: "\u0637", // ط (displaced from the v base key by the canonical v→ٹ)
+    y: "\u064E", // fatha
+    u: "\u0626", // ئ
+    i: "\u0650", // kasra
+    o: "\u0624", // ؤ — tutor adaptation (was XKB's rare ۃ; ؤ is common, e.g. گاؤں)
+    p: "\u064F", // damma
+    a: "\u0622", // آ (also the canonical "aa" digraph)
+    s: "\u0635", // ص
+    d: "\u0688", // ڈ
+    g: "\u063A", // غ (also the canonical "gh" digraph)
+    h: "\u062D", // ح (displaced from the h base key by the canonical h→ھ)
+    j: "\u0636", // ض
+    k: "\u062E", // خ (also the canonical "kh" digraph)
+    l: "\u0656", // subscript alef
+    z: "\u0630", // ذ
+    x: "\u0698", // ژ (also the canonical "zh" digraph)
+    c: "\u062B", // ث
+    v: "\u0638", // ظ
+    n: "\u06BA", // ں (noon ghunna)
+    m: "\u0658"  // noon-ghunna mark
   };
 
   var URDU_DIGITS = ["\u06F0", "\u06F1", "\u06F2", "\u06F3", "\u06F4",
@@ -71,7 +100,10 @@
 
   /**
    * Build the key mapping table for a layout mode.
-   * WHY tutor adaptations: Two deviations from strict XKB for learnability:
+   * WHY one table from one map: the base layer is the canonical singles
+   * (window.DKUrduMap — D-3), the shift layer is SHIFT_SUPPLEMENT
+   * (characters with no Roman transliteration). No private map is kept.
+   * WHY tutor adaptations: two deviations from strict XKB for learnability:
    *   1. Shift+o → ؤ (not XKB's rare ۃ) — ؤ appears in common words (گاؤں).
    *   2. Shift+digit → symbols (!@#) not Quranic marks — lessons need ! ؟.
    * Each key maps to { n: normal char, s: shift char }.
@@ -80,10 +112,12 @@
    */
   function buildKeys(mode) {
     var k = {}, l;
-    for (l in LETTERS) k[l] = { n: LETTERS[l].n, s: LETTERS[l].s };
-    // Tutor adaptation (both layouts): Shift+o = ؤ (hamza on waw — گاؤں، بڑھاؤ).
-    // Far more common in Urdu than XKB's ۃ (teh marbuta goal).
-    k["o"] = { n: "\u06C1", s: "\u0624" };
+    // Base layer = canonical singles; shift layer = SHIFT_SUPPLEMENT.
+    // (The Shift+o → ؤ tutor adaptation lives in SHIFT_SUPPLEMENT itself.)
+    for (l in CANON.singles) {
+      k[l] = { n: CANON.singles[l] };
+      if (SHIFT_SUPPLEMENT[l]) k[l].s = SHIFT_SUPPLEMENT[l];
+    }
     var d;
     for (d = 0; d <= 9; d++) {
       var key = String(d);
@@ -149,6 +183,10 @@
   var attachedEl = null;
   var attachedHandler = null;
   var osShift = false; // on-screen keyboard shift toggle
+  // F-2: render target the shift toggle was last rendered for. osShift is
+  // preserved across re-renders of the SAME container + layout, and reset
+  // only when the layout changes or a new container renders.
+  var lastRenderContainer = null, lastRenderLayout = null;
 
   /**
    * Switch the active keyboard layout and persist the choice.
@@ -223,6 +261,54 @@
     }
   }
 
+  /* ---- Canonical digraph handling (V3 WP-3, KEY-02) ----
+   * WHY a pending letter: the canonical map has 14 digraphs (kh, th, bh,
+   * …) that a 1:1 physical-key map cannot represent. The keyboard therefore
+   * buffers the last Roman letter it inserted: when the next letter
+   * completes a canonical digraph, the just-inserted single is replaced in
+   * place by the digraph output ("t" then "h" → "تھ").
+   * WHY replace-in-place (not delayed insert): every keystroke must still
+   * produce an input event immediately, because the lesson/test loop judges
+   * from the input value (js/pages/urdu-typing.js reads typeArea.value on
+   * "input"). The replacement is guarded: it only fires when the character
+   * before the cursor is exactly the pending single, so a moved cursor or
+   * an intervening edit can never corrupt text. Shifted keys, digits,
+   * punctuation, Space and Backspace clear the pending letter. */
+  var pendingRoman = null; // Roman letter of the last inserted single, or null
+
+  function resetPending() { pendingRoman = null; }
+
+  /* Replace the pending single (one char before the cursor) with text.
+   * Returns true on success, false when the cursor moved or the text
+   * changed since the pending insert (caller then inserts the single). */
+  function replaceLastChar(el, text) {
+    try {
+      var s = el.selectionStart, e = el.selectionEnd;
+      if (s == null || s === 0 || s !== e) return false;
+      if (el.value.slice(s - 1, s) !== CANON.singles[pendingRoman]) return false;
+      if (typeof el.setRangeText === "function") {
+        el.setRangeText(text, s - 1, s, "end");
+      } else {
+        el.value = el.value.slice(0, s - 1) + text + el.value.slice(s);
+        try { el.selectionStart = el.selectionEnd = s - 1 + text.length; } catch (e2) {}
+      }
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      return true;
+    } catch (err) { return false; }
+  }
+
+  /* Insert one unshifted Roman letter through the canonical map, collapsing
+   * a canonical digraph when the previous letter completes one. */
+  function insertRoman(el, roman) {
+    var pair = pendingRoman ? pendingRoman + roman : null;
+    if (pair && CANON.digraphs.hasOwnProperty(pair)) {
+      if (replaceLastChar(el, CANON.digraphs[pair])) { pendingRoman = null; return; }
+      // Cursor moved since the pending insert — fall through, insert single.
+    }
+    insertAtCursor(el, CANON.singles[roman]);
+    pendingRoman = roman;
+  }
+
   /**
    * Convert a KeyboardEvent.code to our key ID format.
    * WHY use .code (not .key): .code is layout-independent ("KeyA" is the same
@@ -247,12 +333,23 @@
    * WHY skip with modifiers: Ctrl+C, Alt+Tab etc. must work normally.
    * WHY special-case Backspace/Enter/Tab: These are editing/navigation keys,
    * not character keys — let the browser handle them natively.
-   * Flow: code→base→mapKey→preventDefault→insertAtCursor→flashKey.
+   * Flow: code→base→(unshifted letter: insertRoman/digraph collapse;
+   *   shifted/digit/punct: mapKey)→preventDefault→insertAtCursor→flashKey.
    * @param {KeyboardEvent} e - The keydown event.
    */
   function onKeyDown(e) {
     if (!attachedEl || e.target !== attachedEl) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return; // allow shortcuts
+    // WHY dead-key guard (F-1): on international layouts (e.g. US-International)
+    // a dead key (' / ^) arrives with e.key === 'Dead'. Dispatching on e.code
+    // would intercept it and insert the mapped character, so the OS dead-key
+    // composition never happens. Return without preventDefault so the OS
+    // composition proceeds; the pending letter is invalidated like any other
+    // non-typing key.
+    if (e.key === 'Dead') { resetPending(); return; }
+    // WHY skip with modifiers: Ctrl+C, Alt+Tab etc. must work normally.
+    // AltGr on Windows arrives as Ctrl+Alt, so it also passes through to
+    // the OS layout here (see KEY-09 evaluation for the modifier record).
+    if (e.ctrlKey || e.metaKey || e.altKey) { resetPending(); return; }
     var code = e.code || "";
     if (code === "Backspace" || code === "Delete" || code === "Tab" ||
         code === "Enter" || code === "CapsLock" ||
@@ -260,24 +357,39 @@
         code === "ShiftLeft" || code === "ShiftRight" || code === "ControlLeft" ||
         code === "ControlRight" || code === "AltLeft" || code === "AltRight" ||
         code === "Escape") {
+      resetPending(); // editing/navigation keys invalidate the pending letter
       return; // default behavior
     }
     var base = codeToBase(code);
     if (base === " ") {
       e.preventDefault();
       // Shift+Space = ZWNJ (نیم فاصلہ), used in Urdu e.g. "نہیں"
+      resetPending();
       insertAtCursor(attachedEl, e.shiftKey ? "\u200C" : " ");
       flashKey("Space");
       return;
     }
     if (base) {
-      var ch = mapKey(base, e.shiftKey);
-      if (ch) {
+      if (!e.shiftKey && CANON.singles.hasOwnProperty(base)) {
+        // WHY insertRoman, not mapKey: a 1:1 lookup cannot produce the
+        // canonical digraphs ("th"→تھ, "kh"→خ). The pending-letter collapse
+        // above is the keyboard's digraph path (KEY-02).
         e.preventDefault();
-        insertAtCursor(attachedEl, ch);
+        insertRoman(attachedEl, base);
         flashKey(base);
+      } else {
+        // Shifted letters, digits and punctuation go through the keys
+        // table (shift layer = SHIFT_SUPPLEMENT, digits/punctuation as before).
+        var ch = mapKey(base, e.shiftKey);
+        if (ch) {
+          e.preventDefault();
+          resetPending();
+          insertAtCursor(attachedEl, ch);
+          flashKey(base);
+        } else {
+          resetPending(); // unmapped key (e.g. "`" in phonetic) -> default behavior
+        }
       }
-      // else: unmapped key (e.g. "`" in phonetic) -> default behavior
     }
   }
 
@@ -316,6 +428,7 @@
    * when leaving the Urdu typing page.
    */
   function detach() {
+    resetPending();
     if (attachedEl && attachedHandler) {
       try { attachedEl.removeEventListener("keydown", attachedHandler); } catch (e) {}
     }
@@ -337,7 +450,15 @@
   function renderKeyboard(container, opts) {
     opts = opts || {};
     if (!container) return;
-    osShift = false;
+    // WHY preserve osShift (F-2): the on-screen Shift toggle flips osShift
+    // and immediately re-renders; resetting here made the toggle decorative
+    // (Shift-click then letter-click typed the unshifted character).
+    // Reset only when the layout changed or a new container renders.
+    if (lastRenderContainer !== container || lastRenderLayout !== current) {
+      osShift = false;
+    }
+    lastRenderContainer = container;
+    lastRenderLayout = current;
     var keys = LAYOUTS[current].keys;
     container.innerHTML = "";
     container.className = (container.className || "") + " ukb";
@@ -407,6 +528,7 @@
       return;
     }
     if (kid === "Backspace") {
+      resetPending();
       var el = attachedEl;
       if (el) {
         try {
@@ -420,13 +542,28 @@
       return;
     }
     if (kid === "Tab" || kid === "CapsLock" || kid === "Enter") return;
-    var ch;
-    if (kid === "Space") ch = osShift ? "\u200C" : " ";
-    else {
-      var def = LAYOUTS[current].keys[kid];
-      if (!def) return;
-      ch = (osShift && def.s) ? def.s : def.n;
+    if (kid === "Space") {
+      resetPending();
+      var sp = osShift ? "\u200C" : " ";
+      if (opts && typeof opts.onKey === "function") opts.onKey(sp, kid);
+      else if (attachedEl) { insertAtCursor(attachedEl, sp); try { attachedEl.focus(); } catch (e) {} }
+      flashKey(kid);
+      return;
     }
+    // WHY digraphs on click too: tapping "t" then "h" must give تھ, the same
+    // as typing it (KEY-03 tests both paths). The onKey-callback path has no
+    // element to replace in, so it keeps single-character delivery; no
+    // in-repo caller uses onKey.
+    if (!osShift && CANON.singles.hasOwnProperty(kid) &&
+        !(opts && typeof opts.onKey === "function")) {
+      if (attachedEl) { insertRoman(attachedEl, kid); try { attachedEl.focus(); } catch (e) {} }
+      flashKey(kid);
+      return;
+    }
+    var def = LAYOUTS[current].keys[kid];
+    if (!def) return;
+    var ch = (osShift && def.s) ? def.s : def.n;
+    resetPending();
     if (opts && typeof opts.onKey === "function") opts.onKey(ch, kid);
     else if (attachedEl) { insertAtCursor(attachedEl, ch); try { attachedEl.focus(); } catch (e) {} }
     flashKey(kid);

@@ -1,31 +1,38 @@
 /* DoKit — Urdu typing (Phase 2b).
  * Three honest pieces, no backend: (1) a Roman-to-Urdu converter using
- * the standard phonetic layout (digraphs win over single letters),
+ * the shared canonical map (window.DKUrduMap — digraphs win over single
+ * letters; map lives in assets/js/urdu-canonical-map.js, KEY-02),
  * (2) an on-screen Urdu keyboard that inserts letters into the
  * practice box, (3) Urdu practice passages with per-character feedback
  * via the shared DKType engine (lessons.js) — not a second copy. */
 (function () {
   'use strict';
-  var DIGRAPHS = {"kh": "خ", "gh": "غ", "ch": "چ", "sh": "ش", "zh": "ژ", "aa": "آ", "ee": "ی", "oo": "و", "dh": "دھ", "bh": "بھ", "ph": "پھ", "jh": "جھ", "th": "تھ", "rh": "ڑھ"};
-  var SINGLES = {"a": "ا", "b": "ب", "c": "چ", "d": "د", "e": "ع", "f": "ف", "g": "گ", "h": "ھ", "i": "ی", "j": "ج", "k": "ک", "l": "ل", "m": "م", "n": "ن", "o": "ہ", "p": "پ", "q": "ق", "r": "ر", "s": "س", "t": "ت", "u": "ء", "v": "ٹ", "w": "و", "x": "ش", "y": "ے", "z": "ز"};
+  // Canonical Roman→Urdu map (V3 WP-3, KEY-02, decision D-3): the map lives
+  // in ONE place, assets/js/urdu-canonical-map.js (window.DKUrduMap). This
+  // file keeps NO private copy of the map — it reads the shared table, so
+  // the converter and the live keyboard (js/urdu-keyboard.js) can never
+  // drift apart again (C3). The map script must load before this file
+  // (see typing/urdu/index.html script order).
   var ROWS = ["ا ب پ ت ٹ ث ج چ ح خ د ڈ ذ ر ڑ ز ژ س ش ص ض", "ط ظ ع غ ف ق ک گ ل م ن و ہ ھ ی ے"];
   var PRACTICE = ["میرا نام علی ہے۔", "میں روزانہ اردو ٹائپنگ کی مشق کرتا ہوں۔", "محنت کامیابی کی کنجی ہے۔"];
 
-  // Convert Roman text to Urdu: scan left to right, preferring the
-  // 2-letter digraph at each position, else the single-letter map.
-  // Unknown characters (digits, punctuation, spaces) pass through.
+  // Convert Roman text to Urdu through the shared canonical map (the
+  // digraph-preferring scan lives in urdu-canonical-map.js, one copy).
+  var mapWarned = false;
   function convertRoman(text) {
-    var out = '', i = 0;
-    while (i < text.length) {
-      var two = text.slice(i, i + 2).toLowerCase();
-      if (DIGRAPHS.hasOwnProperty(two)) { out += DIGRAPHS[two]; i += 2; }
-      else {
-        var one = text[i].toLowerCase();
-        out += SINGLES.hasOwnProperty(one) ? SINGLES[one] : text[i];
-        i += 1;
+    if (window.DKUrduMap && typeof window.DKUrduMap.convertRoman === 'function') {
+      return window.DKUrduMap.convertRoman(text);
+    }
+    // WHY fail visible, not silent: without the map there is no correct
+    // conversion, and inventing one here would re-create the C3 conflict.
+    // Return the input unchanged and warn once (per page load).
+    if (!mapWarned) {
+      mapWarned = true;
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('DKUrduMap missing — load assets/js/urdu-canonical-map.js before assets/js/urdu.js');
       }
     }
-    return out;
+    return text;
   }
 
   // -- Converter -------------------------------------------------------------
@@ -103,9 +110,17 @@
       wpmEl: document.getElementById('ur-wpm'),
       accEl: document.getElementById('ur-acc'),
       resultEl: document.getElementById('ur-result'),
+      // WP-4 TYPE-02: Urdu is the scoring language here (Segmenter
+      // locale 'ur'); the engine scores grapheme-aware from v2.
+      language: 'ur',
       onFinish: function (st) {
+        // WP-4 TYPE-02: v2 tags (paper §4) on the saved result.
         if (window.DK2) {
-          window.DK2.saveResult({ type: 'urdu', wpm: st.wpm, acc: st.acc });
+          window.DK2.saveResult({ type: 'urdu', wpm: st.wpm, acc: st.acc,
+            graphemes: st.typed, verified: st.verified,
+            metricVersion: st.metricVersion, graphemeVersion: st.graphemeVersion,
+            sessionId: st.sessionId, contentId: st.contentId,
+            mode: 'practice', language: 'ur' });
         }
       }
     });
@@ -117,10 +132,11 @@
         urSelect.appendChild(o);
       });
       urSelect.addEventListener('change', function () {
-        urEngine.load(PRACTICE[parseInt(urSelect.value, 10)]);
+        var ui = parseInt(urSelect.value, 10);
+        urEngine.load(PRACTICE[ui], 'urdu-practice:' + (ui + 1));
       });
     }
-    urEngine.load(PRACTICE[0]);
+    urEngine.load(PRACTICE[0], 'urdu-practice:1');
   }
   // Restore: Urdu page tabs (Converter / Lessons / Test) — plain
   // visibility switching, no data. The EN/UR toggle beside the tabs
