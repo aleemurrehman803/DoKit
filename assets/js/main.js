@@ -1891,6 +1891,37 @@ function dokiMicStop(){
       var done = document.createElement('button'); done.className = 'btn ghost'; done.textContent = dkT('rsv_0960', 'Close');
       done.addEventListener('click', close); row.appendChild(done);
       card.appendChild(row);
+      // UI-01: in-tour language switcher. The tour backdrop (z-index 95)
+      // covers the header/footer selectors (header z-index 50), and a
+      // real click on one closes the tour instead of switching — so the
+      // switcher lives INSIDE the card (z-index 96), where it is always
+      // reachable. A <select> needs no new menu/focus-trap code (native
+      // keyboard support) and fits the 420px card at 390px viewports.
+      // On change it calls the engine's setLang(); the existing
+      // syncTour/dokit:langchange path re-renders the CURRENT step in the
+      // new language (show() keeps the step index i). Focus after the
+      // re-render lands on Next, per the existing F36 contract below.
+      var langRow = document.createElement('p');
+      langRow.className = 'tour-lang';
+      var langLabel = document.createElement('label');
+      langLabel.setAttribute('for', 'tour-lang');
+      langLabel.textContent = dkT('lang_select_label', 'Language');
+      var langSel = document.createElement('select');
+      langSel.id = 'tour-lang';
+      langSel.setAttribute('aria-label', dkT('lang_select_label', 'Language'));
+      var tourLangs = [['en', 'English'], ['ur', 'اردو'], ['ar', 'العربية'], ['hi', 'हिन्दी'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['de', 'Deutsch'], ['tr', 'Türkçe'], ['ru', 'Русский']];
+      var curLang = 'en';
+      try { var eng0 = window.DK_I18N || window.DKI18N; curLang = (eng0 && typeof eng0.getLang === 'function') ? eng0.getLang() : (document.documentElement.lang || 'en'); } catch (e) { curLang = document.documentElement.lang || 'en'; }
+      tourLangs.forEach(function (L) {
+        var opt = document.createElement('option'); opt.value = L[0]; opt.textContent = L[1];
+        if (L[0] === curLang) { opt.selected = true; }
+        langSel.appendChild(opt);
+      });
+      langSel.addEventListener('change', function () {
+        try { var eng = window.DK_I18N || window.DKI18N; if (eng && typeof eng.setLang === 'function') { eng.setLang(langSel.value); } } catch (e) { window.dkSwallow && window.dkSwallow(e, 'main.js'); }
+      });
+      langRow.appendChild(langLabel); langRow.appendChild(document.createTextNode(' ')); langRow.appendChild(langSel);
+      card.appendChild(langRow);
       // F36: show() rebuilds the card's buttons every step, which
       // would drop keyboard focus to <body> — land it on Next/Done.
       try { next.focus(); } catch (e) { /* old browsers: focus stays put */ }
