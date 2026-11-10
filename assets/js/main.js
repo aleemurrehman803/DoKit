@@ -1757,7 +1757,7 @@ function dokiMicStop(){
       var inst = document.createElement('button'); inst.className = 'btn'; inst.textContent = dkT('rsv_0980', 'Install');
       instBtn = inst;
       inst.addEventListener('click', function () {
-        if (deferred) { deferred.prompt(); deferred = null; }
+        if (deferred && typeof deferred.prompt === 'function') { deferred.prompt(); deferred = null; }
         bar.remove();
       });
       var dis = document.createElement('button'); dis.className = 'btn ghost'; dis.textContent = dkT('saas.dismiss', 'Dismiss');

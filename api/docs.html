@@ -34,7 +34,15 @@
   table.api th { color:var(--text-muted,#666); font-weight:600; }
   code.inline { background:var(--bg-muted,#f1f1f1); padding:.1rem .4rem; border-radius:5px; font-size:.88em; }
   .toc a { display:block; padding:.25rem 0; }
-@media (max-width:700px){.grid[style]{grid-template-columns:1fr!important}.toc{position:static!important}}</style>
+  /* UI67-01: the grid's 1fr track sizes to the <pre> min-content
+   * (785px), overflowing every viewport below it. min-width:0 on the
+   * children lets the track shrink; <pre> keeps overflow-x:auto. */
+  .grid[style]>*{min-width:0}
+  /* UI67-01 (cont.): inline <code> holds a long unbreakable JSON
+   * string (407px) — let it wrap anywhere instead of forcing the
+   * page wider. */
+  code.inline{overflow-wrap:anywhere}
+@media (max-width:700px){.grid[style]{grid-template-columns:minmax(0,1fr)!important}.toc{position:static!important}table.api{display:block;overflow-x:auto}}</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -70,7 +78,7 @@
         <div id="apiNotifyMsg" role="status" style="display:none;margin-top:var(--sp-2)"><p style="margin:0"></p></div>
       </div>
 
-      <div class="grid" style="grid-template-columns:220px 1fr;gap:var(--sp-5);align-items:start">
+      <div class="grid" style="grid-template-columns:220px minmax(0,1fr);gap:var(--sp-5);align-items:start">
         <nav class="toc card" aria-label="On this page" style="position:sticky;top:1rem;margin:0">
           <strong>On this page</strong>
           <a href="#quickstart">Quickstart</a>
