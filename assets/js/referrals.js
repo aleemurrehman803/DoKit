@@ -390,12 +390,14 @@
      * short English label, the same pattern Tasks 3-6 used). */
     var monthlyText = 'This month: ' + (s.monthlyEarnings || 0);
     var remainingText = s.nextRank ? (s.rankRemaining + ' more to ' + s.nextRank) : '';
-    var html = '<p><b>' + esc(T('ref_stat_earnings', 'Total earnings')) + ':</b> '
+    var html = '<p><b>' + esc(T('ref_stat_earnings', 'Referral earnings')) + ':</b> '
       + '<span' + (flashEarn ? ' class="num-flash"' : '') + '>' + esc(String(s.totalEarnings)) + '</span> · ' + esc(monthlyText)
       + ' · <b>' + esc(T('ref_stat_friends', 'Active friends')) + ':</b> '
       + '<span' + (flashFriends ? ' class="num-flash"' : '') + '>' + esc(String(s.active)) + '</span> · <b>' + esc(T('ref_stat_rank', 'Rank')) + ':</b> '
-      + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending rewards')) + ':</b> '
-      + esc(String(s.pending)) + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
+      + esc(s.rank) + ' · <b>' + esc(T('ref_stat_pending', 'Pending referrals')) + ':</b> '
+      + esc(String(s.pending))
+      + ((summary && summary.pendingClaims != null) ? (' · <b>' + esc(T('ref_stat_claims_pending', 'Pending claims')) + ':</b> ' + esc(String(summary.pendingClaims))) : '')
+      + '</p><p>' + esc(T('ref_rank_progress', 'Rank progress')) + ': '
       + esc(String(s.rankProgress)) + '%'
       + (s.nextRank ? (' · ' + esc(s.nextRank)) : '')
       + (remainingText ? (' · ' + esc(remainingText)) : '')
@@ -631,6 +633,14 @@
     setTxt('dash-ref-active', String(s.active));
     setTxt('dash-ref-pending', String(s.pending));
     setTxt('dash-ref-rank', s.rank);
+    /* UI-05a: the pending-claims count rides on the same summary
+     * object (account.js attaches it before calling here). null
+     * means the count query failed — show "—", never a wrong 0. */
+    if (summary && summary.pendingClaims != null) {
+      setTxt('dash-ref-claims', String(summary.pendingClaims));
+    } else {
+      setTxt('dash-ref-claims', '—');
+    }
     setTxt('dash-ref-count', String(s.total));
     /* Card / profile labels use contract keys only (defensive: the
      * elements exist only where the sibling page task added them). */
@@ -1511,6 +1521,21 @@
     if (!d || !uid) { return Promise.resolve([]); }
     return d.collection('reward_claims').where('uid', '==', uid).get()
       .then(snapshotRows).catch(function () { return []; });
+  }
+  function countPendingClaims(uid) {
+    /* UI-05a: the header "Pending rewards" counts pending REFERRAL
+     * rows only; reward claims live in reward_claims, which the
+     * header never queried. This counts the user's own pending
+     * claims (the same collection the admin settle queue reads).
+     * No rules change: list allows owners their own docs (uid ==
+     * auth), and two equality filters need no composite index.
+     * Returns null on any failure so the UI shows nothing instead
+     * of a wrong 0. */
+    var d = coreDb();
+    if (!d || !uid) { return Promise.resolve(null); }
+    return d.collection('reward_claims').where('uid', '==', uid).where('status', '==', 'pending').get()
+      .then(function (snap) { return snap.size; })
+      .catch(function () { return null; });
   }
   function adminListClaims(status) {
     var d = coreDb();
@@ -4477,7 +4502,16 @@
             ctx.fillRect(0, 0, 1080, 1350);
             var ink = '#ffffff';
             ctx.fillStyle = ink;
-            ctx.font = 'bold 72px ' + FONT_STACK;
+            /* UI-05f3: shrink-to-fit — long display names (the owner's
+             * own name measures 1102px at 72px vs 1020px available)
+             * used to overflow the poster's right edge. Shrink in 4px
+             * steps to a 36px floor; short names stay at 72px. */
+            var nameSize = 72;
+            ctx.font = 'bold ' + nameSize + 'px ' + FONT_STACK;
+            while (nameSize > 36 && ctx.measureText(name).width > 1020) {
+              nameSize -= 4;
+              ctx.font = 'bold ' + nameSize + 'px ' + FONT_STACK;
+            }
             ctx.fillText(name, 60, 200);
             ctx.font = '44px ' + FONT_STACK;
             var rankLine = 'Rank: ' + stats.rank;
@@ -4511,6 +4545,7 @@
              * QR failure must never break the poster — if the library
              * is absent or throws, the poster stays exactly as before
              * (gradient + text) and the download still works. */
+            var qrDrawn = false;
             try {
               if (typeof root.QRCode !== 'undefined') {
                 var qrBox = document.createElement('div');
@@ -4523,9 +4558,18 @@
                   ctx.fillStyle = '#111827';
                   ctx.font = 'bold 36px ' + FONT_STACK;
                   ctx.fillText('Scan to join DoKit', 130, 1265);
+                  qrDrawn = true;
                 }
               }
             } catch (qrErr) { window.dkSwallow && window.dkSwallow(qrErr, 'referrals.js'); }
+            if (!qrDrawn) {
+              /* UI-05f2: the QR was silently absent when the library
+               * failed — say so on the poster instead of leaving a
+               * bare gradient, and point at the printed link. */
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '32px ' + FONT_STACK;
+              ctx.fillText('QR unavailable — share the link above', 60, 800);
+            }
           }
         }
       } catch (e) { window.dkSwallow && window.dkSwallow(e, 'referrals.js'); }
@@ -5255,7 +5299,7 @@
     streakMultiplierActive: streakMultiplierActive, applyMultipliers: applyMultipliers,
     runningBalance: runningBalance, isFrozen: isFrozen,
     ambassadorCounts: ambassadorCounts, deviceDuplicateMap: deviceDuplicateMap,
-    createClaim: createClaim, listMyClaims: listMyClaims, adminListClaims: adminListClaims,
+    createClaim: createClaim, listMyClaims: listMyClaims, countPendingClaims: countPendingClaims, adminListClaims: adminListClaims,
     adminSettleClaim: adminSettleClaim, adminRejectClaim: adminRejectClaim,
     requestPurchase: requestPurchase, adminApprovePurchase: adminApprovePurchase,
     adminRejectPurchase: adminRejectPurchase, requestRefund: requestRefund,

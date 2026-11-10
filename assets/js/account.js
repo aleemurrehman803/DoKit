@@ -1008,20 +1008,29 @@
   function admLoadCounts(){
     var db = DKA.db();
     if (!db) { return; }
+    // UI-05b: per-query settlement — one failed read must not wipe
+    // all seven counts (the old single Promise.all + one catch did).
+    // Each count resolves to a number or null (failed); only when
+    // ALL seven are null does the generic error note show.
+    function safeCount(p) {
+      return p.then(function (snap) { return snap.size; }).catch(function () { return null; });
+    }
+    function num(v) { return (v == null) ? '—' : String(v); }
     // Counts (admin list reads; a failure shows the generic error note in the section).
     Promise.all([
-      db.collection('users').get(),
-      db.collection('deposits').where('status', '==', 'pending').get(),
-      db.collection('withdrawals').where('status', '==', 'pending').get(),
-      db.collection('coin_claims').where('status', '==', 'pending').get(),
-      db.collection('reward_claims').where('status', '==', 'pending').get(),
-      db.collection('contact_messages').get(),
-      db.collection('certificates').get()
+      safeCount(db.collection('users').get()),
+      safeCount(db.collection('deposits').where('status', '==', 'pending').get()),
+      safeCount(db.collection('withdrawals').where('status', '==', 'pending').get()),
+      safeCount(db.collection('coin_claims').where('status', '==', 'pending').get()),
+      safeCount(db.collection('reward_claims').where('status', '==', 'pending').get()),
+      safeCount(db.collection('contact_messages').get()),
+      safeCount(db.collection('certificates').get())
     ]).then(function (r) {
-      var html = '<p>Users: ' + r[0].size + ' · Pending deposits: ' + r[1].size
-        + ' · Pending withdrawals: ' + r[2].size + ' · Pending claims: ' + r[4].size
-        + ' · Pending daily claims: ' + r[3].size
-        + ' · Inbox: ' + r[5].size + ' · Certificates: ' + r[6].size + '</p>'
+      if (r.every(function (v) { return v == null; })) { admLoadError('adm-counts'); return; }
+      var html = '<p>Users: ' + num(r[0]) + ' · Pending deposits: ' + num(r[1])
+        + ' · Pending withdrawals: ' + num(r[2]) + ' · Pending claims: ' + num(r[4])
+        + ' · Pending daily claims: ' + num(r[3])
+        + ' · Inbox: ' + num(r[5]) + ' · Certificates: ' + num(r[6]) + '</p>'
         + '<p><button class="btn ghost" type="button" data-adm="export-json">Export users (JSON)</button> '
         + '<button class="btn ghost" type="button" data-adm="export-csv">Export deposits (CSV)</button></p>'
        ;
@@ -1511,14 +1520,22 @@
           return;
         }
       }
+      /* UI-05d: show the in-progress state on the button itself —
+       * it used to stay labelled "Grant reward" while disabled until
+       * the queue re-rendered. The original label is restored on
+       * failure (on success done() reloads the queue). */
+      var refLabel = b.textContent;
       b.disabled = true;
+      if (act === 'ref-grant') {
+        b.textContent = (window.dkT ? window.dkT('ref_granting', 'Granting…') : 'Granting…');
+      }
       var refJob;
       if (act === 'ref-grant') {
         refJob = window.DKREF.adminGrant(currentUser.uid, id);
       } else {
         refJob = window.DKREF.adminSetPaused(id, act === 'ref-pause');
       }
-      refJob.then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; fail(err); });
+      refJob.then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; b.textContent = refLabel; fail(err); });
     } else if (act === 'inbox-del') {
       if (!id) { return; }
       if (!window.confirm((window.dkT ? window.dkT('acct_adm_confirm_delete', 'Delete this message?') : 'Delete this message?'))) { return; }
@@ -2402,10 +2419,16 @@
       }
       Promise.all([
         window.DKREF.loadMyReferralSummary(user.uid),
-        window.DKREF.userReferralFields(user.uid).catch(function () { return {}; })
+        window.DKREF.userReferralFields(user.uid).catch(function () { return {}; }),
+        /* UI-05a: pending reward-claims count — the header "Pending
+         * rewards" counts pending referral rows only, so a claim
+         * never showed there. Same collection the admin settle queue
+         * reads; null on failure (rendered as "—", never a wrong 0). */
+        window.DKREF.countPendingClaims(user.uid).catch(function () { return null; })
       ]).then(function (parts) {
         var summary = parts[0];
         var fields = parts[1] || {};
+        summary.pendingClaims = parts[2];
         /* Fresh field read may be empty on a read failure — fall back
          * to the user doc already loaded at boot, never to invented
          * values. */
@@ -2442,7 +2465,11 @@
           }
         }
       }).catch(function (e) { /* referral sections are best-effort;
-        * coins, profile and dashboard keep working without them. */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+        * coins, profile and dashboard keep working without them.
+        * UI-05c: on failure the rank shows "—" (failed), distinct
+        * from the "…" loading placeholder in the static HTML. */ 
+        var rk = $('dash-ref-rank'); if (rk) { rk.textContent = '—'; }
+        window.dkSwallow && window.dkSwallow(e, 'account.js'); });
     })();
     /* Referral card on non-dashboard pages (subscription): hidden by
      * default, revealed only when signed in. */
