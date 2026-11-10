@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["tr"] = {
     "ref_stat_pending": "Bekleyen yönlendirmele",
     "ref_stat_claims_pending": "Bekleyen talepler",
     "ref_granting": "Veriliyor…",
+    "ref_err_tx_unavailable": "Yönlendirme ödülü reddedildi: Firestore işlemleri kullanılamıyor.",
+    "claim_err_tx_unavailable": "Talep ödemesi reddedildi: Firestore işlemleri kullanılamıyor.",
     "ref_rank_progress": "Sonraki sıraya ilerleme",
     "ref_tree_title": "Ekibim",
     "ref_tree_l1": "Seviye 1 — doğrudan davet edilenler",

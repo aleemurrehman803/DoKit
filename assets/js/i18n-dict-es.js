@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["es"] = {
     "ref_stat_pending": "Referencias pendientes",
     "ref_stat_claims_pending": "Reclamaciones pendientes",
     "ref_granting": "Otorgando…",
+    "ref_err_tx_unavailable": "Concesión de referencia rechazada: las transacciones de Firestore no están disponibles.",
+    "claim_err_tx_unavailable": "Liquidación de reclamación rechazada: las transacciones de Firestore no están disponibles.",
     "ref_rank_progress": "Progreso al siguiente rango",
     "ref_tree_title": "Mi equipo",
     "ref_tree_l1": "Nivel 1 — invitados directamente",

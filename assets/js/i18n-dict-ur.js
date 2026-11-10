@@ -1703,6 +1703,8 @@ window.DK_I18N_DICT["ur"] = {
     "ref_stat_pending": "زیر التواء ریفرلز",
     "ref_stat_claims_pending": "زیر التواء دعوے",
     "ref_granting": "دے رہے ہیں…",
+    "ref_err_tx_unavailable": "ریفرل گرانٹ مسترد: Firestore ٹرانزیکشنز دستیاب نہیں ہیں۔",
+    "claim_err_tx_unavailable": "دعوے کا تصفیہ مسترد: Firestore ٹرانزیکشنز دستیاب نہیں ہیں۔",
     "ref_rank_progress": "اگلے درجے تک پیش رفت",
     "ref_tree_title": "میری ٹیم",
     "ref_tree_l1": "لیول 1 — براہ راست مدعو کیے گئے",

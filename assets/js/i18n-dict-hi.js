@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["hi"] = {
     "ref_stat_pending": "लंबित रेफ़रल",
     "ref_stat_claims_pending": "लंबित दावे",
     "ref_granting": "दिया जा रहा है…",
+    "ref_err_tx_unavailable": "रेफ़रल अनुदान अस्वीकृत: Firestore लेन-देन उपलब्ध नहीं हैं।",
+    "claim_err_tx_unavailable": "दावा निपटान अस्वीकृत: Firestore लेन-देन उपलब्ध नहीं हैं।",
     "ref_rank_progress": "अगले रैंक तक प्रगति",
     "ref_tree_title": "मेरी टीम",
     "ref_tree_l1": "लेवल 1 — सीधे आमंत्रित",

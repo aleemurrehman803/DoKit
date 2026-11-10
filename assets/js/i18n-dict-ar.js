@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["ar"] = {
     "ref_stat_pending": "الإحالات المعلقة",
     "ref_stat_claims_pending": "المطالبات المعلقة",
     "ref_granting": "جارٍ المنح…",
+    "ref_err_tx_unavailable": "تم رفض منحة الإحالة: معاملات Firestore غير متوفرة.",
+    "claim_err_tx_unavailable": "تم رفض تسوية المطالبة: معاملات Firestore غير متوفرة.",
     "ref_rank_progress": "التقدم نحو المرتبة التالية",
     "ref_tree_title": "فريقي",
     "ref_tree_l1": "المستوى 1 — مدعوون مباشرة",

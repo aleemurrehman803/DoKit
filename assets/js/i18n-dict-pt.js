@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["pt"] = {
     "ref_stat_pending": "Indicações pendentes",
     "ref_stat_claims_pending": "Reivindicações pendentes",
     "ref_granting": "Concedendo…",
+    "ref_err_tx_unavailable": "Concessão de indicação recusada: transações do Firestore indisponíveis.",
+    "claim_err_tx_unavailable": "Liquidação da reivindicação recusada: transações do Firestore indisponíveis.",
     "ref_rank_progress": "Progresso para a próxima posição",
     "ref_tree_title": "Minha equipe",
     "ref_tree_l1": "Nível 1 — convidados diretamente",

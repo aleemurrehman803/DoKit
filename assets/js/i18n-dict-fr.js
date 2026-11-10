@@ -1700,6 +1700,8 @@ window.DK_I18N_DICT["fr"] = {
     "ref_stat_pending": "Parrainages en attente",
     "ref_stat_claims_pending": "Demandes en attente",
     "ref_granting": "Attribution…",
+    "ref_err_tx_unavailable": "Octroi de parrainage refusé : les transactions Firestore ne sont pas disponibles.",
+    "claim_err_tx_unavailable": "Règlement de la demande refusé : les transactions Firestore ne sont pas disponibles.",
     "ref_rank_progress": "Progression vers le rang suivant",
     "ref_tree_title": "Mon équipe",
     "ref_tree_l1": "Niveau 1 — invités directement",

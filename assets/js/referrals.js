@@ -803,7 +803,7 @@
      * run non-atomically. */
     var d = db();
     if (!d || !adminUid || !referralId) { return Promise.reject(new Error(window.dkT ? window.dkT('ref_err_input', 'Missing grant input.') : 'Missing grant input.')); }
-    if (typeof d.runTransaction !== 'function') { return Promise.reject(new Error('Referral grant refused: Firestore transactions are unavailable.')); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(new Error(window.dkT ? window.dkT('ref_err_tx_unavailable', 'Referral grant refused: Firestore transactions are unavailable.') : 'Referral grant refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('referrals').doc(referralId);
     return d.runTransaction(function (tx) {
       var ctx = { legs: [], legPaid: {}, legStreak: {}, welcomePaid: false,
@@ -1563,7 +1563,7 @@
     var d = coreDb();
     var missingMsg = 'Missing claim settlement input.';
     if (!d || !adminUid || !claimId) { return Promise.reject(coreErr(missingMsg)); }
-    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr('Claim settlement refused: Firestore transactions are unavailable.')); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr(window.dkT ? window.dkT('claim_err_tx_unavailable', 'Claim settlement refused: Firestore transactions are unavailable.') : 'Claim settlement refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('reward_claims').doc(claimId);
     return d.runTransaction(function (tx) {
       var ctx = {};
