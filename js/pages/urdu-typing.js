@@ -471,10 +471,18 @@
     } catch (e) {}
 
     applyUiLang();
-    $("langToggle").addEventListener("click", function () {
-      uiLang = uiLang === "ur" ? "en" : "ur";
-      applyUiLang(); renderLayoutCards(); renderLessons(); renderTestPane();
-    });
+    /* CQ-002 (10 Nov 2026): typing/urdu.html has NO #langToggle element,
+     * so the unguarded lookup threw here and the whole init aborted —
+     * lessons, keyboard preview and tab bindings never ran (dead page).
+     * Guard it: the toggle is optional; without it the page simply
+     * keeps its default UI language. */
+    var langToggle = $("langToggle");
+    if (langToggle) {
+      langToggle.addEventListener("click", function () {
+        uiLang = uiLang === "ur" ? "en" : "ur";
+        applyUiLang(); renderLayoutCards(); renderLessons(); renderTestPane();
+      });
+    }
 
     renderLayoutCards();
     UrduKB.renderKeyboard($("kbPreview"));
