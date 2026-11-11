@@ -45,53 +45,53 @@
 @media (max-width:700px){.grid[style]{grid-template-columns:minmax(0,1fr)!important}.toc{position:static!important}table.api{display:block;overflow-x:auto}}</style>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
 <header id="site-nav"></header>
 <main id="main">
   <section class="section">
     <div class="container" style="max-width:860px">
       <div class="section-head" style="text-align:start;margin-inline:0">
-        <span class="eyebrow">Developers</span>
-        <h1>🧰 DoKit Developer API</h1>
-        <p>Put DoKit's tools inside your own apps and websites. REST + JSON, API-key auth.</p>
+        <span class="eyebrow" data-i18n="acct_api_eyebrow">Developers</span>
+        <h1 data-i18n="api_docs_h1">🧰 DoKit Developer API</h1>
+        <p data-i18n="api_docs_lede">Put DoKit's tools inside your own apps and websites. REST + JSON, API-key auth.</p>
       </div>
 
       <div class="api-banner" role="note">
-        <strong>🚧 Backend in development.</strong>
-        This documentation describes the v1 API contract. The live backend at
-        <code class="inline">https://api.dokit.app/v1</code> is not serving traffic yet —
-        calls will fail until launch. The <a href="#quickstart">JS SDK</a> and
-        <a href="../account/api-keys.html">API key manager</a> are ready now so you can
-        integrate ahead of time.
+        <strong data-i18n="api_docs_banner_h">🚧 Backend in development.</strong>
+        <span data-i18n="api_docs_banner_a">This documentation describes the v1 API contract. The live backend at</span>
+        <code class="inline">https://api.dokit.app/v1</code> <span data-i18n="api_docs_banner_b">is not serving traffic yet —
+        calls will fail until launch. The</span> <a href="#quickstart" data-i18n="api_docs_banner_sdk">JS SDK</a> <span data-i18n="api_docs_banner_c">and</span>
+        <a href="../account/api-keys.html" data-i18n="api_docs_banner_keys">API key manager</a> <span data-i18n="api_docs_banner_d">are ready now so you can
+        integrate ahead of time.</span>
       </div>
 
       <div class="card" id="apiNotifyCard" style="margin-bottom:var(--sp-5)">
-        <h2 style="margin-top:0">🔔 Notify me at launch</h2>
-        <p style="color:var(--text-muted)">Leave your email and we'll send you one message the moment the API backend goes live. No spam, ever.</p>
+        <h2 style="margin-top:0" data-i18n="api_docs_notify_h">🔔 Notify me at launch</h2>
+        <p style="color:var(--text-muted)" data-i18n="api_docs_notify_d">Leave your email and we'll send you one message the moment the API backend goes live. No spam, ever.</p>
         <form id="apiNotifyForm" novalidate>
           <div class="field">
-            <label for="apiNotifyEmail">Email</label>
+            <label for="apiNotifyEmail" data-i18n="acct_field_email">Email</label>
             <input class="form-control text-input" id="apiNotifyEmail" type="email" autocomplete="email" maxlength="120" required style="max-width:340px">
           </div>
-          <button class="btn btn-primary" type="submit">Notify me</button>
+          <button class="btn btn-primary" type="submit" data-i18n="notify_btn">Notify me</button>
         </form>
         <div id="apiNotifyMsg" role="status" style="display:none;margin-top:var(--sp-2)"><p style="margin:0"></p></div>
       </div>
 
       <div class="grid" style="grid-template-columns:220px minmax(0,1fr);gap:var(--sp-5);align-items:start">
         <nav class="toc card" aria-label="On this page" style="position:sticky;top:1rem;margin:0">
-          <strong>On this page</strong>
-          <a href="#quickstart">Quickstart</a>
-          <a href="#auth">Authentication</a>
-          <a href="#ratelimits">Rate limits</a>
-          <a href="#endpoints">Endpoints</a>
-          <a href="#errors">Error codes</a>
-          <a href="#webhooks">Webhooks (planned)</a>
+          <strong data-i18n="api_docs_toc_h">On this page</strong>
+          <a href="#quickstart" data-i18n="api_docs_toc_quickstart">Quickstart</a>
+          <a href="#auth" data-i18n="api_docs_toc_auth">Authentication</a>
+          <a href="#ratelimits" data-i18n="api_docs_toc_ratelimits">Rate limits</a>
+          <a href="#endpoints" data-i18n="api_docs_toc_endpoints">Endpoints</a>
+          <a href="#errors" data-i18n="api_docs_toc_errors">Error codes</a>
+          <a href="#webhooks" data-i18n="api_docs_toc_webhooks">Webhooks (planned)</a>
         </nav>
 
         <div>
-          <h2 id="quickstart">⚡ Quickstart</h2>
-          <p>Install the SDK (or copy <code class="inline">js/dokit-sdk.js</code> into your project):</p>
+          <h2 id="quickstart" data-i18n="api_docs_quickstart_h">⚡ Quickstart</h2>
+          <p><span data-i18n="api_docs_quickstart_install_a">Install the SDK (or copy</span> <code class="inline">js/dokit-sdk.js</code> <span data-i18n="api_docs_quickstart_install_b">into your project):</span></p>
           <pre class="code"><span class="c">// Node.js</span>
 const DoKitSDK = require("./dokit-sdk.js");
 <span class="c">// Browser: &lt;script src="https://aleemurrehman803.github.io/DoKit/js/dokit-sdk.js"&gt;&lt;/script&gt;</span>
@@ -107,26 +107,26 @@ const stats = await dokit.countWords("Hello world");
 <span class="c">// Compress an image (browser File / Node Buffer)</span>
 const small = await dokit.compressImage(file, { quality: 0.8 });
 <span class="c">// → Blob of the compressed image</span></pre>
-          <p>Get a key: <a href="../account/api-keys.html">Account → API Keys</a> (sign in required).</p>
+          <p><span data-i18n="api_docs_quickstart_key_a">Get a key:</span> <a href="../account/api-keys.html" data-i18n="api_docs_quickstart_key_link">Account → API Keys</a> <span data-i18n="api_docs_quickstart_key_b">(sign in required).</span></p>
 
-          <h2 id="auth">🔐 Authentication</h2>
-          <p>Every request carries your key in the <code class="inline">Authorization</code> header:</p>
+          <h2 id="auth" data-i18n="api_docs_auth_h">🔐 Authentication</h2>
+          <p><span data-i18n="api_docs_auth_intro_a">Every request carries your key in the</span> <code class="inline">Authorization</code> <span data-i18n="api_docs_auth_intro_b">header:</span></p>
           <pre class="code">Authorization: Bearer dk_9f3K…xQ2a</pre>
           <ul>
-            <li>Keys start with <code class="inline">dk_</code> and are 35 characters long.</li>
-            <li>DoKit stores only a <strong>SHA-256 hash</strong> of your key — a leaked database reveals nothing usable.</li>
-            <li>Use one key per app. Revoke a key the moment it leaks (<a href="../account/api-keys.html">API Keys</a>).</li>
-            <li>Never put a key in client-side code that ships to browsers you don't control — call the API from your server.</li>
+            <li><span data-i18n="api_docs_auth_keys_a">Keys start with</span> <code class="inline">dk_</code> <span data-i18n="api_docs_auth_keys_b">and are 35 characters long.</span></li>
+            <li><span data-i18n="api_docs_auth_hash_a">DoKit stores only a</span> <strong>SHA-256 hash</strong> <span data-i18n="api_docs_auth_hash_b">of your key — a leaked database reveals nothing usable.</span></li>
+            <li><span data-i18n="api_docs_auth_onekey_a">Use one key per app. Revoke a key the moment it leaks (</span><a href="../account/api-keys.html" data-i18n="api_docs_auth_onekey_link">API Keys</a>).</li>
+            <li data-i18n="api_docs_auth_never">Never put a key in client-side code that ships to browsers you don't control — call the API from your server.</li>
           </ul>
 
-          <h2 id="ratelimits">⏱️ Rate limits</h2>
+          <h2 id="ratelimits" data-i18n="api_docs_ratelimits_h">⏱️ Rate limits</h2>
           <table class="api">
-            <tr><th>Plan</th><th>Requests / day</th><th>Burst</th></tr>
-            <tr><td>Free</td><td>100</td><td>10 / minute</td></tr>
-            <tr><td>Pro ($6/mo)</td><td>10,000</td><td>120 / minute</td></tr>
-            <tr><td>Team ($29/mo)</td><td>100,000</td><td>600 / minute</td></tr>
+            <tr><th data-i18n="api_docs_rl_plan">Plan</th><th data-i18n="api_docs_rl_perday">Requests / day</th><th data-i18n="api_docs_rl_burst">Burst</th></tr>
+            <tr><td data-i18n="plan_free">Free</td><td>100</td><td data-i18n="api_docs_rl_burst_10">10 / minute</td></tr>
+            <tr><td data-i18n="api_docs_rl_pro">Pro ($6/mo)</td><td>10,000</td><td data-i18n="api_docs_rl_burst_120">120 / minute</td></tr>
+            <tr><td data-i18n="api_docs_rl_team">Team ($29/mo)</td><td>100,000</td><td data-i18n="api_docs_rl_burst_600">600 / minute</td></tr>
           </table>
-          <p>Over the limit you get <code class="inline">429</code> with a <code class="inline">Retry-After</code> header (seconds). The SDK surfaces it as <code class="inline">err.retryAfter</code>:</p>
+          <p><span data-i18n="api_docs_rl_over_a">Over the limit you get</span> <code class="inline">429</code> <span data-i18n="api_docs_rl_over_b">with a</span> <code class="inline">Retry-After</code> <span data-i18n="api_docs_rl_over_c">header (seconds). The SDK surfaces it as</span> <code class="inline">err.retryAfter</code>:</p>
           <pre class="code">try {
   await dokit.countWords(text);
 } catch (err) {
@@ -134,14 +134,14 @@ const small = await dokit.compressImage(file, { quality: 0.8 });
     console.log("Slow down, retry in", err.retryAfter, "seconds");
   }
 }</pre>
-          <p>Rate limits are counted <strong>per API key</strong>, reset daily at 00:00 UTC.</p>
+          <p><span data-i18n="api_docs_rl_count_a">Rate limits are counted</span> <strong data-i18n="api_docs_rl_count_perkey">per API key</strong><span data-i18n="api_docs_rl_count_b">, reset daily at 00:00 UTC.</span></p>
 
-          <h2 id="endpoints">🔌 Endpoints</h2>
-          <p>Base URL: <code class="inline">https://api.dokit.app/v1</code></p>
+          <h2 id="endpoints" data-i18n="api_docs_endpoints_h">🔌 Endpoints</h2>
+          <p><span data-i18n="api_docs_endpoints_base">Base URL:</span> <code class="inline">https://api.dokit.app/v1</code></p>
 
           <div class="endpoint">
             <h3><span class="method post">POST</span> <code class="inline">/image/resize</code></h3>
-            <p>Resize an image. Multipart upload (<code class="inline">image</code> field). Returns the resized image (binary).</p>
+            <p><span data-i18n="api_docs_ep_resize_a">Resize an image. Multipart upload (</span><code class="inline">image</code> <span data-i18n="api_docs_ep_resize_b">field). Returns the resized image (binary).</span></p>
             <pre class="code"><span class="c"># fields</span>
 image    <span class="c">(file, required — png/jpeg/webp, ≤ 25 MB)</span>
 width    <span class="c">(int, px — width or height required)</span>
@@ -152,7 +152,7 @@ format   <span class="c">"png" | "jpeg" | "webp" (default "png")</span></pre>
 
           <div class="endpoint">
             <h3><span class="method post">POST</span> <code class="inline">/image/compress</code></h3>
-            <p>Compress an image. Returns the compressed image (binary).</p>
+            <p data-i18n="api_docs_ep_compress_d">Compress an image. Returns the compressed image (binary).</p>
             <pre class="code"><span class="c"># fields</span>
 image      <span class="c">(file, required)</span>
 quality    <span class="c">(float 0–1, default 0.8)</span>
@@ -161,7 +161,7 @@ maxSizeKB  <span class="c">(int, optional — iteratively compress until under t
 
           <div class="endpoint">
             <h3><span class="method post">POST</span> <code class="inline">/image/convert</code></h3>
-            <p>Convert between PNG, JPEG, and WebP. Returns the converted image (binary).</p>
+            <p data-i18n="api_docs_ep_convert_d">Convert between PNG, JPEG, and WebP. Returns the converted image (binary).</p>
             <pre class="code"><span class="c"># fields</span>
 image   <span class="c">(file, required)</span>
 format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
@@ -169,7 +169,7 @@ format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
 
           <div class="endpoint">
             <h3><span class="method post">POST</span> <code class="inline">/text/wordcount</code></h3>
-            <p>JSON body: <code class="inline">{ "text": "…" }</code> (max 1,000,000 chars).</p>
+            <p><span data-i18n="api_docs_ep_jsonbody">JSON body:</span> <code class="inline">{ "text": "…" }</code> <span data-i18n="api_docs_ep_wordcount_b">(max 1,000,000 chars).</span></p>
             <pre class="code"><span class="c">→ 200 OK</span>
 {
   "words": 2,
@@ -182,7 +182,7 @@ format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
 
           <div class="endpoint">
             <h3><span class="method post">POST</span> <code class="inline">/text/caseconvert</code></h3>
-            <p>JSON body: <code class="inline">{ "text": "…", "mode": "upper|lower|title|sentence|alternating|inverse" }</code></p>
+            <p><span data-i18n="api_docs_ep_jsonbody">JSON body:</span> <code class="inline">{ "text": "…", "mode": "upper|lower|title|sentence|alternating|inverse" }</code></p>
             <pre class="code"><span class="c">→ 200 OK</span>
 { "result": "HELLO WORLD" }</pre>
           </div>
@@ -199,27 +199,27 @@ format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
 
           <div class="endpoint">
             <h3><span class="method get">GET</span> <code class="inline">/user/profile</code></h3>
-            <p>Returns the profile of the API key owner.</p>
+            <p data-i18n="api_docs_ep_profile_d">Returns the profile of the API key owner.</p>
             <pre class="code"><span class="c">→ 200 OK</span>
 { "userId": "abc123", "plan": "free", "credits": 250 }</pre>
           </div>
 
-          <h2 id="errors">❌ Error codes</h2>
+          <h2 id="errors" data-i18n="api_docs_errors_h">❌ Error codes</h2>
           <table class="api">
-            <tr><th>HTTP</th><th><code class="inline">code</code></th><th>Meaning</th></tr>
-            <tr><td>400</td><td><code class="inline">invalid_argument</code></td><td>Bad input (e.g. unknown format, empty text)</td></tr>
-            <tr><td>401</td><td><code class="inline">unauthorized</code></td><td>Missing/invalid API key</td></tr>
-            <tr><td>401</td><td><code class="inline">key_revoked</code></td><td>Key was revoked — generate a new one</td></tr>
-            <tr><td>403</td><td><code class="inline">plan_required</code></td><td>Endpoint needs Pro/Team</td></tr>
-            <tr><td>413</td><td><code class="inline">file_too_large</code></td><td>Image over 25 MB</td></tr>
-            <tr><td>429</td><td><code class="inline">rate_limited</code></td><td>Too many requests — honor <code class="inline">Retry-After</code></td></tr>
-            <tr><td>500</td><td><code class="inline">internal_error</code></td><td>Something broke on our side — retry later</td></tr>
+            <tr><th>HTTP</th><th><code class="inline">code</code></th><th data-i18n="api_docs_err_meaning">Meaning</th></tr>
+            <tr><td>400</td><td><code class="inline">invalid_argument</code></td><td data-i18n="api_docs_err_invalid">Bad input (e.g. unknown format, empty text)</td></tr>
+            <tr><td>401</td><td><code class="inline">unauthorized</code></td><td data-i18n="api_docs_err_unauth">Missing/invalid API key</td></tr>
+            <tr><td>401</td><td><code class="inline">key_revoked</code></td><td data-i18n="api_docs_err_revoked">Key was revoked — generate a new one</td></tr>
+            <tr><td>403</td><td><code class="inline">plan_required</code></td><td data-i18n="api_docs_err_plan">Endpoint needs Pro/Team</td></tr>
+            <tr><td>413</td><td><code class="inline">file_too_large</code></td><td data-i18n="api_docs_err_large">Image over 25 MB</td></tr>
+            <tr><td>429</td><td><code class="inline">rate_limited</code></td><td><span data-i18n="api_docs_err_ratelimit_a">Too many requests — honor</span> <code class="inline">Retry-After</code></td></tr>
+            <tr><td>500</td><td><code class="inline">internal_error</code></td><td data-i18n="api_docs_err_internal">Something broke on our side — retry later</td></tr>
           </table>
-          <p>Error body shape:</p>
+          <p data-i18n="api_docs_err_shape">Error body shape:</p>
           <pre class="code">{ "error": { "code": "rate_limited", "message": "Daily quota exceeded" } }</pre>
 
-          <h2 id="webhooks">🔔 Webhooks (planned)</h2>
-          <p>Planned for v1.1: subscribe to events (<code class="inline">certificate.issued</code>, <code class="inline">payment.completed</code>) at a URL you own. Payloads will be signed with HMAC-SHA256 so you can verify they came from DoKit. Not live yet — see <a href="SUGGESTIONS.md">the API roadmap (SUGGESTIONS.md)</a>.</p>
+          <h2 id="webhooks" data-i18n="api_docs_webhooks_h">🔔 Webhooks (planned)</h2>
+          <p><span data-i18n="api_docs_webhooks_a">Planned for v1.1: subscribe to events (</span><code class="inline">certificate.issued</code>, <code class="inline">payment.completed</code><span data-i18n="api_docs_webhooks_c">) at a URL you own. Payloads will be signed with HMAC-SHA256 so you can verify they came from DoKit. Not live yet — see</span> <a href="SUGGESTIONS.md" data-i18n="api_docs_webhooks_link">the API roadmap (SUGGESTIONS.md)</a>.</p>
         </div>
       </div>
     </div>
@@ -227,6 +227,8 @@ format  <span class="c">"png" | "jpeg" | "webp" (required)</span></pre>
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
+<script src="../js/i18n-hotfix.js?v=20261008-08" defer></script>
+<script src="../js/i18n-docs.js" defer></script>
 <script src="../js/ui.js" defer></script>
 <script src="../js/nav-init.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
