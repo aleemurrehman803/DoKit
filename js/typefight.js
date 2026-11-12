@@ -158,12 +158,25 @@
     var db = DKF.db();
     var col = ledgerRef(uid);
     var userRef = db.collection("users").doc(uid);
-    /* prevHash is read INSIDE the transaction (via tx.get on the query) so
-     * concurrent appends serialize correctly — no chain forks. The hash is
-     * computed from the tx-read prevHash before writing. */
+    /* FIX (TYPEFIGHT, E04-v2 pattern — ported from
+     * js/pages/admin-full.js ledgerCreditTx): Transaction.get() accepts
+     * ONLY a DocumentReference. The old code passed the orderBy/limit
+     * Query to tx.get(), which throws live ("Expected type 'Ju', but it
+     * was: a custom Yu object", Firebase JS SDK 10.12.0 compat,
+     * castReference) — every ledgerAppend call failed before any read
+     * happened. The old comment's claim that the query read inside the
+     * transaction "serializes correctly" was FALSE for the same reason
+     * the E04 v1 comment was false: a Query can never be read through
+     * tx.get at all.
+     * The latest-entry read is now a PLAIN collection read inside the
+     * update function, so a transaction retry re-runs it fresh. The
+     * user doc below is still tx.get()'d AND tx.set()'d, so it stays
+     * the contention anchor: concurrent appends serialize on it and
+     * the plain read re-executes on retry — no hash-chain forks.
+     * Hash formula, reward math, ledger schema and return value are
+     * unchanged. */
     return db.runTransaction(function (tx) {
-      var lastQuery = col.orderBy("clientTs", "desc").limit(1);
-      return tx.get(lastQuery).then(function (snap) {
+      return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
         var prevHash = "GENESIS";
         snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
         return tx.get(userRef).then(function (userDoc) {
@@ -179,7 +192,7 @@
           var clientTs = Date.now();
           var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
           /* NOTE: sha256 is async; Firestore transactions retry the function on
-           * contention, so we compute the hash inside using the tx-consistent
+           * contention, so we compute the hash inside using the plain-read
            * prevHash. Each retry re-reads prevHash, keeping the chain linear. */
           return sha256(payload).then(function (hash) {
             var entry = {
