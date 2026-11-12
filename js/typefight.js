@@ -141,6 +141,12 @@
    *
    * Balance is ALWAYS derived as the sum of the ledger — never stored
    * separately — so it cannot drift out of sync with history.
+   *
+   * Chain head: users/{uid}.lastLedgerHash mirrors the latest entry's
+   * hash (written by ledgerAppend in the same transaction). It is the
+   * ONLY source ledgerAppend trusts for prevHash once present; a
+   * missing field falls back to one plain latest-entry read (legacy
+   * users — see ledgerAppend).
    * ------------------------------------------------------------------ */
 
   /**
@@ -158,42 +164,60 @@
     var db = DKF.db();
     var col = ledgerRef(uid);
     var userRef = db.collection("users").doc(uid);
-    /* FIX (TYPEFIGHT, E04-v2 pattern — ported from
-     * js/pages/admin-full.js ledgerCreditTx): Transaction.get() accepts
-     * ONLY a DocumentReference. The old code passed the orderBy/limit
-     * Query to tx.get(), which throws live ("Expected type 'Ju', but it
-     * was: a custom Yu object", Firebase JS SDK 10.12.0 compat,
-     * castReference) — every ledgerAppend call failed before any read
-     * happened. The old comment's claim that the query read inside the
-     * transaction "serializes correctly" was FALSE for the same reason
-     * the E04 v1 comment was false: a Query can never be read through
-     * tx.get at all.
-     * The latest-entry read is now a PLAIN collection read inside the
-     * update function, so a transaction retry re-runs it fresh. The
-     * user doc below is still tx.get()'d AND tx.set()'d, so it stays
-     * the contention anchor: concurrent appends serialize on it and
-     * the plain read re-executes on retry — no hash-chain forks.
-     * Hash formula, reward math, ledger schema and return value are
-     * unchanged. */
+    /* REWORK (TYPEFIGHT, 12 Nov 2026 — fixes the T3 hash-chain fork the
+     * E04-A6 gate reproduced 1-in-6 at HEAD 301cdd0): the previous fix
+     * read the latest ledger entry with a PLAIN collection read inside
+     * the update function and claimed "concurrent appends serialize on
+     * [the user doc] and the plain read re-executes on retry — no
+     * hash-chain forks". That claim was FALSE, gate-proven: a plain
+     * read is INVISIBLE to Firestore transaction contention validation
+     * (real Firestore tracks only transaction.get() reads). B could
+     * plain-read an empty ledger (prevHash GENESIS), A could commit,
+     * and B's tx.get(userRef) would then record the NEW user-doc
+     * version — so B committed cleanly with the stale GENESIS
+     * prevHash. No retry, forked chain, correct balances.
+     * The chain head now lives ON the user doc as `lastLedgerHash`
+     * and is read via tx.get(userRef) — a TRANSACTION-TRACKED read.
+     * Why this serializes: the user doc is in the transaction's
+     * tracked read set, so EITHER a concurrent committer bumps its
+     * version first (the loser's commit fails validation, the SDK
+     * retries, and the retry re-reads the fresh lastLedgerHash) OR
+     * the tx.get happens after the commit (and sees the fresh field
+     * directly). In both cases the new entry anchors to the true
+     * latest hash and the chain stays linear.
+     * Legacy bootstrap: users whose doc has no lastLedgerHash yet
+     * (every user created before this change) fall back to ONE plain
+     * latest-entry read inside the update function. That fallback is
+     * still safe: the tx.get(userRef) above already recorded the user
+     * doc's version, so a concurrent commit between the read and
+     * this commit fails validation and the retry finds the field
+     * present. After the first append under this code the field
+     * always exists, so the fallback runs at most once per user.
+     * Hash formula, reward math, ledger schema, return value, error
+     * strings and caller contracts are unchanged. */
     return db.runTransaction(function (tx) {
-      return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
-        var prevHash = "GENESIS";
-        snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
-        return tx.get(userRef).then(function (userDoc) {
-          var currentCoins = 0;
-          if (userDoc.exists) {
-            currentCoins = userDoc.data().coins | 0;
-          }
-          var newCoins = currentCoins + amount;
-          // Prevent negative balance (defense in depth - rules should also enforce)
-          if (newCoins < 0) {
-            throw new Error("Insufficient balance: cannot go negative");
-          }
+      return tx.get(userRef).then(function (userDoc) {
+        var currentCoins = 0;
+        var lastLedgerHash = null;
+        if (userDoc.exists) {
+          var data = userDoc.data() || {};
+          currentCoins = data.coins | 0;
+          lastLedgerHash = data.lastLedgerHash || null;
+        }
+        var newCoins = currentCoins + amount;
+        // Prevent negative balance (defense in depth - rules should also enforce)
+        if (newCoins < 0) {
+          throw new Error("Insufficient balance: cannot go negative");
+        }
+        /* Shared tail: hash the entry off the given chain head, stage
+         * the ledger write + the user-doc write (coins AND the new
+         * chain head, so the next append reads it via tx.get). The
+         * hash is computed inside the update function: on a contention
+         * retry the whole function re-runs and re-reads the fresh
+         * head, so the chain stays linear. */
+        var appendWithHead = function (prevHash) {
           var clientTs = Date.now();
           var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
-          /* NOTE: sha256 is async; Firestore transactions retry the function on
-           * contention, so we compute the hash inside using the plain-read
-           * prevHash. Each retry re-reads prevHash, keeping the chain linear. */
           return sha256(payload).then(function (hash) {
             var entry = {
               amount: amount,
@@ -204,9 +228,20 @@
               hash: hash
             };
             tx.set(col.doc(), entry);
-            tx.set(userRef, { coins: newCoins }, { merge: true });
+            tx.set(userRef, { coins: newCoins, lastLedgerHash: hash }, { merge: true });
             return entry;
           });
+        };
+        if (lastLedgerHash) {
+          return appendWithHead(lastLedgerHash);
+        }
+        /* Legacy user (no lastLedgerHash yet): one plain latest-entry
+         * read to bootstrap the head. See the header comment above
+         * for why the retry logic keeps even this safe. */
+        return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
+          var prevHash = "GENESIS";
+          snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
+          return appendWithHead(prevHash);
         });
       });
     });
