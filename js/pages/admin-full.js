@@ -85,8 +85,12 @@
    * Ledger schema MUST match js/typefight.js ledgerAppend/ledgerVerify:
    *   { amount, reason, clientTs, ts, prevHash, hash }
    *   hash = sha256(prevHash|uid|amount|reason|clientTs)
-   * prevHash is read INSIDE the transaction (same pattern as ledgerAppend)
-   * so concurrent mutations serialize correctly — no chain forks.
+   * prevHash is read INSIDE the transaction update function as a PLAIN
+   * collection read (NOT tx.get — Transaction.get accepts DocumentReference
+   * only; a Query throws live, see E04 v2). The users/{uid} doc is still
+   * tx.get()'d AND tx.update()'d, so it is the contention anchor: concurrent
+   * mutations serialize on it and the plain prevHash read re-runs fresh on
+   * retry — no chain forks.
    * Resolves with { newCoins }.
    * ------------------------------------------------------------------ */
   function ledgerCreditTx(uid, amount, reason) {
@@ -99,7 +103,16 @@
     var userRef = d.collection("users").doc(uid);
     var ledgerCol = userRef.collection("coin_ledger");
     return d.runTransaction(function (tx) {
-      return tx.get(ledgerCol.orderBy("clientTs", "desc").limit(1)).then(function (lsnap) {
+      /* FIX (ADMINFULL, E04-v2 pattern): Transaction.get() accepts ONLY a
+       * DocumentReference — passing this orderBy/limit Query threw
+       * "Expected type 'Ju', but it was: a custom Yu object" live
+       * (Firebase JS SDK 10.12.0 compat, castReference). The latest-entry
+       * read is now a PLAIN collection read inside the update function, so
+       * a transaction retry re-runs it fresh. The user doc below is still
+       * tx.get()'d AND tx.update()'d, so it stays the contention anchor:
+       * concurrent mutations serialize on it and the plain read re-executes
+       * on retry — no hash-chain forks. Reward math unchanged. */
+      return ledgerCol.orderBy("clientTs", "desc").limit(1).get().then(function (lsnap) {
         var prevHash = "GENESIS";
         lsnap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
         return tx.get(userRef).then(function (usnap) {
@@ -1222,9 +1235,12 @@
      * H1: the credited amount is read from the DEPOSIT DOCUMENT inside the
      * transaction — the DOM-supplied `amount` is display-only (confirm
      * dialog) and never touches the ledger or the balance.
-     * H2: prevHash is read INSIDE the transaction (same pattern as
-     * js/typefight.js ledgerAppend) so concurrent approvals serialize
-     * correctly — no chain forks.
+     * H2: prevHash is read INSIDE the transaction update function as a
+     * PLAIN collection read (same pattern as js/typefight.js ledgerAppend,
+     * minus tx.get — Transaction.get accepts DocumentReference only; a
+     * Query throws live, see E04 v2). The deposit doc AND the user doc are
+     * still tx.get()'d AND tx.update()'d, so both are contention anchors
+     * and a retry re-runs the plain read fresh — no chain forks.
      */
     var credited = 0; // actual credited amount, for the audit log below
 
@@ -1243,8 +1259,14 @@
           var curCoins = Number(udata.coins) || 0;
           var newCoins = curCoins + creditAmount;
 
-          // H2: prevHash read inside the transaction.
-          return tx.get(ledgerCol.orderBy("clientTs", "desc").limit(1)).then(function (lsnap) {
+          /* H2 (FIXED, E04-v2 pattern): prevHash read inside the update
+           * function as a PLAIN collection read — tx.get() accepts ONLY a
+           * DocumentReference, and this orderBy/limit Query threw live
+           * ("Expected type 'Ju', but it was: a custom Yu object",
+           * SDK 10.12.0). The deposit doc AND the user doc are still
+           * tx.get()'d AND tx.update()'d, so both are contention anchors:
+           * a retry re-runs this read fresh — no chain forks. */
+          return ledgerCol.orderBy("clientTs", "desc").limit(1).get().then(function (lsnap) {
             var prevHash = "GENESIS";
             lsnap.forEach(function (doc) { prevHash = doc.data().hash || "GENESIS"; });
             var clientTs = Date.now();
