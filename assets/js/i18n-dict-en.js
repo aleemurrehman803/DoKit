@@ -1782,6 +1782,8 @@ window.DK_I18N_DICT["en"] = {
     "ref_granting": "Granting…",
     "ref_err_tx_unavailable": "Referral grant refused: Firestore transactions are unavailable.",
     "claim_err_tx_unavailable": "Claim settlement refused: Firestore transactions are unavailable.",
+    "claim_err_missing_input": "Missing claim settlement input.",
+    "claim_reject_missing_input": "Missing claim rejection input.",
     "ref_rank_progress": "Progress to next rank",
     "ref_tree_title": "My team",
     "ref_tree_l1": "Level 1 — directly invited",

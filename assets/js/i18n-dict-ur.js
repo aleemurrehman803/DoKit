@@ -1782,6 +1782,8 @@ window.DK_I18N_DICT["ur"] = {
     "ref_granting": "دے رہے ہیں…",
     "ref_err_tx_unavailable": "ریفرل گرانٹ مسترد: Firestore ٹرانزیکشنز دستیاب نہیں ہیں۔",
     "claim_err_tx_unavailable": "دعوے کا تصفیہ مسترد: Firestore ٹرانزیکشنز دستیاب نہیں ہیں۔",
+    "claim_err_missing_input": "دعوے کے تصفیے کا ان پٹ غائب ہے۔",
+    "claim_reject_missing_input": "دعوے کو مسترد کرنے کا ان پٹ غائب ہے۔",
     "ref_rank_progress": "اگلے درجے تک پیش رفت",
     "ref_tree_title": "میری ٹیم",
     "ref_tree_l1": "لیول 1 — براہ راست مدعو کیے گئے",

@@ -1631,7 +1631,7 @@
      * appended twice — so running them on a resume is safe. RULES:
      * no change needed (see E04_CONCURRENCY_FIX_REPORT.md §5). */
     var d = coreDb();
-    var missingMsg = 'Missing claim settlement input.';
+    var missingMsg = window.dkT ? window.dkT('claim_err_missing_input', 'Missing claim settlement input.') : 'Missing claim settlement input.';
     if (!d || !adminUid || !claimId) { return Promise.reject(coreErr(missingMsg)); }
     if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr(window.dkT ? window.dkT('claim_err_tx_unavailable', 'Claim settlement refused: Firestore transactions are unavailable.') : 'Claim settlement refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('reward_claims').doc(claimId);
@@ -1642,9 +1642,9 @@
        * rules pin) and the user doc (badges / plan side effects). */
       return tx.get(ref).then(function (snap) {
         var claim = (snap && snap.exists) ? (snap.data() || {}) : null;
-        var notFoundMsg = 'Claim not found.';
+        var notFoundMsg = window.dkT ? window.dkT('acct_claim_nf', 'Claim not found.') : 'Claim not found.';
         if (!claim) { throw coreErr(notFoundMsg); }
-        var staleMsg = 'Claim is no longer pending.';
+        var staleMsg = window.dkT ? window.dkT('acct_claim_stale', 'Claim is no longer pending.') : 'Claim is no longer pending.';
         if (claim.status !== 'pending') { throw coreErr(staleMsg); }
         ctx.claim = claim;
         ctx.isAppeal = claim.kind === 'appeal' || !!(claim.detail && claim.detail.apology);
@@ -1691,7 +1691,7 @@
         if (!ctx.userExists && Object.keys(userPatch).length > 0) {
           /* No user doc: a tx.update would fail anyway — fail here
            * with the honest error before writing anything. */
-          throw coreErr('Claim user not found.');
+          throw coreErr(window.dkT ? window.dkT('acct_claim_user_nf', 'Claim user not found.') : 'Claim user not found.');
         }
         if (Object.keys(userPatch).length > 0) {
           tx.update(d.collection('users').doc(claim.uid), userPatch);
@@ -1707,14 +1707,14 @@
 
   function adminRejectClaim(adminUid, claimId, reason) {
     var d = coreDb();
-    var missingMsg = 'Missing claim rejection input.';
+    var missingMsg = window.dkT ? window.dkT('claim_reject_missing_input', 'Missing claim rejection input.') : 'Missing claim rejection input.';
     if (!d || !adminUid || !claimId) { return Promise.reject(coreErr(missingMsg)); }
     var ref = d.collection('reward_claims').doc(claimId);
     return ref.get().then(function (snap) {
       var claim = (snap && snap.exists) ? (snap.data() || {}) : null;
-      var notFoundMsg = 'Claim not found.';
+      var notFoundMsg = window.dkT ? window.dkT('acct_claim_nf', 'Claim not found.') : 'Claim not found.';
       if (!claim) { throw coreErr(notFoundMsg); }
-      var staleMsg = 'Claim is no longer pending.';
+      var staleMsg = window.dkT ? window.dkT('acct_claim_stale', 'Claim is no longer pending.') : 'Claim is no longer pending.';
       if (claim.status !== 'pending') { throw coreErr(staleMsg); }
       return ref.update({ status: 'rejected', reviewedBy: adminUid, reviewedAt: serverTimestamp(), rejectReason: reason || '' });
     }).then(function () { return true; });

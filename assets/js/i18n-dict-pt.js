@@ -1779,6 +1779,8 @@ window.DK_I18N_DICT["pt"] = {
     "ref_granting": "Concedendo…",
     "ref_err_tx_unavailable": "Concessão de indicação recusada: transações do Firestore indisponíveis.",
     "claim_err_tx_unavailable": "Liquidação da reivindicação recusada: transações do Firestore indisponíveis.",
+    "claim_err_missing_input": "Falta a entrada de liquidação da reivindicação.",
+    "claim_reject_missing_input": "Falta a entrada de rejeição da reivindicação.",
     "ref_rank_progress": "Progresso para a próxima posição",
     "ref_tree_title": "Minha equipe",
     "ref_tree_l1": "Nível 1 — convidados diretamente",

@@ -1779,6 +1779,8 @@ window.DK_I18N_DICT["de"] = {
     "ref_granting": "Wird gewährt…",
     "ref_err_tx_unavailable": "Empfehlungsgewährung abgelehnt: Firestore-Transaktionen sind nicht verfügbar.",
     "claim_err_tx_unavailable": "Anspruchsbegleichung abgelehnt: Firestore-Transaktionen sind nicht verfügbar.",
+    "claim_err_missing_input": "Eingabe für die Anspruchsbegleichung fehlt.",
+    "claim_reject_missing_input": "Eingabe für die Anspruchsablehnung fehlt.",
     "ref_rank_progress": "Fortschritt zum nächsten Rang",
     "ref_tree_title": "Mein Team",
     "ref_tree_l1": "Stufe 1 — direkt eingeladen",

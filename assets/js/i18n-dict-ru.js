@@ -1779,6 +1779,8 @@ window.DK_I18N_DICT["ru"] = {
     "ref_granting": "Выдача…",
     "ref_err_tx_unavailable": "Выдача реферального вознаграждения отклонена: транзакции Firestore недоступны.",
     "claim_err_tx_unavailable": "Погашение заявки отклонено: транзакции Firestore недоступны.",
+    "claim_err_missing_input": "Отсутствуют входные данные для погашения заявки.",
+    "claim_reject_missing_input": "Отсутствуют входные данные для отклонения заявки.",
     "ref_rank_progress": "Прогресс до следующего ранга",
     "ref_tree_title": "Моя команда",
     "ref_tree_l1": "Уровень 1 — приглашённые напрямую",
