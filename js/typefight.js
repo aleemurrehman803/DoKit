@@ -637,7 +637,22 @@
 })();
 
 /* ----------------------------------------------------------------------
- * REQUIRED FIRESTORE RULES (to be added in Firebase console):
+ * REQUIRED FIRESTORE RULES (summary only — DO NOT paste this as rules):
+ *
+ * The authoritative rules live in the deploy folder
+ * (dokit-audit/publish-df3ef92c-2026-11-03/deploy/firestore.rules).
+ * TypeFight earns use a TWO-PHASE append (R1, 12 Nov 2026) because
+ * rules evaluate each write against PRE-transaction state:
+ *   Phase 1 (transaction): create the entry with id == its hash AND
+ *     advance users/{uid}.lastLedgerHash to that hash (no coins).
+ *   Phase 2 (plain write): set {coins, lastCreditedHash} — allowed
+ *     ONLY if the entry already exists at coin_ledger/{head}, the
+ *     amount is PINNED per reason (typing_test 10, daily_streak 5,
+ *     lesson_* 3, battle places 50/30/20/10), and
+ *     coins == old coins + entry amount exactly.
+ * An UNVALIDATED owner-create rule (any entry, any amount) would be
+ * an open minting hole — never use one. Suspended users cannot earn
+ * or credit. Negative amounts (spends) are NOT whitelisted.
  *
  * function isAdmin() {
  *   return request.auth != null &&
@@ -645,10 +660,14 @@
  * }
  *
  * match /users/{userId}/coin_ledger/{entryId} {
- *   // Owner (or admin) can read; owner can only CREATE (append).
- *   // Updates and deletes are forbidden -> immutable.
+ *   // Owner (or admin) can read. Owner CREATE is allowed ONLY for
+ *   // TypeFight entries passing ledgerTypefightEntry() (pinned
+ *   // reason/amount, exact 6-field shape, id == hash) AND
+ *   // ledgerTypefightHead() (prevHash == current head), and only
+ *   // while not suspended. The full rule text lives in the
+ *   // deploy-folder firestore.rules — copy it from there, never
+ *   // from this comment. Updates and deletes are forbidden.
  *   allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
- *   allow create: if request.auth != null && request.auth.uid == userId;
  *   allow update, delete: if false;
  * }
  *
