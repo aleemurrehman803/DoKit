@@ -1489,7 +1489,7 @@
             ctx.prior = (lsnap && lsnap.exists) ? (lsnap.data() || {}) : null;
             return tx.get(ctx.userRef);
           }).then(function (usnap) {
-            if (!usnap || !usnap.exists) { throw new Error('Deposit user not found.'); }
+            if (!usnap || !usnap.exists) { throw new Error(window.dkT ? window.dkT('acct_dep_user_nf', 'Deposit user not found.') : 'Deposit user not found.'); }
           });
         }).then(function () {
           /* WRITE PHASE — no tx.get after this point. */
@@ -1532,10 +1532,10 @@
           var ctx = {};
           return tx.get(claimRef).then(function (snap) {
             var cl = (snap && snap.exists) ? (snap.data() || {}) : null;
-            if (!cl) { throw new Error('Claim not found.'); }
-            if (cl.status !== 'pending') { throw new Error('Claim is no longer pending.'); }
+            if (!cl) { throw new Error(window.dkT ? window.dkT('acct_claim_nf', 'Claim not found.') : 'Claim not found.'); }
+            if (cl.status !== 'pending') { throw new Error(window.dkT ? window.dkT('acct_claim_stale', 'Claim is no longer pending.') : 'Claim is no longer pending.'); }
             var amt = Number(cl.amount) || 0;
-            if (!cl.uid || amt < 1 || amt > 100) { throw new Error('Claim record is incomplete.'); }
+            if (!cl.uid || amt < 1 || amt > 100) { throw new Error(window.dkT ? window.dkT('acct_claim_bad', 'Claim record is incomplete.') : 'Claim record is incomplete.'); }
             ctx.claim = cl;
             ctx.amount = amt;
             ctx.userRef = db.collection('users').doc(cl.uid);
@@ -1545,7 +1545,7 @@
             ctx.prior = !!(lsnap && lsnap.exists);
             return tx.get(ctx.userRef);
           }).then(function (usnap) {
-            if (!usnap || !usnap.exists) { throw new Error('Claim user not found.'); }
+            if (!usnap || !usnap.exists) { throw new Error(window.dkT ? window.dkT('acct_claim_user_nf', 'Claim user not found.') : 'Claim user not found.'); }
             /* WRITE PHASE — no tx.get after this point. */
             if (!ctx.prior) {
               tx.update(ctx.userRef, { coins: firebase.firestore.FieldValue.increment(ctx.amount) });
