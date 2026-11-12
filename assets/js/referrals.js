@@ -1551,33 +1551,6 @@
     Object.keys(entry || {}).forEach(function (k) { if (k !== 'docId') { rec[k] = entry[k]; } });
     tx.set(d.collection('users').doc(uid).collection('coin_ledger').doc(docId), rec);
   }
-  function payUser(d, adminUid, uid, amount, entry) {
-    /* DEPRECATED — DO NOT USE for live crediting (E04-A6, 12 Nov 2026).
-     * This is the OLD non-transactional credit: it increments FIRST
-     * and wrote the ledger SECOND, both outside any transaction,
-     * while the old header claimed the source doc-id + create-only
-     * rules meant "a duplicate grant collides instead of minting
-     * twice". That claim was FALSE as a mint guard, mock-proven 8/8
-     * paths (E04-A6): the increment lands BEFORE the only check that
-     * could stop a duplicate, so a concurrent call minted and only
-     * then got permission-denied on the .set — the victim kept
-     * double coins with one ledger entry. REAL INVARIANT: payUser
-     * performs NO gate check and is NOT idempotent by itself;
-     * exactly-once comes ONLY from the caller holding the gate
-     * inside a runTransaction (see payUserTx). This function is
-     * retained ONLY because the Group B paths (contest / battle /
-     * goal) still call it; the Group B commit deletes it. No new
-     * caller may ever be added. */
-    var docId = entry ? entry.docId : null;
-    if (!docId) { return Promise.reject(coreErr('Missing ledger doc id.')); }
-    return d.collection('users').doc(uid).update({
-      coins: root.firebase.firestore.FieldValue.increment(amount)
-    }).then(function () {
-      var rec = { uid: uid, amount: amount, by: adminUid, createdAt: serverTimestamp() };
-      Object.keys(entry || {}).forEach(function (k) { if (k !== 'docId') { rec[k] = entry[k]; } });
-      return d.collection('users').doc(uid).collection('coin_ledger').doc(docId).set(rec);
-    });
-  }
   function setPlan(d, uid, plan) {
     return d.collection('users').doc(uid).update({ plan: plan });
   }
@@ -3219,54 +3192,95 @@
     });
   }
   function adminPayContest(adminUid, mk) {
+    /* Admin-only contest payment — ATOMIC (E04-A6 fix, 12 Nov 2026).
+     * The old code read the published gate, then paid winners one by
+     * one with plain-read ledger checks + payUser outside any
+     * transaction: two concurrent pays both passed the gate and the
+     * first winner got paid twice (500 -> 1000) while the second
+     * call died on the denied .set before reaching the other winners.
+     * ONE db.runTransaction now holds the gate, every winner's
+     * ledger-doc read, every winner's user-doc anchor, every mint
+     * and the paid flip. A concurrent pay contends on the source
+     * doc, retries, sees status paid and returns alreadyPaid.
+     * SIZE (Group B decision D-B3): the contest is top-3 by design
+     * (CONTEST_PRIZES, and adminPublishContest assigns default
+     * prizes only to the first three ranks), so one transaction is
+     * the right shape. The guard below refuses a payout with more
+     * than 100 winners rather than half-paying it (100 winners =
+     * 201 writes, well under the 500-write transaction cap) — a
+     * bigger contest needs its own per-winner design first. Same
+     * contract as before: skipped winners (missing uid /
+     * non-positive amount / missing user doc) are reported and BLOCK
+     * the paid flip, exactly like the old skip-and-report; a winner
+     * already paid, or a uid listed twice, is skipped silently and
+     * does not inflate the total. RULES: no change needed. */
     var d = coreDb();
     var missingMsg = 'Missing contest payment input.';
     if (!d || !adminUid || !mk) { return Promise.reject(coreErr(missingMsg)); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr('Contest payment refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('contest_winners').doc(mk);
-    return ref.get().then(function (snap) {
-      var doc = (snap && snap.exists) ? (snap.data() || {}) : null;
-      var notFoundMsg = 'Contest not found.';
-      if (!doc) { throw coreErr(notFoundMsg); }
-      if (doc.status === 'paid') { return { alreadyPaid: true, paid: 0, winnersPaid: [] }; }
-      /* Option 1: ALL payment inputs come from the admin-only payout
-       * doc. A missing payout doc THROWS (status stays 'published',
-       * retryable) — pay NEVER falls back to public-doc uids, so a
-       * legacy board cannot be paid until its payout record exists
-       * (Option 2 sequencing). Prizes were fully resolved at publish,
-       * so no recompute from bonusPool happens here. */
-      return d.collection('board_payouts').doc('contest-' + mk).get().then(function (psnap) {
+    return d.runTransaction(function (tx) {
+      var ctx = { alreadyPaid: false, winners: [], plan: [], skipped: [], total: 0, paidUids: [] };
+      /* -- READ 1: the contest doc — the paid gate lives INSIDE the
+       * transaction. Then the payout doc (the ONLY source of winner
+       * uids + prizes; never the public doc). */
+      return tx.get(ref).then(function (snap) {
+        var doc = (snap && snap.exists) ? (snap.data() || {}) : null;
+        var notFoundMsg = 'Contest not found.';
+        if (!doc) { throw coreErr(notFoundMsg); }
+        if (doc.status === 'paid') { ctx.alreadyPaid = true; return null; }
+        return tx.get(d.collection('board_payouts').doc('contest-' + mk));
+      }).then(function (psnap) {
+        if (ctx.alreadyPaid) { return null; }
         if (!psnap || !psnap.exists) { throw coreErr('Payout record missing — refusing to mark paid. Legacy board: create its payout record first (Option 2 sequencing).'); }
-        var winners = ((psnap.data() || {}).winners || []);
+        ctx.winners = ((psnap.data() || {}).winners || []);
+        if (ctx.winners.length > 100) { throw coreErr('Contest has too many winners for one transaction (' + ctx.winners.length + ' > 100) — split the payout first.'); }
+        /* -- READ 2: per winner, the ledger doc (deterministic id
+         * 'contest-' + mk — the idempotency marker) + the user doc
+         * (contention anchor). Reads only — no write is staged
+         * until every winner has been read. */
+        var seen = {};
         var seq = Promise.resolve();
-        var total = 0;
-        var paidUids = [];
-        var skipped = [];
-        winners.forEach(function (w, i) {
+        ctx.winners.forEach(function (w, i) {
           seq = seq.then(function () {
             var amount = Number(w.prize) || 0;
             /* Missing uid or non-positive amount -> SKIP + REPORT and
              * BLOCK the paid flip below (never silent-skip + flip). */
-            if (!(amount > 0) || !w.uid) { skipped.push({ index: i, uid: w.uid || null, reason: !w.uid ? 'missing-uid' : 'non-positive-amount' }); return; }
-            /* Ledger-first idempotency: ANY 'contest prize' entry for
-             * this monthKey means this winner already paid, so a
-             * retried pay skips them instead of double-paying. */
-            return ledgerHasFiltered(d, w.uid, 'monthKey', mk, 'contest prize').then(function (already) {
-              if (already) { return false; }
-              return payUser(d, adminUid, w.uid, amount, { reason: 'contest prize', monthKey: mk, rank: i + 1, docId: 'contest-' + mk }).then(function () { return true; });
-            }).then(function (paidIt) {
-              /* Only a fresh payment counts toward the reported total:
-               * a skipped (already-paid) winner must not inflate it, or
-               * a resumed pay would report coins it never moved. */
-              if (paidIt) { total += amount; paidUids.push(w.uid); }
+            if (!(amount > 0) || !w.uid) { ctx.skipped.push({ index: i, uid: w.uid || null, reason: !w.uid ? 'missing-uid' : 'non-positive-amount' }); return; }
+            /* A uid listed twice is treated as already paid on its
+             * second occurrence, exactly like the old ledger-query
+             * skip (the first occurrence's payment is found, so the
+             * second never mints). */
+            if (seen[w.uid]) { return; }
+            seen[w.uid] = true;
+            var ledger = d.collection('users').doc(w.uid).collection('coin_ledger');
+            return tx.get(ledger.doc('contest-' + mk)).then(function (lsnap) {
+              var already = !!(lsnap && lsnap.exists);
+              return tx.get(d.collection('users').doc(w.uid)).then(function (usnap) {
+                ctx.plan.push({ uid: w.uid, amount: amount, rank: i + 1, index: i, already: already, userExists: !!(usnap && usnap.exists) });
+              });
             });
           });
         });
-        return seq.then(function () {
-          if (skipped.length > 0) {
-            return { alreadyPaid: false, paid: total, winnersPaid: paidUids, skipped: skipped, statusKept: 'published' };
-          }
-          return ref.update({ status: 'paid' }).then(function () { return { alreadyPaid: false, paid: total, winnersPaid: paidUids, skipped: [] }; });
+        return seq;
+      }).then(function () {
+        if (ctx.alreadyPaid) { return { alreadyPaid: true, paid: 0, winnersPaid: [] }; }
+        /* -- WRITE PHASE (no tx.get after this point). Only a fresh
+         * payment counts toward the reported total: a skipped
+         * (already-paid) winner must not inflate it, or a resumed
+         * pay would report coins it never moved. */
+        ctx.plan.forEach(function (p) {
+          if (p.already) { return; }
+          if (!p.userExists) { ctx.skipped.push({ index: p.index, uid: p.uid, reason: 'missing-user' }); return; }
+          payUserTx(tx, d, adminUid, p.uid, p.amount, { reason: 'contest prize', monthKey: mk, rank: p.rank, docId: 'contest-' + mk });
+          ctx.total += p.amount;
+          ctx.paidUids.push(p.uid);
         });
+        if (ctx.skipped.length > 0) {
+          return { alreadyPaid: false, paid: ctx.total, winnersPaid: ctx.paidUids, skipped: ctx.skipped, statusKept: 'published' };
+        }
+        tx.update(ref, { status: 'paid' });
+        return { alreadyPaid: false, paid: ctx.total, winnersPaid: ctx.paidUids, skipped: [] };
       });
     });
   }
@@ -3318,10 +3332,39 @@
     }).then(function () { return { goalId: month }; });
   }
   function adminDistributeGoal(adminUid, goalId) {
+    /* Admin-only community-goal distribution — ATOMIC PER RECIPIENT
+     * (E04-A6 fix, 12 Nov 2026). The old code had NO status check at
+     * all and paid every active user with plain-read ledger checks +
+     * payUser outside any transaction: two concurrent runs both paid
+     * the first recipient twice (20 -> 40). A goal pays EVERY active
+     * user in a month — unbounded fan-out — so it can never fit one
+     * transaction (500-write cap). DESIGN (Group B decision D-B1):
+     * one runTransaction PER RECIPIENT, each holding tx.get on that
+     * recipient's deterministic ledger doc ('goal-' + goalId, the
+     * idempotency marker — skip if it exists) + tx.get/tx.update on
+     * that recipient's user doc as the anchor, followed by ONE
+     * finalizing transaction that tx.gets the goal doc and flips it
+     * to 'distributed'. A second concurrent distributor ends up
+     * skipping already-paid recipients, never double-paying, and its
+     * finalizing transaction finds the flip already done. A
+     * deliberate sequential re-run still re-scans (a user who became
+     * active after the first run is paid then) — the flip is a
+     * completion marker, not a freeze; see the worker report for the
+     * veto path. Same contract as before: resolves with { paid,
+     * recipients }; a recipient whose user doc is missing is reported
+     * in `skipped` and blocks the flip, instead of aborting the
+     * whole distribution like the old code did. RULES: no change
+     * needed. */
     var d = coreDb();
     var missingMsg = 'Missing goal distribution input.';
     if (!d || !adminUid || !goalId) { return Promise.reject(coreErr(missingMsg)); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr('Goal distribution refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('community_goals').doc(goalId);
+    /* Phase 0 (plain reads): the goal doc, then the whole users list
+     * + typing activations — the same active-user computation as
+     * before. A recipient list is a plain read by nature (a whole
+     * collection has no single doc to tx.get); the exactly-once
+     * property lives in Phase 1, not here. */
     return ref.get().then(function (snap) {
       var doc = (snap && snap.exists) ? (snap.data() || {}) : null;
       var notFoundMsg = 'Community goal not found.';
@@ -3349,22 +3392,55 @@
           if (!uid) { return; }
           if (activeByTest[uid] || monthKey(toMs(u.lastLogin)) === goalMonth) { recipients.push(uid); }
         });
-        var seq = Promise.resolve();
-        var total = 0;
-        var paidUids = [];
-        recipients.forEach(function (uid) {
-          seq = seq.then(function () {
-            return ledgerHasFiltered(d, uid, 'goalId', goalId, 'community goal').then(function (already) {
-              if (already) { return false; }
-              return payUser(d, adminUid, uid, RATES.COMMUNITY_GOAL_REWARD, { reason: 'community goal', goalId: goalId, docId: 'goal-' + goalId }).then(function () { return true; });
-            }).then(function (paidIt) {
-              if (paidIt) { total += RATES.COMMUNITY_GOAL_REWARD; paidUids.push(uid); }
+        return recipients;
+      });
+    }).then(function (recipients) {
+      /* Phase 1: one transaction per recipient, run SEQUENTIALLY
+       * (a parallel fan-out would contend with itself and retry far
+       * more than it needs to). Each transaction tx.gets the
+       * recipient's ledger doc first: if it exists the recipient
+       * already paid and the transaction writes nothing. */
+      var total = 0;
+      var paidUids = [];
+      var skipped = [];
+      var seq = Promise.resolve();
+      recipients.forEach(function (uid) {
+        seq = seq.then(function () {
+          return d.runTransaction(function (tx) {
+            var ledgerRef = d.collection('users').doc(uid).collection('coin_ledger').doc('goal-' + goalId);
+            return tx.get(ledgerRef).then(function (lsnap) {
+              if (lsnap && lsnap.exists) { return false; }
+              return tx.get(d.collection('users').doc(uid)).then(function (usnap) {
+                if (!usnap || !usnap.exists) { return 'missing-user'; }
+                payUserTx(tx, d, adminUid, uid, RATES.COMMUNITY_GOAL_REWARD, { reason: 'community goal', goalId: goalId, docId: 'goal-' + goalId });
+                return true;
+              });
             });
+          }).then(function (paidIt) {
+            if (paidIt === true) { total += RATES.COMMUNITY_GOAL_REWARD; paidUids.push(uid); }
+            else if (paidIt === 'missing-user') { skipped.push({ uid: uid, reason: 'missing-user' }); }
           });
         });
-        return seq.then(function () {
-          return ref.update({ status: 'distributed' });
-        }).then(function () { return { paid: total, recipients: paidUids }; });
+      });
+      return seq.then(function () {
+        /* Phase 2 (finalizing transaction): the flip is guarded by
+         * tx.get on the goal doc. A concurrent distributor that
+         * already flipped is a no-op here, never a second flip; a
+         * run with missing-user skips leaves the goal unflipped so
+         * the next run can still pay that recipient. */
+        return d.runTransaction(function (tx) {
+          return tx.get(ref).then(function (gsnap) {
+            var g = (gsnap && gsnap.exists) ? (gsnap.data() || {}) : null;
+            if (!g) { throw coreErr('Community goal not found.'); }
+            if (g.status === 'distributed' || skipped.length > 0) { return g.status; }
+            tx.update(ref, { status: 'distributed' });
+            return 'distributed';
+          });
+        }).then(function (leftStatus) {
+          var out = { paid: total, recipients: paidUids, skipped: skipped };
+          if (leftStatus !== 'distributed') { out.statusKept = leftStatus; }
+          return out;
+        });
       });
     });
   }
@@ -3632,10 +3708,37 @@
     });
   }
   function adminPayBattle(adminUid, wk) {
+    /* Admin-only battle payment — ATOMIC PER MEMBER (E04-A6 fix,
+     * 12 Nov 2026). The old code read the published gate, then paid
+     * the whole winning team one by one with plain-read ledger
+     * checks + payUser outside any transaction: two concurrent pays
+     * both passed the gate and the first member got paid twice
+     * (50 -> 100) while the second call died on the denied .set
+     * before reaching the other members. A battle pays a WHOLE
+     * TEAM — unbounded fan-out — so it can never fit one transaction
+     * (500-write cap). DESIGN (Group B decision D-B2, same as the
+     * goal): one runTransaction PER MEMBER, each holding tx.get on
+     * that member's deterministic ledger doc ('battle-' + wk, the
+     * idempotency marker — skip if it exists) + tx.get/tx.update on
+     * that member's user doc as the anchor, followed by ONE
+     * finalizing transaction that tx.gets the battle doc and flips
+     * it to 'paid'. A second concurrent distributor ends up
+     * skipping already-paid members, never double-paying. Same
+     * contract as before: resolves with { alreadyPaid, paid, share,
+     * members, remainder }; a member whose user doc is missing is
+     * reported in `skipped` and blocks the flip, instead of
+     * aborting the whole payment like the old code did. The share
+     * is unchanged (floor of pool / members; the remainder is
+     * returned and stored as unallocated). RULES: no change needed. */
     var d = coreDb();
     var missingMsg = 'Missing battle payment input.';
     if (!d || !adminUid || !wk) { return Promise.reject(coreErr(missingMsg)); }
+    if (typeof d.runTransaction !== 'function') { return Promise.reject(coreErr('Battle payment refused: Firestore transactions are unavailable.')); }
     var ref = d.collection('battles').doc(wk);
+    /* Phase 0 (plain reads): the battle doc (an already-paid battle
+     * returns early, as before), the payout doc (winnerUid + pool —
+     * never the public doc) and the referrals collection (the
+     * winning team's active members). */
     return ref.get().then(function (snap) {
       var doc = (snap && snap.exists) ? (snap.data() || {}) : null;
       var notFoundMsg = 'Battle not found.';
@@ -3666,22 +3769,56 @@
            * is returned and stored on the doc as unallocated. */
           var share = Math.floor(pool / members.length);
           var remainder = pool - share * members.length;
-          var seq = Promise.resolve();
-          var paidUids = [];
-          var total = 0;
-          members.forEach(function (mid) {
-            seq = seq.then(function () {
-              return ledgerHasFiltered(d, mid, 'weekKey', wk, 'battle prize').then(function (already) {
-                if (already) { return false; }
-                return payUser(d, adminUid, mid, share, { reason: 'battle prize', weekKey: wk, docId: 'battle-' + wk }).then(function () { return true; });
-              }).then(function (paidIt) {
-                if (paidIt) { total += share; paidUids.push(mid); }
+          return { members: members, share: share, remainder: remainder, pool: pool };
+        });
+      });
+    }).then(function (ctx0) {
+      if (ctx0.alreadyPaid) { return ctx0; }
+      /* Phase 1: one transaction per member, run SEQUENTIALLY.
+       * Each transaction tx.gets the member's ledger doc first: if
+       * it exists the member already paid and the transaction
+       * writes nothing. */
+      var total = 0;
+      var paidUids = [];
+      var skipped = [];
+      var seq = Promise.resolve();
+      ctx0.members.forEach(function (mid) {
+        seq = seq.then(function () {
+          return d.runTransaction(function (tx) {
+            var ledgerRef = d.collection('users').doc(mid).collection('coin_ledger').doc('battle-' + wk);
+            return tx.get(ledgerRef).then(function (lsnap) {
+              if (lsnap && lsnap.exists) { return false; }
+              return tx.get(d.collection('users').doc(mid)).then(function (usnap) {
+                if (!usnap || !usnap.exists) { return 'missing-user'; }
+                payUserTx(tx, d, adminUid, mid, ctx0.share, { reason: 'battle prize', weekKey: wk, docId: 'battle-' + wk });
+                return true;
               });
             });
+          }).then(function (paidIt) {
+            if (paidIt === true) { total += ctx0.share; paidUids.push(mid); }
+            else if (paidIt === 'missing-user') { skipped.push({ uid: mid, reason: 'missing-user' }); }
           });
-          return seq.then(function () {
-            return ref.update({ status: 'paid', share: share, remainder: remainder });
-          }).then(function () { return { alreadyPaid: false, paid: total, share: share, members: paidUids, remainder: remainder }; });
+        });
+      });
+      return seq.then(function () {
+        /* Phase 2 (finalizing transaction): the flip is guarded by
+         * tx.get on the battle doc. A concurrent distributor that
+         * already flipped is a no-op here, never a second flip; a
+         * run with missing-user skips leaves the battle unflipped
+         * so the next run can still pay that member. */
+        return d.runTransaction(function (tx) {
+          return tx.get(ref).then(function (bsnap) {
+            var b = (bsnap && bsnap.exists) ? (bsnap.data() || {}) : null;
+            if (!b) { throw coreErr('Battle not found.'); }
+            if (b.status === 'paid' || skipped.length > 0) { return b.status; }
+            tx.update(ref, { status: 'paid', share: ctx0.share, remainder: ctx0.remainder });
+            return 'paid';
+          });
+        }).then(function (leftStatus) {
+          var out = { alreadyPaid: false, paid: total, share: ctx0.share, members: paidUids, remainder: ctx0.remainder };
+          if (skipped.length > 0) { out.skipped = skipped; }
+          if (leftStatus !== 'paid') { out.statusKept = leftStatus; }
+          return out;
         });
       });
     });
