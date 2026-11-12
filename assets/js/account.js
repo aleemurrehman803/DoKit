@@ -1378,13 +1378,51 @@
       var inp = row ? row.querySelector('input') : null;
       var n = inp ? parseInt(inp.value, 10) : 0;
       /* Stage 1 (AUD-003, D6): client-side give cap 1000 (UX only —
-       * the rules cap is the boundary) + ledger doc-id. Give has no
-       * source doc, so the id is timestamp+random; it carries no
-       * idempotency claim. admAudit entry kept. */
+       * the rules cap is the boundary). Reward math + cap preserved
+       * exactly; only the write path changed (E04-A6 Group C). */
       if (!n || n < 1 || n > 1000 || !id) { return; }
-      db.collection('users').doc(id).update({coins: firebase.firestore.FieldValue.increment(n)}).then(function () {
-        return db.collection('users').doc(id).collection('coin_ledger').doc('give-' + Date.now() + '-' + Math.floor(Math.random() * 1e9)).set({uid: id, amount: n, by: currentUser.uid, reason: 'admin grant', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
-      }).then(function () { admAudit('give_coins', id, String(n)); done(); }).catch(fail);
+      /* E04-A6 Group C — ATOMIC give (E04-v2 pattern). Give has no
+       * source doc, so the deterministic LEDGER doc is the idempotency
+       * marker: its doc-id is derived from a per-action key generated
+       * ONCE per rendered row (the row IS the give form — admLoad
+       * re-renders the Users list after every successful action, so a
+       * fresh render is a fresh "form open" with a fresh key, while a
+       * double-click on the same render reuses it). Inside ONE
+       * runTransaction, tx.get() reads the ledger doc: if it exists,
+       * the grant already landed and this call stands down as a
+       * duplicate (no second increment, no second entry); otherwise
+       * the user doc is tx.get()'d as the contention anchor, then the
+       * increment + ledger set commit atomically. A retry after an
+       * ambiguous failure reuses the same key and lands as a no-op
+       * instead of a second credit. Cross-tab grants carry different
+       * keys by construction and are treated as separate intentional
+       * grants — see the Group C worker report (residuals). RULES: no
+       * change needed — ledgerGive pins only reason + 1..1000 amount,
+       * and the record written here is the same shape as the old one
+       * (same fields, same reason). */
+      var giveKey = (row && row.getAttribute) ? row.getAttribute('data-give-key') : null;
+      if (!giveKey) {
+        giveKey = Date.now() + '-' + Math.floor(Math.random() * 1e9);
+        if (row && row.setAttribute) { try { row.setAttribute('data-give-key', giveKey); } catch (e) { /* non-DOM row: the key stays local to this call */ } }
+      }
+      var giveUserRef = db.collection('users').doc(id);
+      var giveLedgerRef = giveUserRef.collection('coin_ledger').doc('give-' + giveKey);
+      /* Single-tab defence in depth (the transaction is the real
+       * guard): the button dies on first click, re-enabled on failure. */
+      b.disabled = true;
+      db.runTransaction(function (tx) {
+        return tx.get(giveLedgerRef).then(function (lsnap) {
+          if (lsnap && lsnap.exists) { return { duplicate: true }; }
+          return tx.get(giveUserRef).then(function () {
+            tx.update(giveUserRef, { coins: firebase.firestore.FieldValue.increment(n) });
+            tx.set(giveLedgerRef, {uid: id, amount: n, by: currentUser.uid, reason: 'admin grant', createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+            return { duplicate: false };
+          });
+        });
+      }).then(function (res) {
+        if (res && res.duplicate) { done('Already granted — no extra coins issued.'); return; }
+        admAudit('give_coins', id, String(n)); done();
+      }).catch(function (err) { b.disabled = false; fail(err); });
     } else if (act === 'suspend' || act === 'unsuspend') {
       if (!id) { return; }
       db.collection('users').doc(id).update({suspended: act === 'suspend'}).then(function () { admAudit(act, id); done(); }).catch(fail);
@@ -1400,93 +1438,122 @@
         db.collection('deposits').doc(id).update({status: 'rejected', reviewedBy: currentUser.uid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()}).then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; fail(err); });
         return;
       }
-      // Item 79 approve: coins ONLY after admin verification, in this
-      // order. Every step must succeed before the next runs, so a failure
-      // can never leave a half-credited deposit:
-      // 1. Re-read the deposit LIVE; it must still be pending (a second
-      //    click or a reloaded queue must never double-credit).
+      // Item 79 approve — ATOMIC (E04-A6 Group C, E04-v2 pattern
+      // ported from js/pages/admin-full.js approveDeposit: do not
+      // re-derive it). The pending gate, the duplicate-txn check, the
+      // ledger check, the mint and the flip run in ONE runTransaction:
+      // 1. tx.get() the deposit LIVE; it must still be pending.
       // 2. Duplicate check: no OTHER approved deposit may share this
       //    method + transaction ID. A reused receipt is BLOCKED (the
-      //    request stays pending for investigation, the duplicate is
-      //    named in the error) — never silently paid twice.
-      // 3. Idempotency: if a ledger entry for this deposit already exists
-      //    (a previous attempt credited but failed before marking
-      //    approved), do NOT credit again — just mark approved.
-      // 4. Credit coins = floor(amount / 2) to the deposit owner, then a
-      //    ledger entry, then mark the deposit approved with the grant
-      //    recorded on it. A 0-coin grant (amount below Rs 2) marks
-      //    approved with coinsGranted 0 and no increment — the formula,
-      //    applied literally, with the preview having warned the user.
-      // Ledger path note: entries go to the RULES-PERMITTED
-      // users/{uid}/coin_ledger subcollection (firestore.rules line 121:
-      // admin-only create, owner-or-admin read). The older Give-coins
-      // and claim-approval writers used the top-level coin_ledger path,
-      // which has NO rule (default-deny) — both were moved to this
-      // nested path on 25 Oct 2026 (ledger-path fix, user order), so
-      // every ledger writer now uses a rules-permitted path.
+      //    request stays pending for investigation) — never silently
+      //    paid twice. This is a PLAIN read inside the update function
+      //    (tx.get accepts DocumentReferences only), so a retry
+      //    re-runs it fresh.
+      // 3. Idempotency: tx.get() the deterministic ledger doc (doc-id
+      //    IS the deposit id — the rules pin it). If it exists, a
+      //    previous attempt credited but failed before the flip: mint
+      //    nothing, just confirm the flip with the prior amount.
+      // 4. Credit coins = floor(amount / 2) to the deposit owner
+      //    (depCoinsFor, unchanged), then a ledger entry, then the
+      //    deposit flips to approved with the grant recorded. A 0-coin
+      //    grant (amount below Rs 2) flips with coinsGranted 0 and no
+      //    increment — the formula, applied literally. The deposit doc
+      //    AND the user doc are tx.get()'d AND tx.update()'d, so
+      //    concurrent approvals contend, retry, and the second sees
+      //    the flipped status and refuses. RULES: no change needed —
+      //    the transaction writes the same records the old code wrote
+      //    (same ledger doc-id, same fields; ledgerDeposit pins
+      //    entryId == depositId and 2*amount <= depositAmount, which
+      //    floor(amount/2) satisfies).
       var depRef = db.collection('deposits').doc(id);
-      depRef.get().then(function (snap) {
-        var d = (snap && snap.exists) ? (snap.data() || {}) : null;
-        if (!d || d.status !== 'pending') { throw new Error(window.dkT ? window.dkT('acct_dep_stale', 'Deposit is no longer pending.') : 'Deposit is no longer pending.'); }
-        var amt = parseFloat(d.amount);
-        if (!amt || amt <= 0 || !d.userId) { throw new Error(window.dkT ? window.dkT('acct_dep_bad', 'Deposit record is incomplete.') : 'Deposit record is incomplete.'); }
-        var coins = depCoinsFor(amt);
-        return db.collection('deposits').where('method', '==', d.method || '').where('txnId', '==', d.txnId || '').where('status', '==', 'approved').get().then(function (dupSnap) {
-          var dup = false;
-          dupSnap.forEach(function (doc) { if (doc.id !== id) { dup = true; } });
-          if (dup) { throw new Error(window.dkT ? window.dkT('acct_dep_dup', 'Duplicate transaction: another approved deposit already uses this method and transaction ID. Coins were not issued.') : 'Duplicate transaction: another approved deposit already uses this method and transaction ID. Coins were not issued.'); }
-          return {d: d, coins: coins};
-        });
-      }).then(function (ctx) {
-        return db.collection('users').doc(ctx.d.userId).collection('coin_ledger').where('depositId', '==', id).get().then(function (lsnap) {
-          var prior = null;
-          lsnap.forEach(function (doc) { prior = doc.data() || {}; });
-          return {d: ctx.d, coins: ctx.coins, prior: prior};
-        });
-      }).then(function (ctx) {
-        var chain = Promise.resolve();
-        if (!ctx.prior && ctx.coins >= 1) {
-          chain = chain.then(function () {
-            return db.collection('users').doc(ctx.d.userId).update({coins: firebase.firestore.FieldValue.increment(ctx.coins)});
-          }).then(function () {
-            /* Stage 1 (AUD-003): deposit doc-id (rules enforce it). */
-            return db.collection('users').doc(ctx.d.userId).collection('coin_ledger').doc(id).set({uid: ctx.d.userId, amount: ctx.coins, by: currentUser.uid, reason: 'deposit approval', depositId: id, depositAmount: ctx.d.amount, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+      db.runTransaction(function (tx) {
+        var ctx = {};
+        return tx.get(depRef).then(function (snap) {
+          var d = (snap && snap.exists) ? (snap.data() || {}) : null;
+          if (!d || d.status !== 'pending') { throw new Error(window.dkT ? window.dkT('acct_dep_stale', 'Deposit is no longer pending.') : 'Deposit is no longer pending.'); }
+          var amt = parseFloat(d.amount);
+          if (!amt || amt <= 0 || !d.userId) { throw new Error(window.dkT ? window.dkT('acct_dep_bad', 'Deposit record is incomplete.') : 'Deposit record is incomplete.'); }
+          ctx.d = d;
+          ctx.coins = depCoinsFor(amt);
+          ctx.userRef = db.collection('users').doc(d.userId);
+          ctx.ledgerRef = ctx.userRef.collection('coin_ledger').doc(id);
+          /* Plain duplicate-txn read inside the update fn (NOT tx.get:
+           * a multi-where Query is not a DocumentReference). */
+          return db.collection('deposits').where('method', '==', d.method || '').where('txnId', '==', d.txnId || '').where('status', '==', 'approved').get().then(function (dupSnap) {
+            var dup = false;
+            dupSnap.forEach(function (doc) { if (doc.id !== id) { dup = true; } });
+            if (dup) { throw new Error(window.dkT ? window.dkT('acct_dep_dup', 'Duplicate transaction: another approved deposit already uses this method and transaction ID. Coins were not issued.') : 'Duplicate transaction: another approved deposit already uses this method and transaction ID. Coins were not issued.'); }
           });
-        }
-        var granted = ctx.prior ? (ctx.prior.amount || 0) : ctx.coins;
-        return chain.then(function () {
-          return depRef.update({status: 'approved', coinsGranted: granted, reviewedBy: currentUser.uid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()});
+        }).then(function () {
+          return tx.get(ctx.ledgerRef).then(function (lsnap) {
+            ctx.prior = (lsnap && lsnap.exists) ? (lsnap.data() || {}) : null;
+            return tx.get(ctx.userRef);
+          }).then(function (usnap) {
+            if (!usnap || !usnap.exists) { throw new Error(window.dkT ? window.dkT('acct_dep_user_nf', 'Deposit user not found.') : 'Deposit user not found.'); }
+          });
+        }).then(function () {
+          /* WRITE PHASE — no tx.get after this point. */
+          var granted = ctx.prior ? (ctx.prior.amount || 0) : ctx.coins;
+          if (!ctx.prior && ctx.coins >= 1) {
+            tx.update(ctx.userRef, { coins: firebase.firestore.FieldValue.increment(ctx.coins) });
+            tx.set(ctx.ledgerRef, {uid: ctx.d.userId, amount: ctx.coins, by: currentUser.uid, reason: 'deposit approval', depositId: id, depositAmount: ctx.d.amount, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+          }
+          tx.update(depRef, {status: 'approved', coinsGranted: granted, reviewedBy: currentUser.uid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()});
         });
       }).then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; fail(err); });
     } else if (act === 'wd-approve' || act === 'wd-reject') {
       if (!id) { return; }
       db.collection('withdrawals').doc(id).update({status: act === 'wd-approve' ? 'approved' : 'rejected'}).then(function () { admAudit(act, id); done(); }).catch(fail);
     } else if (act === 'claim-approve' || act === 'claim-reject') {
-      var c = admData.claims && admData.claims[id];
       if (!id) { return; }
       if (act === 'claim-reject') {
         db.collection('coin_claims').doc(id).update({status: 'rejected'}).then(function () { admAudit(act, id); done(); }).catch(fail);
-      } else if (c) {
-        /* Stage 1 (AUD-003): legacy claim gains the deposit path's
-         * discipline, which it lacked entirely (no pre-check, no source
-         * id, flip FIRST). Ledger pre-check first: if an entry for this
-         * claim already exists, pay nothing and just confirm the flip.
-         * Otherwise increment, write the ledger entry by source doc-id
-         * (with the claimId field the old entry lacked), then flip LAST
-         * — the old flip-first order stranded an approved claim with no
-         * coins and no retry on any crash after the flip. */
-        db.collection('users').doc(c.uid).collection('coin_ledger').where('claimId', '==', id).get().then(function (lsnap) {
-          var found = false;
-          lsnap.forEach(function () { found = true; });
-          if (found) {
-            return db.collection('coin_claims').doc(id).update({status: 'approved'});
-          }
-          return db.collection('users').doc(c.uid).update({coins: firebase.firestore.FieldValue.increment(c.amount)}).then(function () {
-            return db.collection('users').doc(c.uid).collection('coin_ledger').doc('legacy-' + id).set({uid: c.uid, amount: c.amount, by: currentUser.uid, reason: 'claim approval', claimId: id, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
-          }).then(function () {
-            return db.collection('coin_claims').doc(id).update({status: 'approved'});
+      } else {
+        /* E04-A6 Group C — ATOMIC claim approval (E04-v2 pattern,
+         * same shape as dep-approve above). The claim doc is read
+         * LIVE inside the transaction: the cached admData.claims row
+         * is no longer the authority (a stale cache could pay an
+         * already-settled claim, and it carried no status at all —
+         * a rejected claim would previously have been paid). Pending
+         * gate + deterministic ledger-doc read (doc-id 'legacy-' +
+         * claim id, the rules-pinned shape) + user-doc anchor + mint
+         * + flip run in ONE runTransaction; a second concurrent
+         * approval contends on the claim doc, retries, and refuses
+         * as no longer pending. If the ledger entry already exists
+         * (a previous attempt credited but failed before the flip),
+         * mint nothing and just confirm the flip. Amount bounds
+         * 1..100 are the rules' own (ledgerLegacyClaim); a legacy
+         * claim outside them is refused cleanly instead of minting
+         * and then failing the ledger write. RULES: no change needed
+         * — same ledger doc-id and fields as before. */
+        var claimRef = db.collection('coin_claims').doc(id);
+        b.disabled = true;
+        db.runTransaction(function (tx) {
+          var ctx = {};
+          return tx.get(claimRef).then(function (snap) {
+            var cl = (snap && snap.exists) ? (snap.data() || {}) : null;
+            if (!cl) { throw new Error(window.dkT ? window.dkT('acct_claim_nf', 'Claim not found.') : 'Claim not found.'); }
+            if (cl.status !== 'pending') { throw new Error(window.dkT ? window.dkT('acct_claim_stale', 'Claim is no longer pending.') : 'Claim is no longer pending.'); }
+            var amt = Number(cl.amount) || 0;
+            if (!cl.uid || amt < 1 || amt > 100) { throw new Error(window.dkT ? window.dkT('acct_claim_bad', 'Claim record is incomplete.') : 'Claim record is incomplete.'); }
+            ctx.claim = cl;
+            ctx.amount = amt;
+            ctx.userRef = db.collection('users').doc(cl.uid);
+            ctx.ledgerRef = ctx.userRef.collection('coin_ledger').doc('legacy-' + id);
+            return tx.get(ctx.ledgerRef);
+          }).then(function (lsnap) {
+            ctx.prior = !!(lsnap && lsnap.exists);
+            return tx.get(ctx.userRef);
+          }).then(function (usnap) {
+            if (!usnap || !usnap.exists) { throw new Error(window.dkT ? window.dkT('acct_claim_user_nf', 'Claim user not found.') : 'Claim user not found.'); }
+            /* WRITE PHASE — no tx.get after this point. */
+            if (!ctx.prior) {
+              tx.update(ctx.userRef, { coins: firebase.firestore.FieldValue.increment(ctx.amount) });
+              tx.set(ctx.ledgerRef, {uid: ctx.claim.uid, amount: ctx.amount, by: currentUser.uid, reason: 'claim approval', claimId: id, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+            }
+            tx.update(claimRef, {status: 'approved'});
           });
-        }).then(function () { admAudit(act, id); done(); }).catch(fail);
+        }).then(function () { admAudit(act, id); done(); }).catch(function (err) { b.disabled = false; fail(err); });
       }
     } else if (act === 'ref-export') {
       /* Referral CSV export (no row needed — the button sits in the
@@ -2948,6 +3015,16 @@
         }
       }
     }).catch(function(e){ /* claims list is best-effort; balance still shows */ window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+  }
+
+  /* Node test hook (E04-A6 Group C, DKADM_TEST_EXPORT) — mirrors
+   * referrals.js:5387. Exposes the admin handlers to the mock
+   * harness only; in the browser `module` is undefined, so this
+   * changes no live behaviour. */
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { admClick: admClick, depCoinsFor: depCoinsFor,
+      setCurrentUser: function (u) { currentUser = u; },
+      setClaims: function (c) { admData.claims = c; } };
   }
 
   /* Run after DOM is ready (the main.js loader injects this async). */
