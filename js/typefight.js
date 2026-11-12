@@ -140,18 +140,79 @@
    * The first entry uses prevHash = "GENESIS".
    *
    * Balance is ALWAYS derived as the sum of the ledger — never stored
-   * separately — so it cannot drift out of sync with history.
+   * separately — so it cannot drift out of sync with history. (The
+   * users/{uid}.coins field is a cached copy for quick reads; the
+   * ledger sum is the source of truth.)
    *
    * Chain head: users/{uid}.lastLedgerHash mirrors the latest entry's
-   * hash (written by ledgerAppend in the same transaction). It is the
-   * ONLY source ledgerAppend trusts for prevHash once present; a
-   * missing field falls back to one plain latest-entry read (legacy
-   * users — see ledgerAppend).
+   * hash. It is the ONLY source ledgerAppend trusts for prevHash once
+   * present; a missing field is bootstrapped once from the latest
+   * entry (legacy users — see ledgerAppend step 2).
+   *
+   * TWO-PHASE APPEND (R1, 12 Nov 2026 — live Firestore rules split the
+   * append because rules evaluate each write against PRE-transaction
+   * state and cannot see the other write in the same transaction):
+   *   Phase 1 (transaction): create the entry with DETERMINISTIC id =
+   *     its hash, and advance lastLedgerHash to that hash. NO coins
+   *     change here — the transaction only links the chain.
+   *   Phase 2 (plain write): credit the coins (coins = newCoins) and
+   *     stamp lastCreditedHash = the entry hash. The rules accept this
+   *     write only if coins == old coins + entry amount exactly and
+   *     lastCreditedHash == the head — so a stale or replayed credit
+   *     is denied, never applied twice.
+   *   settlePending(uid): if phase 1 committed but phase 2 never
+   *     landed (lost response / crash), the entry is a valid chain
+   *     link whose amount was never credited. The next append (or
+   *     retry) settles it first: credit the head entry's amount and
+   *     stamp lastCreditedHash = head. Best-effort, never throws.
+   *   A retry that finds its OWN previous entry already settled
+   *   (head == credited == its hash) returns that entry instead of
+   *   appending again — otherwise one earn would be credited twice.
    * ------------------------------------------------------------------ */
+
+  /**
+   * Settle a pending (phase-1-committed, phase-2-uncredited) ledger entry.
+   * Reads the user doc; if lastLedgerHash exists and differs from
+   * lastCreditedHash, the head entry was linked but never credited —
+   * credit its amount and stamp lastCreditedHash = head. If the head
+   * entry doc does NOT exist, it is a legacy entry (auto-id, created
+   * by the old single-transaction client) that was already credited
+   * with its coins in the old transaction — do nothing.
+   * Best-effort: never throws. On any error, resolves null and the
+   * caller continues (the append below will settle again / retry).
+   * @param {string} uid
+   * @returns {Promise<object|null>} The settled entry, or null.
+   */
+  function settlePending(uid) {
+    var db = DKF.db();
+    var userRef = db.collection("users").doc(uid);
+    return userRef.get().then(function (userDoc) {
+      if (!userDoc.exists) return null;
+      var data = userDoc.data() || {};
+      var head = data.lastLedgerHash || null;
+      var credited = data.lastCreditedHash || null;
+      if (!head || head === credited) return null;
+      return ledgerRef(uid).doc(head).get().then(function (entryDoc) {
+        if (!entryDoc.exists) return null;
+        var entry = entryDoc.data() || {};
+        return userRef.update({
+          coins: (data.coins | 0) + (entry.amount | 0),
+          lastCreditedHash: head
+        }).then(function () { return entry; });
+      });
+    }).catch(function () { return null; });
+  }
 
   /**
    * Append a coin transaction to the user's immutable ledger.
    * Positive amount = earn, negative = spend. Resolves with the new entry.
+   *
+   * TWO-PHASE FLOW (R1 — see the ledger header above): settlePending,
+   * then a legacy head init, then phase 1 (transaction: entry with
+   * deterministic id = hash + head advance, no coins) and phase 2
+   * (plain write: coins + lastCreditedHash). The whole flow retries
+   * up to 5 times; a retry that finds its own previous entry already
+   * settled returns that entry instead of appending again.
    * @param {string} uid
    * @param {number} amount - Integer, non-zero.
    * @param {string} reason - Human-readable reason (e.g. "battle_win_1st").
@@ -164,87 +225,147 @@
     var db = DKF.db();
     var col = ledgerRef(uid);
     var userRef = db.collection("users").doc(uid);
-    /* REWORK (TYPEFIGHT, 12 Nov 2026 — fixes the T3 hash-chain fork the
-     * E04-A6 gate reproduced 1-in-6 at HEAD 301cdd0): the previous fix
-     * read the latest ledger entry with a PLAIN collection read inside
-     * the update function and claimed "concurrent appends serialize on
-     * [the user doc] and the plain read re-executes on retry — no
-     * hash-chain forks". That claim was FALSE, gate-proven: a plain
-     * read is INVISIBLE to Firestore transaction contention validation
-     * (real Firestore tracks only transaction.get() reads). B could
-     * plain-read an empty ledger (prevHash GENESIS), A could commit,
-     * and B's tx.get(userRef) would then record the NEW user-doc
-     * version — so B committed cleanly with the stale GENESIS
-     * prevHash. No retry, forked chain, correct balances.
-     * The chain head now lives ON the user doc as `lastLedgerHash`
-     * and is read via tx.get(userRef) — a TRANSACTION-TRACKED read.
-     * Why this serializes: the user doc is in the transaction's
-     * tracked read set, so EITHER a concurrent committer bumps its
-     * version first (the loser's commit fails validation, the SDK
-     * retries, and the retry re-reads the fresh lastLedgerHash) OR
-     * the tx.get happens after the commit (and sees the fresh field
-     * directly). In both cases the new entry anchors to the true
-     * latest hash and the chain stays linear.
-     * Legacy bootstrap: users whose doc has no lastLedgerHash yet
-     * (every user created before this change) fall back to ONE plain
-     * latest-entry read inside the update function. That fallback is
-     * still safe: the tx.get(userRef) above already recorded the user
-     * doc's version, so a concurrent commit between the read and
-     * this commit fails validation and the retry finds the field
-     * present. After the first append under this code the field
-     * always exists, so the fallback runs at most once per user.
-     * Hash formula, reward math, ledger schema, return value, error
-     * strings and caller contracts are unchanged. */
-    return db.runTransaction(function (tx) {
-      return tx.get(userRef).then(function (userDoc) {
-        var currentCoins = 0;
-        var lastLedgerHash = null;
-        if (userDoc.exists) {
-          var data = userDoc.data() || {};
-          currentCoins = data.coins | 0;
-          lastLedgerHash = data.lastLedgerHash || null;
+    var MAX_ATTEMPTS = 5;
+    /* The previous attempt's phase-1 entry, if it committed: its hash
+     * lets the retry recognise it as already-settled instead of
+     * appending a second entry for the same earn. Set only after
+     * phase 1 resolves (a failed phase 1 leaves nothing behind). */
+    var prevAttempt = null;
+
+    /* One attempt = steps 1-4. On ANY failure, the caller retries the
+     * whole flow (fresh clientTs -> fresh hash -> fresh entry id);
+     * an entry the previous attempt committed is a valid chain link
+     * that settlePending credits on the retry — never deleted, and
+     * its hash is never reused for a new entry. */
+    function attemptOnce(attemptNo) {
+      /* Step 1: settle any pending (phase-1-committed, uncredited) entry. */
+      return settlePending(uid).then(function () {
+        return userRef.get();
+      }).then(function (userDoc) {
+        var data = userDoc.exists ? (userDoc.data() || {}) : {};
+        /* Own-entry recognition: the previous attempt's entry committed
+         * and settlePending just credited it (head == credited == its
+         * hash). The earn has landed — return it, do NOT append again.
+         * WITHOUT this, a phase-1-committed / phase-2-failed attempt
+         * would be credited twice (once by settle, once by the retry's
+         * fresh entry). */
+        if (prevAttempt && data.lastLedgerHash === prevAttempt.hash &&
+            data.lastCreditedHash === prevAttempt.hash) {
+          return { done: true, entry: prevAttempt.entry };
         }
-        var newCoins = currentCoins + amount;
-        // Prevent negative balance (defense in depth - rules should also enforce)
-        if (newCoins < 0) {
-          throw new Error("Insufficient balance: cannot go negative");
+        var head = data.lastLedgerHash || null;
+        if (head) return { done: false, head: head };
+        /* Step 2: legacy head init — user doc has no lastLedgerHash yet.
+         * If the ledger is non-empty, the latest entry is the head:
+         * write it to the user doc FIRST (plain merge write, NOT in
+         * the transaction) so phase 1 can anchor to it. If the ledger
+         * is empty, the head is "GENESIS". */
+        return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
+          var latestHash = null;
+          snap.forEach(function (d) { latestHash = d.data().hash || null; });
+          if (!latestHash) return { done: false, head: "GENESIS" };
+          return writeHead(latestHash).then(function () {
+            return { done: false, head: latestHash };
+          });
+        });
+      }).then(function (r) {
+        if (r.done) return r.entry;
+        return runPhases(r.head);
+      }).catch(function (err) {
+        if (attemptNo >= MAX_ATTEMPTS) throw err;
+        return attemptOnce(attemptNo + 1);
+      });
+    }
+
+    /* Plain head write (step 2). update() preserves the other user-doc
+     * fields; if the user doc does not exist yet, create it with a
+     * merge set instead. */
+    function writeHead(hash) {
+      return userRef.update({ lastLedgerHash: hash }).catch(function (err) {
+        if (err && err.code === "not-found") {
+          return userRef.set({ lastLedgerHash: hash }, { merge: true });
         }
-        /* Shared tail: hash the entry off the given chain head, stage
-         * the ledger write + the user-doc write (coins AND the new
-         * chain head, so the next append reads it via tx.get). The
-         * hash is computed inside the update function: on a contention
-         * retry the whole function re-runs and re-reads the fresh
-         * head, so the chain stays linear. */
-        var appendWithHead = function (prevHash) {
+        throw err;
+      });
+    }
+
+    /* Steps 3-4: phase 1 (transaction) then phase 2 (plain write). */
+    function runPhases(head) {
+      /* REWORK (TYPEFIGHT, 12 Nov 2026 — fixes the T3 hash-chain fork the
+       * E04-A6 gate reproduced 1-in-6 at HEAD 301cdd0): the previous fix
+       * read the latest ledger entry with a PLAIN collection read inside
+       * the update function and claimed "concurrent appends serialize on
+       * [the user doc] and the plain read re-executes on retry — no
+       * hash-chain forks". That claim was FALSE, gate-proven: a plain
+       * read is INVISIBLE to Firestore transaction contention validation
+       * (real Firestore tracks only transaction.get() reads). B could
+       * plain-read an empty ledger (prevHash GENESIS), A could commit,
+       * and B's tx.get(userRef) would then record the NEW user-doc
+       * version — so B committed cleanly with the stale GENESIS
+       * prevHash. No retry, forked chain, correct balances.
+       * The chain head now lives ON the user doc as `lastLedgerHash`
+       * and is read via tx.get(userRef) — a TRANSACTION-TRACKED read.
+       * Why this serializes: the user doc is in the transaction's
+       * tracked read set, so EITHER a concurrent committer bumps its
+       * version first (the loser's commit fails validation, the SDK
+       * retries, and the retry re-reads the fresh lastLedgerHash) OR
+       * the tx.get happens after the commit (and sees the fresh field
+       * directly). In both cases the new entry anchors to the true
+       * latest hash and the chain stays linear.
+       * That tracked-head read is UNCHANGED by the R1 two-phase split
+       * below — only the coins credit moved out of the transaction
+       * (the live rules evaluate each write against pre-transaction
+       * state and cannot see the other write in the same transaction,
+       * so the entry + head advance and the coins credit are now two
+       * separate writes). Hash formula, reward math, ledger schema,
+       * return value, error strings and caller contracts are unchanged. */
+      return db.runTransaction(function (tx) {
+        return tx.get(userRef).then(function (userDoc) {
+          var currentCoins = 0;
+          /* The tracked read wins when present; otherwise fall back to
+           * the head resolved before the transaction (step 2 already
+           * initialised it, so this covers the missing-doc case). */
+          var txHead = head;
+          if (userDoc.exists) {
+            var data = userDoc.data() || {};
+            currentCoins = data.coins | 0;
+            if (data.lastLedgerHash) txHead = data.lastLedgerHash;
+          }
+          var newCoins = currentCoins + amount;
+          // Prevent negative balance (defense in depth - rules should also enforce)
+          if (newCoins < 0) {
+            throw new Error("Insufficient balance: cannot go negative");
+          }
           var clientTs = Date.now();
-          var payload = prevHash + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
+          var payload = txHead + "|" + uid + "|" + amount + "|" + reason + "|" + clientTs;
           return sha256(payload).then(function (hash) {
             var entry = {
               amount: amount,
               reason: reason,
               clientTs: clientTs,
               ts: firebase.firestore.FieldValue.serverTimestamp(),
-              prevHash: prevHash,
+              prevHash: txHead,
               hash: hash
             };
-            tx.set(col.doc(), entry);
-            tx.set(userRef, { coins: newCoins, lastLedgerHash: hash }, { merge: true });
-            return entry;
+            /* DETERMINISTIC id = hash (the rules require id == hash);
+             * head advance ONLY here — NO coins in this transaction. */
+            tx.set(col.doc(hash), entry);
+            tx.set(userRef, { lastLedgerHash: hash }, { merge: true });
+            return { entry: entry, newCoins: newCoins, hash: hash };
           });
-        };
-        if (lastLedgerHash) {
-          return appendWithHead(lastLedgerHash);
-        }
-        /* Legacy user (no lastLedgerHash yet): one plain latest-entry
-         * read to bootstrap the head. See the header comment above
-         * for why the retry logic keeps even this safe. */
-        return col.orderBy("clientTs", "desc").limit(1).get().then(function (snap) {
-          var prevHash = "GENESIS";
-          snap.forEach(function (d) { prevHash = d.data().hash || "GENESIS"; });
-          return appendWithHead(prevHash);
         });
+      }).then(function (result) {
+        prevAttempt = { hash: result.hash, entry: result.entry };
+        /* Step 4 — phase 2, plain write (NOT a transaction): credit the
+         * coins and stamp the entry as credited. If this fails (lost
+         * response / stale coins under concurrency), the outer retry
+         * settles the entry via settlePending and recognises it above. */
+        return userRef.update({ coins: result.newCoins, lastCreditedHash: result.hash })
+          .then(function () { return result.entry; });
       });
-    });
+    }
+
+    return attemptOnce(1);
   }
 
   /**
@@ -501,6 +622,7 @@
     relTime: relTime,
     requireAuth: requireAuth,
     ledgerAppend: ledgerAppend,
+    settlePending: settlePending,
     ledgerBalance: ledgerBalance,
     ledgerHistory: ledgerHistory,
     ledgerVerify: ledgerVerify,
