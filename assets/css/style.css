@@ -1401,3 +1401,19 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
  * value would alter the feel, and F30 already classes .15s as Fast);
  * px margins/gaps (the --sp-* tokens are rem — not value-identical if
  * the root font size ever changes). */
+
+/* ---- Wallet additions (wallet-claim-ui-fix, 13 Nov 2026 — one place,
+ * shared by all rebuilt pages) ---- */
+/* TypeFight wallet (typefight/wallet/): balance, earn cards, ledger
+ * history, chain badge. Adapted from the legacy flat wallet page's
+ * inline styles to the dark-theme tokens (var(--good)/var(--bad) for
+ * the +/- amounts, so they stay readable on --surface). */
+.wallet-balance{font-size:3rem;font-weight:800}
+.earn-note{font-size:var(--fs-sm);color:var(--muted)}
+.txn-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+.txn-table th,.txn-table td{text-align:start;padding:.5rem;border-bottom:1px solid var(--line)}
+.txn-pos{color:var(--good);font-weight:700}
+.txn-neg{color:var(--bad);font-weight:700}
+.chain-badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:var(--fs-sm);font-weight:600}
+.chain-ok{background:rgba(62,207,142,.15);color:var(--good)}
+.chain-bad{background:rgba(255,107,107,.15);color:var(--bad)}

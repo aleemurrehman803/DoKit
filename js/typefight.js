@@ -402,6 +402,34 @@
   }
 
   /**
+   * Find the most recent ledger entry for one earn key.
+   * Plain read (NOT in a transaction) — used by TFWallet.earnStatus()
+   * as the ledger-side cooldown check. No orderBy: a single-field
+   * equality filter uses Firestore's automatic single-field indexes,
+   * so no composite index is needed; the newest entry is picked
+   * client-side by max clientTs. WHY the ledger, not just the profile
+   * stamp: the profile stamp write (TF.saveProfile) can be DENIED by
+   * Firestore rules while the ledger append succeeds, so a profile-only
+   * check would let the same earn be claimed again after a reload.
+   * The ledger is append-only and cannot be edited, so it is the
+   * source of truth for exactly-once.
+   * @param {string} uid
+   * @param {string} key - Earn key, e.g. "typing_test".
+   * @returns {Promise<object|null>} The newest matching entry, or null.
+   */
+  function ledgerLastEarn(uid, key) {
+    return ledgerRef(uid).where("reason", "==", "earn:" + key).get()
+      .then(function (snap) {
+        var best = null;
+        snap.forEach(function (d) {
+          var data = d.data();
+          if (!best || (Number(data.clientTs) || 0) > (Number(best.clientTs) || 0)) best = data;
+        });
+        return best;
+      });
+  }
+
+  /**
    * Verify the hash chain integrity of a user's ledger.
    * Recomputes every hash and checks linkage. Used by the wallet page
    * to display a "chain verified" badge.
@@ -625,6 +653,7 @@
     settlePending: settlePending,
     ledgerBalance: ledgerBalance,
     ledgerHistory: ledgerHistory,
+    ledgerLastEarn: ledgerLastEarn,
     ledgerVerify: ledgerVerify,
     getProfile: getProfile,
     saveProfile: saveProfile,

@@ -13,12 +13,18 @@
  *   - Battle 3rd place ............... +20
  *   - Battle participation ........... +10
  *
- * RATE LIMITING:
- *   Cooldowns are stored in the user's typefight_profile doc as
- *   lastEarn: { <key>: <timestamp ms> }. This is advisory (a user could
- *   tamper with their own browser clock) — production would enforce
- *   cooldowns server-side. Firestore rules still prevent editing the
- *   ledger itself.
+ * RATE LIMITING (two sources — the LEDGER is the source of truth):
+ *   Cooldowns are stamped in the user's typefight_profile doc as
+ *   lastEarn: { <key>: <timestamp ms> } AND recorded immutably in the
+ *   coin ledger as earn entries. The profile stamp is advisory: it can
+ *   be DENIED by Firestore rules (live, Nov 2026: no rule existed for
+ *   users/{uid}/typefight_profile/profile, so the stamp write was
+ *   denied while the ledger append succeeded — and the same claim
+ *   credited twice after a reload). earnStatus() therefore checks
+ *   BOTH sources and takes the LONGER wait; claim() is gated on it.
+ *   A user tampering with their own browser clock can only shorten
+ *   their own wait — production would enforce cooldowns server-side.
+ *   Firestore rules still prevent editing the ledger itself.
  *
  * KNOWN LIMITATIONS (require server-side enforcement for production):
  *   - H2: Coins are client-mintable. A technically skilled user could call
@@ -64,6 +70,73 @@
     return { ok: false, waitMs: waitMs };
   }
 
+  /**
+   * Ledger-aware earn status: combines BOTH cooldown sources and takes
+   * the LONGER wait.
+   *   (a) Profile stamp — TF.getProfile + canEarn() (may be missing:
+   *       the stamp write is best-effort and can be denied by rules).
+   *   (b) Ledger — TF.ledgerLastEarn(): an earn entry within the key's
+   *       cooldown means NOT ok. The ledger is append-only, so this
+   *       check survives reloads and denied stamp writes — it is what
+   *       makes exactly-once hold.
+   * A failed read on the PROFILE side fails OPEN for that side (treated
+   * as "no cooldown seen") so a read error can never lock a user out;
+   * the ledger append itself is still the final guard. The LEDGER side
+   * NEVER fails open: if the ledger read times out (~8s) or rejects,
+   * the ledger could not be checked, so this resolves
+   * {ok:false, error:"unavailable"} and claim() refuses the claim —
+   * a claim must never be allowed when the ledger could not be
+   * checked. If the client is an older cached copy without
+   * TF.ledgerLastEarn, the profile check alone applies (same behaviour
+   * as before this fix).
+   * @param {string} uid
+   * @param {string} key - Earn key, e.g. "typing_test" or "lesson_3".
+   * @returns {Promise<{ok:boolean, waitMs:number, error?:string}>}
+   */
+  var LEDGER_READ_TIMEOUT_MS = 8000;
+  function earnStatus(uid, key) {
+    var def = EARN[key] || { cooldownMs: LESSON_COOLDOWN };
+    var cooldownMs = def.cooldownMs;
+    var profileP = TF.getProfile(uid).then(function (p) {
+      return canEarn(p, key);
+    }).catch(function () { return { ok: true, waitMs: 0 }; });
+    var ledgerP;
+    if (typeof TF.ledgerLastEarn === "function") {
+      /* Race the ledger read against the timeout so a hung read can
+       * never stall the claim gate (or the button) forever. A read
+       * ERROR is treated exactly like a timeout (unavailable). */
+      ledgerP = new Promise(function (resolve) {
+        var settled = false;
+        var timer = setTimeout(function () {
+          if (!settled) {
+            settled = true;
+            resolve({ ok: false, waitMs: 0, error: "unavailable" });
+          }
+        }, LEDGER_READ_TIMEOUT_MS);
+        TF.ledgerLastEarn(uid, key).then(function (entry) {
+          if (settled) return;
+          settled = true; clearTimeout(timer);
+          if (!entry) { resolve({ ok: true, waitMs: 0 }); return; }
+          var waitMs = (Number(entry.clientTs) || 0) + cooldownMs - Date.now();
+          if (waitMs <= 0) resolve({ ok: true, waitMs: 0 });
+          else resolve({ ok: false, waitMs: waitMs });
+        }).catch(function () {
+          if (settled) return;
+          settled = true; clearTimeout(timer);
+          resolve({ ok: false, waitMs: 0, error: "unavailable" });
+        });
+      });
+    } else {
+      ledgerP = Promise.resolve({ ok: true, waitMs: 0 });
+    }
+    return Promise.all([profileP, ledgerP]).then(function (results) {
+      var a = results[0], b = results[1];
+      if (b.error) return { ok: false, waitMs: 0, error: b.error };
+      if (a.ok && b.ok) return { ok: true, waitMs: 0 };
+      return { ok: false, waitMs: Math.max(a.waitMs, b.waitMs) };
+    });
+  }
+
   /* In-memory locks prevent double-click races: two rapid claim() calls
    * for the same uid+key would both pass canEarn() before either stamps
    * the cooldown. The lock is held until the claim settles. */
@@ -72,7 +145,16 @@
 
   /**
    * Claim coins for an earn key (writes ledger + updates cooldown stamp).
-   * Resolves with { entry } on success, or { error, waitMs } if on cooldown.
+   * Resolves with { entry } on success, { error:"cooldown", waitMs } if
+   * on cooldown, or { error:"unavailable" } if the ledger could not be
+   * checked (read timeout / error) — the claim is REFUSED in that case,
+   * never allowed on the profile hint alone.
+   * Gate is earnStatus() (profile stamp AND ledger) — the ledger check
+   * is what keeps exactly-once when the stamp write is denied by rules.
+   * The stamp write stays best-effort: it may be denied until the
+   * typefight_profile rules branch lands, but a stamp failure NEVER
+   * blocks or hides a successful claim — the LEDGER is the source of
+   * truth for exactly-once, and the stamp is only a fast-path hint.
    * @param {string} uid
    * @param {string} key - Earn key.
    * @param {number} [coinsOverride] - For lessons (default LESSON_COINS).
@@ -87,14 +169,22 @@
     var def = EARN[key];
     var coins = (coinsOverride != null) ? coinsOverride : (def ? def.coins : LESSON_COINS);
     var label = def ? def.label : ("Lesson complete (" + key.replace("lesson_", "") + ")");
-    return TF.getProfile(uid).then(function (profile) {
-      var check = canEarn(profile, key);
+    return earnStatus(uid, key).then(function (check) {
+      if (check.error) {
+        /* Ledger could not be checked (read timeout / error): refuse
+         * the claim — never fail-open. The caller surfaces this as a
+         * retryable failure, not a cooldown. */
+        delete claimLocks[lockKey];
+        return { error: check.error, waitMs: 0 };
+      }
       if (!check.ok) {
         delete claimLocks[lockKey];
         return { error: "cooldown", waitMs: check.waitMs };
       }
       return TF.ledgerAppend(uid, coins, "earn:" + key).then(function (entry) {
-        // Stamp the cooldown (merge into profile; best-effort).
+        // Stamp the cooldown (merge into profile; best-effort — a denied
+        // stamp must NEVER fail or hide this claim: the ledger entry
+        // above is already committed and is the exactly-once record.
         var stamp = { lastEarn: {} };
         stamp.lastEarn[key] = Date.now();
         return TF.saveProfile(uid, stamp).catch(function () {}).then(function () {
@@ -281,6 +371,7 @@
     LESSON_COINS: LESSON_COINS,
     BATTLE_REWARDS: BATTLE_REWARDS,
     canEarn: canEarn,
+    earnStatus: earnStatus,
     claim: claim,
     awardBattle: awardBattle,
     award: award,
