@@ -652,6 +652,11 @@
       if (!ok) {
         /* Backend unreachable: forms stay visible but submit with an
          * honest error instead of pretending. Nothing is faked. */
+        /* Wallet guest prompt: auth state is unknowable here, so show
+         * the sign-in prompt as the page did before #wf-guest defaulted
+         * to hidden — a guest must still find the login link. */
+        var wfGuest0 = $('wf-guest');
+        if (wfGuest0) { wfGuest0.hidden = false; }
         document.querySelectorAll('.auth-form').forEach(function(f){
           f.addEventListener('submit', function(e){
             e.preventDefault();
@@ -719,6 +724,12 @@
     if (dashMain) { dashMain.hidden = true; }
     var wfMain = $('wf-main');
     if (wfMain) { wfMain.hidden = true; }
+    /* Wallet guest prompt (typefight/wallet): hidden by default in the
+     * HTML so a signed-in visitor never flashes the "Sign in" prompt
+     * while auth resolves (live, Nov 2026) — shown here, on the
+     * signed-out path only, exactly like the other *-guest blocks. */
+    var wfGuest = $('wf-guest');
+    if (wfGuest) { wfGuest.hidden = false; }
     var tfMain = $('tf-main');
     if (tfMain) { tfMain.hidden = true; }
     var tfGuest = $('tf-guest');
