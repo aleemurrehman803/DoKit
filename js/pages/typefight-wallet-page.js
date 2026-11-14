@@ -8,14 +8,37 @@ var DK_STR = {
   "tfw_r_lesson": "Lesson complete",
   "tfw_r_battle": "Battle — {place}",
   "tfw_r_played": "played",
+  /* Referral awards carry the invitee UID in the ledger reason
+   * ("referral:<uid>") — the label below is what the history shows
+   * instead of leaking that UID into the "What" column. */
+  "tfw_r_referral": "Referral bonus",
   "tfw_ready": "Ready to claim.",
   "tfw_wait": "Available in {wait}.",
   "tfw_cooldown": "On cooldown — come back later",
+  "tfw_claiming": "Claiming…",
   "tfw_coins": "+{n} coins!",
   "tfw_claim_fail": "Claim failed — try again",
 };
 try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
-function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
+/* WHY the DK_STR fallback (not just the engine): on the canonical
+ * directory page the i18n engine (assets/js/i18n.js, loaded
+ * dynamically by main.js) arrives AFTER this script's top-level
+ * DKI18N.add("en", DK_STR) above ran, so the add is skipped — and
+ * the engine's t() returns null for keys absent from every dict.
+ * The old dkT returned that null straight through: history labels
+ * rendered blank (TF.esc(null) === "") and the claim toast threw
+ * (null.replace) — live, Nov 2026: blank "What" column, no toast.
+ * The engine's dict is still consulted first (a translated string
+ * wins); DK_STR is the fallback for this page's own keys only. */
+function dkT(k) {
+  try {
+    if (window.DKI18N) {
+      var v = DKI18N.t(k);
+      if (typeof v === "string" && v !== "") return v;
+    }
+  } catch (e) {}
+  return DK_STR[k] || k;
+}
 /* DoKit — TypeFight wallet page controller.
  *
  * WHAT THIS DOES:
@@ -143,6 +166,9 @@ document.addEventListener("DOMContentLoaded", function () {
       var m = /place(\d)/.exec(r);
       return dkT("tfw_r_battle").replace("{place}", (m ? ("#" + m[1] + " place") : dkT("tfw_r_played")));
     }
+    /* Referral awards store the invitee UID in the reason
+     * ("referral:<uid>") — show the label, never the raw UID. */
+    if (r.indexOf("referral:") === 0) return dkT("tfw_r_referral");
     return r;
   }
 
@@ -169,6 +195,13 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener("click", function () {
       if (!currentUser) return;
       btn.disabled = true;
+      /* Immediate feedback: a claim takes several sequential
+       * Firestore round trips (live: seconds), so say so at once
+       * instead of leaving the stale "Ready to claim." note under a
+       * disabled button. The previous note is restored if the claim
+       * is refused (ledger unavailable) or throws. */
+      var prevNote = note.textContent;
+      note.textContent = dkT("tfw_claiming");
       TFWallet.claim(currentUser.uid, key).then(function (res) {
         if (res.error === "in_progress") {
           /* Another claim for this key is still running (double-click /
@@ -184,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
            * updateNote() below tolerates the timeout too (leaves
            * the note as-is). */
           toast(dkT("tfw_claim_fail"));
+          note.textContent = prevNote;
           btn.disabled = false;
         } else if (res.error === "cooldown") {
           note.textContent = dkT("tfw_wait").replace("{wait}", TFWallet.fmtWait(res.waitMs));
@@ -218,6 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateNote();
       }).catch(function () {
         toast(dkT("tfw_claim_fail"));
+        note.textContent = prevNote;
         btn.disabled = false;
       });
     });

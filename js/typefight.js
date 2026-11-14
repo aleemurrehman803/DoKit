@@ -180,25 +180,39 @@
    * with its coins in the old transaction — do nothing.
    * Best-effort: never throws. On any error, resolves null and the
    * caller continues (the append below will settle again / retry).
+   * Resolves { entry, user }: entry is the settled entry or null,
+   * and user is the user-doc data AFTER any settle update (or as read
+   * when nothing settled) — the caller reuses it instead of re-reading
+   * the same doc (one round trip saved per append; live, Nov 2026:
+   * part of the ~10s claim delay). A null result means the settle
+   * itself failed; the caller must then read the doc fresh.
    * @param {string} uid
-   * @returns {Promise<object|null>} The settled entry, or null.
+   * @returns {Promise<{entry: object|null, user: object|null}|null>}
    */
   function settlePending(uid) {
     var db = DKF.db();
     var userRef = db.collection("users").doc(uid);
     return userRef.get().then(function (userDoc) {
-      if (!userDoc.exists) return null;
+      if (!userDoc.exists) return { entry: null, user: null };
       var data = userDoc.data() || {};
       var head = data.lastLedgerHash || null;
       var credited = data.lastCreditedHash || null;
-      if (!head || head === credited) return null;
+      if (!head || head === credited) return { entry: null, user: data };
       return ledgerRef(uid).doc(head).get().then(function (entryDoc) {
-        if (!entryDoc.exists) return null;
+        if (!entryDoc.exists) return { entry: null, user: data };
         var entry = entryDoc.data() || {};
+        var newCoins = (data.coins | 0) + (entry.amount | 0);
         return userRef.update({
-          coins: (data.coins | 0) + (entry.amount | 0),
+          coins: newCoins,
           lastCreditedHash: head
-        }).then(function () { return entry; });
+        }).then(function () {
+          /* Post-settle state, computed locally: exactly what the
+           * update above wrote, so the caller can trust it as if it
+           * had re-read the doc (same values a fresh read returns). */
+          data.coins = newCoins;
+          data.lastCreditedHash = head;
+          return { entry: entry, user: data };
+        });
       });
     }).catch(function () { return null; });
   }
@@ -238,11 +252,22 @@
      * that settlePending credits on the retry — never deleted, and
      * its hash is never reused for a new entry. */
     function attemptOnce(attemptNo) {
-      /* Step 1: settle any pending (phase-1-committed, uncredited) entry. */
-      return settlePending(uid).then(function () {
-        return userRef.get();
-      }).then(function (userDoc) {
-        var data = userDoc.exists ? (userDoc.data() || {}) : {};
+      /* Step 1: settle any pending (phase-1-committed, uncredited) entry.
+       * settlePending ALSO returns the user doc it already read (post-
+       * settle state), so this attempt does NOT re-read it: the extra
+       * read cost a full round trip on every append (live, Nov 2026:
+       * part of the ~10s claim delay). A null result means settlePending
+       * itself failed — fall back to a fresh read, exactly as before.
+       * The values this step consumes (lastLedgerHash, lastCreditedHash)
+       * are the same ones a fresh read would return; the coins credit
+       * itself is computed inside the transaction below (tx.get), never
+       * from this pre-read. */
+      return settlePending(uid).then(function (settled) {
+        if (settled && settled.user) return settled.user;
+        return userRef.get().then(function (userDoc) {
+          return userDoc.exists ? (userDoc.data() || {}) : {};
+        });
+      }).then(function (data) {
         /* Own-entry recognition: the previous attempt's entry committed
          * and settlePending just credited it (head == credited == its
          * hash). The earn has landed — return it, do NOT append again.

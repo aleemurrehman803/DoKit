@@ -182,15 +182,20 @@
         return { error: "cooldown", waitMs: check.waitMs };
       }
       return TF.ledgerAppend(uid, coins, "earn:" + key).then(function (entry) {
-        // Stamp the cooldown (merge into profile; best-effort — a denied
-        // stamp must NEVER fail or hide this claim: the ledger entry
-        // above is already committed and is the exactly-once record.
+        // Stamp the cooldown (merge into profile) — FIRE-AND-FORGET:
+        // the claim resolves as soon as the ledger append commits.
+        // Awaiting the stamp added a full round trip to every claim
+        // (live, Nov 2026: the stamp write is DENIED by rules until
+        // the typefight_profile branch lands, so each claim waited on
+        // a failing write before the balance could update — part of
+        // the ~10s live delay). The stamp is advisory only: the
+        // LEDGER is the source of truth for exactly-once (earnStatus
+        // checks it), so resolving before the stamp cannot double-pay.
         var stamp = { lastEarn: {} };
         stamp.lastEarn[key] = Date.now();
-        return TF.saveProfile(uid, stamp).catch(function () {}).then(function () {
-          delete claimLocks[lockKey];
-          return { entry: entry, coins: coins };
-        });
+        try { TF.saveProfile(uid, stamp).catch(function () {}); } catch (e) {}
+        delete claimLocks[lockKey];
+        return { entry: entry, coins: coins };
       }, function (err) {
         delete claimLocks[lockKey];
         throw err;

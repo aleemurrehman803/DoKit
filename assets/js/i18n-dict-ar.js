@@ -1571,6 +1571,8 @@ window.DK_I18N_DICT["ar"] = {
     "tfw_hist_coins": "Coins",
     "tfw_hist_empty": "No coin activity yet — earn your first coins above.",
     "tfw_hist_note": "Every entry is hash-chained to the previous one. Entries can never be edited or deleted — any tampering breaks the chain (verified above).",
+    "tfw_r_referral": "Referral bonus",
+    "tfw_claiming": "Claiming…",
     "acct_claimed": "تمت المطالبة بها اليوم بالفعل.",
     "acct_ct_fallback": "تعذر الحفظ — فُتح تطبيق بريدك الإلكتروني بدلًا من ذلك، لذا لم تضِع رسالتك.",
     "acct_ct_saved": "تم حفظ الرسالة. سنرد عليك عبر البريد الإلكتروني.",

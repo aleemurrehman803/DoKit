@@ -1571,6 +1571,8 @@ window.DK_I18N_DICT["de"] = {
     "tfw_hist_coins": "Coins",
     "tfw_hist_empty": "No coin activity yet — earn your first coins above.",
     "tfw_hist_note": "Every entry is hash-chained to the previous one. Entries can never be edited or deleted — any tampering breaks the chain (verified above).",
+    "tfw_r_referral": "Referral bonus",
+    "tfw_claiming": "Claiming…",
     "acct_claimed": "Heute bereits eingefordert.",
     "acct_ct_fallback": "Konnte nicht gespeichert werden — deine E-Mail-App wurde stattdessen geöffnet, deine Nachricht ist also nicht verloren.",
     "acct_ct_saved": "Nachricht gespeichert. Wir antworten per E-Mail.",

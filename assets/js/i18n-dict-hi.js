@@ -1571,6 +1571,8 @@ window.DK_I18N_DICT["hi"] = {
     "tfw_hist_coins": "Coins",
     "tfw_hist_empty": "No coin activity yet — earn your first coins above.",
     "tfw_hist_note": "Every entry is hash-chained to the previous one. Entries can never be edited or deleted — any tampering breaks the chain (verified above).",
+    "tfw_r_referral": "Referral bonus",
+    "tfw_claiming": "Claiming…",
     "acct_claimed": "आज पहले ही प्राप्त कर लिया गया है।",
     "acct_ct_fallback": "सहेजा नहीं जा सका — इसके बजाय आपका ईमेल ऐप खुल गया है, इसलिए आपका संदेश खोया नहीं है।",
     "acct_ct_saved": "संदेश सहेज लिया गया। हम ईमेल से उत्तर देंगे।",

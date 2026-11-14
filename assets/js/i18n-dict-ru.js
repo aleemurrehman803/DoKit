@@ -1571,6 +1571,8 @@ window.DK_I18N_DICT["ru"] = {
     "tfw_hist_coins": "Coins",
     "tfw_hist_empty": "No coin activity yet — earn your first coins above.",
     "tfw_hist_note": "Every entry is hash-chained to the previous one. Entries can never be edited or deleted — any tampering breaks the chain (verified above).",
+    "tfw_r_referral": "Referral bonus",
+    "tfw_claiming": "Claiming…",
     "acct_claimed": "Сегодня уже забрано.",
     "acct_ct_fallback": "Не удалось сохранить — вместо этого открылось ваше почтовое приложение, так что сообщение не потеряно.",
     "acct_ct_saved": "Сообщение сохранено. Мы ответим по электронной почте.",
