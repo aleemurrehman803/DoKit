@@ -657,6 +657,11 @@
          * to hidden — a guest must still find the login link. */
         var wfGuest0 = $('wf-guest');
         if (wfGuest0) { wfGuest0.hidden = false; }
+        /* Wallet loading state: auth will never resolve on this path,
+         * so hide the "Loading…" note — the guest prompt above is the
+         * honest state here, never a loading spinner that never ends. */
+        var wfLoading0 = $('wf-loading');
+        if (wfLoading0) { wfLoading0.hidden = true; }
         document.querySelectorAll('.auth-form').forEach(function(f){
           f.addEventListener('submit', function(e){
             e.preventDefault();
@@ -730,6 +735,10 @@
      * signed-out path only, exactly like the other *-guest blocks. */
     var wfGuest = $('wf-guest');
     if (wfGuest) { wfGuest.hidden = false; }
+    /* Wallet loading state: auth has resolved (signed-out), so the
+     * "Loading…" note's job is done — hide it with the main view. */
+    var wfLoading = $('wf-loading');
+    if (wfLoading) { wfLoading.hidden = true; }
     var tfMain = $('tf-main');
     if (tfMain) { tfMain.hidden = true; }
     var tfGuest = $('tf-guest');
@@ -2603,6 +2612,10 @@
     if (wfMain2) { wfMain2.hidden = false; }
     var wfGuest2 = $('wf-guest');
     if (wfGuest2) { wfGuest2.hidden = true; }
+    /* Wallet loading state: auth has resolved (signed-in) and the real
+     * wallet view is showing, so hide the "Loading…" note. */
+    var wfLoading2 = $('wf-loading');
+    if (wfLoading2) { wfLoading2.hidden = true; }
     if (typeof doc.coins === 'number') { setText('wf-coins', String(doc.coins)); }
     listClaims(user);
     var claimBtn = $('wf-claim-btn');

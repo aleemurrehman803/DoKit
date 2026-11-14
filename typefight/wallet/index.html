@@ -40,6 +40,14 @@
 <h1 data-i18n="rsv_0617">TypeFight Wallet</h1>
 <p class="lede"  data-i18n="acct_wallet_sub">Your real coin balance, synced from your account.</p>
 <div class="note"><b data-i18n="rsv_1138">Virtual coins only:</b> <span data-i18n="rsv_1144">coins have no cash value and cannot be converted to cash.</span></div>
+<!-- Wallet loading state (Nov 2026): auth resolves asynchronously
+     (account.js boot -> DKA.onUser), and BOTH #wf-guest and #wf-main
+     are hidden until it does — so without this the wallet area below
+     is blank for ~1-2s on load. Visible by default; account.js hides
+     it the moment it shows the guest prompt or the signed-in view.
+     Same "Loading…" pattern as #txnLoading below; same i18n key, so
+     no new string and no dict change. -->
+<div id="wf-loading"><p style="color:var(--muted)" data-i18n="tfw_hist_loading">Loading…</p></div>
 <div id="wf-guest" hidden><p data-i18n="rsv_0523">Sign in to your account.</p>
 <p><a class="btn" href="../../account/login/" data-i18n="acct_login_link">Log in</a></p></div>
 <div id="wf-main" hidden>
