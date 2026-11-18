@@ -16,7 +16,27 @@
  * (crop biased toward the top, factor 0.32) so heads keep headroom.
  * Every optional control is guarded: with no fragment on the page the
  * file still works exactly like the Phase 2b version.
- * Classic script, var only, no modules, no CDN, no backend. */
+ * Classic script, var only, no modules, no CDN, no backend.
+ *
+ * UI-EDITOR CORRECTION (18 Nov 2026, branch board-photo-ui-editor):
+ *  - Single upload now shows the ACTUAL photo immediately (preview img)
+ *    and a visible editing toolbar (crop / rotate / flip / enhance / B&W /
+ *    brightness / contrast / saturation / temperature / colour picker /
+ *    background removal / reset) — previously the only edits hid inside
+ *    the Advanced panel and there was no preview before Make.
+ *  - Automatic board-background replacement via assets/js/board-photo-segment.js
+ *    (vendored MediaPipe Selfie Segmentation, colour fallback). The board
+ *    preset bg is the default; a manual colour is a labelled override.
+ *  - REMOVED UI: Advanced section, Preset Name field + Save Preset button,
+ *    old Batch Mode (bulk has its own intake), Email Photo, Use Another
+ *    Photo (replaced by Remove photo in the toolbar). Camera, B&W, Face
+ *    Guide, Print Sheet, WhatsApp, Custom size, Background buttons kept.
+ *  - Per-board note/source/bgMandatory re-attached from the orphan
+ *    tools/board-photo/tool.js (verified requirements only, verbatim).
+ *  - buildCanvas() now also honours per-call brightness/contrast/
+ *    saturation/temp/crop/mask through opts (single-mode state) while the
+ *    bulk engine keeps passing every field explicitly, so bulk output
+ *    cannot drift. */
 (function () {
   'use strict';
 
@@ -29,6 +49,43 @@
 
   /* -- Board specs (single source, copied from the Phase 2b file) -------- */
   var BOARDS = [{"id": "bise-bahawalpur", "name": "BISE Bahawalpur", "w": 150, "h": 200, "kb": 22, "bg": BG_PALE_BLUE, "bg_name": "blue", "verified": true}, {"id": "bise-peshawar", "name": "BISE Peshawar", "w": 300, "h": 300, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "bise-swat", "name": "BISE Swat", "w": 300, "h": 300, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "bie-karachi", "name": "BIE Karachi", "w": 200, "h": 230, "kb": 50, "bg": BG_PALE_BLUE, "bg_name": "blue", "verified": true}, {"id": "bbise-quetta", "name": "BBISE Quetta", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "lums", "name": "LUMS", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "karachi-university", "name": "University of Karachi", "w": 230, "h": 200, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "nust", "name": "NUST", "w": 200, "h": 230, "kb": 50, "bg": BG_PALE_BLUE, "bg_name": "blue", "verified": true}, {"id": "uet-lahore", "name": "UET Lahore", "w": 200, "h": 230, "kb": 1024, "bg": "#f8f8f8", "bg_name": "light", "verified": true}, {"id": "fbise", "name": "FBISE (Federal Board)", "w": 200, "h": 230, "kb": 50, "bg": BG_BLUE, "bg_name": "blue", "verified": true}, {"id": "bise-lahore", "name": "BISE Lahore", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "bise-gujranwala", "name": "BISE Gujranwala", "w": 200, "h": 230, "kb": 18, "bg": BG_BLUE, "bg_name": "blue", "verified": false}, {"id": "bise-rawalpindi", "name": "BISE Rawalpindi", "w": 200, "h": 230, "kb": 18, "bg": BG_BLUE, "bg_name": "blue", "verified": false}, {"id": "bise-multan", "name": "BISE Multan", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-faisalabad", "name": "BISE Faisalabad", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-sargodha", "name": "BISE Sargodha", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-dg-khan", "name": "BISE D.G. Khan", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-sahiwal", "name": "BISE Sahiwal", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-hyderabad", "name": "BISE Hyderabad", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-sukkur", "name": "BISE Sukkur", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-larkana", "name": "BISE Larkana", "w": 200, "h": 230, "kb": 1024, "bg": BG_LIGHT_BLUE, "bg_name": "light blue", "verified": true}, {"id": "bise-mirpurkhas", "name": "BISE Mirpurkhas", "w": 200, "h": 230, "kb": 1024, "bg": BG_LIGHT_BLUE, "bg_name": "light blue", "verified": true}, {"id": "bise-mardan", "name": "BISE Mardan", "w": 300, "h": 300, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "bise-kohat", "name": "BISE Kohat", "w": 300, "h": 300, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "bise-abbottabad", "name": "BISE Abbottabad", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}, {"id": "bise-dikhan", "name": "BISE D.I. Khan", "w": 300, "h": 300, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "ajk-board", "name": "AJK Board Mirpur", "w": 200, "h": 230, "kb": 1024, "bg": BG_BLUE, "bg_name": "blue", "verified": true}, {"id": "punjab-university", "name": "Punjab University", "w": 800, "h": 1000, "kb": 200, "bg": "#ffffff", "bg_name": "white", "verified": true}, {"id": "iba-karachi", "name": "IBA Karachi", "w": 200, "h": 230, "kb": 2048, "bg": BG_BLUE, "bg_name": "blue", "verified": true}, {"id": "comsats", "name": "COMSATS", "w": 200, "h": 230, "kb": 50, "bg": BG_BLUE, "bg_name": "blue", "verified": true}, {"id": "aiou", "name": "AIOU", "w": 200, "h": 230, "kb": 50, "bg": BG_BLUE, "bg_name": "blue", "verified": true}, {"id": "generic", "name": "Pakistani admission (typical)", "w": 200, "h": 230, "kb": 50, "bg": "#ffffff", "bg_name": "white", "verified": false}];
+  /* Board notes/sources/bgMandatory — re-attached from the orphan
+   * tools/board-photo/tool.js (18 Nov 2026). tool.js is the dead divergent
+   * bundle (D-3, never edited); its note/source strings document
+   * already-verified requirements, so they are copied here VERBATIM for
+   * verified boards only. Unverified boards get no note/source: their
+   * specs are "typical standard", not requirements.
+   * bgMandatory is true ONLY when the verified note names ONE required bg
+   * colour. FBISE ("Blue or white" — a choice) and Punjab University
+   * ("white assumed" — not published) are false, honestly. */
+  var BOARD_NOTES = {
+    'bise-bahawalpur': { note: 'Official 2026 registration notice: 100\u2013150 px wide, 150\u2013200 px tall, 8\u201322 KB, blue background, head-to-shoulder photo.', source: 'Notification No. 132-Registration, 27-08-2026 (bisebwp.edu.pk)', bgMandatory: true },
+    'bise-peshawar': { note: '300\u00d7300 px, white background, JPG.', source: 'BISE Peshawar notification 05/Gen:/Reg:/BISEP (31-10-2022), reaffirmed 2026', bgMandatory: true },
+    'bise-swat': { note: '300\u00d7300 px, white background. KB limit not published \u2014 50 KB assumed.', source: 'BISE Swat 9th enrollment notification (bisess.edu.pk)', bgMandatory: true },
+    'bie-karachi': { note: 'Passport size, blue background.', source: 'biek.edu.pk enrolment instructions & official forms F04/F08', bgMandatory: true },
+    'bbise-quetta': { note: 'White background. Pixel/KB not published \u2014 typical standard used.', source: 'BBISE SSC private registration portal (ssc2.bbise.edu.pk)', bgMandatory: true },
+    'lums': { note: 'Passport-size, white background. Pixel/KB not published \u2014 typical standard used.', source: 'admission.lums.edu.pk checklist', bgMandatory: true },
+    'karachi-university': { note: 'KU needs LANDSCAPE orientation (unusual) \u2014 double-check before uploading.', source: 'uokadmission.edu.pk profile-picture instructions', bgMandatory: true },
+    'nust': { note: 'Light blue background (joining documents); portal specs not published.', source: 'pnec.nust.edu.pk joining instructions', bgMandatory: true },
+    'uet-lahore': { note: 'JPG/PNG, max 1 MB, light background. Pixels not published \u2014 typical standard used.', source: 'UET ECAT 2020 official instructions', bgMandatory: true },
+    'fbise': { note: 'Blue or white background. Pixels/KB not published \u2014 typical standard used.', source: 'FBISE notification F-01/FBISE/SSC-A/2nd AE-26/0167 (29-07-2026)', bgMandatory: false },
+    'bise-lahore': { note: 'White background (official portals). Pixels/KB not published \u2014 typical standard used.', source: 'BISE Lahore registration portals', bgMandatory: true },
+    'bise-larkana': { note: 'Light blue background, under 1 MB. Pixels not published \u2014 typical standard used.', source: 'BISE Larkana notification BISE/ACD/LRK/175/2026 (17-09-2026)', bgMandatory: true },
+    'bise-mirpurkhas': { note: 'Light blue background, under 1 MB. Pixels not published \u2014 typical standard used.', source: 'BISE Mirpurkhas notification BISE/HSC-Enrolment/MPS/-01 (09-01-2024)', bgMandatory: true },
+    'bise-mardan': { note: '300\u00d7300 px, white background.', source: 'BISE Mardan notifications 2017\u20132018 (bisemdn.edu.pk)', bgMandatory: true },
+    'bise-kohat': { note: '300\u00d7300 px, white background.', source: 'BISE Kohat notification 142/Gen:/Reg/BISEK (10-09-2025)', bgMandatory: true },
+    'bise-dikhan': { note: '300\u00d7300 px, white background.', source: 'BISE D.I. Khan notification (16-05-2019)', bgMandatory: true },
+    'ajk-board': { note: 'Passport size, blue background, under 1 MB, JPG. Pixels not published \u2014 typical standard used.', source: 'AJK BISE registration booklets (ajkbise.net)', bgMandatory: true },
+    'punjab-university': { note: 'Max 200 KB, max 800\u00d71000 px. Background not published \u2014 white assumed.', source: 'pu.edu.pk official FAQ', bgMandatory: false },
+    'iba-karachi': { note: 'Blue background, JPG/GIF/PNG up to 2 MB (testing-services form). Pixels not published \u2014 typical standard used.', source: 'iba.edu.pk testing services form', bgMandatory: true },
+    'comsats': { note: 'Blue background. Pixels/KB not published \u2014 typical standard used.', source: 'CUI prospectus for international students', bgMandatory: true },
+    'aiou': { note: 'Passport size, blue background. Pixels/KB not published \u2014 typical standard used.', source: 'aiou.edu.pk admission FAQ', bgMandatory: true }
+  };
+  BOARDS.forEach(function (b) {
+    var n = BOARD_NOTES[b.id];
+    b.bgMandatory = !!(n && b.verified && n.bgMandatory);
+    if (n && b.verified) { b.note = n.note; b.source = n.source; }
+  });
   var BWP_NOTE = (window.dkT ? window.dkT('rsv_1051', 'Official 2026 registration notice: 100\u2013150 px wide, ') : 'Official 2026 registration notice: 100\u2013150 px wide, ')
     + (window.dkT ? window.dkT('rsv_1050', '150\u2013200 px tall, 8\u201322 KB, blue background, ') : '150\u2013200 px tall, 8\u201322 KB, blue background, ')
     + (window.dkT ? window.dkT('rsv_1053', 'head-to-shoulder photo.') : 'head-to-shoulder photo.');
@@ -47,15 +104,28 @@
   /* -- Optional restored-control elements (all guarded) ------------------- */
   function $(id) { return document.getElementById(id); }
   var bgRow = $('bgRow');
-  var sheetBtn = $('sheetBtn'), waBtn = $('waBtn'), againBtn = $('againBtn');
+  var sheetBtn = $('sheetBtn'), waBtn = $('waBtn');
   var cwEl = $('cw'), chEl = $('ch'), ckbEl = $('ckb'), customBtn = $('customBtn');
-  var advToggle = $('advToggle'), advSection = $('advSection'), advBody = $('advBody');
+  /* REMOVED 18 Nov 2026 (UI-editor correction): Advanced section
+   * (#advToggle/#advSection/#advBody), Preset Name (#presetName) +
+   * Save Preset (#savePresetBtn), old Batch Mode (#batchBtn/#batchInput/
+   * #batchList), Email Photo (#emailBtn), Use Another Photo (#againBtn).
+   * Their handlers are deleted below; the elements are gone from the HTML.
+   * Relocated into the visible toolbar: Enhance/Rotate/Flip, B&W, Face
+   * Guide, Camera. Preset chips (#presetRow) survive — presets saved in
+   * the bulk editor still apply here. */
   var enhanceBtn = $('enhanceBtn'), rotL = $('rotL'), rotR = $('rotR'), flipBtn = $('flipH');
-  var presetName = $('presetName'), savePresetBtn = $('savePresetBtn'), presetRow = $('presetRow');
+  var presetRow = $('presetRow');
+  var toolbarEl = $('bp-toolbar'), previewImg = $('bp-preview-img'), dzEl = $('dz');
+  var dzLabel = $('bp-dz-label'), segStatusEl = $('bp-seg-status'), bgWarnEl = $('bp-bg-warn');
+  var cropBtn = $('bp-crop-btn'), cropWrap = $('bp-crop-wrap'), cropCanvas = $('bp-crop-canvas');
+  var cropApply = $('bp-crop-apply'), cropCancel = $('bp-crop-cancel');
+  var resetBtn = $('bp-reset-btn'), removeBtn = $('bp-remove-photo');
+  var rmbgToggle = $('bp-rmbg'), featherEl = $('bp-feather'), featherVal = $('bp-feather-v');
+  var bgColorEl = $('bp-bg-color');
   var bwToggle = $('bwToggle'), guideToggle = $('guideToggle'), faceGuide = $('faceGuide');
   var camBtn = $('camBtn'), camModal = $('camModal'), camVideo = $('camVideo');
   var camErr = $('camErr'), camClose = $('camClose'), camX = $('camX'), camShot = $('camShot');
-  var batchBtn = $('batchBtn'), batchInput = $('batchInput'), batchList = $('batchList');
 
   /* -- State -------------------------------------------------------------- */
   var current = BOARDS[0];
@@ -65,6 +135,16 @@
   var customSpec = null;    // {w,h,kb} when the user overrides the board spec
   var bgOverride = null;    // null = board bg; 'original' = no fill; else colour
   var rotation = 0, flipH = false, bwOn = false, enhanceOn = false;
+  /* Single-mode edit state (UI-editor correction): the toolbar binds to
+   * these; buildCanvas() reads them through opts._single (bulk always
+   * passes every field explicitly, so it can never pick these up). */
+  var adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+  var singleCrop = null;    // fractions {x,y,w,h} of the source image, or null
+  var segMask = null;       // segmentation mask canvas at source size, or null
+  var segEngine = '';       // 'mediapipe' | 'colour' | '' (none yet / failed)
+  var removeBgOn = true;    // "Remove background" toggle (default ON)
+  var featherPx = 2;        // mask edge feather, px at output size
+  var loadedDataUrl = null; // original upload, kept independent of output
   var renderSeq = 0;        // guards async fitBlob against stale re-renders
   /* NOTE (bulk upgrade, master prompt §9): NO name/date stamp is drawn on
    * any photo any more. The old stamp controls were removed with the
@@ -134,7 +214,9 @@
         : ' <span class="err">' + (window.dkT ? window.dkT('rsv_1059', 'Unverified \u2014 confirm on your board\u2019s notice') : 'Unverified \u2014 confirm on your board\u2019s notice') + '</span>')
       + '</p>' + (b.custom
         ? '<p>' + (window.dkT ? window.dkT('rsv_1276', 'Custom size overrides the board spec until you pick another board.') : 'Custom size overrides the board spec until you pick another board.') + '</p>' : '')
-      + (!b.custom && current.id === 'bise-bahawalpur' ? '<p>' + BWP_NOTE + '</p>' : '');
+      + (!b.custom && current.id === 'bise-bahawalpur' ? '<p>' + BWP_NOTE + '</p>' : '')
+      + (!b.custom && current.source ? '<p class="note">' + (window.dkT ? window.dkT('bp.spec_source', 'Source: ') : 'Source: ') + esc(current.source) + '</p>' : '')
+      + (!b.custom && current.note && current.id !== 'bise-bahawalpur' ? '<p class="note">' + esc(current.note) + '</p>' : '');
   }
   fillOptions(BOARDS);
   showSpec();
@@ -146,7 +228,7 @@
       /* New board = fresh start: custom size and bg override do not leak
        * from the previous board into this board's photo. */
       customSpec = null; bgOverride = null;
-      showSpec(); syncCustomFields(); syncBgBtns(); rerender(true);
+      showSpec(); syncCustomFields(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); rerender(true);
     }
   });
   if (filterEl) {
@@ -174,8 +256,18 @@
    * opts the single-photo module globals apply, so the legacy flow
    * renders exactly as before. Crop rects are SOURCE pixels. No text,
    * logo or watermark is ever drawn here (master rule §9). */
+  /* Head-safe cover-crop rect (source pixels) — shared by buildCanvas()
+   * and the single-mode crop UI, so the cropper's default rect is exactly
+   * what Make would have used. Top bias 0.32 keeps heads in frame. */
+  function coverCropRect(iw, ih, outW, outH) {
+    var scale = Math.max(outW / iw, outH / ih);
+    var cw = Math.round(outW / scale), ch = Math.round(outH / scale);
+    return { x: Math.max(0, Math.round((iw - cw) / 2)),
+      y: Math.max(0, Math.round((ih - ch) * 0.32)), w: cw, h: ch };
+  }
   function buildCanvas(img, spec, opts) {
     var o = opts || {};
+    var single = !!o._single; /* single-mode state applies ONLY with this flag (bulk never sets it) */
     /* WHY per-field fallback (not Object.assign): the module globals are
      * the single-photo state; bulk passes only the fields it overrides. */
     var rot = (((o.rotation !== undefined ? o.rotation : rotation) % 360) + 360) % 360;
@@ -189,15 +281,22 @@
      * cover crop — fill the frame, bias the crop window toward the top
      * (0.32) so a head is not cut off at the top edge. */
     var cw, ch, sx, sy;
+    /* Explicit crop wins; in single mode the toolbar crop (fractions of
+     * the source image) converts to source pixels here. */
+    var cropPx = null;
     if (o.crop && o.crop.w > 0 && o.crop.h > 0) {
-      cw = Math.min(o.crop.w, iw); ch = Math.min(o.crop.h, ih);
-      sx = Math.max(0, Math.min(o.crop.x || 0, iw - cw));
-      sy = Math.max(0, Math.min(o.crop.y || 0, ih - ch));
+      cropPx = { x: o.crop.x || 0, y: o.crop.y || 0, w: o.crop.w, h: o.crop.h };
+    } else if (single && singleCrop) {
+      cropPx = { x: Math.round(singleCrop.x * iw), y: Math.round(singleCrop.y * ih),
+        w: Math.round(singleCrop.w * iw), h: Math.round(singleCrop.h * ih) };
+    }
+    if (cropPx) {
+      cw = Math.min(cropPx.w, iw); ch = Math.min(cropPx.h, ih);
+      sx = Math.max(0, Math.min(cropPx.x, iw - cw));
+      sy = Math.max(0, Math.min(cropPx.y, ih - ch));
     } else {
-      var scale = Math.max(outW / iw, outH / ih);
-      cw = Math.round(outW / scale); ch = Math.round(outH / scale);
-      sx = Math.max(0, Math.round((iw - cw) / 2));
-      sy = Math.max(0, Math.round((ih - ch) * 0.32));
+      var cc = coverCropRect(iw, ih, outW, outH);
+      cw = cc.w; ch = cc.h; sx = cc.x; sy = cc.y;
     }
     var canvas = document.createElement('canvas');
     canvas.width = outW; canvas.height = outH;
@@ -214,31 +313,75 @@
      * adjustments multiply on top of it. */
     var filters = [];
     if (bw) { filters.push('grayscale(1)'); }
-    var br = (enh ? 1.06 : 1) * (o.brightness || 1);
-    var ct = (enh ? 1.12 : 1) * (o.contrast || 1);
-    var st = (enh ? 1.08 : 1) * (o.saturation || 1);
+    /* Single-mode slider values apply only with opts._single; bulk passes
+     * every field explicitly, so its numbers are untouched. */
+    function adjVal(key, fallback) {
+      if (o[key] !== undefined) { return o[key]; }
+      return single ? adj[key] : fallback;
+    }
+    var br = (enh ? 1.06 : 1) * adjVal('brightness', 1);
+    var ct = (enh ? 1.12 : 1) * adjVal('contrast', 1);
+    var st = (enh ? 1.08 : 1) * adjVal('saturation', 1);
     if (br !== 1 || ct !== 1 || st !== 1) {
       filters.push('brightness(' + br.toFixed(3) + ') contrast(' + ct.toFixed(3)
         + ') saturate(' + st.toFixed(3) + ')');
     }
-    ctx.filter = filters.length ? filters.join(' ') : 'none';
-    ctx.save();
-    ctx.translate(outW / 2, outH / 2);
-    if (flip) { ctx.scale(-1, 1); }
-    ctx.rotate(rot * Math.PI / 180);
-    ctx.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
-    ctx.restore();
-    ctx.filter = 'none';
+    /* The subject draw (transforms + filters), shared by the plain path
+     * and the masked path so the two can never drift apart. */
+    function drawSubject(c2) {
+      c2.filter = filters.length ? filters.join(' ') : 'none';
+      c2.save();
+      c2.translate(outW / 2, outH / 2);
+      if (flip) { c2.scale(-1, 1); }
+      c2.rotate(rot * Math.PI / 180);
+      c2.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
+      c2.restore();
+      c2.filter = 'none';
+    }
     /* Colour temperature: a warm/cool tint overlay at low alpha. It shifts
      * colour balance only — no pixels are invented, no face is changed. */
-    var temp = o.temp || 0;
-    if (temp !== 0) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'overlay';
-      ctx.globalAlpha = Math.min(0.12, Math.abs(temp) / 100 * 0.12);
-      ctx.fillStyle = temp > 0 ? '#ff9a3c' : '#3c7dff';
-      ctx.fillRect(0, 0, outW, outH);
-      ctx.restore();
+    var temp = adjVal('temp', 0);
+    function applyTemp(c2) {
+      if (temp === 0) { return; }
+      c2.save();
+      c2.globalCompositeOperation = 'overlay';
+      c2.globalAlpha = Math.min(0.12, Math.abs(temp) / 100 * 0.12);
+      c2.fillStyle = temp > 0 ? '#ff9a3c' : '#3c7dff';
+      c2.fillRect(0, 0, outW, outH);
+      c2.restore();
+    }
+    /* Masked path: the subject is drawn to a temp canvas, the temp tint
+     * applied, the segmentation mask cuts the background out (feathered),
+     * and the result is laid over the board-colour fill. Without a mask
+     * (toggle off, or segmentation failed) the plain cover-crop path runs
+     * exactly as before. */
+    var mask = (single && removeBgOn) ? segMask : (o.mask || null);
+    if (mask && window.DKBoardSegment) {
+      var tmp = document.createElement('canvas');
+      tmp.width = outW; tmp.height = outH;
+      var tctx = tmp.getContext('2d');
+      drawSubject(tctx);
+      applyTemp(tctx);
+      /* The mask lives at SOURCE size, so it must go through the SAME
+       * source window (sx/sy/cw/ch) and the SAME flip/rotate transforms as
+       * the subject — drawing the whole mask scaled to outW/outH would
+       * squeeze a landscape mask into a portrait frame and cut a narrow
+       * strip out of the face (caught on a landscape portrait, 18 Nov 2026:
+       * the face came out tall and narrow). */
+      var mCanvas = document.createElement('canvas');
+      mCanvas.width = outW; mCanvas.height = outH;
+      var mctx = mCanvas.getContext('2d');
+      mctx.save();
+      mctx.translate(outW / 2, outH / 2);
+      if (flip) { mctx.scale(-1, 1); }
+      mctx.rotate(rot * Math.PI / 180);
+      mctx.drawImage(mask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
+      mctx.restore();
+      window.DKBoardSegment.applyMaskToCanvas(tmp, mCanvas, featherPx);
+      ctx.drawImage(tmp, 0, 0);
+    } else {
+      drawSubject(ctx);
+      applyTemp(ctx);
     }
     return canvas;
   }
@@ -284,7 +427,7 @@
     if (!loadedImg) { return; }
     var seq = ++renderSeq;
     var spec = effSpec();
-    var built = buildCanvas(loadedImg, spec);
+    var built = buildCanvas(loadedImg, spec, { _single: true });
     /* Show the on-page canvas immediately (preview), then fit quality. */
     canvasEl.width = built.width; canvasEl.height = built.height;
     canvasEl.getContext('2d').drawImage(built, 0, 0);
@@ -309,15 +452,83 @@
   }
 
   /* -- Upload (Phase 2b: FileReader only, never uploaded anywhere) -------- */
+  /* Single-photo load, shared by file pick, drag & drop and camera capture.
+   * A new photo is a fresh start: every edit resets (a crop from the old
+   * photo must never apply to the new one). The ACTUAL photo is shown at
+   * once in the preview area, the toolbar appears, and the processed
+   * preview renders immediately — Make is no longer the way to discover
+   * either. Segmentation then runs in the background; when its mask lands
+   * the preview re-renders with the board background applied. */
+  function resetSingleEdits() {
+    rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
+    adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+    singleCrop = null; segMask = null; segEngine = '';
+    removeBgOn = true; featherPx = 2; bgOverride = null;
+    syncToolbarControls(); syncBgBtns(); syncBgWarning();
+    if (cropWrap) { cropWrap.hidden = true; }
+  }
+  function setLoadedImage(img, name, dataUrl) {
+    loadedImg = img;
+    loadedDataUrl = dataUrl || null;
+    resetSingleEdits();
+    showLoadedName(name);
+    /* Actual-photo preview: replaces the "Your photo" label. The original
+     * stays independent — edits only ever affect the processed canvas. */
+    if (previewImg && dataUrl) {
+      previewImg.src = dataUrl;
+      previewImg.hidden = false;
+      previewImg.alt = name || '';
+    }
+    if (dzLabel) { dzLabel.hidden = true; }
+    if (toolbarEl) { toolbarEl.hidden = false; }
+    say(window.dkT ? window.dkT('bp.ed_loaded', 'Photo loaded \u2014 edit it below, then press \u201cMake board photo\u201d.') : 'Photo loaded \u2014 edit it below, then press \u201cMake board photo\u201d.');
+    /* Processed preview at once (no mask yet — cover crop on board bg). */
+    rerender(true);
+    startSegmentation();
+  }
+  /* Background replacement, async and non-blocking. The status line always
+   * says which engine produced the mask (or that none could), never a
+   * silent fallback. If segmentation fails the photo still works — it is
+   * cover-cropped onto the board colour exactly as before. */
+  function startSegmentation() {
+    if (!loadedImg || !window.DKBoardSegment) {
+      setSegStatus(window.dkT ? window.dkT('bp.ed_seg_unavailable', 'Automatic background removal is unavailable in this browser \u2014 your photo is placed on the board colour instead.') : 'Automatic background removal is unavailable in this browser \u2014 your photo is placed on the board colour instead.');
+      return;
+    }
+    setSegStatus(window.dkT ? window.dkT('bp.ed_segmenting', 'Removing the background\u2026 (in your browser, nothing is uploaded)') : 'Removing the background\u2026 (in your browser, nothing is uploaded)');
+    window.DKBoardSegment.removeBackground(loadedImg).then(function (res) {
+      if (!loadedImg) { return; } /* a newer photo superseded this run */
+      if (res && res.mask) {
+        segMask = res.mask; segEngine = res.engine;
+        setSegStatus(window.dkT
+          ? window.dkT('bp.ed_seg_ok', 'Background replaced with the board colour')
+          : 'Background replaced with the board colour');
+        rerender(true);
+      } else {
+        segMask = null; segEngine = '';
+        setSegStatus(window.dkT ? window.dkT('bp.ed_seg_failed', 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.') : 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.');
+        rerender(true);
+      }
+    }).catch(function () {
+      segMask = null; segEngine = '';
+      setSegStatus(window.dkT ? window.dkT('bp.ed_seg_failed', 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.') : 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.');
+    });
+  }
+  function setSegStatus(msg) {
+    if (segStatusEl) { segStatusEl.textContent = msg || ''; }
+  }
   function loadFromFile(file) {
     if (!file) { return; }
+    if (!validImageFile(file)) {
+      say(window.dkT ? window.dkT('rsv_1260', 'No valid photos chosen \u2014 pick PNG, JPG or WebP files under 25 MB.') : 'No valid photos chosen \u2014 pick PNG, JPG or WebP files under 25 MB.');
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function () {
       var img = new Image();
-      img.onload = function () {
-        loadedImg = img;
-        showLoadedName(file.name);
-        say((window.dkT ? window.dkT('rsv_0994', 'Photo loaded. Press \u201cMake board photo\u201d.') : 'Photo loaded. Press \u201cMake board photo\u201d.'));
+      img.onload = function () { setLoadedImage(img, file.name, reader.result); };
+      img.onerror = function () {
+        say(window.dkT ? window.dkT('rsv_1228', 'This image could not be processed.') : 'This image could not be processed.');
       };
       img.src = reader.result;
     };
@@ -327,6 +538,20 @@
     fileEl.addEventListener('change', function () {
       loadFromFile(fileEl.files[0]);
       fileEl.value = '';
+    });
+  }
+  /* Dropzone: click re-picks (the preview img replaces the label, so the
+   * zone itself must stay clickable); drag & drop a photo onto it. */
+  if (dzEl && fileEl) {
+    dzEl.addEventListener('click', function (e) {
+      if (e.target === fileEl) { return; } /* let the input open natively */
+      fileEl.click();
+    });
+    dzEl.addEventListener('dragover', function (e) { e.preventDefault(); });
+    dzEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) { loadFromFile(f); }
     });
   }
   if (makeBtn) {
@@ -354,19 +579,54 @@
         btn.addEventListener('click', function () {
           var v = btn.getAttribute('data-bg');
           bgOverride = (v === 'board') ? null : v;
-          syncBgBtns();
+          syncBgBtns(); syncBgWarning(); syncBgColorPicker();
           rerender(true);
         });
       })(bgBtns[bi]);
     }
     syncBgBtns();
   }
+  /* Colour picker: a manual colour is an EXPLICIT OVERRIDE of the board
+   * preset. When the board's bg is mandatory (see BOARD_NOTES) and the
+   * chosen colour differs, the warning below the toolbar says so — the
+   * board may reject the photo. The board default always stays one click
+   * away ("Board default" button). */
+  function syncBgWarning() {
+    if (!bgWarnEl) { return; }
+    var mandatory = current && current.bgMandatory;
+    var off = bgOverride && bgOverride !== 'original'
+      ? bgOverride.toLowerCase() !== (current.bg || '').toLowerCase()
+      : bgOverride === 'original';
+    if (mandatory && off) {
+      bgWarnEl.textContent = window.dkT
+        ? window.dkT('bp.ed_bg_warn', 'Warning: this background differs from what your board requires')
+        : 'Warning: this background differs from what your board requires';
+      bgWarnEl.hidden = false;
+    } else {
+      bgWarnEl.textContent = '';
+      bgWarnEl.hidden = true;
+    }
+  }
+  function syncBgColorPicker() {
+    if (bgColorEl) {
+      bgColorEl.value = (bgOverride && bgOverride !== 'original')
+        ? bgOverride : (current.bg || '#ffffff');
+    }
+  }
+  if (bgColorEl) {
+    bgColorEl.addEventListener('input', function () {
+      bgOverride = bgColorEl.value;
+      syncBgBtns(); syncBgWarning();
+      rerender(true);
+    });
+    syncBgColorPicker();
+  }
 
   /* -- Restored: custom size (width / height / max-KB override) ------------ */
   function applyCustomSpec(name, w, h, kb) {
     customSpec = { w: w, h: h, kb: kb };
     bgOverride = null; /* custom spec starts from the board background */
-    showSpec(); syncBgBtns(); rerender(true);
+    showSpec(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); rerender(true);
   }
   if (customBtn) {
     customBtn.addEventListener('click', function () {
@@ -375,16 +635,6 @@
       var kb = ckbEl ? clampInt(ckbEl.value, 50, 1, 10240) : 50;
       applyCustomSpec('Custom (' + w + '\u00d7' + h + ')', w, h, kb);
       if (!loadedImg) { say((window.dkT ? window.dkT('rsv_1277', 'Custom size set: ') : 'Custom size set: ') + w + '\u00d7' + h + (window.dkT ? window.dkT('rsv_0950', ' px, max ') : ' px, max ') + kb + (window.dkT ? window.dkT('rsv_1278', ' KB. Now choose a photo.') : ' KB. Now choose a photo.')); }
-    });
-  }
-
-  /* -- Restored: Advanced panel toggle ------------------------------------- */
-  if (advToggle && advBody) {
-    advToggle.addEventListener('click', function () {
-      var open = advBody.hidden;
-      advBody.hidden = !open;
-      if (advSection) { advSection.classList.toggle('open', open); }
-      advToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
   }
 
@@ -435,6 +685,206 @@
     });
   }
 
+  /* -- Visible editing toolbar (UI-editor correction, 18 Nov 2026) ---------- */
+  /* Every control below is visible immediately after upload — no panel to
+   * discover first. Each one updates the processed preview live via
+   * rerender(true); nothing here touches the original upload. */
+  function syncToolbarControls() {
+    /* Slider positions + value labels mirror the adj state (used by Reset
+     * and by a fresh upload, so the UI can never disagree with the render). */
+    function setSlider(id, valId, v) {
+      var el = $(id), lab = $(valId);
+      if (el) { el.value = String(v); }
+      if (lab) { lab.textContent = String(v); }
+    }
+    setSlider('bp-brightness', 'bp-brightness-v', Math.round((adj.brightness - 1) * 100));
+    setSlider('bp-contrast', 'bp-contrast-v', Math.round((adj.contrast - 1) * 100));
+    setSlider('bp-saturation', 'bp-saturation-v', Math.round((adj.saturation - 1) * 100));
+    setSlider('bp-temp', 'bp-temp-v', adj.temp);
+    toggleBtn(enhanceBtn, enhanceOn);
+    toggleBtn(flipBtn, flipH);
+    if (bwToggle) { bwToggle.checked = bwOn; }
+    if (rmbgToggle) { rmbgToggle.checked = removeBgOn; }
+    if (featherEl) { featherEl.value = String(featherPx); }
+    if (featherVal) { featherVal.textContent = String(featherPx); }
+    syncBgColorPicker();
+  }
+  function bindSlider(id, valId, apply) {
+    var el = $(id);
+    if (!el) { return; }
+    el.addEventListener('input', function () {
+      var v = parseInt(el.value, 10) || 0;
+      var lab = $(valId);
+      if (lab) { lab.textContent = String(v); }
+      apply(v);
+      rerender(true);
+    });
+  }
+  bindSlider('bp-brightness', 'bp-brightness-v', function (v) { adj.brightness = 1 + v / 100; });
+  bindSlider('bp-contrast', 'bp-contrast-v', function (v) { adj.contrast = 1 + v / 100; });
+  bindSlider('bp-saturation', 'bp-saturation-v', function (v) { adj.saturation = 1 + v / 100; });
+  bindSlider('bp-temp', 'bp-temp-v', function (v) { adj.temp = v; });
+  if (rmbgToggle) {
+    rmbgToggle.addEventListener('change', function () {
+      removeBgOn = rmbgToggle.checked;
+      rerender(true);
+    });
+  }
+  if (featherEl) {
+    featherEl.addEventListener('input', function () {
+      featherPx = parseInt(featherEl.value, 10) || 0;
+      if (featherVal) { featherVal.textContent = String(featherPx); }
+      rerender(true);
+    });
+  }
+  /* Reset restores the appropriate original/shared state: rotation, flip,
+   * B&W, Enhance, all four sliders, crop, background override, background
+   * removal + feather. The uploaded photo itself is untouched, and the
+   * segmentation mask is kept (re-running it would waste seconds). */
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      if (needPhoto()) { return; }
+      rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
+      adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+      singleCrop = null; removeBgOn = true; featherPx = 2; bgOverride = null;
+      if (cropWrap) { cropWrap.hidden = true; }
+      syncToolbarControls(); syncBgBtns(); syncBgWarning();
+      rerender(true);
+    });
+  }
+  /* Remove photo: clears the upload, the preview, the toolbar and the
+   * processed output. Replaces "Use another photo" (deleted) — same
+   * outcome, without auto-opening the file picker. */
+  if (removeBtn) {
+    removeBtn.addEventListener('click', function () {
+      loadedImg = null; loadedDataUrl = null; segMask = null; segEngine = '';
+      currentBlob = null;
+      if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
+      if (fileEl) { fileEl.value = ''; }
+      showLoadedName('');
+      if (previewImg) { previewImg.hidden = true; previewImg.removeAttribute('src'); }
+      if (dzLabel) { dzLabel.hidden = false; }
+      if (toolbarEl) { toolbarEl.hidden = true; }
+      if (cropWrap) { cropWrap.hidden = true; }
+      canvasEl.style.display = 'none';
+      if (dlEl) { dlEl.style.display = 'none'; }
+      setSegStatus('');
+      resetSingleEdits();
+      say(window.dkT ? window.dkT('rsv_1279', 'Choose another photo.') : 'Choose another photo.');
+    });
+  }
+
+  /* -- Interactive crop (single mode; same pattern as the bulk editor) ----- */
+  /* Draggable + resizable, aspect-locked to the board spec (a free-aspect
+   * rect would stretch the face at export, so it is never allowed).
+   * Apply stores fractions of the source image; Cancel keeps the previous
+   * crop (or none). The original is preserved — crop only changes the
+   * source window buildCanvas() draws from. */
+  var singleCropDrag = null;
+  function renderSingleCrop() {
+    if (!loadedImg || !cropCanvas) { return; }
+    var img = loadedImg;
+    var W = 320, scale = W / img.naturalWidth;
+    var H = Math.max(1, Math.round(img.naturalHeight * scale));
+    cropCanvas.width = W; cropCanvas.height = H;
+    var ctx = cropCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, W, H);
+    var spec = effSpec();
+    var aspect = spec.w / spec.h;
+    var rect = singleCrop
+      ? { x: singleCrop.x * W, y: singleCrop.y * H, w: singleCrop.w * W, h: singleCrop.h * H }
+      : (function () {
+          var r = coverCropRect(img.naturalWidth, img.naturalHeight, spec.w, spec.h);
+          return { x: r.x * scale, y: r.y * scale, w: r.w * scale, h: r.h * scale };
+        })();
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, W, rect.y);
+    ctx.fillRect(0, rect.y + rect.h, W, H - (rect.y + rect.h));
+    ctx.fillRect(0, rect.y, rect.x, rect.h);
+    ctx.fillRect(rect.x + rect.w, rect.y, W - (rect.x + rect.w), rect.h);
+    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    cropCanvas._rect = rect; cropCanvas._scale = scale; cropCanvas._aspect = aspect;
+  }
+  function renderSingleCropOverlayOnly() {
+    if (!loadedImg || !cropCanvas || !cropCanvas._rect) { return; }
+    var ctx = cropCanvas.getContext('2d');
+    ctx.drawImage(loadedImg, 0, 0, cropCanvas.width, cropCanvas.height);
+    var rect = cropCanvas._rect;
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, cropCanvas.width, rect.y);
+    ctx.fillRect(0, rect.y + rect.h, cropCanvas.width, cropCanvas.height - (rect.y + rect.h));
+    ctx.fillRect(0, rect.y, rect.x, rect.h);
+    ctx.fillRect(rect.x + rect.w, rect.y, cropCanvas.width - (rect.x + rect.w), rect.h);
+    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  }
+  if (cropBtn && cropWrap) {
+    cropBtn.addEventListener('click', function () {
+      if (needPhoto()) { return; }
+      var open = cropWrap.hidden;
+      cropWrap.hidden = !open;
+      cropBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) { renderSingleCrop(); }
+    });
+  }
+  if (cropCanvas) {
+    cropCanvas.addEventListener('pointerdown', function (e) {
+      if (!cropCanvas._rect) { return; }
+      e.preventDefault();
+      var r = cropCanvas.getBoundingClientRect();
+      var p = { x: e.clientX - r.left, y: e.clientY - r.top };
+      var rc = cropCanvas._rect, edge = 10;
+      var nearRight = Math.abs(p.x - (rc.x + rc.w)) < edge;
+      var nearBottom = Math.abs(p.y - (rc.y + rc.h)) < edge;
+      var inside = p.x >= rc.x && p.x <= rc.x + rc.w && p.y >= rc.y && p.y <= rc.y + rc.h;
+      singleCropDrag = {
+        mode: (nearRight || nearBottom) ? 'resize' : (inside ? 'move' : null),
+        startX: p.x, startY: p.y, rect: { x: rc.x, y: rc.y, w: rc.w, h: rc.h }
+      };
+    });
+    cropCanvas.addEventListener('pointermove', function (e) {
+      if (!singleCropDrag || !singleCropDrag.mode) { return; }
+      e.preventDefault();
+      var r = cropCanvas.getBoundingClientRect();
+      var p = { x: e.clientX - r.left, y: e.clientY - r.top };
+      var dx = p.x - singleCropDrag.startX, dy = p.y - singleCropDrag.startY;
+      var rc = { x: singleCropDrag.rect.x, y: singleCropDrag.rect.y,
+        w: singleCropDrag.rect.w, h: singleCropDrag.rect.h };
+      if (singleCropDrag.mode === 'move') {
+        rc.x = Math.max(0, Math.min(cropCanvas.width - rc.w, rc.x + dx));
+        rc.y = Math.max(0, Math.min(cropCanvas.height - rc.h, rc.y + dy));
+      } else {
+        var nw = Math.max(20, Math.min(cropCanvas.width - rc.x, rc.w + dx));
+        var nh = nw / cropCanvas._aspect;
+        if (rc.y + nh > cropCanvas.height) { nh = cropCanvas.height - rc.y; nw = nh * cropCanvas._aspect; }
+        rc.w = nw; rc.h = nh;
+      }
+      cropCanvas._rect = rc;
+      renderSingleCropOverlayOnly();
+    });
+    ['pointerup', 'pointerleave'].forEach(function (ev) {
+      cropCanvas.addEventListener(ev, function () { singleCropDrag = null; });
+    });
+  }
+  if (cropApply) {
+    cropApply.addEventListener('click', function () {
+      if (cropCanvas && cropCanvas._rect) {
+        var rc = cropCanvas._rect;
+        singleCrop = { x: rc.x / cropCanvas.width, y: rc.y / cropCanvas.height,
+          w: rc.w / cropCanvas.width, h: rc.h / cropCanvas.height };
+      }
+      if (cropWrap) { cropWrap.hidden = true; }
+      rerender(true);
+    });
+  }
+  if (cropCancel) {
+    cropCancel.addEventListener('click', function () {
+      if (cropWrap) { cropWrap.hidden = true; }
+      renderSingleCrop(); /* discard the drag, restore the stored crop */
+    });
+  }
+
   /* -- Restored: presets (device-local only, max 12) ----------------------- */
   function loadPresets() {
     try {
@@ -479,19 +929,10 @@
     });
     renderPresets();
   }
-  if (savePresetBtn) {
-    savePresetBtn.addEventListener('click', function () {
-      var spec = effSpec();
-      var name = (presetName ? presetName.value.trim() : '')
-        || (spec.w + '\u00d7' + spec.h);
-      var list = loadPresets();
-      list.unshift({ name: name, w: spec.w, h: spec.h, kb: spec.kb });
-      savePresets(list); renderPresets();
-      if (presetName) { presetName.value = ''; }
-      say((window.dkT ? window.dkT('rsv_1242', 'Preset saved: ') : 'Preset saved: ') + name + '.');
-    });
-  }
-
+  /* Preset saving from single mode is gone with the name field + button
+   * (UI-editor correction). Presets are still SAVED from the bulk editor
+   * (auto-named "Custom 1", "Custom 2", ...) and their chips still apply
+   * here via renderPresets()/presetRow above. */
   /* -- Restored: Print Sheet 4x6 -------------------------------------------- */
   if (sheetBtn) {
     sheetBtn.addEventListener('click', function () {
@@ -544,20 +985,9 @@
     });
   }
 
-  /* -- Restored: "Use another photo" reset ---------------------------------- */
-  if (againBtn) {
-    againBtn.addEventListener('click', function () {
-      loadedImg = null; currentBlob = null;
-      if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
-      if (fileEl) { fileEl.value = ''; }
-      showLoadedName('');
-      canvasEl.style.display = 'none';
-      if (dlEl) { dlEl.style.display = 'none'; }
-      say((window.dkT ? window.dkT('rsv_1279', 'Choose another photo.') : 'Choose another photo.'));
-      if (fileEl) { fileEl.click(); }
-    });
-  }
-
+  /* REMOVED 18 Nov 2026 (UI-editor correction): "Use another photo"
+   * (#againBtn) is replaced by "Remove photo" in the toolbar — same reset,
+   * without auto-opening the file picker. */
   /* -- Restored: camera capture (getUserMedia + snapshot) ------------------- */
   var camStream = null;
   function stopCam() {
@@ -624,16 +1054,14 @@
       var img = new Image();
       img.onload = function () {
         closeCam();
-        loadedImg = img;
-        showLoadedName(window.dkT ? window.dkT('bp.cam_t', 'Camera') : 'Camera');
-        say((window.dkT ? window.dkT('rsv_1251', 'Photo captured. Press \u201cMake board photo\u201d.') : 'Photo captured. Press \u201cMake board photo\u201d.'));
-        rerender(false);
+        setLoadedImage(img, window.dkT ? window.dkT('bp.cam_t', 'Camera') : 'Camera', dataUrl);
       };
       img.src = dataUrl;
     });
   }
 
-  /* -- Restored: batch photos (multi-file, one output per input) ------------ */
+  /* Shared file helpers (kept: the Bulk engine API + the upload validator
+   * both use them; only the old batch UI that called them is deleted). */
   function decodeFile(file) {
     return new Promise(function (resolve, reject) {
       var url = URL.createObjectURL(file);
@@ -647,73 +1075,14 @@
     return f && /^image\/(png|jpeg|webp)$/.test(f.type)
       && f.size <= 25 * 1024 * 1024;
   }
-  if (batchBtn && batchInput) {
-    batchBtn.addEventListener('click', function () { batchInput.click(); });
-  }
-  if (batchInput && batchList) {
-    batchInput.addEventListener('change', function () {
-      var files = Array.prototype.slice.call(batchInput.files || [], 0, 10)
-        .filter(validImageFile);
-      batchInput.value = '';
-      batchList.innerHTML = '';
-      if (!files.length) {
-        batchList.innerHTML = '<li class="thint">' + (window.dkT ? window.dkT('rsv_1260', 'No valid photos chosen — pick PNG, JPG or WebP files under 25 MB.') : 'No valid photos chosen — pick PNG, JPG or WebP files under 25 MB.') + '</li>';
-        return;
-      }
-      /* Each file goes through the SAME buildCanvas + fitBlob as the
-       * single photo, so batch output always matches the current spec
-       * and transforms — no second pipeline to drift. */
-      files.forEach(function (f, idx) {
-        var li = document.createElement('li');
-        li.innerHTML = '<span class="thint">' + (window.dkT ? window.dkT('rsv_1261', 'Processing ') : 'Processing ') + esc(f.name) + ' \u2026</span>';
-        batchList.appendChild(li);
-        decodeFile(f).then(function (img) {
-          var spec = effSpec();
-          var built = buildCanvas(img, spec);
-          return fitBlob(built, spec.kb * 1024).then(function (res) {
-            if (!res.blob) {
-              li.innerHTML = '<span class="thint">' + esc(f.name) + (window.dkT ? window.dkT('rsv_1262', ' — could not be processed.') : ' — could not be processed.') + '</span>';
-              return;
-            }
-            var url = URL.createObjectURL(res.blob);
-            li.innerHTML = '';
-            var th = document.createElement('img');
-            th.src = url; th.alt = f.name;
-            var nm = document.createElement('span');
-            nm.textContent = f.name + ' (' + spec.w + '\u00d7' + spec.h
-              + ', ' + (res.blob.size / 1024).toFixed(1) + ' KB'
-              + (res.over ? (window.dkT ? window.dkT('rsv_1263', ', over target') : ', over target') : '') + ')';
-            var dl = document.createElement('button');
-            dl.type = 'button'; dl.className = 'btn ghost';
-            dl.textContent = (window.dkT ? window.dkT('rsv_1264', 'Download JPG') : 'Download JPG');
-            dl.addEventListener('click', function () {
-              downloadBlob(res.blob, 'board-photo-' + (idx + 1) + '.jpg');
-            });
-            li.appendChild(th); li.appendChild(nm); li.appendChild(dl);
-          });
-        }).catch(function () {
-          li.innerHTML = '<span class="thint">' + esc(f.name) + (window.dkT ? window.dkT('rsv_1265', ' — could not be read.') : ' — could not be read.') + '</span>';
-        });
-      });
-    });
-  }
-  /* -- Item 50 (NEW, not in the old deliverable): Email photo, HONEST -- */
-  /* mailto: links cannot carry attachments — no website can attach a
-   * file through mailto:. So this button downloads the made photo (so
-   * the file is ready in Downloads) and opens a mail draft via
-   * window.open, same pattern as the WhatsApp handler. The note next
-   * to the button says plainly to attach the downloaded photo
-   * manually. It never claims the photo is attached. */
-  var emailBtn = $('emailBtn');
-  if (emailBtn) {
-    emailBtn.addEventListener('click', function () {
-      if (!currentBlob) { say((window.dkT ? window.dkT('rsv_1254', 'Make a board photo first, then email it.') : 'Make a board photo first, then email it.')); return; }
-      downloadBlob(currentBlob, 'board-photo.jpg');
-      var subj = (window.dkT ? window.dkT('rsv_1255', 'My board photo') : 'My board photo');
-      var body = (window.dkT ? window.dkT('rsv_1256', 'My board photo (made with DoKit Board Photo).') : 'My board photo (made with DoKit Board Photo).');
-      window.open('mailto:?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body), '_blank', 'noopener');
-    });
-  }
+  /* REMOVED 18 Nov 2026 (UI-editor correction): old Batch Mode (max 10,
+   * one output per input) is deleted — bulk mode has its own intake with
+   * ZIP/folder/paste/500 cap. No dangling references remain: batchBtn /
+   * batchInput / batchList are gone from the HTML and from the var list. */
+  /* REMOVED 18 Nov 2026 (UI-editor correction): Email Photo button.
+   * mailto: cannot carry attachments, so it only ever downloaded the photo
+   * and opened a draft — the Download button already does the useful half.
+   * No dangling references: emailBtn is gone from the HTML and the var list. */
 
   /* -- Bulk engine API (board-photo-bulk.js consumes this) ---------------- */
   /* Single source of truth for boards + pipeline, so bulk output can never
@@ -733,6 +1102,7 @@
     downloadBlob: downloadBlob,
     decodeFile: decodeFile,
     validImageFile: validImageFile,
+    coverCropRect: coverCropRect,
     esc: esc
   };
 })();

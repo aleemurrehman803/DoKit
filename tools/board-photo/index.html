@@ -143,8 +143,8 @@
       <button type="button" class="btn ghost" id="bpb-ed-reset-all" data-i18n="bpb.reset_all">Reset all edits</button>
     </p>
     <p>
-      <label for="bpb-ed-preset-name" data-i18n="bpb.preset_name">Preset name</label>
-      <input id="bpb-ed-preset-name" type="text">
+      <!-- Preset name field removed 18 Nov 2026 (UI-editor correction):
+           custom presets auto-name sequentially, e.g. "Custom 1". -->
       <button type="button" class="btn ghost" id="bpb-ed-preset-save" data-i18n="bpb.preset_save">Save as preset</button>
     </p>
     <p id="bpb-ed-presets"></p>
@@ -156,8 +156,57 @@
     <p><button type="button" class="btn ghost" id="bpb-diag-btn">Download diagnostics</button></p>
   </details>
 </div>
-<div id="dz" class="dropzone bp-single-only" tabindex="0" role="button" data-i18n-aria="rsv_1426"><p class="dz-title" data-i18n="rsv_1426">Drag &amp; drop your image here</p><p class="dz-hint" data-i18n="rsv_1427">PNG, JPEG, WebP · up to 25 MB</p><label for="bp-file" data-i18n="rsv_0715">Your photo</label>
+<div id="dz" class="dropzone bp-single-only" tabindex="0" role="button" data-i18n-aria="rsv_1426"><p class="dz-title" data-i18n="rsv_1426">Drag &amp; drop your image here</p><p class="dz-hint" data-i18n="rsv_1427">PNG, JPEG, WebP · up to 25 MB</p><label for="bp-file" id="bp-dz-label" data-i18n="rsv_0715">Your photo</label>
+<img id="bp-preview-img" hidden alt="">
 <input id="bp-file" type="file" accept="image/*"><p id="bp-filename" class="note" aria-live="polite"></p></div>
+<!-- Visible editing toolbar (UI-editor correction, 18 Nov 2026): appears
+     immediately after upload in single mode — Crop, Rotate, Flip, Enhance,
+     B&W, sliders, background removal + colour, Reset, Remove photo, Camera,
+     Face Guide. Reuses the existing DoKit .btn/.btn.ghost components only. -->
+<div id="bp-toolbar" class="bp-single-only" hidden>
+  <div class="bp-toolbar-row" role="toolbar" aria-label="Photo editor">
+    <button type="button" class="btn ghost" id="bp-crop-btn" aria-expanded="false" data-i18n="bp.ed_crop">Crop</button>
+    <button type="button" class="btn ghost" id="rotL" aria-label="Rotate left" data-i18n-aria="bp.ed_rot_l">&#8635;</button>
+    <button type="button" class="btn ghost" id="rotR" aria-label="Rotate right" data-i18n-aria="bp.ed_rot_r">&#8636;</button>
+    <button type="button" class="btn ghost" id="flipH" aria-pressed="false" data-i18n="bp.ed_flip">&#8646; Flip</button>
+    <button type="button" class="btn ghost" id="enhanceBtn" aria-pressed="false" data-i18n="bp.ed_enhance">Enhance</button>
+    <label class="bp-check"><input type="checkbox" id="bwToggle"> <span data-i18n="bp.bw_t">Black &amp; White</span></label>
+    <label class="bp-check"><input type="checkbox" id="guideToggle"> <span data-i18n="bp.guide_t">Face Guide</span></label>
+    <label class="bp-check"><input type="checkbox" id="bp-rmbg" checked> <span data-i18n="bp.ed_rmbg">Remove background</span></label>
+    <button type="button" class="btn ghost" id="camBtn" data-i18n="bp.cam_btn">Use Camera</button>
+    <button type="button" class="btn ghost" id="bp-reset-btn" data-i18n="bp.ed_reset">Reset</button>
+    <button type="button" class="btn ghost" id="bp-remove-photo" data-i18n="bp.ed_remove_photo">Remove photo</button>
+  </div>
+  <div class="bp-toolbar-row bp-sliders" role="group" aria-label="Adjustments">
+    <label><span data-i18n="bp.ed_brightness">Brightness</span><input id="bp-brightness" type="range" min="-50" max="50" value="0"><span id="bp-brightness-v">0</span></label>
+    <label><span data-i18n="bp.ed_contrast">Contrast</span><input id="bp-contrast" type="range" min="-50" max="50" value="0"><span id="bp-contrast-v">0</span></label>
+    <label><span data-i18n="bp.ed_saturation">Saturation</span><input id="bp-saturation" type="range" min="-100" max="100" value="0"><span id="bp-saturation-v">0</span></label>
+    <label><span data-i18n="bp.ed_temp">Colour temperature</span><input id="bp-temp" type="range" min="-100" max="100" value="0"><span id="bp-temp-v">0</span></label>
+    <label><span data-i18n="bp.ed_feather">Edge softening</span><input id="bp-feather" type="range" min="0" max="8" value="2"><span id="bp-feather-v">2</span></label>
+  </div>
+  <div class="bp-toolbar-row" role="group" aria-label="Background colour">
+    <b data-i18n="bp.bg_label">Background</b>
+    <div id="bgRow" role="group" aria-label="Background colour" data-i18n-aria="bp.bg_label">
+      <button type="button" class="btn ghost bbg-btn" data-bg="#ffffff" data-i18n="bp.bg_white">White</button>
+      <button type="button" class="btn ghost bbg-btn" data-bg="#e6f0ff" data-i18n="bp.bg_blue">Blue</button>
+      <button type="button" class="btn ghost bbg-btn" data-bg="#d93b3b" data-i18n="bp.bg_red">Red</button>
+      <button type="button" class="btn ghost bbg-btn" data-bg="board" data-i18n="bp.bg_board">Board default</button>
+      <button type="button" class="btn ghost bbg-btn" data-bg="original" data-i18n="bp.bg_original">Keep original</button>
+    </div>
+    <label class="bp-check"><span data-i18n="bp.ed_bg_color">Custom colour</span> <input id="bp-bg-color" type="color" value="#e6f0ff"></label>
+  </div>
+  <p id="bp-bg-warn" class="err" hidden></p>
+  <p id="bp-seg-status" class="note" aria-live="polite"></p>
+  <p id="presetRow"></p>
+  <div id="bp-crop-wrap" hidden>
+    <p><b data-i18n="bp.ed_crop_title">Crop — drag to move, drag the corner to resize</b></p>
+    <canvas id="bp-crop-canvas"></canvas>
+    <p class="bpb-row">
+      <button type="button" class="btn" id="bp-crop-apply" data-i18n="bp.ed_crop_apply">Apply crop</button>
+      <button type="button" class="btn ghost" id="bp-crop-cancel" data-i18n="rsv_1248">Cancel</button>
+    </p>
+  </div>
+</div>
 <p class="bp-single-only"><button class="btn" id="bp-make" data-i18n="rsv_0378">Make board photo</button></p>
 <div style="position:relative;display:inline-block" class="bp-single-only">
 <canvas id="bp-canvas" style="max-width:100%;display:none"></canvas>
@@ -165,16 +214,8 @@
 </div>
 <p id="bp-msg" class="bp-single-only"></p>
 <p class="bp-single-only"><a id="bp-download" class="btn ghost" style="display:none" download="board-photo.jpg" data-i18n="rsv_0233">Download photo</a></p>
-<div class="bp-single-only">
-  <p><b data-i18n="rsv_1221">Background</b></p>
-  <div id="bgRow" role="group" aria-label="Background colour" data-i18n-aria="rsv_1221">
-    <button type="button" class="btn ghost bbg-btn" data-bg="#ffffff" data-i18n="rsv_1222">White</button>
-    <button type="button" class="btn ghost bbg-btn" data-bg="#e6f0ff" data-i18n="rsv_1223">Blue</button>
-    <button type="button" class="btn ghost bbg-btn" data-bg="#d93b3b" data-i18n="rsv_1224">Red</button>
-    <button type="button" class="btn ghost bbg-btn" data-bg="board" data-i18n="rsv_1225">Board default</button>
-    <button type="button" class="btn ghost bbg-btn" data-bg="original" data-i18n="resizer.batch_bg_keep">Keep original</button>
-  </div>
-</div>
+<!-- Background buttons moved into the editing toolbar above (UI-editor
+     correction, 18 Nov 2026) — the board preset bg is the default there. -->
 <p class="bp-single-only"><button type="button" class="btn ghost" id="sheetBtn" data-i18n="rsv_1229">Print Sheet (4×6)</button></p>
 <p class="bp-single-only"><button type="button" class="btn ghost" id="waBtn" data-i18n="rsv_1231">Share on WhatsApp</button></p>
 <p class="note bp-single-only" data-i18n="rsv_1232">WhatsApp share sends a text link only — wa.me cannot carry an image file. Download your photo first, then attach it manually inside WhatsApp.</p>
@@ -188,37 +229,10 @@
   <input id="ckb" type="number" min="1" max="10240" value="50">
   <p><button type="button" class="btn ghost" id="customBtn" data-i18n="rsv_1275">Use custom size</button></p>
 </div>
-<div id="advSection" class="bp-single-only">
-  <p><button type="button" class="btn ghost" id="advToggle" aria-expanded="false" aria-controls="advBody" data-i18n="rsv_1233">Advanced ▾</button></p>
-  <div id="advBody" hidden>
-    <p>
-      <button type="button" class="btn ghost" id="enhanceBtn" aria-pressed="false" data-i18n="rsv_1234">Enhance photo</button>
-      <button type="button" class="btn ghost" id="rotL" aria-label="Rotate left" data-i18n-aria="rsv_1235">↻</button>
-      <button type="button" class="btn ghost" id="rotR" aria-label="Rotate right" data-i18n-aria="rsv_1236">↺</button>
-      <button type="button" class="btn ghost" id="flipH" aria-pressed="false" data-i18n="rsv_1237">⇆ Flip</button>
-    </p>
-    <p>
-      <label for="presetName" data-i18n="rsv_1238">Preset name (optional)</label>
-      <input id="presetName" type="text" placeholder="e.g. My board size" data-i18n-ph="rsv_1239">
-      <button type="button" class="btn ghost" id="savePresetBtn" data-i18n="rsv_1240">Save preset</button>
-    </p>
-    <p id="presetRow"></p>
-    <p><button type="button" class="btn ghost" id="camBtn" data-i18n="rsv_1244">Use Camera</button></p>
-<div>
-  <p><b data-i18n="rsv_1257">Batch Mode</b> — <span data-i18n="rsv_1258">process many photos at once (max 10, same spec and transforms as the single photo)</span></p>
-  <p><button type="button" class="btn ghost" id="batchBtn" data-i18n="rsv_1259">Choose photos</button></p>
-  <input type="file" id="batchInput" accept="image/png,image/jpeg,image/webp" multiple hidden>
-  <ul id="batchList"></ul>
-</div>
-<!-- Name/date stamp REMOVED in the bulk upgrade (master prompt §9:
-     absolutely no text on the photo). See BOARD_PHOTO_REGISTER.md D-1. -->
-<p>
-<p>
-  <label><input type="checkbox" id="bwToggle"> <span data-i18n="rsv_1269">Black & White</span></label>
-  <label><input type="checkbox" id="guideToggle"> <span data-i18n="rsv_1270">Face Guide</span></label>
-</p>
-  </div>
-</div>
+<!-- REMOVED 18 Nov 2026 (UI-editor correction): Advanced section, Preset
+     Name field + Save Preset button, old Batch Mode. Enhance/Rotate/Flip,
+     B&W, Face Guide and Camera moved into the visible toolbar above;
+     preset chips (#presetRow) moved there too. -->
 <div id="camModal" hidden role="dialog" aria-label="Camera capture" data-i18n-aria="rsv_1245">
   <p><button type="button" class="btn ghost" id="camX" aria-label="Close camera" data-i18n-aria="rsv_1246">×</button></p>
   <video class="mw-100" id="camVideo" autoplay playsinline></video>
@@ -228,14 +242,14 @@
     <button type="button" class="btn ghost" id="camClose" data-i18n="rsv_1248">Cancel</button>
   </p>
 </div>
-<p class="bp-single-only"><button type="button" class="btn ghost" id="emailBtn" data-i18n="rsv_1252">Email photo</button></p>
-<p class="note bp-single-only" data-i18n="rsv_1253">Email opens a mail draft only — mailto cannot attach files. Your photo downloads first, so you can attach it manually.</p>
-<p class="bp-single-only"><button type="button" class="btn ghost" id="againBtn" data-i18n="rsv_1280">Use another photo</button></p>
+<!-- REMOVED 18 Nov 2026 (UI-editor correction): Email Photo (mailto cannot
+     attach files — Download already does the useful half) and Use Another
+     Photo (replaced by Remove photo in the toolbar). -->
 </div>
-<div class="note"><b data-i18n="rsv_1140">What this tool does not do:</b> <span data-i18n="rsv_1164">it crops and resizes your photo to the board's size and fits it into the file-size limit on a solid background. It does not remove backgrounds and cannot check photo rules beyond the published size and file-size limits. Board rules change — always check your board's latest notice before submitting.</span></div>
+<div class="note"><b data-i18n="rsv_1140">What this tool does not do:</b> <span data-i18n="bp.disclaimer">it crops and resizes your photo to the board's size, fits it into the file-size limit, and replaces the background with your board's required colour (automatic cutout, done in your browser). The cutout works best on a plain, even background; fine hair and busy backgrounds may leave a soft edge — check the preview before submitting. It cannot check photo rules beyond the published size and file-size limits. Board rules change — always check your board's latest notice before submitting.</span></div>
 </div></section></main>
 <footer class="site"><div class="container"><div class="footgrid"><div><a class="logo" href="../../"><svg width="38" height="38" viewBox="0 0 48 48" role="img" aria-label="DoKit logo"><defs><linearGradient id="lgd-f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4CF1"/><stop offset="1" stop-color="#4B2FD6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgd-f)"/><text x="23" y="34" font-size="27" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="system-ui, sans-serif">D</text><circle cx="36" cy="36" r="4" fill="#FFC531"/></svg><span>Do<em>Kit</em></span></a><p class="lede"  data-i18n="footer_tagline">Every tool you'll ever need. Free, fast, and private — right in your browser.</p><p><a href="mailto:malikjalil014@gmail.com">malikjalil014@gmail.com</a></p></div><div><b data-i18n="footer_tools">Tools</b><a href="../../tools/image-resizer/" data-i18n="tool_resizer_name">Image Resizer</a><a href="../../tools/image-compressor/" data-i18n="tool_compressor_name">Image Compressor</a><a href="../../tools/image-converter/" data-i18n="tool_converter_name">Image Converter</a><a href="../../tools/word-counter/" data-i18n="tool_counter_name">Word Counter</a><a href="../../tools/case-converter/" data-i18n="tool_case_name">Case Converter</a><a href="../../tools/board-photo/" data-i18n="bp.title">Board Photo</a><a href="../../tools/password-generator/" data-i18n="cs2_t">Password Generator</a><a href="../../tools/unit-converter/" data-i18n="cs4_t">Unit Converter</a><a href="../../tools/qr-generator/" data-i18n="cs1_t">QR Generator</a><a href="../../typing/" data-i18n="test_title">Typing Test</a></div><div><b data-i18n="footer_company">Company</b><a href="../../about/" data-i18n="nav_about">About</a><a href="../../contact/" data-i18n="nav_contact">Contact</a><a href="../../pricing/" data-i18n="nav_pricing">Pricing</a><a href="../../faq/" data-i18n="nav_faq">FAQ</a><a href="../../guides/" data-i18n="guide_idx_crumb">Guides</a><a href="../../coming-soon/" data-i18n="rsv_1094">Coming Soon</a></div><div><b data-i18n="footer_more">More</b><a href="../../games/" data-i18n="rsv_0280">Games</a><a href="../../typing/lessons/" data-i18n="rsv_0367">Lessons</a><a href="../../typing/practice/" data-i18n="rsv_0453">Practice</a><a href="../../typing/progress/" data-i18n="rsv_0469">Progress</a><a href="../../status/" data-i18n="status.title">System Status</a><a href="../../changelog/" data-i18n="rsv_0144">Changelog</a><a href="../../wall-of-love/" data-i18n="wol.crumb">Wall of Love</a><a href="../../terms-ur/" data-i18n="rsv_1395">Terms (Urdu)</a><a href="../../api/" data-i18n="rsv_0214">DoKit API</a><a href="../../settings/" data-i18n="rsv_0516">Settings</a><a href="../../notifications/" data-i18n="app_notifications">Notifications</a><a href="../../admin/" data-i18n="price2_team_f5">Admin panel</a></div></div><nav class="foot-lang" aria-label="Language"><span class="foot-lang-label" data-i18n="lang_select_label">Language</span><button type="button" data-lang-pick="en">English</button><button type="button" data-lang-pick="ur">اردو</button><button type="button" data-lang-pick="ar">العربية</button><button type="button" data-lang-pick="hi">हिन्दी</button><button type="button" data-lang-pick="es">Español</button><button type="button" data-lang-pick="fr">Français</button><button type="button" data-lang-pick="pt">Português</button><button type="button" data-lang-pick="de">Deutsch</button><button type="button" data-lang-pick="tr">Türkçe</button><button type="button" data-lang-pick="ru">Русский</button></nav><p class="footbase"><span data-i18n="footer_powered">Powered by DoKit</span> · <span data-i18n="footer_developer">Developed by Malik Jalil Ur Rehman Khokhar</span> · <span data-i18n="footer_rights">© 2026 DoKit. All rights reserved.</span> · <a href="../../privacy/" data-i18n="nav_privacy">Privacy</a> · <a href="../../terms/" data-i18n="nav_terms">Terms</a></p></div></footer>
 <button id="chat-fab" aria-label="Chat with Doki" data-i18n-aria="doki_chat"><span class="doki doki--face doki--idle"><img class="doki-photo" src="../../assets/img/doki-photo.png" alt="Doki, the DoKit assistant" srcset="../../assets/img/doki-photo-96.png 96w, ../../assets/img/doki-photo-192.png 192w, ../../assets/img/doki-photo.png 400w" sizes="60px" width="400" height="400"><span class="doki-thinkdots" aria-hidden="true"><i></i><i></i><i></i></span><span class="doki-zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></span><span class="doki-micring" aria-hidden="true"></span></span></button><div id="chat-panel" role="dialog" aria-label="Doki chatbot preview" data-i18n-aria="rsv_1075"><div class="chead"><span class="doki doki--face doki--idle doki-head"><img class="doki-photo" src="../../assets/img/doki-photo.png" alt="" aria-hidden="true" srcset="../../assets/img/doki-photo-96.png 96w, ../../assets/img/doki-photo-192.png 192w, ../../assets/img/doki-photo.png 400w" sizes="64px" loading="lazy" width="400" height="400"><span class="doki-thinkdots" aria-hidden="true"><i></i><i></i><i></i></span><span class="doki-zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></span><span class="doki-micring" aria-hidden="true"></span></span><span data-i18n="rsv_1076">Doki — DoKit Assistant</span> <span class="muted" data-i18n="rsv_1077">(preview)</span></div><div id="chat-log"><div class="msg bot" data-i18n="rsv_1072">Assalam-o-Alaikum! Main Doki hoon. DoKit ke tools, typing aur pricing ke baare me poochein — main site ki apni maloomat se jawab dunga. Neeche kisi page par click karein ya sawal likhein.</div></div><form id="chat-form" data-tools="../../tools/" data-pricing="../../pricing/" data-faq="../../faq/" data-contact="../../contact/" data-compressor="../../tools/image-compressor/" data-resizer="../../tools/image-resizer/" data-converter="../../tools/image-converter/" data-counter="../../tools/word-counter/" data-case="../../tools/case-converter/" data-typing="../../typing/" data-lessons="../../typing/lessons/" data-games="../../typing/games/" data-board="../../tools/board-photo/" data-password="../../tools/password-generator/" data-unit="../../tools/unit-converter/" data-qr="../../tools/qr-generator/" data-battle="../../typefight/battle/" data-wall="../../wall-of-love/" data-changelog="../../changelog/" data-status="../../status/" data-api="../../api/" data-design="../../design-system/" data-practice="../../typing/practice/" data-results="../../typing/results/" data-progress="../../typing/progress/" data-dashboard="../../typing/dashboard/" data-certificate="../../typing/certificate/"><input id="chat-input" type="text" placeholder="Apna sawal likhein…" data-i18n-ph="rsv_1073" aria-label="Chatbot sawal" data-i18n-aria="rsv_1074"><button class="btn doki-mic-btn" type="button" id="chat-mic" aria-label="Voice input" data-i18n-aria="doki_mic_btn"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button class="btn" type="submit" data-i18n="form_send">Send message</button></form></div>
-<script src="../../assets/js/main.js" defer></script><script src="../../js/i18n-boardphoto.js" defer></script><script src="../../assets/js/board-photo.js" defer></script><script src="../../assets/js/vendor/fflate.min.js" defer></script><script src="../../assets/js/board-photo-zip.js" defer></script><script src="../../assets/js/board-photo-bulk-logic.js" defer></script><script src="../../assets/js/board-photo-bulk.js" defer></script>
+<script src="../../assets/js/main.js" defer></script><script src="../../js/i18n-boardphoto.js" defer></script><script src="../../assets/js/vendor/mediapipe-selfie/selfie_segmentation.js" defer></script><script src="../../assets/js/board-photo-segment.js" defer></script><script src="../../assets/js/board-photo.js" defer></script><script src="../../assets/js/vendor/fflate.min.js" defer></script><script src="../../assets/js/board-photo-zip.js" defer></script><script src="../../assets/js/board-photo-bulk-logic.js" defer></script><script src="../../assets/js/board-photo-bulk.js" defer></script>
 </body>
 </html>
