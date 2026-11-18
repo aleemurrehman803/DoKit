@@ -84,7 +84,18 @@
 
   /* Load compat SDKs in order, then init. App Check is best-effort:
    * if its scripts fail, Auth still works and Firestore works unless the
-   * console enforces App Check (mirrors the legacy comment). */
+   * console enforces App Check (mirrors the legacy comment).
+   * Perf fix (Nov 2026) — static SDK tags: the DKA pages now load the
+   * compat SDKs + reCAPTCHA Enterprise via static <script defer> tags
+   * (like the flat pages), so by the time boot() runs they are usually
+   * already present. Only download the modules that are actually
+   * missing — never re-download a present module — and keep the old
+   * dynamic path as the fallback when the static tags did not load
+   * (offline / blocked host). Failure semantics are identical to
+   * loadScript (resolve false on error/timeout; init proceeds only
+   * if window.firebase exists). Deferred scripts execute in document
+   * order, and the SDK tags sit before account.js, so the modules are
+   * present before boot() runs. */
   var sdkReady = null;
   function ensureSdk(){
     if (sdkReady) { return sdkReady; }
@@ -92,14 +103,16 @@
       if (window.firebase && window.firebase.apps && window.firebase.apps.length) {
         return Promise.resolve(true);
       }
-      var chain = Promise.all([
-        loadScriptParallel(SDK_BASE + 'firebase-app-compat.js'),
-        loadScriptParallel(SDK_BASE + 'firebase-auth-compat.js'),
-        loadScriptParallel(SDK_BASE + 'firebase-firestore-compat.js'),
-        loadScriptParallel(SDK_BASE + 'firebase-storage-compat.js'),
-        loadScriptParallel(SDK_BASE + 'firebase-app-check-compat.js'),
-        loadScriptParallel('https://www.google.com/recaptcha/enterprise.js')
-      ]);
+      var missing = [];
+      if (!window.firebase) { missing.push(SDK_BASE + 'firebase-app-compat.js'); }
+      if (!(window.firebase && window.firebase.auth)) { missing.push(SDK_BASE + 'firebase-auth-compat.js'); }
+      if (!(window.firebase && window.firebase.firestore)) { missing.push(SDK_BASE + 'firebase-firestore-compat.js'); }
+      if (!(window.firebase && window.firebase.storage)) { missing.push(SDK_BASE + 'firebase-storage-compat.js'); }
+      if (!(window.firebase && window.firebase.appCheck)) { missing.push(SDK_BASE + 'firebase-app-check-compat.js'); }
+      if (!window.grecaptcha) { missing.push('https://www.google.com/recaptcha/enterprise.js'); }
+      var chain = missing.length ?
+        Promise.all(missing.map(function(src){ return loadScriptParallel(src); })) :
+        Promise.resolve(true);
       return chain.then(function(){
         if (!window.firebase) { return false; }
         try {
@@ -154,7 +167,11 @@
     /* Create/merge the user's profile doc on sign-in. Owner-create rules
      * allow coins == 0 (or absent) and forbid suspension fields, so this
      * payload carries neither suspension nor a starting balance above 0. */
-    ensureUserDoc: function(user, extra){
+    /* isNew (perf fix, Nov 2026): pass true ONLY from the email-signup
+     * handler, where createUser just succeeded for a brand-new email
+     * and the uid is provably fresh (see the doSet note below). Login
+     * and Google paths must NOT pass it — they keep the get(). */
+    ensureUserDoc: function(user, extra, isNew){
       if (!user || !user.uid || !DKA.db()) { return Promise.resolve(); }
       var ref = DKA.userDoc(user.uid);
       /* Payload builder, factored so the race retry below reuses the
@@ -244,14 +261,28 @@
         }
         return data;
       };
-      return ref.get().then(function(snap){
+      /* Perf fix (Nov 2026) — signup-path skip of the opening get().
+       * SAFETY CASE (all four hold, for the email-signup call site
+       * only): (1) createUser just succeeded for a brand-new email,
+       * so the uid is fresh and users/{uid} cannot exist yet; (2) the
+       * only other writer, the onUser bare-doc plant, is gated by
+       * window.__dokitSigningUp (set before createUser, cleared only
+       * after this handler's jobs finish); (3) the permission-denied
+       * retry below is KEPT — if the set is denied because the doc
+       * did exist after all, the retry re-reads and rebuilds with the
+       * exists-branch payload (no createdAt), so createdAt is never
+       * overwritten and the write still lands; (4) buildData never
+       * calls snap.data() on the !exists branch, so the synthetic
+       * {exists:false} snapshot is safe. Saving: one Firestore RTT
+       * (~0.3–1s) off the signup path. */
+      var doSet = function(snap){
         return ref.set(buildData(snap), { merge: true }).catch(function(err){
-          /* Signup-race fix (Oct 27, 2026): the get() above can see no
-           * doc while the onUser fallback plants its bare doc before
-           * the server evaluates this set — the write then becomes an
-           * UPDATE, and the owner-update allow-list rejects createdAt,
-           * so the whole write is denied although Auth + bare doc
-           * exist. Retry ONCE with a fresh read: the exists-branch
+          /* Signup-race fix (Oct 27, 2026): the set above can be
+           * evaluated as an UPDATE when the onUser fallback plants
+           * its bare doc before the server sees this write — the
+           * owner-update allow-list then rejects createdAt, so the
+           * whole write is denied although Auth + bare doc exist.
+           * Retry ONCE with a fresh read: the exists-branch
            * payload carries no createdAt and fills referral extras
            * only when missing, so every key is owner-allow-listed and
            * the retry ALLOWs under the current rules. Non-permission
@@ -264,7 +295,9 @@
             return ref.set(buildData(snap2), { merge: true });
           });
         });
-      }).catch(function(err){
+      };
+      var writePromise = isNew ? doSet({ exists: false }) : ref.get().then(doSet);
+      return writePromise.catch(function(err){
         /* Diagnostic (live-test 5, Oct 26): this catch used to swallow
          * every failure silently, which hid three straight live-test
          * failures. A failed user-doc write must stay visible in the
@@ -2241,7 +2274,11 @@
            * referrerId (if captured) + consent (if the box was checked).
            * ensureUserDoc fills missing referral fields, so this is
            * safe even if the fallback doc already exists. */
-          jobs.push(DKA.ensureUserDoc(u, referralSignupFields(u)));
+          /* Perf fix (Nov 2026): isNew=true — createUser just succeeded
+           * for this fresh uid, so ensureUserDoc skips its opening
+           * get() (one Firestore RTT saved); the permission-denied
+           * retry inside stays as the backstop. */
+          jobs.push(DKA.ensureUserDoc(u, referralSignupFields(u), true));
           /* FIX4 (Oct 27): the referrals row used to be gated on a
            * captured ?ref=, so a class-only signup wrote NO row and
            * the teacher's class count stayed 0/10. signupReferralRow
