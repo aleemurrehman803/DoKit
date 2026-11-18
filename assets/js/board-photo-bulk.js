@@ -1490,14 +1490,20 @@
         renderCropCanvas();
       });
     }
+    /* Preset save (UI-editor correction, 18 Nov 2026): the visible name
+     * field is removed — custom presets auto-name sequentially ("Custom 1",
+     * "Custom 2", ...) from the next free number, so saving still works
+     * with no name to type. */
     click('bpb-ed-preset-save', function () {
       if (!state.editorDraft) { return; }
-      var nameEl = $('bpb-ed-preset-name');
       var im = editorImage();
       var eff = LOGIC.mergeSettings(im.shared, state.editorDraft);
-      var name = (nameEl && nameEl.value.trim())
-        || ('Preset ' + (loadEditPresets().length + 1));
       var list = loadEditPresets();
+      var n = 1;
+      var taken = {};
+      list.forEach(function (p) { taken[p.name] = true; });
+      while (taken[t('bpb.preset_auto', 'Custom {n}').replace('{n}', String(n))]) { n++; }
+      var name = t('bpb.preset_auto', 'Custom {n}').replace('{n}', String(n));
       list.unshift({
         name: name,
         settings: {
@@ -1507,7 +1513,6 @@
       });
       saveEditPresets(list);
       renderEditPresets();
-      if (nameEl) { nameEl.value = ''; }
     });
     click('bpb-ed-reset-all', function () {
       if (!state.images.length) { return; }
