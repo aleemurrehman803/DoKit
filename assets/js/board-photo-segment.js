@@ -135,18 +135,228 @@
     }
     return n ? fg / n : 0;
   }
-  /* Feather a mask: draw it through a blur so edges blend into the new bg
-   * instead of cutting a hard halo. Applied at composite time, the
-   * ORIGINAL mask is never mutated (the slider can move freely). */
-  function featheredMask(maskCanvas, featherPx) {
-    if (!featherPx || featherPx <= 0) { return maskCanvas; }
-    var c = document.createElement('canvas');
-    c.width = maskCanvas.width; c.height = maskCanvas.height;
-    var ctx = c.getContext('2d');
-    try { ctx.filter = 'blur(' + featherPx + 'px)'; } catch (e) { /* old browser: hard edge */ }
-    ctx.drawImage(maskCanvas, 0, 0);
-    try { ctx.filter = 'none'; } catch (e) { /* ignore */ }
-    return c;
+  /* NOTE (image-quality round, 18 Nov 2026): the old featheredMask
+   * (uniform Gaussian blur) was removed — it is what spread the pale
+   * halo. refineMask below (choke + bounded box blur) replaces it. */
+
+  /* -- Mask refinement (image-quality round, 18 Nov 2026) ------------------ */
+  /* MASK CHANNELS — measured in-page 18 Nov 2026 (woman-yellow, 800x705):
+   * MediaPipe's mask canvas carries the mask TWICE: RED is the BINARY
+   * hard classification (278,094 px > 127, zero mid values) and ALPHA is
+   * the SOFT edge (256,004 px > 127 plus 26,395 mid values). The colour
+   * fallback's mask is RGB binary with alpha 255. Both producers agree
+   * on one thing: the mask value is in RED. refineMask therefore reads
+   * RED (the hard edge — the choke erodes a clean boundary, not the
+   * model's own soft fringe) and writes the refined value into BOTH
+   * RGB and ALPHA: the compositor (destination-in) reads ALPHA, and a
+   * second refine pass over an already-refined mask is a true no-op.
+   * The first version wrote RGB=v with alpha 255 — destination-in then
+   * kept EVERYTHING and the background was never removed (caught by the
+   * ablation: the After image kept its original yellow background while
+   * the UI claimed "background replaced").
+   * The raw MediaPipe mask's effective resolution is the model's 256x144
+   * input (verified from the tflite: input tensor [1,144,256,3], output
+   * [1,144,256,1]). The soft halo the user sees is created DOWNSTREAM:
+   * the mask downscale to 150x200 plus the old uniform Gaussian feather
+   * (blur 2px) spread a 2-5px band in which the ORIGINAL background
+   * colour leaked through (measured halo 8.5-20.5px at 150x200 output).
+   * refineMask fixes the edge AT OUTPUT SIZE (150x200 = 30k px, so
+   * ImageData processing is cheap):
+   *   1. CHOKE: erode the mask ~1px (3x3 min filter) — cuts the outer
+   *      fringe band that contains background pixels, without touching
+   *      hair/ears/arms (1px at 150 wide is below a hair strand).
+   *   2. FEATHER: a small separable BOX blur (radius = featherPx) instead
+   *      of a Gaussian — a box blur's support is bounded, so the soft band
+   *      stays narrow and predictable (feather 1 = ~3px band total).
+   * The mask itself is never upscaled and never blurred at source size. */
+  function erode3(a, w, h) {
+    var out = new Float32Array(w * h);
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var m = 255;
+        for (var dy = -1; dy <= 1; dy++) {
+          var yy = y + dy; if (yy < 0) { yy = 0; } if (yy >= h) { yy = h - 1; }
+          for (var dx = -1; dx <= 1; dx++) {
+            var xx = x + dx; if (xx < 0) { xx = 0; } if (xx >= w) { xx = w - 1; }
+            var v = a[yy * w + xx];
+            if (v < m) { m = v; }
+          }
+        }
+        out[y * w + x] = m;
+      }
+    }
+    return out;
+  }
+  function boxBlur1d(a, w, h, r, horizontal) {
+    var out = new Float32Array(w * h);
+    var n = 2 * r + 1;
+    if (horizontal) {
+      for (var y = 0; y < h; y++) {
+        var sum = 0;
+        for (var x = -r; x <= r; x++) {
+          var xx = x < 0 ? 0 : (x >= w ? w - 1 : x);
+          sum += a[y * w + xx];
+        }
+        for (var x2 = 0; x2 < w; x2++) {
+          out[y * w + x2] = sum / n;
+          var xa = x2 - r, xb = x2 + r + 1;
+          sum += a[y * w + (xb >= w ? w - 1 : xb)] - a[y * w + (xa < 0 ? 0 : xa)];
+        }
+      }
+    } else {
+      for (var x = 0; x < w; x++) {
+        var s2 = 0;
+        for (var y = -r; y <= r; y++) {
+          var yy = y < 0 ? 0 : (y >= h ? h - 1 : y);
+          s2 += a[yy * w + x];
+        }
+        for (var y2 = 0; y2 < h; y2++) {
+          out[y2 * w + x] = s2 / n;
+          var ya = y2 - r, yb = y2 + r + 1;
+          s2 += a[(yb >= h ? h - 1 : yb) * w + x] - a[(ya < 0 ? 0 : ya) * w + x];
+        }
+      }
+    }
+    return out;
+  }
+  function refineMask(maskCanvas, chokePx, featherPx) {
+    var w = maskCanvas.width, h = maskCanvas.height;
+    var src = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    var a = new Float32Array(w * h);
+    for (var i = 0; i < w * h; i++) { a[i] = src[i * 4]; } /* mask value is in RED (see channel note above) */
+    var c = 0;
+    while (c < (chokePx || 0)) { a = erode3(a, w, h); c++; }
+    if (featherPx && featherPx > 0) {
+      a = boxBlur1d(a, w, h, featherPx, true);
+      a = boxBlur1d(a, w, h, featherPx, false);
+    }
+    var out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    var octx = out.getContext('2d');
+    var img = octx.createImageData(w, h);
+    for (var j = 0; j < w * h; j++) {
+      var v = a[j] < 0 ? 0 : (a[j] > 255 ? 255 : a[j]);
+      /* Value in RGB AND alpha (see channel note above): destination-in
+       * reads alpha — alpha 255 here would keep the whole background. */
+      img.data[j * 4] = v; img.data[j * 4 + 1] = v;
+      img.data[j * 4 + 2] = v; img.data[j * 4 + 3] = v;
+    }
+    octx.putImageData(img, 0, 0);
+    return out;
+  }
+  /* Colour decontamination: after the mask is applied, the semi-transparent
+   * edge band still carries the ORIGINAL background's colour (the mask edge
+   * sits a pixel outside the true subject edge, so those pixels ARE old
+   * background). Recolour each band pixel from the nearest fully-opaque
+   * subject pixel (iterative 3x3 dilation, ~4px reach) — the band keeps
+   * its own alpha, so the edge stays soft, but it now reads as subject
+   * colour instead of a grey/yellow fringe. Alpha is never touched. */
+  function decontaminate(subjectCanvas, maskCanvas) {
+    var w = subjectCanvas.width, h = subjectCanvas.height;
+    var sctx = subjectCanvas.getContext('2d');
+    var s = sctx.getImageData(0, 0, w, h);
+    var m = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    var d = s.data;
+    var filled = new Uint8Array(w * h);
+    /* The refined mask carries its value in ALPHA (and mirrors it in RGB)
+     * — read alpha here so the band test agrees with destination-in. */
+    for (var i = 0; i < w * h; i++) { filled[i] = m[i * 4 + 3] > 242 ? 1 : 0; }
+    for (var pass = 0; pass < 4; pass++) {
+      var changed = false;
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var idx = y * w + x;
+          if (filled[idx]) { continue; }
+          var alpha = m[idx * 4 + 3];
+          if (alpha <= 12 || alpha >= 243) { continue; } /* band only */
+          var r = 0, g = 0, b = 0, n = 0;
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) { continue; }
+              var nx = x + dx, ny = y + dy;
+              if (nx < 0 || ny < 0 || nx >= w || ny >= h) { continue; }
+              var ni = ny * w + nx;
+              if (!filled[ni]) { continue; }
+              var o = ni * 4;
+              r += d[o]; g += d[o + 1]; b += d[o + 2]; n++;
+            }
+          }
+          if (n) {
+            var o2 = idx * 4;
+            d[o2] = r / n; d[o2 + 1] = g / n; d[o2 + 2] = b / n;
+            filled[idx] = 1; changed = true;
+          }
+        }
+      }
+      if (!changed) { break; }
+    }
+    sctx.putImageData(s, 0, 0);
+  }
+  /* Gentle capture sharpening, applied ONLY where the mask is fully opaque
+   * (subject interior — never the background, never the edge band, so no
+   * ringing at the cutout). Compensates the softening of the 150x200
+   * downscale; it is a measured pipeline step (amount picked by the
+   * browser ablation), not a user-facing "sharpen" button. */
+  function sharpenSubject(canvas, maskCanvas, amount) {
+    if (!amount || amount <= 0) { return; }
+    var w = canvas.width, h = canvas.height;
+    var ctx = canvas.getContext('2d');
+    var s = ctx.getImageData(0, 0, w, h);
+    var m = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    var d = s.data;
+    var rgb = new Float32Array(w * h * 3);
+    for (var i = 0; i < w * h; i++) {
+      rgb[i * 3] = d[i * 4]; rgb[i * 3 + 1] = d[i * 4 + 1]; rgb[i * 3 + 2] = d[i * 4 + 2];
+    }
+    var blur = boxBlurRGB(rgb, w, h, 1);
+    /* Sharpen only where the refined mask is fully opaque (alpha > 242)
+     * — the subject interior, never the background or the edge band. */
+    for (var j = 0; j < w * h; j++) {
+      if (m[j * 4 + 3] > 242) {
+        var o = j * 4, b3 = j * 3;
+        d[o] = clamp255(d[o] + amount * (d[o] - blur[b3]));
+        d[o + 1] = clamp255(d[o + 1] + amount * (d[o + 1] - blur[b3 + 1]));
+        d[o + 2] = clamp255(d[o + 2] + amount * (d[o + 2] - blur[b3 + 2]));
+      }
+    }
+    ctx.putImageData(s, 0, 0);
+  }
+  function clamp255(v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
+  function boxBlurRGB(rgb, w, h, r) {
+    var tmp = new Float32Array(w * h * 3);
+    var out = new Float32Array(w * h * 3);
+    var n = 2 * r + 1;
+    for (var y = 0; y < h; y++) {
+      for (var ch = 0; ch < 3; ch++) {
+        var sum = 0;
+        for (var x = -r; x <= r; x++) {
+          var xx = x < 0 ? 0 : (x >= w ? w - 1 : x);
+          sum += rgb[(y * w + xx) * 3 + ch];
+        }
+        for (var x2 = 0; x2 < w; x2++) {
+          tmp[(y * w + x2) * 3 + ch] = sum / n;
+          var xa = x2 - r, xb = x2 + r + 1;
+          sum += rgb[(y * w + (xb >= w ? w - 1 : xb)) * 3 + ch]
+            - rgb[(y * w + (xa < 0 ? 0 : xa)) * 3 + ch];
+        }
+      }
+    }
+    for (var x3 = 0; x3 < w; x3++) {
+      for (var ch2 = 0; ch2 < 3; ch2++) {
+        var s2 = 0;
+        for (var y3 = -r; y3 <= r; y3++) {
+          var yy = y3 < 0 ? 0 : (y3 >= h ? h - 1 : y3);
+          s2 += tmp[(yy * w + x3) * 3 + ch2];
+        }
+        for (var y4 = 0; y4 < h; y4++) {
+          out[(y4 * w + x3) * 3 + ch2] = s2 / n;
+          var ya = y4 - r, yb = y4 + r + 1;
+          s2 += tmp[((yb >= h ? h - 1 : yb) * w + x3) * 3 + ch2]
+            - tmp[((ya < 0 ? 0 : ya) * w + x3) * 3 + ch2];
+        }
+      }
+    }
+    return out;
   }
 
   /* -- Colour fallback (uniform backgrounds only) --------------------------- */
@@ -271,10 +481,12 @@
 
   /* Composite a mask onto a subject canvas IN PLACE: pixels outside the
    * mask become transparent, so the caller's board-colour fill shows
-   * through. featherPx blurs the mask edge first (hair halo control). */
+   * through. featherPx now runs through refineMask (bounded box blur,
+   * no choke) — the old Gaussian blur is gone: it spread the edge band
+   * to 2-5px and let the original background leak in as a halo. */
   function applyMaskToCanvas(subjectCanvas, maskCanvas, featherPx) {
     var ctx = subjectCanvas.getContext('2d');
-    var m = featheredMask(maskCanvas, featherPx || 0);
+    var m = refineMask(maskCanvas, 0, featherPx || 0);
     ctx.save();
     ctx.globalCompositeOperation = 'destination-in';
     ctx.drawImage(m, 0, 0, subjectCanvas.width, subjectCanvas.height);
@@ -285,6 +497,9 @@
     ensure: ensureMP,
     removeBackground: removeBackground,
     applyMaskToCanvas: applyMaskToCanvas,
+    refineMask: refineMask,
+    decontaminate: decontaminate,
+    sharpenSubject: sharpenSubject,
     maskCoverage: maskCoverage,
     vendorBytes: WASM_BYTES,
     vendorFiles: VENDOR_FILES.slice(),

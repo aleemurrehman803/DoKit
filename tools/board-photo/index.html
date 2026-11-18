@@ -182,7 +182,7 @@
     <label><span data-i18n="bp.ed_contrast">Contrast</span><input id="bp-contrast" type="range" min="-50" max="50" value="0"><span id="bp-contrast-v">0</span></label>
     <label><span data-i18n="bp.ed_saturation">Saturation</span><input id="bp-saturation" type="range" min="-100" max="100" value="0"><span id="bp-saturation-v">0</span></label>
     <label><span data-i18n="bp.ed_temp">Colour temperature</span><input id="bp-temp" type="range" min="-100" max="100" value="0"><span id="bp-temp-v">0</span></label>
-    <label><span data-i18n="bp.ed_feather">Edge softening</span><input id="bp-feather" type="range" min="0" max="8" value="2"><span id="bp-feather-v">2</span></label>
+    <label><span data-i18n="bp.ed_feather">Edge softening</span><input id="bp-feather" type="range" min="0" max="8" value="1"><span id="bp-feather-v">1</span></label>
   </div>
   <div class="bp-toolbar-row" role="group" aria-label="Background colour">
     <b data-i18n="bp.bg_label">Background</b>
@@ -212,6 +212,7 @@
   <div id="bp-crop-wrap" hidden>
     <p><b data-i18n="bp.ed_crop_title">Crop — drag to move, drag the corner to resize</b></p>
     <canvas id="bp-crop-canvas"></canvas>
+    <p id="bp-crop-warn" class="note warn" hidden><span data-i18n="bp.ba_crop_warn">Subject is wider than the frame — edges may be cut.</span></p>
     <p class="bpb-row">
       <button type="button" class="btn" id="bp-crop-apply" data-i18n="bp.ed_crop_apply">Apply crop</button>
       <button type="button" class="btn ghost" id="bp-crop-cancel" data-i18n="rsv_1248">Cancel</button>
@@ -230,8 +231,14 @@
       <p id="bp-before-meta" class="note"></p>
     </figure>
     <figure class="bp-compare-fig">
-      <img id="bp-after-img" alt="After — board photo">
+      <div class="bp-zoom-box"><img id="bp-after-img" alt="After — board photo"></div>
       <figcaption data-i18n="bp.ba_after">After — board photo</figcaption>
+      <p class="bpb-row bp-zoom-row">
+        <span data-i18n="bp.ba_zoom">Zoom:</span>
+        <button type="button" class="btn ghost bp-zoom-btn" data-zoom="1" aria-pressed="true">100%</button>
+        <button type="button" class="btn ghost bp-zoom-btn" data-zoom="2" aria-pressed="false">200%</button>
+        <button type="button" class="btn ghost bp-zoom-btn" data-zoom="3" aria-pressed="false">300%</button>
+      </p>
       <p id="bp-after-meta" class="note"></p>
     </figure>
   </div>

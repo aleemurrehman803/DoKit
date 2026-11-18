@@ -144,6 +144,31 @@
   var compareEl = $('bp-compare'), beforeImg = $('bp-before-img'),
       afterImg = $('bp-after-img'), beforeMeta = $('bp-before-meta'),
       afterMeta = $('bp-after-meta');
+  /* After-image zoom (image-quality round, 18 Nov 2026): 100% = actual
+   * pixels, 200%/300% for edge inspection. At 300% the image renders
+   * pixelated so the user sees the real pixels, not a smoothed upscale.
+   * Zoom only changes how the FINAL blob is displayed — never the file. */
+  var zoomBtns = document.querySelectorAll('.bp-zoom-btn');
+  function setAfterZoom(z) {
+    if (!afterImg) { return; }
+    var base = afterImg.naturalWidth || 150;
+    afterImg.style.width = (base * z) + 'px';
+    afterImg.style.maxWidth = 'none';
+    afterImg.style.maxHeight = 'none';
+    afterImg.style.imageRendering = (z >= 3) ? 'pixelated' : 'auto';
+    for (var i = 0; i < zoomBtns.length; i++) {
+      var on = Number(zoomBtns[i].getAttribute('data-zoom')) === z;
+      zoomBtns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      zoomBtns[i].classList.toggle('active', on);
+    }
+  }
+  for (var zi = 0; zi < zoomBtns.length; zi++) {
+    (function (btn) {
+      btn.addEventListener('click', function () {
+        setAfterZoom(Number(btn.getAttribute('data-zoom')) || 1);
+      });
+    })(zoomBtns[zi]);
+  }
   var bwToggle = $('bwToggle'), guideToggle = $('guideToggle'), faceGuide = $('faceGuide');
   var camBtn = $('camBtn'), camModal = $('camModal'), camVideo = $('camVideo');
   var camErr = $('camErr'), camClose = $('camClose'), camX = $('camX'), camShot = $('camShot');
@@ -164,7 +189,7 @@
   var segMask = null;       // segmentation mask canvas at source size, or null
   var segEngine = '';       // 'mediapipe' | 'colour' | '' (none yet / failed)
   var removeBgOn = true;    // "Remove background" toggle (default ON)
-  var featherPx = 2;        // mask edge feather, px at output size
+  var featherPx = 1;        // mask edge feather, px at output size (default 1: measured 18 Nov 2026 — feather 2 widened the halo band)
   var loadedDataUrl = null; // original upload, kept independent of output
   /* PIPELINE FIX (18 Nov 2026): segmentation state machine. The old code
    * had no state at all — Make just rendered whatever mask happened to
@@ -303,6 +328,78 @@
     return { x: Math.max(0, Math.round((iw - cw) / 2)),
       y: Math.max(0, Math.round((ih - ch) * 0.32)), w: cw, h: ch };
   }
+  /* Mask bounding box (source pixels, threshold >127, sampled every 4th
+   * pixel for speed). Returns null when the mask is empty. */
+  /* Mask bounding box (threshold >127). Reads the RED channel: the
+   * ORIGINAL segMask carries its binary hard classification in RED
+   * (measured 18 Nov 2026) — the refined mask is never passed here.
+   * yMax (optional): only scan rows above this source y — used for the
+   * head-zone bbox (see subjectCropRect). */
+  function maskBBox(maskCanvas, yMax) {
+    if (!maskCanvas) { return null; }
+    var w = maskCanvas.width, h = maskCanvas.height;
+    var d;
+    try { d = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data; }
+    catch (e) { return null; }
+    var yEnd = (yMax !== undefined && yMax < h) ? yMax : h;
+    var x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (var y = 0; y < yEnd; y += 4) {
+      for (var x = 0; x < w; x += 4) {
+        if (d[(y * w + x) * 4] > 127) {
+          if (x < x0) { x0 = x; } if (x > x1) { x1 = x; }
+          if (y < y0) { y0 = y; } if (y > y1) { y1 = y; }
+        }
+      }
+    }
+    if (x1 < 0) { return null; }
+    return { x0: x0, y0: y0, x1: x1, y1: y1 };
+  }
+  /* Smart Subject Framing (image-quality round, 18 Nov 2026): the cover
+   * crop's fixed 0.32 top bias is NOT subject-aware — measured top
+   * margins of 0px (head touching the frame) on real photos whose head
+   * sits near the top of the source, and side margins of 0px (shoulders
+   * touching both edges). When a segmentation mask exists, position the
+   * window from the MASK bbox instead: head-top margin >= 8% of the
+   * output height, side margins >= 4% of the output width, where the
+   * subject fits. If the subject is wider/taller than the window, centre
+   * it (symmetric cut) and set warn=true so the UI can say so honestly
+   * instead of silently cutting an ear or a shoulder. Returns the same
+   * {x,y,w,h} shape as coverCropRect, plus .warn. */
+  function subjectCropRect(iw, ih, outW, outH, maskCanvas) {
+    var win = coverCropRect(iw, ih, outW, outH);
+    var bb = maskBBox(maskCanvas);
+    if (!bb) { win.warn = false; return win; }
+    var px = outW / win.w, py = outH / win.h; /* output px per source px */
+    var topWant = Math.round(outH * 0.08), sideWant = Math.round(outW * 0.04);
+    var warn = false;
+    /* Head zone = top 45% of the subject (face + ears live here). The
+     * shoulders below are WIDER and may touch the frame edges — that is
+     * normal ID framing, not a cut — so the horizontal fit and its
+     * warning use the head zone only. Centring on the head also puts
+     * the face in the middle of the frame, not the shoulders. */
+    var headBB = maskBBox(maskCanvas, bb.y0 + Math.round((bb.y1 - bb.y0) * 0.45)) || bb;
+    /* Horizontal: shift the window so the head zone has sideWant on both
+     * sides. If the head zone is wider than the window allows, centre it
+     * (symmetric). */
+    var leftM = (headBB.x0 - win.x) * px, rightM = (win.x + win.w - 1 - headBB.x1) * px;
+    if (leftM < sideWant || rightM < sideWant) {
+      var cx = (headBB.x0 + headBB.x1) / 2;
+      var nx = Math.round(cx - win.w / 2);
+      if ((headBB.x1 - headBB.x0) * px > outW - 2 * sideWant) { warn = true; }
+      win.x = Math.max(0, Math.min(iw - win.w, nx));
+    }
+    /* Vertical: head margin first. If the mask is taller than the window,
+     * align the top (head margin) and cut the bottom — shoulders at the
+     * bottom edge are normal for board photos, a cut head is not. */
+    var topM = (bb.y0 - win.y) * py;
+    if (topM < topWant) {
+      var ny = Math.round(bb.y0 - topWant / py);
+      if ((bb.y1 - bb.y0) * py > outH - topWant) { warn = true; }
+      win.y = Math.max(0, Math.min(ih - win.h, ny));
+    }
+    win.warn = warn;
+    return win;
+  }
   function buildCanvas(img, spec, opts) {
     var o = opts || {};
     var single = !!o._single; /* single-mode state applies ONLY with this flag (bulk never sets it) */
@@ -328,14 +425,26 @@
       cropPx = { x: Math.round(singleCrop.x * iw), y: Math.round(singleCrop.y * ih),
         w: Math.round(singleCrop.w * iw), h: Math.round(singleCrop.h * ih) };
     }
+    /* The mask is resolved BEFORE the window: Smart Subject Framing
+     * positions the default window from the mask bbox (see
+     * subjectCropRect). Bulk passes its mask via o.mask; single mode uses
+     * the live segMask when background removal is on. */
+    var mask = (single && removeBgOn) ? segMask : (o.mask || null);
+    var cropWarn = false;
     if (cropPx) {
       cw = Math.min(cropPx.w, iw); ch = Math.min(cropPx.h, ih);
       sx = Math.max(0, Math.min(cropPx.x, iw - cw));
       sy = Math.max(0, Math.min(cropPx.y, ih - ch));
     } else {
-      var cc = coverCropRect(iw, ih, outW, outH);
+      var cc = (single && mask && window.DKBoardSegment)
+        ? subjectCropRect(iw, ih, outW, outH, mask)
+        : coverCropRect(iw, ih, outW, outH);
       cw = cc.w; ch = cc.h; sx = cc.x; sy = cc.y;
+      cropWarn = !!cc.warn;
     }
+    /* The crop warning is visible to the UI/tests: the subject could not
+     * be framed with safe margins (wider/taller than the frame). */
+    window.__bpCropWarn = cropWarn;
     var canvas = document.createElement('canvas');
     canvas.width = outW; canvas.height = outH;
     var ctx = canvas.getContext('2d');
@@ -364,16 +473,61 @@
       filters.push('brightness(' + br.toFixed(3) + ') contrast(' + ct.toFixed(3)
         + ') saturate(' + st.toFixed(3) + ')');
     }
+    /* Quality test seam (image-quality round, 18 Nov 2026): tests may
+     * override pipeline constants via window.__bpQuality before Make
+     * (ablation runs). Production defaults are the measured winners.
+     *   chokePx: mask erosion px at output size (default 1)
+     *   sharpen: unsharp amount on the subject interior (default 0.25)
+     *   stepDown: two-step downscale on/off (default true) */
+    var __Q = (typeof window !== 'undefined' && window.__bpQuality) || {};
+    var chokePx = (__Q.chokePx !== undefined) ? __Q.chokePx : 1;
+    var sharpAmt = (__Q.sharpen !== undefined) ? __Q.sharpen : 0.25;
+    var stepDown = (__Q.stepDown !== undefined) ? !!__Q.stepDown : true;
+    /* Ablation-only overrides (default = the live slider / on): featherPx
+     * and decont let tests vary the edge pipeline per Make without
+     * touching the UI. Production never sets __bpQuality. */
+    var qFeatherPx = (__Q.featherPx !== undefined) ? __Q.featherPx : featherPx;
+    var qDecont = (__Q.decont !== undefined) ? !!__Q.decont : true;
     /* The subject draw (transforms + filters), shared by the plain path
-     * and the masked path so the two can never drift apart. */
+     * and the masked path so the two can never drift apart.
+     * STEP-DOWN (measured 18 Nov 2026, real canvas): a single 800->150
+     * draw loses sharpness (Laplacian variance 1351); drawing to a 2x
+     * intermediate first, then 2:1 down, recovers +23% (1660) — the
+     * browser's resampler keeps more detail at a 2:1 ratio than at 5:1.
+     * Two steps are used only when the source window is >2x the output
+     * (otherwise a single draw is already a small ratio). */
     function drawSubject(c2) {
       c2.filter = filters.length ? filters.join(' ') : 'none';
-      c2.save();
-      c2.translate(outW / 2, outH / 2);
-      if (flip) { c2.scale(-1, 1); }
-      c2.rotate(rot * Math.PI / 180);
-      c2.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
-      c2.restore();
+      var ratio = Math.max(cw / outW, ch / outH);
+      if (stepDown && ratio > 2) {
+        var mid = document.createElement('canvas');
+        mid.width = outW * 2; mid.height = outH * 2;
+        var m2 = mid.getContext('2d');
+        m2.imageSmoothingEnabled = true; m2.imageSmoothingQuality = 'high';
+        m2.filter = c2.filter;
+        m2.save();
+        m2.translate(outW, outH);
+        if (flip) { m2.scale(-1, 1); }
+        m2.rotate(rot * Math.PI / 180);
+        m2.drawImage(img, sx, sy, cw, ch, -outW, -outH, outW * 2, outH * 2);
+        m2.restore();
+        m2.filter = 'none';
+        /* The filter was already applied at the intermediate draw — the
+         * 2:1 downscale below must run unfiltered, or brightness/
+         * contrast would be applied TWICE. */
+        c2.filter = 'none';
+        c2.save();
+        c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
+        c2.drawImage(mid, 0, 0, outW, outH);
+        c2.restore();
+      } else {
+        c2.save();
+        c2.translate(outW / 2, outH / 2);
+        if (flip) { c2.scale(-1, 1); }
+        c2.rotate(rot * Math.PI / 180);
+        c2.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
+        c2.restore();
+      }
       c2.filter = 'none';
     }
     /* Colour temperature: a warm/cool tint overlay at low alpha. It shifts
@@ -388,12 +542,15 @@
       c2.fillRect(0, 0, outW, outH);
       c2.restore();
     }
-    /* Masked path: the subject is drawn to a temp canvas, the temp tint
-     * applied, the segmentation mask cuts the background out (feathered),
-     * and the result is laid over the board-colour fill. Without a mask
-     * (toggle off, or segmentation failed) the plain cover-crop path runs
-     * exactly as before. */
-    var mask = (single && removeBgOn) ? segMask : (o.mask || null);
+    /* Masked path (image-quality round, 18 Nov 2026): the subject is drawn
+     * to a temp canvas (step-down, see drawSubject), the temp tint applied,
+     * then the mask — refined at OUTPUT size (choke + bounded feather),
+     * never blurred at source size — cuts the background out, the edge band
+     * is decontaminated (old-background colour out, subject colour in),
+     * and the result is laid over the board-colour fill. A gentle capture
+     * sharpening runs on the final canvas, gated to the opaque mask
+     * interior. Without a mask (toggle off, or segmentation failed) the
+     * plain cover-crop path runs exactly as before. */
     if (mask && window.DKBoardSegment) {
       var tmp = document.createElement('canvas');
       tmp.width = outW; tmp.height = outH;
@@ -415,8 +572,17 @@
       mctx.rotate(rot * Math.PI / 180);
       mctx.drawImage(mask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
       mctx.restore();
-      window.DKBoardSegment.applyMaskToCanvas(tmp, mCanvas, featherPx);
+      /* Refine at output size: the 1px choke cuts the pale fringe and the
+       * slider's feather becomes a bounded box blur (see refineMask). */
+      mCanvas = window.DKBoardSegment.refineMask(mCanvas, chokePx, qFeatherPx);
+      /* destination-in with the refined mask (feather 0 here — the blur
+       * already happened inside refineMask). */
+      window.DKBoardSegment.applyMaskToCanvas(tmp, mCanvas, 0);
+      /* Recolour the edge band from the subject (no old-bg spill). */
+      if (qDecont) { window.DKBoardSegment.decontaminate(tmp, mCanvas); }
       ctx.drawImage(tmp, 0, 0);
+      /* Gentle sharpening, subject interior only (mask-gated). */
+      window.DKBoardSegment.sharpenSubject(canvas, mCanvas, sharpAmt);
     } else {
       drawSubject(ctx);
       applyTemp(ctx);
@@ -425,21 +591,30 @@
   }
   /* Binary-search JPEG quality for the largest quality that still fits
    * the KB target. Resolves {blob, over}: over=true means even the
-   * lowest quality stayed over target (caller must say so honestly). */
+   * lowest quality stayed over target (caller must say so honestly).
+   * DIAGNOSTIC (image-quality round, 18 Nov 2026): the chosen quality
+   * is recorded on window.__bpFitQ so tests can tell whether JPEG
+   * compression — or something else — is softening the final image.
+   * Production code never reads this hook. */
   function fitBlob(canvas, targetBytes) {
     return new Promise(function (resolve) {
-      var lo = 0.05, hi = 0.95, best = null;
+      var lo = 0.05, hi = 0.95, best = null, bestQ = null;
       function attempt(q) {
         canvas.toBlob(function (blob) {
           if (!blob) { resolve({ blob: null, over: true }); return; }
           if (blob.size <= targetBytes) {
-            best = blob;
-            if (hi - lo < 0.02) { resolve({ blob: best, over: false }); return; }
+            best = blob; bestQ = q;
+            if (hi - lo < 0.02) {
+              window.__bpFitQ = bestQ;
+              resolve({ blob: best, over: false }); return; }
             lo = q; attempt((q + hi) / 2);
           } else {
             if (hi - lo < 0.02) {
-              if (best) { resolve({ blob: best, over: false }); return; }
+              if (best) {
+                window.__bpFitQ = bestQ;
+                resolve({ blob: best, over: false }); return; }
               canvas.toBlob(function (b2) {
+                window.__bpFitQ = lo;
                 resolve({ blob: b2, over: true });
               }, 'image/jpeg', lo);
               return;
@@ -491,7 +666,7 @@
     if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
     currentBlob = null;
     if (compareEl) { compareEl.hidden = true; }
-    if (afterImg) { afterImg.removeAttribute('src'); }
+    if (afterImg) { afterImg.removeAttribute('src'); setAfterZoom(1); }
     if (dlEl) { dlEl.style.display = 'none'; dlEl.removeAttribute('href'); }
   }
 
@@ -507,7 +682,7 @@
     rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
     adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
     singleCrop = null; segMask = null; segEngine = '';
-    removeBgOn = true; featherPx = 2; bgOverride = null;
+    removeBgOn = true; featherPx = 1; bgOverride = null;
     /* PIPELINE FIX: a fresh photo starts with no mask and no final —
      * the old final (a different photo) must die here, not linger. */
     segState = 'idle'; segRunId++;
@@ -705,7 +880,7 @@
       currentURL = URL.createObjectURL(res.blob);
       finalReady = true;
       var bgReplaced = removeBgOn && segState === 'ready' && !!segMask && bgOverride !== 'original';
-      if (afterImg) { afterImg.src = currentURL; }
+      if (afterImg) { afterImg.src = currentURL; setAfterZoom(1); }
       if (beforeImg && loadedDataUrl) { beforeImg.src = loadedDataUrl; }
       if (beforeMeta) {
         beforeMeta.textContent = loadedImg.naturalWidth + '\u00d7' + loadedImg.naturalHeight + ' px \u00b7 '
@@ -716,7 +891,10 @@
           + (Math.round(res.blob.size / 102.4) / 10) + ' KB (max ' + spec.kb + ' KB) \u00b7 '
           + (bgReplaced
             ? (window.dkT ? window.dkT('bp.ba_meta_bg', 'background replaced') : 'background replaced')
-            : (window.dkT ? window.dkT('bp.ba_meta_bg_kept', 'original background kept') : 'original background kept'));
+            : (window.dkT ? window.dkT('bp.ba_meta_bg_kept', 'original background kept') : 'original background kept'))
+          + (window.__bpCropWarn
+            ? ' \u00b7 ' + (window.dkT ? window.dkT('bp.ba_crop_warn', 'Subject is wider than the frame \u2014 edges may be cut.') : 'Subject is wider than the frame \u2014 edges may be cut.')
+            : '');
       }
       if (compareEl) { compareEl.hidden = false; }
       /* The After <img> IS the final image now — the live preview canvas
@@ -730,9 +908,17 @@
       var bgNote = bgReplaced
         ? (window.dkT ? window.dkT('bp.ba_ready_bg_ok', ' Background replaced with the board colour.') : ' Background replaced with the board colour.')
         : (window.dkT ? window.dkT('bp.ba_ready_bg_off', ' Background removal was off \u2014 the original background was kept.') : ' Background removal was off \u2014 the original background was kept.');
+      /* JPEG quality warning (image-quality round, 18 Nov 2026): if
+       * fitBlob had to drop quality below 0.75 to meet the size limit,
+       * say so honestly — never silently export a degraded image. At
+       * 150x200 / 22 KB this does not trigger (measured q = 0.943), but
+       * the safeguard stays for larger boards / busier photos. */
+      var qWarn = (!res.over && window.__bpFitQ !== undefined && window.__bpFitQ < 0.75)
+        ? (window.dkT ? window.dkT('bp.ba_quality_warn', ' Quality was reduced to fit the size limit.') : ' Quality was reduced to fit the size limit.')
+        : '';
       say(res.over
         ? (window.dkT ? window.dkT('rsv_1226', 'Ready, but still over ') : 'Ready, but still over ') + spec.kb + (window.dkT ? window.dkT('rsv_1227', ' KB at lowest quality \u2014 try a plainer photo.') : ' KB at lowest quality \u2014 try a plainer photo.') + bgNote
-        : (window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote);
+        : (window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote + qWarn);
     });
   }
   if (makeBtn) {
@@ -970,7 +1156,7 @@
       if (needPhoto()) { return; }
       rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
       adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
-      singleCrop = null; removeBgOn = true; featherPx = 2; bgOverride = null;
+      singleCrop = null; removeBgOn = true; featherPx = 1; bgOverride = null;
       if (cropWrap) { cropWrap.hidden = true; }
       syncToolbarControls(); syncBgBtns(); syncBgWarning();
       rerender(true);
@@ -1019,8 +1205,12 @@
     var rect = singleCrop
       ? { x: singleCrop.x * W, y: singleCrop.y * H, w: singleCrop.w * W, h: singleCrop.h * H }
       : (function () {
-          var r = coverCropRect(img.naturalWidth, img.naturalHeight, spec.w, spec.h);
-          return { x: r.x * scale, y: r.y * scale, w: r.w * scale, h: r.h * scale };
+          /* Same window Make uses: subject-aware framing when a mask
+           * exists, so the cropper's default rect == the final export. */
+          var r = (segMask && removeBgOn)
+            ? subjectCropRect(img.naturalWidth, img.naturalHeight, spec.w, spec.h, segMask)
+            : coverCropRect(img.naturalWidth, img.naturalHeight, spec.w, spec.h);
+          return { x: r.x * scale, y: r.y * scale, w: r.w * scale, h: r.h * scale, warn: !!r.warn };
         })();
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
     ctx.fillRect(0, 0, W, rect.y);
@@ -1030,6 +1220,8 @@
     ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
     ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
     cropCanvas._rect = rect; cropCanvas._scale = scale; cropCanvas._aspect = aspect;
+    var cropWarnEl = $('bp-crop-warn');
+    if (cropWarnEl) { cropWarnEl.hidden = !rect.warn; }
   }
   function renderSingleCropOverlayOnly() {
     if (!loadedImg || !cropCanvas || !cropCanvas._rect) { return; }
@@ -1328,6 +1520,8 @@
     decodeFile: decodeFile,
     validImageFile: validImageFile,
     coverCropRect: coverCropRect,
+    subjectCropRect: subjectCropRect,
+    maskBBox: maskBBox,
     esc: esc
   };
 })();
