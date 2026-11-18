@@ -89,6 +89,28 @@
     }
     return current;
   }
+  /* Custom size fields show the board's own spec (live-fix round).
+   * WHY sync: the fields kept their 200x230/50 defaults even when BISE
+   * Bahawalpur (150x200, max 22 KB) was selected, although Make correctly
+   * used the preset — the fields lied about what Make would do. They are
+   * the starting point for a custom override, so they always show the
+   * currently effective spec. Only called when no custom override is
+   * active (init + board change, where customSpec is cleared). */
+  function syncCustomFields() {
+    var b = effSpec();
+    if (cwEl) { cwEl.value = b.w; }
+    if (chEl) { chEl.value = b.h; }
+    if (ckbEl) { ckbEl.value = b.kb; }
+  }
+  /* Loaded-file name (live-fix round): the file input is cleared after
+   * every pick (so re-picking the same file fires change again), which
+   * makes the native control read "No file chosen" even though a photo
+   * IS loaded. This line is the honest record; file names are user data
+   * so it is set via textContent, never HTML. */
+  var fileNameEl = $('bp-filename');
+  function showLoadedName(name) {
+    if (fileNameEl) { fileNameEl.textContent = name || ''; }
+  }
 
   /* -- Board dropdown + spec card (Phase 2b behaviour) --------------------- */
   function fillOptions(list) {
@@ -116,6 +138,7 @@
   }
   fillOptions(BOARDS);
   showSpec();
+  syncCustomFields();
   selectEl.addEventListener('change', function () {
     var found = BOARDS.filter(function (b) { return b.id === selectEl.value; });
     if (found.length) {
@@ -123,7 +146,7 @@
       /* New board = fresh start: custom size and bg override do not leak
        * from the previous board into this board's photo. */
       customSpec = null; bgOverride = null;
-      showSpec(); syncBgBtns(); rerender(true);
+      showSpec(); syncCustomFields(); syncBgBtns(); rerender(true);
     }
   });
   if (filterEl) {
@@ -293,6 +316,7 @@
       var img = new Image();
       img.onload = function () {
         loadedImg = img;
+        showLoadedName(file.name);
         say((window.dkT ? window.dkT('rsv_0994', 'Photo loaded. Press \u201cMake board photo\u201d.') : 'Photo loaded. Press \u201cMake board photo\u201d.'));
       };
       img.src = reader.result;
@@ -526,6 +550,7 @@
       loadedImg = null; currentBlob = null;
       if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
       if (fileEl) { fileEl.value = ''; }
+      showLoadedName('');
       canvasEl.style.display = 'none';
       if (dlEl) { dlEl.style.display = 'none'; }
       say((window.dkT ? window.dkT('rsv_1279', 'Choose another photo.') : 'Choose another photo.'));
@@ -600,6 +625,7 @@
       img.onload = function () {
         closeCam();
         loadedImg = img;
+        showLoadedName(window.dkT ? window.dkT('bp.cam_t', 'Camera') : 'Camera');
         say((window.dkT ? window.dkT('rsv_1251', 'Photo captured. Press \u201cMake board photo\u201d.') : 'Photo captured. Press \u201cMake board photo\u201d.'));
         rerender(false);
       };

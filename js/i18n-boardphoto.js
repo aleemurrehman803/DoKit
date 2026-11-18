@@ -19,7 +19,7 @@ Object.keys(D).forEach(function(l){if(window.DKI18N&&typeof window.DKI18N.add===
 !function(){"use strict";
 var B={
 en:{
-"bpb.apply":"Apply",
+"bpb.applied_one":"Applied to {name}.","bpb.applied_scope":"Applied to {n} photos.","bpb.apply":"Apply",
 "bpb.apply_all":"Apply to all",
 "bpb.apply_confirm":"Apply these settings to {n} photos?",
 "bpb.apply_one":"Apply to this photo",
@@ -64,7 +64,7 @@ en:{
 "bpb.export_done":"ZIP ready: {d} photos, {f} failed.",
 "bpb.export_fail":"ZIP could not be created. Please try again.",
 "bpb.export_zip":"Download all as ZIP",
-"bpb.mgr_empty":"No photos yet — add some above.",
+"bpb.intake_none":"No photos were added.","bpb.mgr_empty":"No photos yet — add some above.",
 "bpb.mgr_title":"Photos",
 "bpb.mode_bulk":"Bulk Photo",
 "bpb.mode_hint":"Bulk mode processes up to 500 photos with the same board spec.",
@@ -103,7 +103,7 @@ en:{
 "bpb.up_zip":"Upload ZIP",
 "bpb.upload_title":"Add photos"},
 ur:{
-"bpb.apply":"لگائیں",
+"bpb.applied_one":"{name} پر لگایا گیا۔","bpb.applied_scope":"{n} فوٹوز پر لگایا گیا۔","bpb.apply":"لگائیں",
 "bpb.apply_all":"سب پر لگائیں",
 "bpb.apply_confirm":"کیا یہ ترتیبات {n} فوٹوز پر لگائیں؟",
 "bpb.apply_one":"اس فوٹو پر لگائیں",
@@ -148,7 +148,7 @@ ur:{
 "bpb.export_done":"زپ تیار: {d} فوٹوز، {f} ناکام۔",
 "bpb.export_fail":"زپ بن نہ سکی۔ براہ کرم دوبارہ کوشش کریں۔",
 "bpb.export_zip":"سب زپ ڈاؤن لوڈ کریں",
-"bpb.mgr_empty":"ابھی کوئی فوٹو نہیں — اوپر سے شامل کریں۔",
+"bpb.intake_none":"کوئی فوٹو شامل نہیں ہوئی۔","bpb.mgr_empty":"ابھی کوئی فوٹو نہیں — اوپر سے شامل کریں۔",
 "bpb.mgr_title":"فوٹوز",
 "bpb.mode_bulk":"بلک فوٹو",
 "bpb.mode_hint":"بلک موڈ میں ایک ہی بورڈ سپیک کے ساتھ 500 تک فوٹوز تیار ہوتی ہیں۔",
@@ -187,7 +187,7 @@ ur:{
 "bpb.up_zip":"زپ اپ لوڈ کریں",
 "bpb.upload_title":"فوٹوز شامل کریں"},
 ar:{
-"bpb.apply":"تطبيق",
+"bpb.applied_one":"تم التطبيق على {name}.","bpb.applied_scope":"تم التطبيق على {n} من الصور.","bpb.apply":"تطبيق",
 "bpb.apply_all":"تطبيق على الكل",
 "bpb.apply_confirm":"تطبيق هذه الإعدادات على {n} صورة؟",
 "bpb.apply_one":"تطبيق على هذه الصورة",
@@ -232,7 +232,7 @@ ar:{
 "bpb.export_done":"ملف ZIP جاهز: {d} صورة، {f} فاشلة.",
 "bpb.export_fail":"تعذّر إنشاء ملف ZIP. حاول مرة أخرى.",
 "bpb.export_zip":"تنزيل الكل كملف ZIP",
-"bpb.mgr_empty":"لا توجد صور بعد — أضف بعضها أعلاه.",
+"bpb.intake_none":"لم تتم إضافة أي صور.","bpb.mgr_empty":"لا توجد صور بعد — أضف بعضها أعلاه.",
 "bpb.mgr_title":"الصور",
 "bpb.mode_bulk":"صور جماعية",
 "bpb.mode_hint":"وضع الصور الجماعية يعالج ما يصل إلى 500 صورة بنفس مواصفات اللوحة.",
@@ -271,7 +271,7 @@ ar:{
 "bpb.up_zip":"رفع ملف ZIP",
 "bpb.upload_title":"أضف صورًا"},
 de:{
-"bpb.apply":"Anwenden",
+"bpb.applied_one":"Angewendet auf {name}.","bpb.applied_scope":"Angewendet auf {n} Fotos.","bpb.apply":"Anwenden",
 "bpb.apply_all":"Auf alle anwenden",
 "bpb.apply_confirm":"Diese Einstellungen auf {n} Fotos anwenden?",
 "bpb.apply_one":"Auf dieses Foto anwenden",
@@ -316,7 +316,7 @@ de:{
 "bpb.export_done":"ZIP bereit: {d} Fotos, {f} fehlgeschlagen.",
 "bpb.export_fail":"ZIP konnte nicht erstellt werden. Bitte erneut versuchen.",
 "bpb.export_zip":"Alle als ZIP herunterladen",
-"bpb.mgr_empty":"Noch keine Fotos — oben welche hinzufügen.",
+"bpb.intake_none":"Es wurden keine Fotos hinzugefügt.","bpb.mgr_empty":"Noch keine Fotos — oben welche hinzufügen.",
 "bpb.mgr_title":"Fotos",
 "bpb.mode_bulk":"Mehrere Fotos",
 "bpb.mode_hint":"Im Mehrfachmodus werden bis zu 500 Fotos mit denselben Board-Vorgaben bearbeitet.",
@@ -355,7 +355,7 @@ de:{
 "bpb.up_zip":"ZIP hochladen",
 "bpb.upload_title":"Fotos hinzufügen"},
 es:{
-"bpb.apply":"Aplicar",
+"bpb.applied_one":"Aplicado a {name}.","bpb.applied_scope":"Aplicado a {n} fotos.","bpb.apply":"Aplicar",
 "bpb.apply_all":"Aplicar a todas",
 "bpb.apply_confirm":"¿Aplicar estos ajustes a {n} fotos?",
 "bpb.apply_one":"Aplicar a esta foto",
@@ -400,7 +400,7 @@ es:{
 "bpb.export_done":"ZIP listo: {d} fotos, {f} fallidas.",
 "bpb.export_fail":"No se pudo crear el ZIP. Inténtalo de nuevo.",
 "bpb.export_zip":"Descargar todo como ZIP",
-"bpb.mgr_empty":"Aún no hay fotos: añade algunas arriba.",
+"bpb.intake_none":"No se añadió ninguna foto.","bpb.mgr_empty":"Aún no hay fotos: añade algunas arriba.",
 "bpb.mgr_title":"Fotos",
 "bpb.mode_bulk":"Fotos en lote",
 "bpb.mode_hint":"El modo en lote procesa hasta 500 fotos con la misma especificación del tablero.",
@@ -439,7 +439,7 @@ es:{
 "bpb.up_zip":"Subir ZIP",
 "bpb.upload_title":"Añadir fotos"},
 fr:{
-"bpb.apply":"Appliquer",
+"bpb.applied_one":"Appliqué à {name}.","bpb.applied_scope":"Appliqué à {n} photos.","bpb.apply":"Appliquer",
 "bpb.apply_all":"Appliquer à toutes",
 "bpb.apply_confirm":"Appliquer ces réglages à {n} photos ?",
 "bpb.apply_one":"Appliquer à cette photo",
@@ -484,7 +484,7 @@ fr:{
 "bpb.export_done":"ZIP prêt : {d} photos, {f} en échec.",
 "bpb.export_fail":"Impossible de créer le ZIP. Veuillez réessayer.",
 "bpb.export_zip":"Tout télécharger en ZIP",
-"bpb.mgr_empty":"Aucune photo pour l'instant — ajoutez-en ci-dessus.",
+"bpb.intake_none":"Aucune photo ajoutée.","bpb.mgr_empty":"Aucune photo pour l'instant — ajoutez-en ci-dessus.",
 "bpb.mgr_title":"Photos",
 "bpb.mode_bulk":"Photos en série",
 "bpb.mode_hint":"Le mode en série traite jusqu'à 500 photos avec la même spécification du tableau.",
@@ -523,7 +523,7 @@ fr:{
 "bpb.up_zip":"Importer un ZIP",
 "bpb.upload_title":"Ajouter des photos"},
 hi:{
-"bpb.apply":"लागू करें",
+"bpb.applied_one":"{name} पर लागू किया गया।","bpb.applied_scope":"{n} फ़ोटो पर लागू किया गया।","bpb.apply":"लागू करें",
 "bpb.apply_all":"सभी पर लागू करें",
 "bpb.apply_confirm":"क्या ये सेटिंग्स {n} फ़ोटो पर लागू करें?",
 "bpb.apply_one":"इस फ़ोटो पर लागू करें",
@@ -568,7 +568,7 @@ hi:{
 "bpb.export_done":"ZIP तैयार: {d} फ़ोटो, {f} असफल।",
 "bpb.export_fail":"ZIP नहीं बनाया जा सका। कृपया पुनः प्रयास करें।",
 "bpb.export_zip":"सभी ZIP के रूप में डाउनलोड करें",
-"bpb.mgr_empty":"अभी कोई फ़ोटो नहीं — ऊपर से जोड़ें।",
+"bpb.intake_none":"कोई फ़ोटो नहीं जोड़ी गई।","bpb.mgr_empty":"अभी कोई फ़ोटो नहीं — ऊपर से जोड़ें।",
 "bpb.mgr_title":"फ़ोटो",
 "bpb.mode_bulk":"बल्क फ़ोटो",
 "bpb.mode_hint":"बल्क मोड में एक ही बोर्ड स्पेक के साथ 500 तक फ़ोटो तैयार होती हैं।",
@@ -607,7 +607,7 @@ hi:{
 "bpb.up_zip":"ZIP अपलोड करें",
 "bpb.upload_title":"फ़ोटो जोड़ें"},
 pt:{
-"bpb.apply":"Aplicar",
+"bpb.applied_one":"Aplicado a {name}.","bpb.applied_scope":"Aplicado a {n} fotos.","bpb.apply":"Aplicar",
 "bpb.apply_all":"Aplicar a todas",
 "bpb.apply_confirm":"Aplicar estas configurações a {n} fotos?",
 "bpb.apply_one":"Aplicar a esta foto",
@@ -652,7 +652,7 @@ pt:{
 "bpb.export_done":"ZIP pronto: {d} fotos, {f} falharam.",
 "bpb.export_fail":"Não foi possível criar o ZIP. Tente novamente.",
 "bpb.export_zip":"Baixar tudo como ZIP",
-"bpb.mgr_empty":"Ainda não há fotos — adicione algumas acima.",
+"bpb.intake_none":"Nenhuma foto foi adicionada.","bpb.mgr_empty":"Ainda não há fotos — adicione algumas acima.",
 "bpb.mgr_title":"Fotos",
 "bpb.mode_bulk":"Fotos em lote",
 "bpb.mode_hint":"O modo em lote processa até 500 fotos com a mesma especificação do quadro.",
@@ -691,7 +691,7 @@ pt:{
 "bpb.up_zip":"Enviar ZIP",
 "bpb.upload_title":"Adicionar fotos"},
 ru:{
-"bpb.apply":"Применить",
+"bpb.applied_one":"Применено к {name}.","bpb.applied_scope":"Применено к {n} фото.","bpb.apply":"Применить",
 "bpb.apply_all":"Применить ко всем",
 "bpb.apply_confirm":"Применить эти настройки к {n} фото?",
 "bpb.apply_one":"Применить к этому фото",
@@ -736,7 +736,7 @@ ru:{
 "bpb.export_done":"ZIP готов: {d} фото, {f} не удалось.",
 "bpb.export_fail":"Не удалось создать ZIP. Попробуйте ещё раз.",
 "bpb.export_zip":"Скачать всё как ZIP",
-"bpb.mgr_empty":"Фото пока нет — добавьте их выше.",
+"bpb.intake_none":"Фотографии не добавлены.","bpb.mgr_empty":"Фото пока нет — добавьте их выше.",
 "bpb.mgr_title":"Фото",
 "bpb.mode_bulk":"Массовая обработка",
 "bpb.mode_hint":"В массовом режиме обрабатывается до 500 фото по одной спецификации доски.",
@@ -775,7 +775,7 @@ ru:{
 "bpb.up_zip":"Загрузить ZIP",
 "bpb.upload_title":"Добавить фото"},
 tr:{
-"bpb.apply":"Uygula",
+"bpb.applied_one":"{name} adlı fotoğrafa uygulandı.","bpb.applied_scope":"{n} fotoğrafa uygulandı.","bpb.apply":"Uygula",
 "bpb.apply_all":"Tümüne uygula",
 "bpb.apply_confirm":"Bu ayarlar {n} fotoğrafa uygulansın mı?",
 "bpb.apply_one":"Bu fotoğrafa uygula",
@@ -820,7 +820,7 @@ tr:{
 "bpb.export_done":"ZIP hazır: {d} fotoğraf, {f} başarısız.",
 "bpb.export_fail":"ZIP oluşturulamadı. Lütfen tekrar deneyin.",
 "bpb.export_zip":"Tümünü ZIP olarak indir",
-"bpb.mgr_empty":"Henüz fotoğraf yok — yukarıdan ekleyin.",
+"bpb.intake_none":"Hiç fotoğraf eklenmedi.","bpb.mgr_empty":"Henüz fotoğraf yok — yukarıdan ekleyin.",
 "bpb.mgr_title":"Fotoğraflar",
 "bpb.mode_bulk":"Toplu Fotoğraf",
 "bpb.mode_hint":"Toplu mod, aynı pano özelliğiyle 500'e kadar fotoğrafı işler.",
@@ -860,4 +860,38 @@ tr:{
 "bpb.upload_title":"Fotoğraf ekle"}
 };
 Object.keys(B).forEach(function(l){if(window.DKI18N&&typeof window.DKI18N.add==="function"){DKI18N.add(l,B[l]);}else{(window.__DKI18N_QUEUE__=window.__DKI18N_QUEUE__||[]).push([l,B[l]]);}});
+}();
+
+/* Self-healing registration (live-fix round, 18 Nov 2026).
+ * WHY this exists: the i18n engine (assets/js/i18n.js) is loaded
+ * DYNAMICALLY by main.js, so it is not always there yet when this file's
+ * defer script runs — the dicts above then land in __DKI18N_QUEUE__, and
+ * nothing in the engine ever drains that queue. Live (?lang=ur) that left
+ * every bpb.* label English (mode labels, bulk buttons) while the header
+ * translated from the main dicts. This retry drains the queue through the
+ * engine's own add() as soon as it appears (add() merges, so registering
+ * the same keys twice is a harmless no-op); after ~6s it stops and the
+ * page keeps its English fallbacks, exactly as before. It never touches
+ * the shared engine file — a one-line drain there would fix every tool
+ * page at once, but that is a shared-file decision for the parent. */
+!function(){"use strict";
+  var TRIES = 0, MAX_TRIES = 40; /* 40 x 150ms = ~6s */
+  function drain(){
+    var eng = window.DKI18N;
+    if (!eng || typeof eng.add !== "function") { return false; }
+    var q = window.__DKI18N_QUEUE__;
+    if (q && q.length) {
+      window.__DKI18N_QUEUE__ = [];
+      q.forEach(function (pair) {
+        try { eng.add(pair[0], pair[1]); } catch (e) { /* one bad dict must not block the rest */ }
+      });
+    }
+    return true;
+  }
+  function tick(){
+    if (drain()) { return; }
+    TRIES++;
+    if (TRIES < MAX_TRIES) { setTimeout(tick, 150); }
+  }
+  tick();
 }();

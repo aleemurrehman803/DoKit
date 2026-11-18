@@ -337,21 +337,38 @@
     });
   }
   /* Intake report: one honest line — added / rejected (with reasons) /
-   * duplicates — plus diagnostics for every rejection. */
+   * duplicates — plus diagnostics for every rejection AND every duplicate.
+   * WHY always report (even 0/0/0): the old code only built a message when
+   * something was added, so a ZIP of already-present photos showed a bare
+   * "ZIP:" line and no diagnostics — live-verified as a failed upload,
+   * although the files were correctly skipped as duplicates. The message
+   * goes ONLY to #bpb-status (say): #bpb-summary belongs to renderToolbar's
+   * "N / 500" count, and writing the same line to both showed it twice. */
   function reportIntake(res, source) {
     var added = res.added || 0;
     var rej = res.rejected || [];
     var dups = res.duplicates || [];
-    var parts = [];
-    if (added) { parts.push(t('bpb.summary', 'Added {a} · rejected {r} · duplicates {d}', { a: added, r: rej.length, d: dups.length })); }
-    if (!added && !rej.length && !dups.length) { return; }
-    var msg = (source ? source + ': ' : '') + parts.join(' ');
+    if (!added && !rej.length && !dups.length) {
+      /* Nothing was seen at all (e.g. a ZIP of only folders): say so
+       * honestly instead of returning silently. */
+      say((source ? source + ': ' : '') + t('bpb.intake_none', 'No photos were added.'));
+      diag('intake_empty', null, null, 'intake', source || '');
+      return;
+    }
+    var msg = (source ? source + ': ' : '') + t('bpb.summary', 'Added {a} · rejected {r} · duplicates {d}', { a: added, r: rej.length, d: dups.length });
+    if (dups.length) {
+      /* Duplicate names are user data: appended as plain text via say()
+       * (textContent), never HTML — and only the first five, so a ZIP of
+       * 500 duplicates cannot flood the status line. */
+      msg += ' (' + dups.slice(0, 5).join(', ') + (dups.length > 5 ? ', …' : '') + ')';
+    }
     say(msg);
     rej.forEach(function (r) {
       diag('reject', null, null, 'intake', r.name + ' (' + r.reason + ')');
     });
-    var sumEl = $('bpb-summary');
-    if (sumEl) { sumEl.textContent = msg; }
+    dups.forEach(function (n) {
+      diag('dup', null, null, 'intake', n);
+    });
   }
   /* Add many files (File objects or {name, blob} entries). ZIP files are
    * detected by signature and routed to extraction; the rest go through
@@ -1202,7 +1219,10 @@
     renderCropCanvas();
     renderManager();
     saveSessionSoon();
-    say(t('bpb.edit_title', 'Edit photo') + ' — ' + im.name);
+    /* Confirmation, not a restatement of the editor title: the old line
+     * said "Edit photo — <name>" again, so the user could not tell the
+     * click had done anything without reopening the editor. */
+    say(t('bpb.applied_one', 'Applied to {name}.', { name: im.name }));
   }
   /* Invalidate a processed output after an edit (it must be re-run). */
   function invalidateOutput(im) {
@@ -1234,8 +1254,10 @@
       renderManager();
       renderEditorPreview();
       saveSessionSoon();
-      say(t('bpb.apply_confirm', 'Apply these settings to {n} photos?',
-        { n: affected.length }));
+      /* Confirmation with its own key: the old line reused the confirm
+       * QUESTION ("Apply these settings to {n} photos?") as the status,
+       * so after applying the user was still asked a question. */
+      say(t('bpb.applied_scope', 'Applied to {n} photos.', { n: affected.length }));
       diag('apply_scope', null, null, 'edit',
         scope + ' keys=' + dirtyKeys.join(',') + ' n=' + affected.length);
     };
