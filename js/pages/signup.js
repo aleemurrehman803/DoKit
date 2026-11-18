@@ -7,6 +7,8 @@ var DK_STR = {
   "su_email": "Please enter a valid email address.",
   "su_pw": "Password must be at least 6 characters.",
   "su_pw_match": "Passwords do not match.",
+  "su_pw_hint": "Minimum 6 characters",
+  "su_pw_len_ok": "✓ Password is at least 6 characters.",
   "su_terms": "Please accept the Terms of Service and Privacy Policy to continue.",
   "su_captcha": "Please enter the security code shown above.",
   "su_loading": "Sign-up is still loading. Please wait a moment and try again.",
@@ -68,6 +70,17 @@ document.addEventListener("DOMContentLoaded", function () {
   if (confirmEl) confirmEl.addEventListener("input", refreshConfirm);
   refreshStrength();
 
+  // Closure fix (Nov 2026): the "Minimum 6 characters" hint used to
+  // stay visible even for a strong password — same shared helper as
+  // the directory pages, so it flips to a success line once the
+  // length rule is met (the hint is about length; the meter above
+  // it is about strength).
+  if (window.DKAuth && DKAuth.bindPwHint) {
+    DKAuth.bindPwHint(pw, document.getElementById("pwd-hint"),
+      function () { return dkT("su_pw_hint"); },
+      function () { return dkT("su_pw_len_ok"); });
+  }
+
   // CAPTCHA is required on every signup attempt.
   var cap = null;
   if (window.DKCaptcha) {
@@ -101,6 +114,9 @@ document.addEventListener("DOMContentLoaded", function () {
     DKF.onUser(function (user) {
       if (user) window.location.href = "dashboard.html";
     });
+    /* Closure fix (Nov 2026): warm the App Check token now, while
+     * the user fills the form — see DKF.warmAppCheck. */
+    try { DKF.warmAppCheck(); } catch (e) {}
   }
 
   form.addEventListener("submit", function (ev) {

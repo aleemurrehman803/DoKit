@@ -1623,6 +1623,7 @@ window.DK_I18N_DICT["en"] = {
     "acct_profile_sub": "Your display name and photo live here.",
     "acct_pw_fair": "Fair",
     "acct_pw_good": "Good",
+    "acct_pw_len_ok": "✓ Password is at least 6 characters.",
     "acct_pw_strong": "Strong",
     "acct_pw_weak": "Weak",
     "acct_ref_count": "Friends joined",

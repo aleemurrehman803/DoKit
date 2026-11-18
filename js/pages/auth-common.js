@@ -58,6 +58,33 @@
     }
   }
 
+  /* Password-length hint with a success state (closure fix, Nov 2026):
+   * the hint ("Minimum 6 characters") used to stay visible even for a
+   * strong password, reading like a permanent warning. Now it flips to
+   * a success line (green, .pw-hint-ok in css/auth.css) once the
+   * password meets the length rule, and flips back if the user deletes
+   * below it. The rule is the same MIN_LEN the submit validation uses
+   * (Firebase minimum 6) — the hint is about length, the meter above
+   * it is about strength, so a 6-char "123456" still shows Weak on
+   * the meter while the hint correctly reports the length as met.
+   * Texts come from getter functions so a mid-session language switch
+   * is honoured on the next keystroke; dataset flag stops
+   * double-binding. */
+  var PW_MIN_LEN = 6;
+  function bindPwHint(pwEl, hintEl, getHintText, getOkText) {
+    if (!pwEl || !hintEl) return;
+    if (hintEl.dataset.dkHint) return;
+    hintEl.dataset.dkHint = "1";
+    function refresh() {
+      var ok = pwEl.value.length >= PW_MIN_LEN;
+      hintEl.textContent = ok ? getOkText() : getHintText();
+      if (ok) hintEl.classList.add("pw-hint-ok");
+      else hintEl.classList.remove("pw-hint-ok");
+    }
+    pwEl.addEventListener("input", refresh);
+    refresh();
+  }
+
   /* Google sign-in safety net (live-verified 18 Nov 2026): the GIS
    * token-client callback normally fires when the chooser is closed
    * without choosing an account — but when the chooser opens as a
@@ -93,6 +120,7 @@
   window.DKAuth = {
     EMAIL_RE: EMAIL_RE,
     bindPwToggle: bindPwToggle,
+    bindPwHint: bindPwHint,
     scorePassword: scorePassword,
     renderStrength: renderStrength,
     resetGoogleOnFocusReturn: resetGoogleOnFocusReturn

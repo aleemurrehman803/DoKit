@@ -166,6 +166,13 @@
 .pw-strength-label[data-level="3"] strong { color: var(--primary); }
 .pw-strength-label[data-level="4"] strong { color: #12a150; }
 
+/* Password-length hint success state (closure fix, Nov 2026): the
+ * directory pages load style.css, not tokens.css, so no --success-text
+ * variable exists there — use the same hard-coded pair as .form-ok
+ * above (verified contrast on white in both themes). */
+.pw-hint-ok { color: #067647; font-weight: 600; }
+[data-theme="dark"] .pw-hint-ok { color: #6ce9a6; }
+
 /* Google button + divider. */
 .btn-google {
   display: flex; align-items: center; justify-content: center; gap: 10px;

@@ -92,6 +92,9 @@ document.addEventListener("DOMContentLoaded", function () {
     DKF.onUser(function (user) {
       if (user) window.location.href = "dashboard.html";
     });
+    /* Closure fix (Nov 2026): warm the App Check token now, while
+     * the user fills the form — see DKF.warmAppCheck. */
+    try { DKF.warmAppCheck(); } catch (e) {}
   }
 
   /* Forgot password: NEW minimal flow on this page (the DKF login page

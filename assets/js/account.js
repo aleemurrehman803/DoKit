@@ -673,6 +673,26 @@
         bindVfForm();
         return;
       }
+      /* Closure fix (Nov 2026) — App Check token warm-up. Measured
+       * root cause of the ~10s submit→redirect delay: the first
+       * Firebase Auth call waits on reCAPTCHA Enterprise token
+       * acquisition (execute() + token exchange), which took 3–10s
+       * across live runs, while the Auth REST call itself takes
+       * <1s and the Firestore writes <2s. Warming fetches the token
+       * in the background while the user fills the form, so the
+       * SDK's token cache serves the submit-time call instead.
+       * Fire-and-forget: a failed warm-up changes nothing — the
+       * submit-time fetch proceeds exactly as before, and no data
+       * flow, write, or redirect is touched. Only on pages with an
+       * auth form, so the rest of the site pays no extra request. */
+      try {
+        if (window.firebase && firebase.appCheck &&
+            (document.getElementById('acct-login-form') ||
+             document.getElementById('acct-signup-form') ||
+             document.getElementById('acct-google-btn'))) {
+          firebase.appCheck().getToken().catch(function () {});
+        }
+      } catch (e) { /* warm-up is best-effort only */ }
       DKA.onUser(function(user){
         currentUser = user;
         if (!user) {
@@ -2041,6 +2061,17 @@
         };
         pwEl.addEventListener('input', refreshMeter);
         refreshMeter();
+      }
+      /* Closure fix (Nov 2026): the "min 6 characters" hint used to
+       * stay visible even for a strong password. Bind the shared
+       * helper so it flips to a success line once the length rule is
+       * met. Texts are dkT getters (EN + UR in the dicts, English
+       * fallback elsewhere), so no language is hard-coded here. */
+      var hintEl = $('acct-pw-hint');
+      if (pwEl && hintEl && window.DKAuth && DKAuth.bindPwHint) {
+        DKAuth.bindPwHint(pwEl, hintEl,
+          function () { return (window.dkT ? window.dkT('acct_err_pw', 'Password must be at least 6 characters.') : 'Password must be at least 6 characters.'); },
+          function () { return (window.dkT ? window.dkT('acct_pw_len_ok', '✓ Password is at least 6 characters.') : '✓ Password is at least 6 characters.'); });
       }
     }
 

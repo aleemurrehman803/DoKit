@@ -1623,6 +1623,7 @@ window.DK_I18N_DICT["ur"] = {
     "acct_profile_sub": "آپ کا ڈسپلے نام اور تصویر یہیں ہوتی ہے۔",
     "acct_pw_fair": "درمیانہ",
     "acct_pw_good": "اچھا",
+    "acct_pw_len_ok": "✓ پاس ورڈ کم از کم 6 حروف کا ہے۔",
     "acct_pw_strong": "مضبوط",
     "acct_pw_weak": "کمزور",
     "acct_ref_count": "شامل ہونے والے دوست",

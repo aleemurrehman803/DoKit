@@ -141,6 +141,22 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
       return a ? a.signOut() : Promise.resolve();
     },
 
+    /* Closure fix (Nov 2026): warm the App Check token in the
+     * background. Same measured root cause as the DKA warm-up in
+     * assets/js/account.js — the first Auth call waits 3–10s on
+     * reCAPTCHA Enterprise token acquisition while the Auth REST
+     * call itself takes <1s. Call only from the login/signup pages,
+     * after DKF.auth() has initialised App Check (DKF.onUser does
+     * that at page load). Fire-and-forget: a failed warm-up changes
+     * nothing — the submit-time fetch proceeds exactly as before. */
+    warmAppCheck: function () {
+      try {
+        if (ready() && firebase.appCheck) {
+          firebase.appCheck().getToken().catch(function () {});
+        }
+      } catch (e) { /* warm-up is best-effort only */ }
+    },
+
     googleProvider: function () {
       return new firebase.auth.GoogleAuthProvider();
     },
