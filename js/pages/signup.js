@@ -11,6 +11,7 @@ var DK_STR = {
   "su_pw_len_ok": "✓ Password is at least 6 characters.",
   "su_terms": "Please accept the Terms of Service and Privacy Policy to continue.",
   "su_captcha": "Please enter the security code shown above.",
+  "su_captcha_wrong": "Incorrect security code. Please try the new code shown above.",
   "su_loading": "Sign-up is still loading. Please wait a moment and try again.",
   "su_gopen": "Opening Google sign-in…",
   "su_gcancel": "Google sign-in was cancelled.",
@@ -96,6 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // CAPTCHA is required on every signup attempt.
   var cap = null;
+  var capInput = document.getElementById("capInput");
   if (window.DKCaptcha) {
     cap = DKCaptcha.init(
       document.getElementById("capCanvas"),
@@ -148,8 +150,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (pw.value.length < 6) { pErr.textContent = dkT("su_pw"); ok = false; }
     if (confirmEl && confirmEl.value !== pw.value) { if (cfErr) cfErr.textContent = dkT("su_pw_match"); ok = false; }
     if (termsEl && !termsEl.checked) { if (tErr) tErr.textContent = dkT("su_terms"); ok = false; }
+    /* Closure fix 3 (Nov 2026): distinguish empty vs wrong code —
+     * a wrong code used to show the "please enter" prompt, which reads
+     * as if nothing was typed. Read the input BEFORE cap.refresh()
+     * clears it. */
     if (!cap || !cap.validate()) {
-      if (cErr) cErr.textContent = dkT("su_captcha");
+      if (cErr) cErr.textContent = dkT(capInput && capInput.value.trim() ? "su_captcha_wrong" : "su_captcha");
       if (cap) cap.refresh();
       ok = false;
     }
@@ -191,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (cErr) cErr.textContent = "";
       if (gErr) gErr.textContent = "";
       if (!cap || !cap.validate()) {
-        if (cErr) cErr.textContent = dkT("su_captcha");
+        if (cErr) cErr.textContent = dkT(capInput && capInput.value.trim() ? "su_captcha_wrong" : "su_captcha");
         if (cap) cap.refresh();
         return;
       }

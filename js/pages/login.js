@@ -6,6 +6,7 @@ var DK_STR = {
   "li_email": "Please enter a valid email address.",
   "li_pw": "Password must be at least 6 characters.",
   "li_captcha": "Please enter the security code shown above.",
+  "li_captcha_wrong": "Incorrect security code. Please try the new code shown above.",
   "li_loading": "Sign-in is still loading. Please wait a moment and try again.",
   "li_gopen": "Opening Google sign-in…",
   "li_gcancel": "Google sign-in was cancelled.",
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // CAPTCHA is required on every login attempt.
   var cap = null;
+  var capInput = document.getElementById("capInput");
   if (window.DKCaptcha) {
     cap = DKCaptcha.init(
       document.getElementById("capCanvas"),
@@ -151,8 +153,12 @@ document.addEventListener("DOMContentLoaded", function () {
     var emailOk = window.DKAuth ? DKAuth.EMAIL_RE.test(em) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
     if (!emailOk) { eErr.textContent = dkT("li_email"); ok = false; }
     if (pw.value.length < 6) { pErr.textContent = dkT("li_pw"); ok = false; }
+    /* Closure fix 3 (Nov 2026): distinguish empty vs wrong code —
+     * a wrong code used to show the "please enter" prompt, which reads
+     * as if nothing was typed. Read the input BEFORE cap.refresh()
+     * clears it. */
     if (!cap || !cap.validate()) {
-      if (cErr) cErr.textContent = dkT("li_captcha");
+      if (cErr) cErr.textContent = dkT(capInput && capInput.value.trim() ? "li_captcha_wrong" : "li_captcha");
       if (cap) cap.refresh();
       ok = false;
     }
