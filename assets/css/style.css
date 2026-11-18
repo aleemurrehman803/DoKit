@@ -1417,3 +1417,35 @@ input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,input[ty
 .chain-badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:var(--fs-sm);font-weight:600}
 .chain-ok{background:rgba(62,207,142,.15);color:var(--good)}
 .chain-bad{background:rgba(255,107,107,.15);color:var(--bad)}
+
+/* ---- Referral Earnings jhoomar lights (navbar, 18 Nov 2026) ----
+ * Shaadi-style fairy lights around the header "Referral Earnings" link
+ * ONLY (desktop nav + mobile menu share the same #nav-links markup, so
+ * one wrapper covers both). 12 tiny dots on all four sides, staggered
+ * twinkle = chasing effect. CSS-only, no images (DoKit rule: inline SVG
+ * + CSS gradients only).
+ * Dots live in a sibling <span class="ref-lights-dots"> OUTSIDE the anchor:
+ * i18n sets textContent on [data-i18n] elements, which would wipe dots
+ * placed inside the anchor on every language switch.
+ * pointer-events:none on the decorative layer, so clicks always reach
+ * the link. prefers-reduced-motion: animation off, dots shown steady. */
+.ref-lights{position:relative;display:flex}
+.ref-lights>a{flex:1 1 auto}
+.ref-lights-dots{position:absolute;inset:-6px;pointer-events:none;z-index:1}
+.ref-lights-dots i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--dot,#FFC531);opacity:.25;animation:ref-twinkle 1.8s ease-in-out infinite;animation-delay:var(--d,0s)}
+/* Dot positions: 1-4 top edge, 5-8 bottom edge, 9-10 left edge, 11-12 right edge.
+ * Colours cycle yellow / white / green / red; delays stagger the chase. */
+.ref-lights-dots i:nth-child(1){left:10%;top:-3px;--dot:#FFC531;--d:0s}
+.ref-lights-dots i:nth-child(2){left:37%;top:-3px;--dot:#FFFFFF;--d:.15s}
+.ref-lights-dots i:nth-child(3){left:63%;top:-3px;--dot:#2ECC71;--d:.3s}
+.ref-lights-dots i:nth-child(4){left:90%;top:-3px;--dot:#FF5A5A;--d:.45s}
+.ref-lights-dots i:nth-child(5){left:10%;bottom:-3px;--dot:#2ECC71;--d:.6s}
+.ref-lights-dots i:nth-child(6){left:37%;bottom:-3px;--dot:#FF5A5A;--d:.75s}
+.ref-lights-dots i:nth-child(7){left:63%;bottom:-3px;--dot:#FFC531;--d:.9s}
+.ref-lights-dots i:nth-child(8){left:90%;bottom:-3px;--dot:#FFFFFF;--d:1.05s}
+.ref-lights-dots i:nth-child(9){left:-3px;top:28%;--dot:#FFFFFF;--d:1.2s}
+.ref-lights-dots i:nth-child(10){left:-3px;top:72%;--dot:#FFC531;--d:1.35s}
+.ref-lights-dots i:nth-child(11){right:-3px;top:28%;--dot:#FF5A5A;--d:1.5s}
+.ref-lights-dots i:nth-child(12){right:-3px;top:72%;--dot:#2ECC71;--d:1.65s}
+@keyframes ref-twinkle{0%,100%{opacity:.25;transform:scale(.7);box-shadow:0 0 2px 0 var(--dot)}50%{opacity:1;transform:scale(1.15);box-shadow:0 0 8px 2px var(--dot)}}
+@media (prefers-reduced-motion:reduce){.ref-lights-dots i{animation:none;opacity:.85;box-shadow:0 0 3px 0 var(--dot)}}
