@@ -197,6 +197,17 @@
   </div>
   <p id="bp-bg-warn" class="err" hidden></p>
   <p id="bp-seg-status" class="note" aria-live="polite"></p>
+  <!-- PIPELINE FIX (18 Nov 2026): segmentation failure box. Shown only
+       when the background could not be separated — a failed background
+       is never presented as a finished board photo. -->
+  <div id="bp-seg-fail" class="bp-seg-fail" hidden>
+    <p id="bp-seg-fail-msg" class="err" data-i18n="bp.ba_seg_failed">Background could not be separated — this photo does NOT meet your board's background requirement.</p>
+    <p class="bpb-row">
+      <button type="button" class="btn" id="bp-seg-retry" data-i18n="bp.ba_seg_retry">Retry background removal</button>
+      <button type="button" class="btn ghost" id="bp-seg-colour" data-i18n="bp.ba_seg_colour">Try colour removal</button>
+      <button type="button" class="btn ghost" id="bp-seg-continue" data-i18n="bp.ba_seg_continue">Continue without background removal</button>
+    </p>
+  </div>
   <p id="presetRow"></p>
   <div id="bp-crop-wrap" hidden>
     <p><b data-i18n="bp.ed_crop_title">Crop — drag to move, drag the corner to resize</b></p>
@@ -208,6 +219,23 @@
   </div>
 </div>
 <p class="bp-single-only"><button class="btn" id="bp-make" data-i18n="rsv_0378">Make board photo</button></p>
+<!-- PIPELINE FIX (18 Nov 2026): labelled Before / After compare. The
+     After image is the EXACT final export (same blob as the download
+     link) — not a separate render. Shown only after Make. -->
+<section id="bp-compare" class="bp-single-only" hidden>
+  <div class="bp-compare-grid">
+    <figure class="bp-compare-fig">
+      <img id="bp-before-img" alt="Before — original photo">
+      <figcaption data-i18n="bp.ba_before">Before — original photo</figcaption>
+      <p id="bp-before-meta" class="note"></p>
+    </figure>
+    <figure class="bp-compare-fig">
+      <img id="bp-after-img" alt="After — board photo">
+      <figcaption data-i18n="bp.ba_after">After — board photo</figcaption>
+      <p id="bp-after-meta" class="note"></p>
+    </figure>
+  </div>
+</section>
 <div style="position:relative;display:inline-block" class="bp-single-only">
 <canvas id="bp-canvas" style="max-width:100%;display:none"></canvas>
 <div id="faceGuide" hidden aria-hidden="true" style="position:absolute;left:50%;top:8%;width:60%;height:70%;transform:translateX(-50%);border:2px dashed #fff;outline:1px solid rgba(0,0,0,.4);border-radius:50%;pointer-events:none"></div>
