@@ -242,3 +242,41 @@
 .auth-shell--dir .auth-row .linklike { font-size: var(--fs-sm); font-weight: 600; }
 .auth-shell--dir .auth-note { text-align: center; margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); }
 .auth-shell--dir .auth-note a { font-weight: 600; }
+
+/* ---------- Email OTP reset (FREE-only, Nov 2026) ----------
+ * Panel inside the login card (account/login/index.html). Reuses the
+ * card's tokens (.btn, .field, .err, .auth-check, .pw-toggle) so both
+ * themes keep working; only the digit boxes and panel buttons are new. */
+.auth-card #otp-reset-panel .btn { width: 100%; }
+.auth-card #otp-reset-panel h1 { margin: 0 0 var(--sp-2); font-size: var(--fs-xl); }
+.auth-card #otp-reset-panel .lede { margin-bottom: var(--sp-5); }
+.otp-digits { display: flex; gap: 8px; margin-bottom: var(--sp-4); }
+.otp-digits input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  padding: 0;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  background: var(--surface);
+}
+.otp-digits input:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+#otp-reset-panel .auth-check { margin-bottom: var(--sp-4); }
+#otp-reset-panel .linklike {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--primary);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+@media (max-width: 380px) {
+  .otp-digits { gap: 6px; }
+  .otp-digits input { height: 46px; font-size: 1.25rem; }
+}

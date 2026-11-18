@@ -1,0 +1,1 @@
+{"dependencies":{"firebase-admin":"^12.6.0","firebase-functions":"^5.1.0"},"description":"DoKit Cloud Functions — FREE-ONLY: email OTP password reset via the Resend free plan. No paid service is called.","engines":{"node":"20"},"main":"index.js","name":"dokit-functions","private":true,"scripts":{"test":"node --test test/otp.test.js"}}

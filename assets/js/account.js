@@ -2381,11 +2381,360 @@
         });
       });
     }
+    /* ---------- Email OTP reset (FREE-only, Nov 2026) ----------
+     * Google-style reset: 6-digit code by email, then a new password —
+     * no link click needed. The link flow stays as the fallback inside
+     * the panel (otp-link-fallback below) and as the behaviour when
+     * this panel is absent (other pages using this file).
+     * Backend: Firebase Cloud Functions (functions/requestOtp +
+     * verifyOtpAndReset) + Resend free plan. NOT DEPLOYED YET — see
+     * functions/README.md (owner steps: Blaze + Resend key). Until
+     * deploy, the endpoints answer 404 / the fetch fails, and the
+     * panel says so honestly (otp_err_unavailable) and points at the
+     * link fallback; nothing is faked. All security rules are
+     * server-side (functions/otp.js): hashed codes, 10-min expiry,
+     * single-use, 5 attempts, per-email rate limits, no
+     * account-existence leakage. This file only renders what the
+     * server answers. dataset guard stops double-binding. */
+    var otpPanel = $('otp-reset-panel');
+    /* Assigned inside the OTP block below ('use strict' makes block
+     * function declarations block-scoped, so the opener must be a
+     * function-scope var for the reset handler to call it). */
+    var otpOpenPanel = null;
+    if (otpPanel && !otpPanel.dataset.dka) {
+      otpPanel.dataset.dka = '1';
+      /* 1st-gen Cloud Functions URL (predictable — see functions/
+       * README.md). Only live after the owner deploys; before that
+       * every call fails and the panel reports it honestly. */
+      var OTP_BASE = 'https://us-central1-dokit-app-2e81d.cloudfunctions.net';
+      var OTP_RESEND_WAIT_S = 60;
+      var otpEmail = '';
+      var otpNewPass = '';
+      var otpTimer = null;
+      function otpT(key, fallback){
+        return (window.dkT ? window.dkT(key, fallback) : fallback);
+      }
+      function otpStopTimer(){
+        if (otpTimer) { clearInterval(otpTimer); otpTimer = null; }
+        var btn = $('otp-resend-btn');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = otpT('otp_resend', 'Resend code');
+        }
+      }
+      /* Step -1 closes the panel and restores the login form; 0/1/2
+       * show the email / code / done step. Closing also wipes the
+       * code + new password from the DOM and from memory. */
+      function otpShowStep(step){
+        var ids = ['otp-step-email', 'otp-step-code', 'otp-step-done'];
+        ids.forEach(function(id, i){
+          var el = $(id);
+          if (el) { el.hidden = (i !== step); }
+        });
+        var loginForm = $('acct-login-form');
+        var loginNote = $('acct-login-note');
+        var open = step >= 0;
+        if (loginForm) { loginForm.hidden = open; }
+        if (loginNote) { loginNote.hidden = open; }
+        otpPanel.hidden = !open;
+        if (!open) {
+          otpStopTimer();
+          otpEmail = '';
+          otpNewPass = '';
+          var digits = document.querySelectorAll('#otp-digits input');
+          digits.forEach(function(d){ d.value = ''; });
+          var p1 = $('otp-pass'); if (p1) { p1.value = ''; }
+          var p2 = $('otp-pass2'); if (p2) { p2.value = ''; }
+          showMsg('otp-err', '', false);
+          showMsg('otp-err2', '', false);
+          showMsg('otp-err3', '', false);
+        }
+      }
+      otpOpenPanel = function(){
+        var em = ($('acct-email') || {}).value || '';
+        var oe = $('otp-email');
+        if (oe && em.trim()) { oe.value = em.trim(); }
+        showMsg('otp-err', '', false);
+        otpShowStep(0);
+        if (oe) { try { oe.focus(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } }
+      };
+      /* POST JSON to a function. A 404/HTML answer (functions not
+       * deployed yet) is not JSON — map it to 'not-deployed' instead
+       * of throwing, so the caller can show the honest message. */
+      function otpPost(path, body){
+        return fetch(OTP_BASE + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }).then(function(r){
+          return r.text().then(function(txt){
+            var j = { ok: false, error: 'unknown' };
+            try { j = JSON.parse(txt); } catch (e) { j = { ok: false, error: 'not-deployed' }; }
+            return { status: r.status, body: j };
+          });
+        });
+      }
+      function otpBusy(btn, busy, busyText){
+        if (!btn) { return ''; }
+        if (busy) {
+          btn.dataset.otpLabel = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = busyText;
+          return '';
+        }
+        btn.disabled = false;
+        if (btn.dataset.otpLabel) { btn.textContent = btn.dataset.otpLabel; }
+        return '';
+      }
+      /* 60s resend cooldown. While waiting, the countdown replaces the
+       * button's own label ("Resend code in 59s" / "کوڈ دوبارہ بھیجیں:
+       * 59s") — a separate timer span next to the button read as a
+       * stutter ("Resend code Resend code in 59s"). */
+      function otpStartResendTimer(){
+        otpStopTimer();
+        var btn = $('otp-resend-btn');
+        var left = OTP_RESEND_WAIT_S;
+        if (btn) { btn.disabled = true; }
+        var tick = function(){
+          if (left <= 0) {
+            otpStopTimer();
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = otpT('otp_resend', 'Resend code');
+            }
+            return;
+          }
+          if (btn) { btn.textContent = otpT('otp_resend_wait', 'Resend code in') + ' ' + left + 's'; }
+          left -= 1;
+        };
+        tick();
+        otpTimer = setInterval(tick, 1000);
+      }
+      /* 6 digit boxes: type-to-advance, backspace-to-go-back, paste
+       * splits across boxes, non-digits are dropped. */
+      var otpDigits = document.querySelectorAll('#otp-digits input');
+      otpDigits.forEach(function(box, i){
+        box.addEventListener('input', function(){
+          box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+          if (box.value && otpDigits[i + 1]) { otpDigits[i + 1].focus(); }
+        });
+        box.addEventListener('keydown', function(e){
+          if (e.key === 'Backspace' && !box.value && otpDigits[i - 1]) {
+            otpDigits[i - 1].focus();
+          } else if (e.key === 'ArrowLeft' && otpDigits[i - 1]) {
+            otpDigits[i - 1].focus();
+          } else if (e.key === 'ArrowRight' && otpDigits[i + 1]) {
+            otpDigits[i + 1].focus();
+          }
+        });
+        box.addEventListener('paste', function(e){
+          e.preventDefault();
+          var text = '';
+          try { text = (e.clipboardData || window.clipboardData).getData('text') || ''; } catch (err) { text = ''; }
+          var digits = text.replace(/[^0-9]/g, '').slice(0, 6);
+          digits.split('').forEach(function(ch, j){
+            if (otpDigits[i + j]) { otpDigits[i + j].value = ch; }
+          });
+          var next = otpDigits[Math.min(i + digits.length, 5)];
+          if (next) { next.focus(); }
+        });
+      });
+      /* New-password show/hide — same shared helper as the login
+       * password (guarded: without DKAuth the field still works). */
+      var otpPwEl = $('otp-pass');
+      var otpPwTog = $('otp-pass-toggle');
+      if (otpPwEl && otpPwTog && window.DKAuth && !otpPwTog.dataset.dkToggle) {
+        otpPwTog.dataset.dkToggle = '1';
+        DKAuth.bindPwToggle(otpPwEl, otpPwTog,
+          function(){ return otpT('acct_show_pw', 'Show'); },
+          function(){ return otpT('acct_hide_pw', 'Hide'); });
+      }
+      /* Step 1: send the code. The server answers {ok:true} even for
+       * an unknown email (no existence leak), so the success message
+       * says "if an account exists" — honest either way. */
+      var otpSendBtn = $('otp-send-btn');
+      if (otpSendBtn) {
+        otpSendBtn.addEventListener('click', function(){
+          var email = ($('otp-email') || {}).value || '';
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+            showMsg('otp-err', otpT('acct_err_email', 'Please enter a valid email address.'), true);
+            return;
+          }
+          otpBusy(otpSendBtn, true, otpT('otp_sending', 'Sending…'));
+          otpPost('/requestOtp', { email: email.trim() }).then(function(r){
+            otpBusy(otpSendBtn, false);
+            if (r.body.ok) {
+              otpEmail = email.trim();
+              showMsg('otp-err2', '', false);
+              otpShowStep(1);
+              otpStartResendTimer();
+              if (otpDigits[0]) { try { otpDigits[0].focus(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); } }
+              return;
+            }
+            var err = r.body.error || 'unknown';
+            if (err === 'too-many-requests') {
+              showMsg('otp-err', otpT('acct_err_many', 'Too many attempts. Please wait a little and try again.'), true);
+            } else if (err === 'not-configured' || err === 'not-deployed') {
+              showMsg('otp-err', otpT('otp_err_unavailable', 'Code reset is not available right now. Try the link option below.'), true);
+            } else if (err === 'send-failed') {
+              showMsg('otp-err', otpT('otp_err_send', 'Could not send the code. Check your connection and try again.'), true);
+            } else {
+              showMsg('otp-err', otpT('acct_err_unknown', 'Something went wrong. Please try again.'), true);
+            }
+          }).catch(function(){
+            /* Network failure (offline, or functions not deployed):
+             * honest message + the link fallback stays usable. */
+            otpBusy(otpSendBtn, false);
+            showMsg('otp-err', otpT('otp_err_unavailable', 'Code reset is not available right now. Try the link option below.'), true);
+          });
+        });
+      }
+      /* Step 1 fallback: the old link flow, unchanged logic. */
+      var otpLinkBtn = $('otp-link-fallback');
+      if (otpLinkBtn) {
+        otpLinkBtn.addEventListener('click', function(){
+          var email = (($('otp-email') || {}).value || ($('acct-email') || {}).value || '').trim();
+          if (!email) {
+            showMsg('otp-err', otpT('acct_err_email', 'Please enter a valid email address.'), true);
+            return;
+          }
+          var a = DKA.auth();
+          if (!a) { showMsg('otp-err', otpT('acct_err_net', 'Network error. Check your connection and try again.'), true); return; }
+          a.sendPasswordResetEmail(email).then(function(){
+            showMsg('otp-err', otpT('acct_reset_sent', 'Password reset email sent. Check your inbox.'), false);
+          }).catch(function(err){
+            showMsg('otp-err', DKA.friendlyError(err), true);
+          });
+        });
+      }
+      /* Step 2: verify code + set the new password. */
+      var otpVerifyBtn = $('otp-verify-btn');
+      if (otpVerifyBtn) {
+        otpVerifyBtn.addEventListener('click', function(){
+          var code = '';
+          otpDigits.forEach(function(d){ code += d.value; });
+          if (!/^\d{6}$/.test(code)) {
+            showMsg('otp-err2', otpT('otp_err_invalid', 'That code is incorrect or expired. Check the code and try again.'), true);
+            return;
+          }
+          var pass = ($('otp-pass') || {}).value || '';
+          var pass2 = ($('otp-pass2') || {}).value || '';
+          if (pass.length < 6) {
+            showMsg('otp-err2', otpT('acct_err_pw', 'Password must be at least 6 characters.'), true);
+            return;
+          }
+          if (pass !== pass2) {
+            showMsg('otp-err2', otpT('acct_err_pw_match', 'Passwords do not match.'), true);
+            return;
+          }
+          otpBusy(otpVerifyBtn, true, otpT('otp_resetting', 'Resetting…'));
+          otpPost('/verifyOtpAndReset', { email: otpEmail, code: code, newPassword: pass }).then(function(r){
+            otpBusy(otpVerifyBtn, false);
+            if (r.body.ok) {
+              /* Keep the new password only in memory for the Log in
+               * button below; wipe it from the fields at once. */
+              otpNewPass = pass;
+              var p1 = $('otp-pass'); if (p1) { p1.value = ''; }
+              var p2 = $('otp-pass2'); if (p2) { p2.value = ''; }
+              otpStopTimer();
+              /* Stay-signed-in defaults to the login form's Remember
+               * Me, so the done screen matches what the user chose. */
+              var stay = $('otp-stay');
+              var rem = $('acct-remember');
+              if (stay && rem) { stay.checked = rem.checked; }
+              otpShowStep(2);
+              return;
+            }
+            var err = r.body.error || 'unknown';
+            if (err === 'too-many-attempts') {
+              showMsg('otp-err2', otpT('otp_err_many', 'Too many attempts. Please request a new code.'), true);
+            } else if (err === 'invalid-code') {
+              showMsg('otp-err2', otpT('otp_err_invalid', 'That code is incorrect or expired. Check the code and try again.'), true);
+            } else if (err === 'invalid-input') {
+              showMsg('otp-err2', otpT('otp_err_invalid', 'That code is incorrect or expired. Check the code and try again.'), true);
+            } else {
+              showMsg('otp-err2', otpT('acct_err_unknown', 'Something went wrong. Please try again.'), true);
+            }
+          }).catch(function(){
+            otpBusy(otpVerifyBtn, false);
+            showMsg('otp-err2', otpT('acct_err_net', 'Network error. Check your connection and try again.'), true);
+          });
+        });
+      }
+      /* Resend: same request as step 1 (server rate-limits it). */
+      var otpResendBtn = $('otp-resend-btn');
+      if (otpResendBtn) {
+        otpResendBtn.addEventListener('click', function(){
+          if (otpResendBtn.disabled || !otpEmail) { return; }
+          otpResendBtn.disabled = true;
+          otpPost('/requestOtp', { email: otpEmail }).then(function(r){
+            if (r.body.ok) {
+              otpStartResendTimer();
+              showMsg('otp-err2', otpT('otp_sent', 'If an account exists for this email, a code was sent. Check your inbox.'), false);
+            } else if (r.body.error === 'too-many-requests') {
+              otpResendBtn.disabled = false;
+              showMsg('otp-err2', otpT('acct_err_many', 'Too many attempts. Please wait a little and try again.'), true);
+            } else {
+              otpResendBtn.disabled = false;
+              showMsg('otp-err2', otpT('otp_err_send', 'Could not send the code. Check your connection and try again.'), true);
+            }
+          }).catch(function(){
+            otpResendBtn.disabled = false;
+            showMsg('otp-err2', otpT('acct_err_net', 'Network error. Check your connection and try again.'), true);
+          });
+        });
+      }
+      /* Step 3: log in with the new password, right here. Persistence
+       * mirrors dkaApplyPersistence above: checked (LOCAL, the
+       * Firebase default) needs no call; unchecked signs out when the
+       * tab closes. Redirect target matches the normal login flow. */
+      var otpLoginBtn = $('otp-login-btn');
+      if (otpLoginBtn) {
+        otpLoginBtn.addEventListener('click', function(){
+          var a = DKA.auth();
+          if (!a) { showMsg('otp-err3', otpT('acct_err_net', 'Network error. Check your connection and try again.'), true); return; }
+          if (!otpEmail || !otpNewPass) { showMsg('otp-err3', otpT('acct_err_unknown', 'Something went wrong. Please try again.'), true); return; }
+          otpBusy(otpLoginBtn, true, otpT('otp_logging_in', 'Logging in…'));
+          var persist = Promise.resolve();
+          try {
+            var stay = $('otp-stay');
+            if (stay && !stay.checked) {
+              var P = (window.firebase && firebase.auth && firebase.auth.Auth) ? firebase.auth.Auth.Persistence : null;
+              if (P) { persist = a.setPersistence(P.SESSION).catch(function(){}); }
+            }
+          } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+          persist.then(function(){
+            return a.signInWithEmailAndPassword(otpEmail, otpNewPass);
+          }).then(function(cred){
+            return DKA.ensureUserDoc(cred.user);
+          }).then(function(){
+            location.href = '../dashboard/';
+          }).catch(function(err){
+            otpBusy(otpLoginBtn, false);
+            showMsg('otp-err3', DKA.friendlyError(err), true);
+          });
+        });
+      }
+      /* Back to the login form (both steps). */
+      ['otp-back-login-1', 'otp-back-login-2'].forEach(function(id){
+        var b = $(id);
+        if (b) { b.addEventListener('click', function(){ otpShowStep(-1); }); }
+      });
+    }
     var reset = $('acct-reset-link');
     if (reset && !reset.dataset.dka) {
       reset.dataset.dka = '1';
       reset.addEventListener('click', function(e){
         e.preventDefault();
+        /* OTP reset (Nov 2026): "Forgot password?" now opens the code
+         * panel (otpOpenPanel, defined in the OTP block above) instead
+         * of mailing a link at once. The link flow is still one click
+         * away inside the panel (otp-link-fallback). Pages without the
+         * panel keep the old direct-link behaviour. */
+        if ($('otp-reset-panel') && otpOpenPanel) {
+          otpOpenPanel();
+          return;
+        }
         var email = ($('acct-email') || {}).value || '';
         if (!email.trim()) {
           showMsg('acct-err', (window.dkT ? window.dkT('acct_err_email', 'Please enter a valid email address.') : 'Please enter a valid email address.'), true);
