@@ -55,6 +55,33 @@
     });
   }
 
+  /* Closure fix 2 (Nov 2026) — parallel SDK download. The old
+   * ensureSdk() chain loaded the six SDK scripts SEQUENTIALLY (each
+   * .then waited for the previous file), so App Check activation —
+   * and the token warm-up after it — started ~2-3s late on every
+   * DKA page (measured: staggered script starts, while the flat
+   * pages' static <script> tags all start in the same millisecond).
+   * Dynamically inserted scripts with async=false download IN
+   * PARALLEL but EXECUTE in insertion order, so the dependency
+   * order (app-compat first, then the compat modules) is preserved
+   * while the downloads overlap. Failure semantics are identical
+   * to loadScript (resolve false on error/timeout; init proceeds
+   * only if window.firebase exists); worst-case wait drops from
+   * the SUM of the per-file timeouts to the MAX of one. */
+  function loadScriptParallel(src, timeoutMs){
+    return new Promise(function(resolve){
+      var done = false;
+      function fin(ok){ if (!done) { done = true; resolve(ok); } }
+      var s = document.createElement('script');
+      s.async = false; /* ordered execution, parallel download */
+      s.src = src;
+      s.onload = function(){ fin(true); };
+      s.onerror = function(){ fin(false); };
+      document.head.appendChild(s);
+      setTimeout(function(){ fin(false); }, timeoutMs || 10000);
+    });
+  }
+
   /* Load compat SDKs in order, then init. App Check is best-effort:
    * if its scripts fail, Auth still works and Firestore works unless the
    * console enforces App Check (mirrors the legacy comment). */
@@ -65,12 +92,14 @@
       if (window.firebase && window.firebase.apps && window.firebase.apps.length) {
         return Promise.resolve(true);
       }
-      var chain = loadScript(SDK_BASE + 'firebase-app-compat.js')
-        .then(function(){ return loadScript(SDK_BASE + 'firebase-auth-compat.js'); })
-        .then(function(){ return loadScript(SDK_BASE + 'firebase-firestore-compat.js'); })
-        .then(function(){ return loadScript(SDK_BASE + 'firebase-storage-compat.js'); })
-        .then(function(){ return loadScript(SDK_BASE + 'firebase-app-check-compat.js'); })
-        .then(function(){ return loadScript('https://www.google.com/recaptcha/enterprise.js'); });
+      var chain = Promise.all([
+        loadScriptParallel(SDK_BASE + 'firebase-app-compat.js'),
+        loadScriptParallel(SDK_BASE + 'firebase-auth-compat.js'),
+        loadScriptParallel(SDK_BASE + 'firebase-firestore-compat.js'),
+        loadScriptParallel(SDK_BASE + 'firebase-storage-compat.js'),
+        loadScriptParallel(SDK_BASE + 'firebase-app-check-compat.js'),
+        loadScriptParallel('https://www.google.com/recaptcha/enterprise.js')
+      ]);
       return chain.then(function(){
         if (!window.firebase) { return false; }
         try {
@@ -289,19 +318,33 @@
           db.collection('users').doc(user.uid).get().then(function(snap){
             var d = (snap && snap.exists) ? (snap.data() || {}) : {};
             if (!snap || !snap.exists) {
-              try {
-                db.collection('users').doc(user.uid).set({
-                  email: user.email || '',
-                  displayName: user.displayName || '',
-                  /* Referral Phase 1 fallback creation: a doc created
-                   * here (not via a signup form) still gets its own
-                   * referralCode so the invite link always works.
-                   * referrerId is NOT set here — only the signup flows
-                   * may attribute a referrer, never a later sign-in. */
-                  referralCode: user.uid,
-                  createdAt: Date.now()
-                }, { merge: true }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
-              } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+              /* Closure fix 2 (Nov 2026): while an email/Google signup
+               * handler is mid-flight (window.__dokitSigningUp), it is
+               * about to write the FULL user doc itself (referral
+               * fields included). Planting a bare doc here first races
+               * that write: the handler's create then evaluates as an
+               * update, createdAt is rejected by the rules, and
+               * ensureUserDoc pays a get+set retry. Skip the plant
+               * during the signup window only — every other sign-in
+               * still gets its fallback doc exactly as before, and
+               * the redirect still waits for the handler's own
+               * writes (never redirected before essential data is
+               * saved). */
+              if (!window.__dokitSigningUp) {
+                try {
+                  db.collection('users').doc(user.uid).set({
+                    email: user.email || '',
+                    displayName: user.displayName || '',
+                    /* Referral Phase 1 fallback creation: a doc created
+                     * here (not via a signup form) still gets its own
+                     * referralCode so the invite link always works.
+                     * referrerId is NOT set here — only the signup flows
+                     * may attribute a referrer, never a later sign-in. */
+                    referralCode: user.uid,
+                    createdAt: Date.now()
+                  }, { merge: true }).catch(function (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); });
+                } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+              }
             }
             var until = Number(d.suspendUntil) || 0;
             var suspended = !!d.suspended && (!until || until > Date.now());
@@ -684,12 +727,21 @@
        * Fire-and-forget: a failed warm-up changes nothing — the
        * submit-time fetch proceeds exactly as before, and no data
        * flow, write, or redirect is touched. Only on pages with an
-       * auth form, so the rest of the site pays no extra request. */
+       * auth form, so the rest of the site pays no extra request.
+       * Closure fix 2 (Nov 2026) — dashboard pages warm too. The
+       * redirect target has no auth form, so before this its first
+       * Firestore call paid a full cold reCAPTCHA execute (measured:
+       * zero warm-up calls on dashboard boot, while signup/login
+       * warm once each). The homepage still warms nothing (no form,
+       * no dashboard) — see the F-home regression check. */
       try {
+        var isDashboardPage = /\/dashboard\//.test(location.pathname) ||
+            !!document.getElementById('dash-main') ||
+            !!document.getElementById('dash-guest');
         if (window.firebase && firebase.appCheck &&
             (document.getElementById('acct-login-form') ||
              document.getElementById('acct-signup-form') ||
-             document.getElementById('acct-google-btn'))) {
+             document.getElementById('acct-google-btn') || isDashboardPage)) {
           firebase.appCheck().getToken().catch(function () {});
         }
       } catch (e) { /* warm-up is best-effort only */ }
@@ -2033,8 +2085,14 @@
      * have no toggle/meter. dataset flags stop double-binding if
      * this function ever runs twice. */
     if (window.DKAuth) {
-      var dkaShow = (window.dkT ? window.dkT('acct_show_pw', 'Show') : 'Show');
-      var dkaHide = (window.dkT ? window.dkT('acct_hide_pw', 'Hide') : 'Hide');
+      /* Closure fix 2 (Nov 2026): Show/Hide and strength words are
+       * passed as GETTERS, evaluated per render — the old values were
+       * captured once at bind time via dkT() and stayed English
+       * ("Strong", "Show") after a mid-session switch to Urdu, while
+       * the hint next to them translated. bindPwToggle re-renders
+       * its label on dokit:langchange; the meter re-renders below. */
+      var dkaShow = function () { return (window.dkT ? window.dkT('acct_show_pw', 'Show') : 'Show'); };
+      var dkaHide = function () { return (window.dkT ? window.dkT('acct_hide_pw', 'Hide') : 'Hide'); };
       var pwEl = $('acct-pass');
       var pwTog = $('acct-pw-toggle');
       if (pwEl && pwTog && !pwTog.dataset.dkToggle) {
@@ -2051,15 +2109,18 @@
       var meterLabel = $('acct-pw-strength');
       if (pwEl && (meterEl || meterLabel) && !pwEl.dataset.dkMeter) {
         pwEl.dataset.dkMeter = '1';
-        var strengthWords = [
-          (window.dkT ? window.dkT('acct_pw_weak', 'Weak') : 'Weak'),
-          (window.dkT ? window.dkT('acct_pw_fair', 'Fair') : 'Fair'),
-          (window.dkT ? window.dkT('acct_pw_good', 'Good') : 'Good'),
-          (window.dkT ? window.dkT('acct_pw_strong', 'Strong') : 'Strong')];
+        var strengthWords = function () {
+          return [
+            (window.dkT ? window.dkT('acct_pw_weak', 'Weak') : 'Weak'),
+            (window.dkT ? window.dkT('acct_pw_fair', 'Fair') : 'Fair'),
+            (window.dkT ? window.dkT('acct_pw_good', 'Good') : 'Good'),
+            (window.dkT ? window.dkT('acct_pw_strong', 'Strong') : 'Strong')];
+        };
         var refreshMeter = function () {
           DKAuth.renderStrength(meterEl, meterLabel, pwEl.value, strengthWords);
         };
         pwEl.addEventListener('input', refreshMeter);
+        document.addEventListener('dokit:langchange', refreshMeter);
         refreshMeter();
       }
       /* Closure fix (Nov 2026): the "min 6 characters" hint used to

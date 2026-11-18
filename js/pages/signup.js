@@ -49,18 +49,31 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Show/hide toggles (shared helper in js/pages/auth-common.js).
+  // Closure fix 2 (Nov 2026): pass getters, not captured strings, so
+  // a mid-session language switch re-renders Show/Hide in the new
+  // language (the old captured dkT() values stayed English in UR).
   if (window.DKAuth) {
-    DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"), dkT("su_show"), dkT("su_hide"));
-    DKAuth.bindPwToggle(confirmEl, document.getElementById("confirmToggle"), dkT("su_show"), dkT("su_hide"));
+    DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"),
+      function () { return dkT("su_show"); }, function () { return dkT("su_hide"); });
+    DKAuth.bindPwToggle(confirmEl, document.getElementById("confirmToggle"),
+      function () { return dkT("su_show"); }, function () { return dkT("su_hide"); });
   }
 
   // Live password-strength meter + confirm-match feedback while typing.
   var meter = document.getElementById("pwMeter");
   var strengthLabel = document.getElementById("pw-strength-label");
-  var strengthWords = [dkT("su_strength_weak"), dkT("su_strength_fair"), dkT("su_strength_good"), dkT("su_strength_strong")];
+  /* Closure fix 2 (Nov 2026): strength words via a getter, evaluated
+   * per render — the old array was captured once at bind time and
+   * stayed English ("Strong") after a switch to Urdu, while the
+   * hint next to it translated. Re-render on dokit:langchange so a
+   * switch mid-form updates the word without another keystroke. */
+  function strengthWords() {
+    return [dkT("su_strength_weak"), dkT("su_strength_fair"), dkT("su_strength_good"), dkT("su_strength_strong")];
+  }
   function refreshStrength() {
     if (window.DKAuth) DKAuth.renderStrength(meter, strengthLabel, pw.value, strengthWords);
   }
+  document.addEventListener("dokit:langchange", refreshStrength);
   function refreshConfirm() {
     if (!cfErr || !confirmEl) return;
     // Only flag a mismatch once the user has typed something in confirm.

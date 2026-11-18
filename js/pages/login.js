@@ -40,7 +40,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Show/hide password (shared helper in js/pages/auth-common.js).
-  if (window.DKAuth) DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"), dkT("li_show"), dkT("li_hide"));
+  // Closure fix 2 (Nov 2026): pass getters, not captured strings, so
+  // a mid-session language switch re-renders Show/Hide in the new
+  // language (the old captured dkT() values stayed English in UR).
+  if (window.DKAuth) DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"),
+    function () { return dkT("li_show"); }, function () { return dkT("li_hide"); });
 
   /* Remember Me: Firebase default persistence is LOCAL (stay signed in),
    * so a checked box needs no call at all — and skipping it keeps the

@@ -12,17 +12,33 @@
 
   /* Show/hide toggle for a password input. btn text swaps Show/Hide
    * (labels passed in so each page can i18n them); aria-pressed tracks
-   * state for screen readers. Focus stays on the input. */
+   * state for screen readers. Focus stays on the input.
+   * Closure fix 2 (Nov 2026): showText/hideText may be getter
+   * functions, evaluated per render — the old captured strings went
+   * stale on a mid-session language switch (Show/Hide stayed English
+   * in Urdu mode). A dokit:langchange listener (dispatched on
+   * document by both i18n engines) re-renders the label in the
+   * current language without touching the input type. */
   function bindPwToggle(input, btn, showText, hideText) {
     if (!input || !btn) return;
+    function getShow() { return (typeof showText === "function") ? showText() : showText; }
+    function getHide() { return (typeof hideText === "function") ? hideText() : hideText; }
+    function paint() {
+      var visible = input.type === "text";
+      var label = visible ? getHide() : getShow();
+      btn.textContent = label;
+      btn.setAttribute("aria-pressed", visible ? "true" : "false");
+      btn.setAttribute("aria-label", label + " password");
+    }
     btn.addEventListener("click", function () {
-      var show = input.type === "password";
-      input.type = show ? "text" : "password";
-      btn.textContent = show ? hideText : showText;
-      btn.setAttribute("aria-pressed", show ? "true" : "false");
-      btn.setAttribute("aria-label", show ? hideText + " password" : showText + " password");
+      input.type = (input.type === "password") ? "text" : "password";
+      paint();
       try { input.focus(); } catch (e) {}
     });
+    if (typeof document !== "undefined" && document.addEventListener) {
+      document.addEventListener("dokit:langchange", paint);
+    }
+    paint();
   }
 
   /* Strength score 0-4: +1 each for length >= 8, mixed case, a digit,
@@ -38,7 +54,12 @@
   }
 
   /* Paint the 4-segment meter (data-score) and the label under it.
-   * labels: [weak, fair, good, strong] strings from the page's DK_STR. */
+   * labels: [weak, fair, good, strong] strings from the page's DK_STR,
+   * OR a getter function returning that array — evaluated per render
+   * so a mid-session language switch is honoured (closure fix 2,
+   * Nov 2026: the old captured array stayed English in Urdu mode
+   * while the hint next to it translated). Call sites re-render on
+   * dokit:langchange with the current password value. */
   function renderStrength(meter, label, pw, labels) {
     if (!meter && !label) return;
     var score = scorePassword(pw);
@@ -53,7 +74,8 @@
       label.setAttribute("data-level", String(score));
       label.innerHTML = "";
       var strong = document.createElement("strong");
-      strong.textContent = labels[idx] || "";
+      var arr = (typeof labels === "function") ? labels() : labels;
+      strong.textContent = (arr && arr[idx]) || "";
       label.appendChild(strong);
     }
   }
@@ -82,6 +104,15 @@
       else hintEl.classList.remove("pw-hint-ok");
     }
     pwEl.addEventListener("input", refresh);
+    /* Closure fix 2 (Nov 2026): re-render on dokit:langchange too.
+     * The hint element carries a data-i18n key (the plain hint), so
+     * the engine's apply() rewrites its textContent to the plain
+     * hint on every switch — clobbering the success line until the
+     * next keystroke. refresh() runs after the engine's apply (the
+     * event fires after it), so the length-correct line wins. */
+    if (typeof document !== "undefined" && document.addEventListener) {
+      document.addEventListener("dokit:langchange", refresh);
+    }
     refresh();
   }
 
