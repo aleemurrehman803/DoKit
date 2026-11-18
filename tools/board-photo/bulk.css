@@ -92,3 +92,17 @@
 .bp-compare-fig img { max-width: 100%; max-height: 260px; height: auto; display: block; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--r-md, 12px); background: var(--surface2); }
 .bp-compare-fig figcaption { font-weight: 700; margin-top: .4rem; }
 .bp-seg-fail { border: 1px solid var(--bad); border-radius: var(--r-md, 12px); padding: .75rem 1rem; margin: .75rem 0; background: var(--surface); }
+
+/* Image-quality round (18 Nov 2026): After-image zoom / edge inspection.
+ * The zoom box scrolls so a 300% view stays inside the page; the After
+ * image itself is the exact final blob — zoom never alters the file. */
+.bp-zoom-box { overflow: auto; max-height: 320px; border: 1px solid var(--line); border-radius: var(--r-md, 12px); background: var(--surface2); }
+.bp-zoom-box img { border: 0 !important; }
+.bp-zoom-row { gap: .4rem; align-items: center; margin-top: .5rem; }
+.bp-zoom-btn.active { outline: 2px solid var(--accent, #6C4CF1); }
+.note.warn { border-left: 3px solid #f0b429; padding-left: .5rem; }
+/* The compare figure is a flex item: without min-width:0 it refuses to
+ * shrink below its content, so a 300% zoomed After image would push the
+ * whole page wider on mobile. The zoom box scrolls internally instead. */
+.bp-compare-fig { min-width: 0; }
+.bp-zoom-box { max-width: 100%; }
