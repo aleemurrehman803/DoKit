@@ -10,6 +10,11 @@ var DK_STR = {
   "li_gopen": "Opening Google sign-in…",
   "li_gcancel": "Google sign-in was cancelled.",
   "li_gstart": "Google sign-in could not start. Please try again.",
+  "li_show": "Show",
+  "li_hide": "Hide",
+  "li_forgot": "Forgot password?",
+  "li_reset_sending": "Sending reset email…",
+  "li_reset_sent": "Password reset email sent. Check your inbox (and spam folder).",
 };
 try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
 function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
@@ -24,11 +29,33 @@ document.addEventListener("DOMContentLoaded", function () {
   var pErr = document.getElementById("err-password");
   var gErr = document.getElementById("err-general");
   var cErr = document.getElementById("err-captcha");
+  var okEl = document.getElementById("ok-general");
+  var rememberMe = document.getElementById("rememberMe");
+  var forgotLink = document.getElementById("forgotLink");
   var submitBtn = form.querySelector('button[type="submit"]');
 
   function setBusy(b) {
     submitBtn.disabled = b;
     submitBtn.textContent = b ? dkT("li_busy") : dkT("li_login");
+  }
+
+  // Show/hide password (shared helper in js/pages/auth-common.js).
+  if (window.DKAuth) DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"), dkT("li_show"), dkT("li_hide"));
+
+  /* Remember Me: Firebase default persistence is LOCAL (stay signed in),
+   * so a checked box needs no call at all — and skipping it keeps the
+   * Google popup on the direct click-gesture path (no async hop that a
+   * popup blocker could mistake for a background window). Only an
+   * UNCHECKED box calls setPersistence(SESSION) — signed out when the
+   * browser/tab closes. A failure here never blocks sign-in. */
+  function applyPersistence() {
+    if (rememberMe && rememberMe.checked) return Promise.resolve();
+    try {
+      var a = window.DKF && DKF.auth();
+      var P = (window.firebase && firebase.auth && firebase.auth.Auth) ? firebase.auth.Auth.Persistence : null;
+      if (!a || !P) return Promise.resolve();
+      return a.setPersistence(P.SESSION);
+    } catch (e) { return Promise.resolve(); }
   }
 
   // CAPTCHA is required on every login attempt.
@@ -65,14 +92,55 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* Forgot password: NEW minimal flow on this page (the DKF login page
+   * previously had no reset UI; the reset itself is plain Firebase
+   * sendPasswordResetEmail, the same call the account index pages use).
+   * Uses the email already typed in the form; errors come from
+   * DKF.friendlyError like every other auth error on this page. */
+  if (forgotLink) {
+    forgotLink.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (forgotLink.getAttribute("aria-disabled") === "true") return;
+      if (okEl) { okEl.hidden = true; okEl.textContent = ""; }
+      if (gErr) gErr.textContent = "";
+      var em = email.value.trim();
+      var emailOk = window.DKAuth ? DKAuth.EMAIL_RE.test(em) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+      if (!emailOk) {
+        eErr.textContent = dkT("li_email");
+        try { email.focus(); } catch (e) {}
+        return;
+      }
+      if (!window.DKF || !DKF.auth()) {
+        if (gErr) gErr.textContent = dkT("li_loading");
+        return;
+      }
+      eErr.textContent = "";
+      forgotLink.setAttribute("aria-disabled", "true");
+      forgotLink.textContent = dkT("li_reset_sending");
+      DKF.auth().sendPasswordResetEmail(em)
+        .then(function () {
+          forgotLink.removeAttribute("aria-disabled");
+          forgotLink.textContent = dkT("li_forgot");
+          if (okEl) { okEl.textContent = dkT("li_reset_sent"); okEl.hidden = false; }
+        })
+        .catch(function (err) {
+          forgotLink.removeAttribute("aria-disabled");
+          forgotLink.textContent = dkT("li_forgot");
+          if (gErr) gErr.textContent = DKF.friendlyError(err);
+        });
+    });
+  }
+
   form.addEventListener("submit", function (ev) {
     ev.preventDefault();
     var ok = true;
     eErr.textContent = ""; pErr.textContent = "";
     if (gErr) gErr.textContent = "";
     if (cErr) cErr.textContent = "";
+    if (okEl) { okEl.hidden = true; okEl.textContent = ""; }
     var em = email.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { eErr.textContent = dkT("li_email"); ok = false; }
+    var emailOk = window.DKAuth ? DKAuth.EMAIL_RE.test(em) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+    if (!emailOk) { eErr.textContent = dkT("li_email"); ok = false; }
     if (pw.value.length < 6) { pErr.textContent = dkT("li_pw"); ok = false; }
     if (!cap || !cap.validate()) {
       if (cErr) cErr.textContent = dkT("li_captcha");
@@ -85,7 +153,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     setBusy(true);
-    DKF.auth().signInWithEmailAndPassword(em, pw.value)
+    // Honour Remember Me first, then sign in (unchanged handler).
+    applyPersistence().then(function () {
+      return DKF.auth().signInWithEmailAndPassword(em, pw.value);
+    })
       .then(function (cred) { return DKF.ensureUserDoc(cred.user); })
       .then(function () { window.location.href = "dashboard.html"; })
       .catch(function (err) {
@@ -107,36 +178,40 @@ document.addEventListener("DOMContentLoaded", function () {
       // }
       if (cErr) cErr.textContent = "";
       if (gErr) gErr.textContent = "";
+      if (okEl) { okEl.hidden = true; okEl.textContent = ""; }
       gBtn.disabled = true;
       if (gErr) gErr.textContent = dkT("li_gopen");
-      withGIS(function () {
-        try {
-          var tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GIS_CLIENT_ID,
-            scope: "openid email profile",
-            ux_mode: "popup",
-            callback: function (tokenResp) {
-              if (!tokenResp || !tokenResp.access_token) {
-                gBtn.disabled = false;
-                if (gErr) gErr.textContent = dkT("li_gcancel");
-                return;
-              }
-              var cred = firebase.auth.GoogleAuthProvider.credential(null, tokenResp.access_token);
-              DKF.auth().signInWithCredential(cred)
-                .then(function (uc) { return DKF.ensureUserDoc(uc.user); })
-                .then(function () { window.location.href = "dashboard.html"; })
-                .catch(function (err) {
+      // Remember Me applies to Google sign-in too.
+      applyPersistence().then(function () {
+        withGIS(function () {
+          try {
+            var tokenClient = google.accounts.oauth2.initTokenClient({
+              client_id: GIS_CLIENT_ID,
+              scope: "openid email profile",
+              ux_mode: "popup",
+              callback: function (tokenResp) {
+                if (!tokenResp || !tokenResp.access_token) {
                   gBtn.disabled = false;
-                  if (cap) cap.refresh();
-                  if (gErr) gErr.textContent = DKF.friendlyError(err);
-                });
-            }
-          });
-          tokenClient.requestAccessToken();
-        } catch (e) {
-          gBtn.disabled = false;
-          if (gErr) gErr.textContent = dkT("li_gstart");
-        }
+                  if (gErr) gErr.textContent = dkT("li_gcancel");
+                  return;
+                }
+                var cred = firebase.auth.GoogleAuthProvider.credential(null, tokenResp.access_token);
+                DKF.auth().signInWithCredential(cred)
+                  .then(function (uc) { return DKF.ensureUserDoc(uc.user); })
+                  .then(function () { window.location.href = "dashboard.html"; })
+                  .catch(function (err) {
+                    gBtn.disabled = false;
+                    if (cap) cap.refresh();
+                    if (gErr) gErr.textContent = DKF.friendlyError(err);
+                  });
+              }
+            });
+            tokenClient.requestAccessToken();
+          } catch (e) {
+            gBtn.disabled = false;
+            if (gErr) gErr.textContent = dkT("li_gstart");
+          }
+        });
       });
     });
   }

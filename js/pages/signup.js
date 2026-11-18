@@ -6,11 +6,19 @@ var DK_STR = {
   "su_name": "Please enter your name.",
   "su_email": "Please enter a valid email address.",
   "su_pw": "Password must be at least 6 characters.",
+  "su_pw_match": "Passwords do not match.",
+  "su_terms": "Please accept the Terms of Service and Privacy Policy to continue.",
   "su_captcha": "Please enter the security code shown above.",
   "su_loading": "Sign-up is still loading. Please wait a moment and try again.",
   "su_gopen": "Opening Google sign-in…",
   "su_gcancel": "Google sign-in was cancelled.",
   "su_gstart": "Google sign-in could not start. Please try again.",
+  "su_show": "Show",
+  "su_hide": "Hide",
+  "su_strength_weak": "Weak",
+  "su_strength_fair": "Fair",
+  "su_strength_good": "Good",
+  "su_strength_strong": "Strong",
 };
 try { if (window.DKI18N) DKI18N.add("en", DK_STR); } catch (e) {}
 function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} return DK_STR[k] || k; }
@@ -22,9 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
   var nameEl = document.getElementById("name");
   var email = document.getElementById("email");
   var pw = document.getElementById("password");
+  var confirmEl = document.getElementById("confirm");
+  var termsEl = document.getElementById("terms");
   var nErr = document.getElementById("err-name");
   var eErr = document.getElementById("err-email");
   var pErr = document.getElementById("err-password");
+  var cfErr = document.getElementById("err-confirm");
+  var tErr = document.getElementById("err-terms");
   var gErr = document.getElementById("err-general");
   var cErr = document.getElementById("err-captcha");
   var submitBtn = form.querySelector('button[type="submit"]');
@@ -33,6 +45,28 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.disabled = b;
     submitBtn.textContent = b ? dkT("su_busy") : dkT("su_create");
   }
+
+  // Show/hide toggles (shared helper in js/pages/auth-common.js).
+  if (window.DKAuth) {
+    DKAuth.bindPwToggle(pw, document.getElementById("pwToggle"), dkT("su_show"), dkT("su_hide"));
+    DKAuth.bindPwToggle(confirmEl, document.getElementById("confirmToggle"), dkT("su_show"), dkT("su_hide"));
+  }
+
+  // Live password-strength meter + confirm-match feedback while typing.
+  var meter = document.getElementById("pwMeter");
+  var strengthLabel = document.getElementById("pw-strength-label");
+  var strengthWords = [dkT("su_strength_weak"), dkT("su_strength_fair"), dkT("su_strength_good"), dkT("su_strength_strong")];
+  function refreshStrength() {
+    if (window.DKAuth) DKAuth.renderStrength(meter, strengthLabel, pw.value, strengthWords);
+  }
+  function refreshConfirm() {
+    if (!cfErr || !confirmEl) return;
+    // Only flag a mismatch once the user has typed something in confirm.
+    cfErr.textContent = (confirmEl.value && confirmEl.value !== pw.value) ? dkT("su_pw_match") : "";
+  }
+  if (pw) pw.addEventListener("input", function () { refreshStrength(); refreshConfirm(); });
+  if (confirmEl) confirmEl.addEventListener("input", refreshConfirm);
+  refreshStrength();
 
   // CAPTCHA is required on every signup attempt.
   var cap = null;
@@ -71,13 +105,18 @@ document.addEventListener("DOMContentLoaded", function () {
     ev.preventDefault();
     var ok = true;
     nErr.textContent = ""; eErr.textContent = ""; pErr.textContent = "";
+    if (cfErr) cfErr.textContent = "";
+    if (tErr) tErr.textContent = "";
     if (gErr) gErr.textContent = "";
     if (cErr) cErr.textContent = "";
     var nm = nameEl.value.trim();
     var em = email.value.trim();
+    var emailOk = window.DKAuth ? DKAuth.EMAIL_RE.test(em) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
     if (nm.length < 2) { nErr.textContent = dkT("su_name"); ok = false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { eErr.textContent = dkT("su_email"); ok = false; }
+    if (!emailOk) { eErr.textContent = dkT("su_email"); ok = false; }
     if (pw.value.length < 6) { pErr.textContent = dkT("su_pw"); ok = false; }
+    if (confirmEl && confirmEl.value !== pw.value) { if (cfErr) cfErr.textContent = dkT("su_pw_match"); ok = false; }
+    if (termsEl && !termsEl.checked) { if (tErr) tErr.textContent = dkT("su_terms"); ok = false; }
     if (!cap || !cap.validate()) {
       if (cErr) cErr.textContent = dkT("su_captcha");
       if (cap) cap.refresh();

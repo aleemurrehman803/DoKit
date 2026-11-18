@@ -1,0 +1,210 @@
+/* DoKit — Premium auth pages (account/login.html + account/signup.html).
+ * Split-screen SaaS layout built on the existing design system:
+ * every colour, space, radius and shadow below comes from tokens.css
+ * variables, so light/dark themes keep working. No new external hosts.
+ * Layout: branded gradient panel + centred form card. Under 900px the
+ * panel collapses to a compact banner above the form (single column).
+ * Motion: one short rise-in on load; fully disabled under
+ * prefers-reduced-motion. */
+
+/* ---------- shell ---------- */
+.auth-main { padding: 0; }
+.auth-shell {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  min-height: 640px;
+  width: 100%;
+}
+.auth-shell *, .auth-shell *::before, .auth-shell *::after { box-sizing: border-box; }
+
+/* ---------- brand panel ---------- */
+.auth-brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: var(--sp-8);
+  color: #fff;
+  background:
+    radial-gradient(110% 90% at 85% 0%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(160deg, #7d5cff 0%, var(--violet) 42%, var(--violet-deep) 78%, #2e1a8f 100%);
+}
+.auth-brand::before, .auth-brand::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.auth-brand::before {
+  width: 340px; height: 340px;
+  right: -110px; bottom: -140px;
+  background: rgba(255, 255, 255, 0.10);
+}
+.auth-brand::after {
+  width: 220px; height: 220px;
+  left: -90px; top: -80px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.auth-brand-inner { position: relative; z-index: 1; max-width: 460px; animation: auth-rise 0.5s ease both; }
+.auth-brand-logo { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-8); }
+.auth-brand-logo img { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+.auth-brand-logo span { font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.02em; }
+.auth-brand h1 {
+  margin: 0 0 var(--sp-3);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.auth-brand p.auth-brand-sub { margin: 0 0 var(--sp-6); font-size: var(--fs-lg); line-height: 1.55; color: rgba(255, 255, 255, 0.88); }
+.auth-brand-feats { list-style: none; margin: 0 0 var(--sp-6); padding: 0; display: grid; gap: var(--sp-3); }
+.auth-brand-feats li { display: flex; gap: var(--sp-3); align-items: flex-start; font-size: var(--fs-base); line-height: 1.5; color: rgba(255, 255, 255, 0.94); }
+.auth-brand-feats .tick {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; margin-top: 1px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.8rem; font-weight: 800; line-height: 1;
+}
+.auth-brand-note { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.72); }
+
+/* ---------- form side ---------- */
+.auth-formwrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-8) var(--sp-4);
+  background: var(--bg);
+}
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--sp-6);
+  border-radius: var(--radius, 16px);
+  animation: auth-rise 0.5s ease 0.08s both;
+}
+.auth-card .section-head { margin-bottom: var(--sp-5); }
+.auth-card .section-head h1 { margin-top: var(--sp-2); }
+.auth-card .form-control { min-height: 48px; font-size: var(--fs-base); }
+.auth-card button[type="submit"] { min-height: 50px; font-size: var(--fs-base); font-weight: 700; }
+.auth-card .btn:focus-visible, .auth-card a:focus-visible,
+.auth-card input:focus-visible, .auth-card .pw-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Field errors / success inside the auth card. Empty slots stay hidden
+ * so the form does not jump when a message appears. */
+.auth-card .form-error { color: var(--danger-text, #b42318); font-size: var(--fs-sm); font-weight: 600; }
+.auth-card .form-error:empty { display: none; }
+.auth-card .form-ok {
+  margin-bottom: var(--sp-3);
+  padding: 10px 12px;
+  border: 1px solid #a6f4c5;
+  border-radius: var(--radius, 10px);
+  background: #ecfdf3;
+  color: #067647;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.auth-card .form-ok[hidden] { display: none; }
+[data-theme="dark"] .auth-card .form-ok { background: #052e1b; border-color: #05603a; color: #6ce9a6; }
+
+/* Password field with show/hide toggle. */
+.auth-pw-wrap { position: relative; }
+.auth-pw-wrap .form-control { padding-right: 4.75rem; }
+.pw-toggle {
+  position: absolute;
+  right: 6px; top: 50%;
+  transform: translateY(-50%);
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0; border-radius: var(--radius, 8px);
+  background: transparent;
+  color: var(--primary);
+  font-size: var(--fs-sm); font-weight: 700;
+  cursor: pointer;
+}
+.pw-toggle:hover { background: var(--surface-2); }
+
+/* Remember-me / forgot row + terms checkbox. */
+.auth-row {
+  display: flex; flex-wrap: wrap;
+  align-items: center; justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.auth-check {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: var(--fs-sm); font-weight: 400; line-height: 1.45;
+  cursor: pointer;
+}
+.auth-check input[type="checkbox"] {
+  flex: none;
+  width: 18px; height: 18px;
+  margin-top: 1px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.auth-row a { font-size: var(--fs-sm); font-weight: 600; }
+.auth-row a[aria-disabled="true"] { opacity: 0.55; pointer-events: none; }
+
+/* Password strength meter (signup). Four segments; the JS sets
+ * data-score="0..4" on .pw-meter and the matching label text. */
+.pw-meter { display: flex; gap: 6px; margin-top: 8px; }
+.pw-meter span { flex: 1; height: 6px; border-radius: 999px; background: var(--border); transition: background-color 0.25s ease; }
+.pw-meter[data-score="1"] span:nth-child(-n+1) { background: #e5484d; }
+.pw-meter[data-score="2"] span:nth-child(-n+2) { background: #f5a524; }
+.pw-meter[data-score="3"] span:nth-child(-n+3) { background: var(--primary); }
+.pw-meter[data-score="4"] span:nth-child(-n+4) { background: #12a150; }
+.pw-strength-label { margin-top: 6px; font-size: var(--fs-sm); color: var(--text-muted); }
+.pw-strength-label strong { font-weight: 700; }
+.pw-strength-label[data-level="1"] strong { color: #e5484d; }
+.pw-strength-label[data-level="2"] strong { color: #b7791f; }
+.pw-strength-label[data-level="3"] strong { color: var(--primary); }
+.pw-strength-label[data-level="4"] strong { color: #12a150; }
+
+/* Google button + divider. */
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%;
+  background: var(--surface);
+  font-weight: 600;
+}
+.btn-google svg { flex: none; }
+.auth-divider {
+  display: flex; align-items: center; gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+
+/* Entrance motion (one short rise; disabled for reduced motion). */
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .auth-shell { grid-template-columns: 1fr; min-height: 0; }
+  .auth-brand { padding: var(--sp-6) var(--sp-5); }
+  .auth-brand-logo { margin-bottom: var(--sp-4); }
+  .auth-brand h1 { font-size: 1.6rem; }
+  .auth-brand-feats, .auth-brand-note { display: none; }
+  .auth-brand p.auth-brand-sub { margin-bottom: 0; }
+  .auth-formwrap { padding: var(--sp-5) var(--sp-3) var(--sp-8); align-items: flex-start; }
+  .auth-card { padding: var(--sp-5) var(--sp-4); }
+}
+@media (max-width: 380px) {
+  .auth-card { padding: var(--sp-4) var(--sp-3); }
+  .auth-brand { padding: var(--sp-5) var(--sp-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-brand-inner, .auth-card { animation: none; }
+  .auth-shell *, .auth-shell *::before, .auth-shell *::after { transition: none !important; }
+}

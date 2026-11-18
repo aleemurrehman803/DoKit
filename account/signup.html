@@ -23,14 +23,31 @@
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/hub.css">
+<link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header id="site-nav"></header>
-<main id="main">
-  <section class="section">
-    <div class="container" style="max-width:480px">
-      <div class="card form-card">
+<main id="main" class="auth-main">
+  <div class="auth-shell">
+    <aside class="auth-brand" aria-label="About DoKit">
+      <div class="auth-brand-inner">
+        <div class="auth-brand-logo">
+          <img src="../assets/logo.svg" alt="" width="44" height="44">
+          <span>DoKit</span>
+        </div>
+        <h1 data-i18n="acct_brand_h1">Every tool you'll ever need</h1>
+        <p class="auth-brand-sub" data-i18n="acct_brand_sub_signup">Create your free account to save your work, sync across devices, earn coins, and unlock personalised features.</p>
+        <ul class="auth-brand-feats">
+          <li><span class="tick" aria-hidden="true">✓</span><span data-i18n="acct_brand_f1">Free forever — every tool, no card required.</span></li>
+          <li><span class="tick" aria-hidden="true">✓</span><span data-i18n="acct_brand_f2">Your work syncs across devices.</span></li>
+          <li><span class="tick" aria-hidden="true">✓</span><span data-i18n="acct_brand_f3">Earn coins by using tools and inviting friends.</span></li>
+        </ul>
+        <p class="auth-brand-note" data-i18n="acct_brand_note">Free forever · No card required</p>
+      </div>
+    </aside>
+    <section class="auth-formwrap">
+      <div class="card form-card auth-card">
         <div class="section-head" style="text-align:center">
           <span class="eyebrow" data-i18n="acct_signup_eyebrow">Free forever</span>
           <h1 data-i18n="acct_signup_h1">Create your account</h1>
@@ -38,19 +55,32 @@
         <form id="signupForm" novalidate>
           <div class="field">
             <label for="name" data-i18n="acct_field_name">Name</label>
-            <input class="form-control text-input" id="name" name="name" type="text" autocomplete="name">
+            <input class="form-control text-input" id="name" name="name" type="text" autocomplete="name" placeholder="Your full name">
             <div class="form-error" id="err-name" role="alert"></div>
           </div>
           <div class="field">
             <label for="email" data-i18n="acct_field_email">Email</label>
-            <input class="form-control text-input" id="email" name="email" type="email" autocomplete="email">
+            <input class="form-control text-input" id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com">
             <div class="form-error" id="err-email" role="alert"></div>
           </div>
           <div class="field">
             <label for="password" data-i18n="acct_field_password">Password</label>
-            <input class="form-control text-input" id="password" name="password" type="password" autocomplete="new-password" aria-describedby="pwd-hint">
+            <div class="auth-pw-wrap">
+              <input class="form-control text-input" id="password" name="password" type="password" autocomplete="new-password" aria-describedby="pwd-hint">
+              <button class="pw-toggle" id="pwToggle" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <div class="pw-meter" id="pwMeter" data-score="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <div class="pw-strength-label" id="pw-strength-label" role="status"></div>
             <div class="form-hint" id="pwd-hint">Minimum 6 characters</div>
             <div class="form-error" id="err-password" role="alert"></div>
+          </div>
+          <div class="field">
+            <label for="confirm" data-i18n="acct_field_confirm">Confirm password</label>
+            <div class="auth-pw-wrap">
+              <input class="form-control text-input" id="confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Re-enter your password">
+              <button class="pw-toggle" id="confirmToggle" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <div class="form-error" id="err-confirm" role="alert"></div>
           </div>
           <div class="field">
             <label for="capInput">Security check <span style="color:var(--text-muted)" data-i18n="acct_required">(required every time)</span></label>
@@ -62,13 +92,15 @@
             <input class="form-control text-input" id="capInput" name="captcha" type="text" autocomplete="off" placeholder="Enter the code shown above" style="margin-top:var(--sp-2)" aria-label="Enter the security code shown in the image">
             <div class="form-error" id="err-captcha" role="alert"></div>
           </div>
+          <div class="field">
+            <label class="auth-check" for="terms"><input type="checkbox" id="terms"> <span>I agree to the <a href="../terms.html">Terms of Service</a> and <a href="../privacy.html">Privacy Policy</a>.</span></label>
+            <div class="form-error" id="err-terms" role="alert"></div>
+          </div>
           <div class="form-error" id="err-general" role="alert" style="margin-bottom:var(--sp-2)"></div>
           <button class="btn btn-primary" type="submit" style="width:100%" data-i18n="acct_signup_submit">Create Account</button>
         </form>
-        <div style="display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-3) 0;color:var(--text-muted);font-size:var(--fs-sm)">
-          <span style="flex:1;border-top:1px solid var(--border)"></span>or<span style="flex:1;border-top:1px solid var(--border)"></span>
-        </div>
-        <button class="btn" id="googleBtn" type="button" style="width:100%" data-i18n="acct_google">Continue with Google</button>
+        <div class="auth-divider" aria-hidden="true">or</div>
+        <button class="btn btn-google" id="googleBtn" type="button"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg><span data-i18n="acct_google">Continue with Google</span></button>
         <p class="form-note" style="text-align:center;margin-top:var(--sp-3)">
           Already have an account? <a href="login.html" data-i18n="acct_login_link">Log in</a>
         </p>
@@ -76,8 +108,8 @@
           Secured by Firebase Authentication.
         </p>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 <footer id="site-foot"></footer>
 <script src="../js/i18n-v2.js" defer></script>
@@ -90,6 +122,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js" defer></script>
 <script src="../js/firebase.js?v=20261008-05" defer></script>
-<script src="../js/pages/signup.js?v=20261007i" defer></script>
+<script src="../js/pages/auth-common.js?v=20261118a" defer></script>
+<script src="../js/pages/signup.js?v=20261118a" defer></script>
 </body>
 </html>
