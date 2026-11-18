@@ -1,0 +1,58 @@
+/* DoKit — Board Photo BULK upgrade styles.
+ * Uses ONLY the live design tokens from assets/css/style.css
+ * (--violet, --amber, --surface, --line, --text, --muted, --good,
+ * --bad, --r-md, --font-sans) and the existing component classes
+ * (.btn, .btn.ghost, .toolbox, .note). No new design language, no new
+ * colours, no new fonts. Dark + light themes follow the tokens. */
+#bpb { margin-top: var(--sp-5, 1.5rem); }
+/* Mode visibility: single-only controls hide in bulk mode and vice versa. */
+[data-bp-mode="single"] .bp-bulk-only { display: none; }
+[data-bp-mode="bulk"] .bp-single-only { display: none !important; }
+.bp-mode { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center;
+  margin: var(--sp-4, 1rem) 0 0; }
+.bp-mode-label { font-weight: 700; }
+.bp-mode label { display: inline-flex; gap: .35rem; align-items: center; cursor: pointer; }
+.bpb-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+#bpb-dz { border: 2px dashed var(--line); border-radius: var(--r-md, 12px);
+  padding: 1.25rem 1rem; text-align: center; cursor: pointer; margin: .75rem 0; }
+#bpb-dz.dragover { border-color: var(--violet); background: var(--surface); }
+#bpb-dz .dz-title { font-weight: 700; margin: 0 0 .25rem; }
+#bpb-dz .dz-hint { color: var(--muted); margin: 0; font-size: .9rem; }
+#bpb-paste-zone { border: 1px dashed var(--line); border-radius: var(--r-md, 12px);
+  padding: .6rem .8rem; color: var(--muted); font-size: .9rem; margin: .5rem 0; }
+#bpb-paste-zone:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.bpb-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+#bpb-sel-count { color: var(--muted); font-size: .9rem; }
+#bpb-grid { list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .75rem; }
+.bpb-card { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px); padding: .6rem; display: flex; flex-wrap: wrap;
+  gap: .4rem; align-items: center; }
+.bpb-card.sel { outline: 2px solid var(--amber); outline-offset: 1px; }
+.bpb-card.st-failed { border-color: var(--bad); }
+.bpb-card.st-done { border-color: var(--good); }
+.bpb-thumb { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; background: var(--surface2); }
+.bpb-serial { font-weight: 800; color: var(--amber); }
+.bpb-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.bpb-meta, .bpb-status { color: var(--muted); font-size: .85rem; }
+.bpb-status { font-weight: 600; }
+.st-done .bpb-status { color: var(--good); }
+.st-failed .bpb-status { color: var(--bad); }
+.bpb-acts { display: flex; flex-wrap: wrap; gap: .3rem; }
+.btn.bpb-mini { padding: .2rem .55rem; font-size: .85rem; }
+#bpb-editor { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px); padding: 1rem; margin-top: 1rem; }
+#bpb-ed-canvas { max-width: 100%; height: auto; display: block; margin: .5rem auto; background: var(--surface2); }
+#bpb-ed-crop-canvas { max-width: 100%; touch-action: none; cursor: crosshair; display: block; margin: .5rem auto; }
+.bpb-sliders { display: grid; gap: .5rem; margin: .75rem 0; }
+.bpb-sliders label { display: grid; grid-template-columns: 10rem 1fr 3rem; gap: .5rem; align-items: center; }
+.bpb-sliders input[type="range"] { width: 100%; }
+#bpb-ed-samples-imgs { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
+#bpb-ed-samples-imgs canvas { border: 1px solid var(--line); border-radius: 8px; }
+#bpb-log { font-family: ui-monospace, monospace; font-size: .8rem; color: var(--muted);
+  max-height: 12rem; overflow: auto; white-space: pre-wrap; }
+#bpb-progress { width: 100%; }
+@media (max-width: 560px) {
+  .bpb-sliders label { grid-template-columns: 7rem 1fr 2.5rem; }
+  #bpb-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
