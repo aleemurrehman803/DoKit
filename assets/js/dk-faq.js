@@ -182,7 +182,7 @@ window.DKFAQ = [
  },
  {
   "q": "What options does Board Photo offer?",
-  "a": "Background White, Blue, or Red; a Print Sheet (4×6); batch mode for up to 10 photos with the same spec and transforms; custom size override (width, height, max KB); name stamp (optional); today's date; and Black & White. WhatsApp share sends a text link only — download the photo first, then attach it manually inside WhatsApp. Email opens a mail draft only — the photo downloads first so you can attach it manually."
+  "a": "Background White, Blue, or Red; batch mode for up to 10 photos with the same spec and transforms; custom size override (width, height, max KB); name stamp (optional); today's date; and Black & White. WhatsApp and Facebook share send a text link only — download the photo first, then attach it manually when you post. Email opens a mail draft only — the photo downloads first so you can attach it manually."
  },
  {
   "q": "Does Board Photo remove backgrounds or check all photo rules?",

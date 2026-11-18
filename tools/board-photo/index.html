@@ -183,6 +183,16 @@
     <label><span data-i18n="bp.ed_saturation">Saturation</span><input id="bp-saturation" type="range" min="-100" max="100" value="0"><span id="bp-saturation-v">0</span></label>
     <label><span data-i18n="bp.ed_temp">Colour temperature</span><input id="bp-temp" type="range" min="-100" max="100" value="0"><span id="bp-temp-v">0</span></label>
     <label><span data-i18n="bp.ed_feather">Edge softening</span><input id="bp-feather" type="range" min="0" max="8" value="1"><span id="bp-feather-v">1</span></label>
+    <!-- Cutout/share round, 18 Nov 2026: professional-editor completeness.
+         Sharpness (capture sharpening, subject interior only), Highlights
+         and Shadows (luminance lift, subject only), Straighten (fine
+         ±10° rotation). Exposure is NOT added: Brightness already is the
+         exposure control in this pipeline — a second slider doing the
+         same thing would be clutter, not completeness. -->
+    <label><span data-i18n="bp.ed_sharpness">Sharpness</span><input id="bp-sharpness" type="range" min="0" max="100" value="25"><span id="bp-sharpness-v">25</span></label>
+    <label><span data-i18n="bp.ed_highlights">Highlights</span><input id="bp-highlights" type="range" min="-100" max="100" value="0"><span id="bp-highlights-v">0</span></label>
+    <label><span data-i18n="bp.ed_shadows">Shadows</span><input id="bp-shadows" type="range" min="-100" max="100" value="0"><span id="bp-shadows-v">0</span></label>
+    <label><span data-i18n="bp.ed_straighten">Straighten</span><input id="bp-straighten" type="range" min="-10" max="10" value="0"><span id="bp-straighten-v">0°</span></label>
   </div>
   <div class="bp-toolbar-row" role="group" aria-label="Background colour">
     <b data-i18n="bp.bg_label">Background</b>
@@ -219,6 +229,16 @@
     </p>
   </div>
 </div>
+<!-- Photo analysis (cutout/share round, 18 Nov 2026): on upload the
+     picture is analysed FIRST — subject/head detection from the mask,
+     head position + margins, and whether it fits the board spec — and
+     the assessment is shown HERE, before crop and background change.
+     Shown once segmentation lands; re-rendered when the board changes
+     or the crop is applied. -->
+<section id="bp-analysis" class="bp-single-only" hidden>
+  <p><b data-i18n="bp.an_title">Photo analysis</b></p>
+  <div id="bp-analysis-body"></div>
+</section>
 <p class="bp-single-only"><button class="btn" id="bp-make" data-i18n="rsv_0378">Make board photo</button></p>
 <!-- PIPELINE FIX (18 Nov 2026): labelled Before / After compare. The
      After image is the EXACT final export (same blob as the download
@@ -251,9 +271,17 @@
 <p class="bp-single-only"><a id="bp-download" class="btn ghost" style="display:none" download="board-photo.jpg" data-i18n="rsv_0233">Download photo</a></p>
 <!-- Background buttons moved into the editing toolbar above (UI-editor
      correction, 18 Nov 2026) — the board preset bg is the default there. -->
-<p class="bp-single-only"><button type="button" class="btn ghost" id="sheetBtn" data-i18n="rsv_1229">Print Sheet (4×6)</button></p>
-<p class="bp-single-only"><button type="button" class="btn ghost" id="waBtn" data-i18n="rsv_1231">Share on WhatsApp</button></p>
-<p class="note bp-single-only" data-i18n="rsv_1232">WhatsApp share sends a text link only — wa.me cannot carry an image file. Download your photo first, then attach it manually inside WhatsApp.</p>
+<!-- REMOVED 18 Nov 2026 (cutout/share round): Print Sheet (4×6)
+     (#sheetBtn) — removed entirely on the owner's word. -->
+<!-- Share row (cutout/share round, 18 Nov 2026): WhatsApp + Facebook
+     share, ONE row. Both send a TEXT LINK only — neither service lets
+     a website attach an image file. Download the photo first, then
+     attach it manually when you post. -->
+<p class="bp-single-only bpb-row">
+  <button type="button" class="btn ghost" id="waBtn" data-i18n="rsv_1231">Share on WhatsApp</button>
+  <button type="button" class="btn ghost" id="fbBtn" data-i18n="bp.share_fb">Share on Facebook</button>
+</p>
+<p class="note bp-single-only" data-i18n="bp.share_note">Sharing sends a text link only — WhatsApp and Facebook cannot carry an image file. Download your photo first, then attach it manually when you post.</p>
 <div class="bp-single-only">
   <p><b data-i18n="rsv_1271">Custom size (overrides board spec)</b></p>
   <label for="cw" data-i18n="rsv_1272">Width (px)</label>

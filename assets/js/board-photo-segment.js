@@ -219,7 +219,17 @@
     }
     return out;
   }
-  function refineMask(maskCanvas, chokePx, featherPx) {
+  /* refineMask(maskCanvas, chokePx, featherPx, gamma): erode the binary
+   * mask (choke), soften the edge (feather, separable box blur), write
+   * the value into RGB AND alpha. gamma (optional, default 1 = no
+   * change): an alpha-contrast curve, a' = 255*(a/255)^gamma. gamma > 1
+   * STEEPENS the edge ramp — mid-alpha pixels move toward the extremes,
+   * so the pale transition ring against a strong background narrows
+   * without eroding hair (unlike a bigger choke). Ablation seam:
+   * buildCanvas passes window.__bpQuality.alphaGamma (see its
+   * "Ablation-only overrides" note). Measured 18 Nov 2026 — see the
+   * cutout/share fringe ablation (validation/quality/fringe/). */
+  function refineMask(maskCanvas, chokePx, featherPx, gamma) {
     var w = maskCanvas.width, h = maskCanvas.height;
     var src = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
     var a = new Float32Array(w * h);
@@ -229,6 +239,11 @@
     if (featherPx && featherPx > 0) {
       a = boxBlur1d(a, w, h, featherPx, true);
       a = boxBlur1d(a, w, h, featherPx, false);
+    }
+    if (gamma && gamma !== 1) {
+      for (var g = 0; g < w * h; g++) {
+        a[g] = 255 * Math.pow(a[g] / 255, gamma);
+      }
     }
     var out = document.createElement('canvas');
     out.width = w; out.height = h;

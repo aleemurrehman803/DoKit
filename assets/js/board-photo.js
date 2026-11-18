@@ -10,8 +10,9 @@
  *  - Background buttons, custom size (w/h/max-KB override), Advanced
  *    panel (Enhance, Rotate L/R, Flip, presets in localStorage),
  *    name/date stamp, B/W toggle, face-guide toggle, camera capture,
- *    batch photos (one output per input), Print Sheet 4x6, WhatsApp
- *    share (TEXT link only — see note on waBtn), "Use another photo".
+ *    batch photos (one output per input), WhatsApp share (TEXT link
+ *    only — see note on waBtn), Facebook share (TEXT link only, same
+ *    mechanism), "Use another photo".
  * Crop change vs Phase 2b: the old tool's head-safe crop is used
  * (crop biased toward the top, factor 0.32) so heads keep headroom.
  * Every optional control is guarded: with no fragment on the page the
@@ -30,7 +31,7 @@
  *  - REMOVED UI: Advanced section, Preset Name field + Save Preset button,
  *    old Batch Mode (bulk has its own intake), Email Photo, Use Another
  *    Photo (replaced by Remove photo in the toolbar). Camera, B&W, Face
- *    Guide, Print Sheet, WhatsApp, Custom size, Background buttons kept.
+ *    Guide, WhatsApp, Facebook, Custom size, Background buttons kept.
  *  - Per-board note/source/bgMandatory re-attached from the orphan
  *    tools/board-photo/tool.js (verified requirements only, verbatim).
  *  - buildCanvas() now also honours per-call brightness/contrast/
@@ -116,7 +117,7 @@
   /* -- Optional restored-control elements (all guarded) ------------------- */
   function $(id) { return document.getElementById(id); }
   var bgRow = $('bgRow');
-  var sheetBtn = $('sheetBtn'), waBtn = $('waBtn');
+  var waBtn = $('waBtn'), fbBtn = $('fbBtn');
   var cwEl = $('cw'), chEl = $('ch'), ckbEl = $('ckb'), customBtn = $('customBtn');
   /* REMOVED 18 Nov 2026 (UI-editor correction): Advanced section
    * (#advToggle/#advSection/#advBody), Preset Name (#presetName) +
@@ -144,6 +145,10 @@
   var compareEl = $('bp-compare'), beforeImg = $('bp-before-img'),
       afterImg = $('bp-after-img'), beforeMeta = $('bp-before-meta'),
       afterMeta = $('bp-after-meta');
+  /* Photo analysis (cutout/share round, 18 Nov 2026): the panel that
+   * shows the FIRST assessment after upload — subject/head detection,
+   * head position + margins, board-spec fit — before crop/background. */
+  var analysisEl = $('bp-analysis'), analysisBody = $('bp-analysis-body');
   /* After-image zoom (image-quality round, 18 Nov 2026): 100% = actual
    * pixels, 200%/300% for edge inspection. At 300% the image renders
    * pixelated so the user sees the real pixels, not a smoothed upscale.
@@ -180,11 +185,13 @@
   var currentURL = null;    // object URL of currentBlob (revoked on replace)
   var customSpec = null;    // {w,h,kb} when the user overrides the board spec
   var bgOverride = null;    // null = board bg; 'original' = no fill; else colour
-  var rotation = 0, flipH = false, bwOn = false, enhanceOn = false;
+  var rotation = 0, straighten = 0, flipH = false, bwOn = false, enhanceOn = false;
   /* Single-mode edit state (UI-editor correction): the toolbar binds to
    * these; buildCanvas() reads them through opts._single (bulk always
    * passes every field explicitly, so it can never pick these up). */
-  var adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+  var adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0,
+    sharpness: 0.25, highlights: 0, shadows: 0 };
+  var loadedFileBytes = 0; /* upload size, for the analysis panel */
   var singleCrop = null;    // fractions {x,y,w,h} of the source image, or null
   var segMask = null;       // segmentation mask canvas at source size, or null
   var segEngine = '';       // 'mediapipe' | 'colour' | '' (none yet / failed)
@@ -292,6 +299,7 @@
        * from the previous board into this board's photo. */
       customSpec = null; bgOverride = null;
       showSpec(); syncCustomFields(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); syncMakeBtn(); rerender(true);
+      renderAnalysis(); /* board spec changed: fit + background lines move */
     }
   });
   if (filterEl) {
@@ -300,12 +308,19 @@
       var list = BOARDS.filter(function (b) {
         return !q || b.name.toLowerCase().indexOf(q) !== -1;
       });
+      /* Board-auto fix (cutout/share round, 18 Nov 2026): the filter
+       * used to SWITCH the board to the first match on every keystroke
+       * AND wipe the manual background override — typing "bis" while
+       * Peshawar was selected silently moved the photo to Bahawalpur.
+       * A filter must only filter the dropdown: the selected board
+       * stays selected (it is kept in the list even when it does not
+       * match the query, so the <select> can never silently switch),
+       * and the override is untouched. Selection changes ONLY through
+       * the 'change' handler above, which clears the override + re-syncs
+       * the warning, picker, Make button and preview together. */
+      if (list.indexOf(current) === -1) { list = [current].concat(list); }
       fillOptions(list);
-      if (list.length) {
-        selectEl.value = list[0].id; current = list[0];
-        customSpec = null; bgOverride = null;
-        showSpec(); syncBgBtns();
-      }
+      selectEl.value = current.id;
     });
   }
 
@@ -406,6 +421,9 @@
     /* WHY per-field fallback (not Object.assign): the module globals are
      * the single-photo state; bulk passes only the fields it overrides. */
     var rot = (((o.rotation !== undefined ? o.rotation : rotation) % 360) + 360) % 360;
+    var st = single ? straighten : 0; /* fine straighten (deg), single mode
+      only — bulk passes rotation explicitly and never sets this, so bulk
+      output cannot drift. outW/outH swapping uses rot only (90/270). */
     var flip = (o.flipH !== undefined ? o.flipH : flipH);
     var bw = (o.bw !== undefined ? o.bw : bwOn);
     var enh = (o.enhance !== undefined ? o.enhance : enhanceOn);
@@ -476,18 +494,25 @@
     /* Quality test seam (image-quality round, 18 Nov 2026): tests may
      * override pipeline constants via window.__bpQuality before Make
      * (ablation runs). Production defaults are the measured winners.
-     *   chokePx: mask erosion px at output size (default 1)
+     *   chokePx: mask erosion px at output size (default 2 — cutout/share
+     *     round, 18 Nov 2026: the fringe ablation measured choke 2 beats
+     *     choke 1 on the config-independent zone metric, 1,493 vs 1,623)
      *   sharpen: unsharp amount on the subject interior (default 0.25)
      *   stepDown: two-step downscale on/off (default true) */
     var __Q = (typeof window !== 'undefined' && window.__bpQuality) || {};
-    var chokePx = (__Q.chokePx !== undefined) ? __Q.chokePx : 1;
-    var sharpAmt = (__Q.sharpen !== undefined) ? __Q.sharpen : 0.25;
+    var chokePx = (__Q.chokePx !== undefined) ? __Q.chokePx : 2;
+    var sharpAmt = (__Q.sharpen !== undefined) ? __Q.sharpen : (single ? adj.sharpness : 0.25);
     var stepDown = (__Q.stepDown !== undefined) ? !!__Q.stepDown : true;
     /* Ablation-only overrides (default = the live slider / on): featherPx
      * and decont let tests vary the edge pipeline per Make without
-     * touching the UI. Production never sets __bpQuality. */
+     * touching the UI. alphaGamma (default 3 — cutout/share round,
+     * 18 Nov 2026: the fringe ablation measured gamma 3 + choke 2 as
+     * the best edge, zone-fringe 1,307 vs 1,623 baseline, sharpness
+     * preserved at 1.90 median) steepens the mask alpha ramp — see
+     * refineMask's gamma note. Production never sets __bpQuality. */
     var qFeatherPx = (__Q.featherPx !== undefined) ? __Q.featherPx : featherPx;
     var qDecont = (__Q.decont !== undefined) ? !!__Q.decont : true;
+    var qGamma = (__Q.alphaGamma !== undefined) ? __Q.alphaGamma : 3;
     /* The subject draw (transforms + filters), shared by the plain path
      * and the masked path so the two can never drift apart.
      * STEP-DOWN (measured 18 Nov 2026, real canvas): a single 800->150
@@ -508,7 +533,7 @@
         m2.save();
         m2.translate(outW, outH);
         if (flip) { m2.scale(-1, 1); }
-        m2.rotate(rot * Math.PI / 180);
+        m2.rotate((rot + st) * Math.PI / 180);
         m2.drawImage(img, sx, sy, cw, ch, -outW, -outH, outW * 2, outH * 2);
         m2.restore();
         m2.filter = 'none';
@@ -524,7 +549,7 @@
         c2.save();
         c2.translate(outW / 2, outH / 2);
         if (flip) { c2.scale(-1, 1); }
-        c2.rotate(rot * Math.PI / 180);
+        c2.rotate((rot + st) * Math.PI / 180);
         c2.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
         c2.restore();
       }
@@ -542,6 +567,37 @@
       c2.fillRect(0, 0, outW, outH);
       c2.restore();
     }
+    /* Highlights / Shadows (cutout/share round, 18 Nov 2026): a
+     * luminance lift on the SUBJECT pixels (same place as the
+     * temperature tint, before masking — the board-colour fill is
+     * never touched). Highlights move bright pixels toward/away from
+     * white, shadows move dark pixels toward/away from black; the
+     * per-pixel channel scale preserves hue. Both default to 0 (no
+     * change). In the plain path the cover-cropped subject fills the
+     * frame, so the whole canvas IS the subject there. */
+    function applyHiSh(c2) {
+      var hi = adjVal('highlights', 0), sh = adjVal('shadows', 0);
+      if (hi === 0 && sh === 0) { return; }
+      var w = c2.canvas.width, h = c2.canvas.height;
+      var img;
+      try { img = c2.getImageData(0, 0, w, h); } catch (e) { return; }
+      var d = img.data;
+      for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], g = d[i + 1], b = d[i + 2];
+        var L = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (L <= 0) { continue; } /* transparent pixel: nothing to lift */
+        var nL = L;
+        if (L > 128 && hi !== 0) { nL = L + (hi / 100) * (255 - L) * (L - 128) / 127; }
+        else if (L < 128 && sh !== 0) { nL = L + (sh / 100) * L * (128 - L) / 127; }
+        if (nL !== L) {
+          var f = nL / L;
+          d[i] = f * r < 0 ? 0 : (f * r > 255 ? 255 : f * r);
+          d[i + 1] = f * g < 0 ? 0 : (f * g > 255 ? 255 : f * g);
+          d[i + 2] = f * b < 0 ? 0 : (f * b > 255 ? 255 : f * b);
+        }
+      }
+      c2.putImageData(img, 0, 0);
+    }
     /* Masked path (image-quality round, 18 Nov 2026): the subject is drawn
      * to a temp canvas (step-down, see drawSubject), the temp tint applied,
      * then the mask — refined at OUTPUT size (choke + bounded feather),
@@ -557,6 +613,7 @@
       var tctx = tmp.getContext('2d');
       drawSubject(tctx);
       applyTemp(tctx);
+      applyHiSh(tctx);
       /* The mask lives at SOURCE size, so it must go through the SAME
        * source window (sx/sy/cw/ch) and the SAME flip/rotate transforms as
        * the subject — drawing the whole mask scaled to outW/outH would
@@ -569,12 +626,12 @@
       mctx.save();
       mctx.translate(outW / 2, outH / 2);
       if (flip) { mctx.scale(-1, 1); }
-      mctx.rotate(rot * Math.PI / 180);
+      mctx.rotate((rot + st) * Math.PI / 180);
       mctx.drawImage(mask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
       mctx.restore();
       /* Refine at output size: the 1px choke cuts the pale fringe and the
        * slider's feather becomes a bounded box blur (see refineMask). */
-      mCanvas = window.DKBoardSegment.refineMask(mCanvas, chokePx, qFeatherPx);
+      mCanvas = window.DKBoardSegment.refineMask(mCanvas, chokePx, qFeatherPx, qGamma);
       /* destination-in with the refined mask (feather 0 here — the blur
        * already happened inside refineMask). */
       window.DKBoardSegment.applyMaskToCanvas(tmp, mCanvas, 0);
@@ -586,6 +643,7 @@
     } else {
       drawSubject(ctx);
       applyTemp(ctx);
+      applyHiSh(ctx);
     }
     return canvas;
   }
@@ -679,8 +737,9 @@
    * either. Segmentation then runs in the background; when its mask lands
    * the preview re-renders with the board background applied. */
   function resetSingleEdits() {
-    rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
-    adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+    rotation = 0; straighten = 0; flipH = false; bwOn = false; enhanceOn = false;
+    adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0,
+      sharpness: 0.25, highlights: 0, shadows: 0 };
     singleCrop = null; segMask = null; segEngine = '';
     removeBgOn = true; featherPx = 1; bgOverride = null;
     /* PIPELINE FIX: a fresh photo starts with no mask and no final —
@@ -712,6 +771,7 @@
      * Make runs the gated pipeline below. */
     rerender(true);
     startSegmentation();
+    renderAnalysis(); /* shows "Analysing…" until the mask lands */
   }
   /* Background replacement, async and non-blocking — but Make is GATED
    * on its result (see segState + makeBoardPhoto). PIPELINE FIX:
@@ -745,12 +805,14 @@
        * runs the cover-crop pipeline and says so honestly. */
       setSegState('off');
       setSegStatus(window.dkT ? window.dkT('bp.ba_seg_off', 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.') : 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.');
+      renderAnalysis();
       return;
     }
     if (!window.DKBoardSegment) {
       setSegState('unavailable');
       setSegStatus(window.dkT ? window.dkT('bp.ed_seg_unavailable', 'Automatic background removal is unavailable in this browser \u2014 the background could not be replaced.') : 'Automatic background removal is unavailable in this browser \u2014 the background could not be replaced.');
       showSegFail();
+      renderAnalysis();
       return;
     }
     var run = ++segRunId;
@@ -767,12 +829,14 @@
           : 'Background replaced with the board colour');
         hideSegFail();
         rerender(true);
+        renderAnalysis(); /* subject/head/fit assessment, shown FIRST */
       } else {
         segMask = null; segEngine = '';
         setSegState('failed');
         setSegStatus(window.dkT ? window.dkT('bp.ba_seg_failed', 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.') : 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.');
         showSegFail();
         rerender(true);
+        renderAnalysis();
       }
     }).catch(function () {
       if (run !== segRunId || !loadedImg) { return; }
@@ -781,7 +845,143 @@
       setSegStatus(window.dkT ? window.dkT('bp.ba_seg_failed', 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.') : 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.');
       showSegFail();
       rerender(true);
+      renderAnalysis();
     });
+  }
+  /* Output-space mask bbox (cutout/share round): draws the segmentation
+   * mask through the SAME crop window + rotation/flip as buildCanvas,
+   * at output size, refines it the same way (choke 1, feather 1), and
+   * reads the opaque bbox. The analysis panel reports head margins
+   * from THIS box, so it always matches the framing Make will produce.
+   * Returns null without a mask. */
+  function maskOutBBox() {
+    if (!segMask || !loadedImg || !window.DKBoardSegment) { return null; }
+    var spec = effSpec();
+    var iw = loadedImg.naturalWidth, ih = loadedImg.naturalHeight;
+    /* Output dims swap on a 90/270° rotation, exactly as in buildCanvas. */
+    var rotN = (((rotation % 360) + 360) % 360);
+    var outW = (rotN === 90 || rotN === 270) ? spec.h : spec.w;
+    var outH = (rotN === 90 || rotN === 270) ? spec.w : spec.h;
+    var cw, ch, sx, sy;
+    if (singleCrop) {
+      cw = Math.min(Math.round(singleCrop.w * iw), iw);
+      ch = Math.min(Math.round(singleCrop.h * ih), ih);
+      sx = Math.max(0, Math.min(Math.round(singleCrop.x * iw), iw - cw));
+      sy = Math.max(0, Math.min(Math.round(singleCrop.y * ih), ih - ch));
+    } else {
+      var cc = subjectCropRect(iw, ih, outW, outH, segMask);
+      cw = cc.w; ch = cc.h; sx = cc.x; sy = cc.y;
+    }
+    var c = document.createElement('canvas');
+    c.width = outW; c.height = outH;
+    var x = c.getContext('2d');
+    x.save();
+    x.translate(outW / 2, outH / 2);
+    if (flipH) { x.scale(-1, 1); }
+    x.rotate(((rotation + straighten) * Math.PI) / 180);
+    x.drawImage(segMask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
+    x.restore();
+    /* Same defaults as buildCanvas (choke 2, feather 1, gamma 3 —
+     * cutout/share round): the panel's bbox must describe the mask
+     * Make actually uses, or its head margins would disagree with
+     * the framing by ~1px. If the defaults ever move, move them here
+     * too. */
+    var refined = window.DKBoardSegment.refineMask(c, 2, 1, 3);
+    var d;
+    try { d = refined.getContext('2d').getImageData(0, 0, outW, outH).data; }
+    catch (e) { return null; }
+    var x0 = outW, y0 = outH, x1 = -1, y1 = -1, opaque = 0;
+    for (var y = 0; y < outH; y++) {
+      for (var xx = 0; xx < outW; xx++) {
+        if (d[(y * outW + xx) * 4 + 3] > 127) {
+          opaque++;
+          if (xx < x0) { x0 = xx; } if (xx > x1) { x1 = xx; }
+          if (y < y0) { y0 = y; } if (y > y1) { y1 = y; }
+        }
+      }
+    }
+    if (x1 < 0) { return null; }
+    return { x0: x0, y0: y0, x1: x1, y1: y1, outW: outW, outH: outH,
+      coverage: opaque / (outW * outH) };
+  }
+  /* Photo analysis (cutout/share round): the FIRST assessment after
+   * upload — subject/head detection, head position + margins, and
+   * whether the photo fits the board spec — shown BEFORE crop and
+   * background change. Re-rendered when segmentation lands, when the
+   * board changes, and when a crop is applied. Every line is built
+   * from dict keys with {placeholders} (same pattern as the bulk
+   * preset names), so Urdu reads correctly. */
+  function renderAnalysis() {
+    if (!analysisEl || !analysisBody) { return; }
+    if (!loadedImg) { analysisEl.hidden = true; analysisBody.textContent = ''; return; }
+    var spec = effSpec();
+    var T = window.dkT || null;
+    function tr(key, fb) { return T ? T(key, fb) : fb; }
+    function sub(s, k, v) { return s.split(k).join(v); }
+    function line(text, cls) {
+      var p = document.createElement('p');
+      p.className = 'note' + (cls ? ' ' + cls : '');
+      p.textContent = text;
+      analysisBody.appendChild(p);
+    }
+    analysisBody.textContent = '';
+    analysisEl.hidden = false;
+    /* Fit line: source dims -> board dims + file size (always shown,
+     * even while segmentation is still running). */
+    var sizeTxt = loadedFileBytes > 0
+      ? (Math.round(loadedFileBytes / 102.4) / 10) + ' KB' : '—';
+    line(sub(sub(sub(sub(sub(sub(
+      tr('bp.an_fit', 'Photo {iw}×{ih} px → board {w}×{h} px, max {kb} KB. Source file {size}.'),
+      '{iw}', String(loadedImg.naturalWidth)), '{ih}', String(loadedImg.naturalHeight)),
+      '{w}', String(spec.w)), '{h}', String(spec.h)), '{kb}', String(spec.kb)),
+      '{size}', sizeTxt));
+    if (loadedImg.naturalWidth < spec.w || loadedImg.naturalHeight < spec.h) {
+      line(tr('bp.an_small', 'Source is smaller than the board size — the output will be upscaled and may look soft.'), 'err');
+    }
+    /* Background line: what Make will use (board spec, or the manual
+     * override) against what the board requires. */
+    var effBg = bgOverride === 'original'
+      ? tr('bp.bg_original', 'Keep original')
+      : (bgOverride || spec.bg);
+    line(sub(sub(tr('bp.an_bg', 'Background: {bg} — board requires {req}.'),
+      '{bg}', effBg), '{req}', bgName(spec.bg_name) + ' (' + spec.bg + ')'));
+    /* Subject + head lines need a mask. */
+    if (segState === 'pending' || segState === 'idle') {
+      line(tr('bp.an_analysing', 'Analysing your photo…'));
+      return;
+    }
+    if (segState === 'off') {
+      line(tr('bp.an_off', 'Background removal is off — the photo keeps its original background.'));
+      return;
+    }
+    if (segState !== 'ready' || !segMask) {
+      line(tr('bp.an_nosubject', 'No subject found — the photo may be too busy or too dark. Try a plainer photo.'), 'err');
+      return;
+    }
+    var bb = maskOutBBox();
+    if (!bb) {
+      line(tr('bp.an_nosubject', 'No subject found — the photo may be too busy or too dark. Try a plainer photo.'), 'err');
+      return;
+    }
+    line(sub(sub(tr('bp.an_subject', 'Subject found — {engine}, coverage {cov}% of the frame.'),
+      '{engine}', segEngine || 'mediapipe'), '{cov}', String(Math.round(bb.coverage * 100))));
+    var topM = bb.y0, leftM = bb.x0, rightM = bb.outW - 1 - bb.x1;
+    var headW = Math.round((bb.x1 - bb.x0 + 1) / bb.outW * 100);
+    line(sub(sub(sub(sub(sub(
+      tr('bp.an_head', 'Head: top margin {top}px ({topp}% of frame height), head width {w}% of the frame, side margins {l}px / {r}px.'),
+      '{top}', String(topM)), '{topp}', String(Math.round(topM / bb.outH * 100))),
+      '{w}', String(headW)), '{l}', String(leftM)), '{r}', String(rightM)));
+    /* Verdict: headroom first (a cut head is the worst failure), then
+     * width (edges may be cut), else ready. Thresholds match the
+     * framing the pipeline itself enforces (8% top, 4% sides). */
+    var topWant = Math.round(bb.outH * 0.08), sideWant = Math.round(bb.outW * 0.04);
+    if (topM < topWant) {
+      line(tr('bp.an_verdict_top', 'Head is too close to the top — retake with more space above the head.'), 'err');
+    } else if (leftM < sideWant || rightM < sideWant || window.__bpCropWarn) {
+      line(tr('bp.an_verdict_wide', 'Subject is wider than the frame — edges may be cut.'), 'err');
+    } else {
+      line(tr('bp.an_verdict_ok', 'Ready for crop — head fully in frame with headroom.'), 'ok');
+    }
   }
   function setSegStatus(msg) {
     if (segStatusEl) { segStatusEl.textContent = msg || ''; }
@@ -792,6 +992,7 @@
       say(window.dkT ? window.dkT('rsv_1260', 'No valid photos chosen \u2014 pick PNG, JPG or WebP files under 25 MB.') : 'No valid photos chosen \u2014 pick PNG, JPG or WebP files under 25 MB.');
       return;
     }
+    loadedFileBytes = file.size || 0; /* analysis panel: source size */
     var reader = new FileReader();
     reader.onload = function () {
       var img = new Image();
@@ -1067,6 +1268,15 @@
     setSlider('bp-contrast', 'bp-contrast-v', Math.round((adj.contrast - 1) * 100));
     setSlider('bp-saturation', 'bp-saturation-v', Math.round((adj.saturation - 1) * 100));
     setSlider('bp-temp', 'bp-temp-v', adj.temp);
+    setSlider('bp-sharpness', 'bp-sharpness-v', Math.round(adj.sharpness * 100));
+    setSlider('bp-highlights', 'bp-highlights-v', adj.highlights);
+    setSlider('bp-shadows', 'bp-shadows-v', adj.shadows);
+    /* Straighten shows degrees: setSlider writes the same value to the
+     * input and the label, so the label needs its own line (input must
+     * stay a bare number or the range control rejects it). */
+    var stEl = $('bp-straighten'), stLab = $('bp-straighten-v');
+    if (stEl) { stEl.value = String(straighten); }
+    if (stLab) { stLab.textContent = straighten + '°'; }
     toggleBtn(enhanceBtn, enhanceOn);
     toggleBtn(flipBtn, flipH);
     if (bwToggle) { bwToggle.checked = bwOn; }
@@ -1090,6 +1300,20 @@
   bindSlider('bp-contrast', 'bp-contrast-v', function (v) { adj.contrast = 1 + v / 100; });
   bindSlider('bp-saturation', 'bp-saturation-v', function (v) { adj.saturation = 1 + v / 100; });
   bindSlider('bp-temp', 'bp-temp-v', function (v) { adj.temp = v; });
+  bindSlider('bp-sharpness', 'bp-sharpness-v', function (v) { adj.sharpness = v / 100; });
+  bindSlider('bp-highlights', 'bp-highlights-v', function (v) { adj.highlights = v; });
+  bindSlider('bp-shadows', 'bp-shadows-v', function (v) { adj.shadows = v; });
+  /* Straighten needs its own listener (not bindSlider): the value label
+   * shows degrees, and bindSlider writes the bare number to the label. */
+  var straightenEl = $('bp-straighten'), straightenLab = $('bp-straighten-v');
+  if (straightenEl) {
+    straightenEl.addEventListener('input', function () {
+      var v = parseInt(straightenEl.value, 10) || 0;
+      if (straightenLab) { straightenLab.textContent = v + '°'; }
+      straighten = v;
+      rerender(true);
+    });
+  }
   if (rmbgToggle) {
     rmbgToggle.addEventListener('change', function () {
       removeBgOn = rmbgToggle.checked;
@@ -1154,8 +1378,9 @@
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
       if (needPhoto()) { return; }
-      rotation = 0; flipH = false; bwOn = false; enhanceOn = false;
-      adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
+      rotation = 0; straighten = 0; flipH = false; bwOn = false; enhanceOn = false;
+      adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0,
+        sharpness: 0.25, highlights: 0, shadows: 0 };
       singleCrop = null; removeBgOn = true; featherPx = 1; bgOverride = null;
       if (cropWrap) { cropWrap.hidden = true; }
       syncToolbarControls(); syncBgBtns(); syncBgWarning();
@@ -1180,7 +1405,9 @@
       canvasEl.style.display = 'none';
       setSegStatus('');
       resetSingleEdits();
+      loadedFileBytes = 0;
       syncMakeBtn();
+      renderAnalysis(); /* no photo: the panel hides */
       say(window.dkT ? window.dkT('rsv_1279', 'Choose another photo.') : 'Choose another photo.');
     });
   }
@@ -1293,6 +1520,7 @@
       }
       if (cropWrap) { cropWrap.hidden = true; }
       rerender(true);
+      renderAnalysis(); /* the crop window moved: head margins change */
     });
   }
   if (cropCancel) {
@@ -1350,42 +1578,12 @@
    * (UI-editor correction). Presets are still SAVED from the bulk editor
    * (auto-named "Custom 1", "Custom 2", ...) and their chips still apply
    * here via renderPresets()/presetRow above. */
-  /* -- Restored: Print Sheet 4x6 -------------------------------------------- */
-  if (sheetBtn) {
-    sheetBtn.addEventListener('click', function () {
-      if (!currentBlob) { say((window.dkT ? window.dkT('rsv_1230', 'Make a board photo first, then print a sheet.') : 'Make a board photo first, then print a sheet.')); return; }
-      var url = URL.createObjectURL(currentBlob);
-      var img = new Image();
-      img.onload = function () {
-        URL.revokeObjectURL(url);
-        /* 4x6 inch at 300 DPI = 1200x1800 px; tile the photo with a
-         * 12 px gap, centred, on white — the sheet itself is a download,
-         * nothing is sent to a printer or server. */
-        var SHEET_W = 1200, SHEET_H = 1800, GAP = 12;
-        var pw = img.naturalWidth || 200, ph = img.naturalHeight || 230;
-        var cols = Math.max(1, Math.floor((SHEET_W + GAP) / (pw + GAP)));
-        var rows = Math.max(1, Math.floor((SHEET_H + GAP) / (ph + GAP)));
-        var gridW = cols * pw + (cols - 1) * GAP;
-        var gridH = rows * ph + (rows - 1) * GAP;
-        var ox = Math.round((SHEET_W - gridW) / 2);
-        var oy = Math.round((SHEET_H - gridH) / 2);
-        var canvas = document.createElement('canvas');
-        canvas.width = SHEET_W; canvas.height = SHEET_H;
-        var ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, SHEET_W, SHEET_H);
-        for (var r = 0; r < rows; r++) {
-          for (var c = 0; c < cols; c++) {
-            ctx.drawImage(img, ox + c * (pw + GAP), oy + r * (ph + GAP), pw, ph);
-          }
-        }
-        canvas.toBlob(function (blob) {
-          if (blob) { downloadBlob(blob, 'board-photo-sheet-4x6.jpg'); }
-        }, 'image/jpeg', 0.92);
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); };
-      img.src = url;
-    });
-  }
+  /* REMOVED 18 Nov 2026 (cutout/share round): Print Sheet (4x6)
+   * (#sheetBtn) is gone from the HTML and this handler is deleted with
+   * it — the owner asked for the Print option to be removed entirely.
+   * The sheet builder (1200x1800 tile download) is gone too; Download
+   * already gives the single board photo, which is what the sheet
+   * tiled. rsv_1229/rsv_1230 stay in the main dicts (unused). */
 
   /* -- Restored: WhatsApp share (HONEST mechanism) -------------------------- */
   /* wa.me links carry TEXT only — no website can attach an image file
@@ -1398,6 +1596,21 @@
       var msg = 'I made my board photo with DoKit Board Photo 🎓\n'
         + window.location.href;
       window.open('https://wa.me/?text=' + encodeURIComponent(msg),
+        '_blank', 'noopener');
+    });
+  }
+
+  /* -- Facebook share (cutout/share round, 18 Nov 2026) ------------------- */
+  /* Same HONEST mechanism as WhatsApp: facebook.com/sharer/sharer.php
+   * shares a PAGE LINK only — no website can attach an image file
+   * through it (Facebook has no wa.me-style file upload, and the Web
+   * Share API's file sharing is not offered by Facebook on desktop).
+   * The user downloads the photo first and attaches it manually when
+   * posting. Nothing here uploads the image anywhere. */
+  if (fbBtn) {
+    fbBtn.addEventListener('click', function () {
+      window.open('https://www.facebook.com/sharer/sharer.php?u='
+        + encodeURIComponent(window.location.href),
         '_blank', 'noopener');
     });
   }
@@ -1471,6 +1684,9 @@
       var img = new Image();
       img.onload = function () {
         closeCam();
+        /* Camera frames have no File: estimate the JPEG size from the
+         * data URL (base64 ≈ 4/3 of the bytes) for the analysis panel. */
+        loadedFileBytes = Math.round(dataUrl.length * 0.75);
         setLoadedImage(img, window.dkT ? window.dkT('bp.cam_t', 'Camera') : 'Camera', dataUrl);
       };
       img.src = dataUrl;
