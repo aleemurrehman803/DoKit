@@ -220,7 +220,8 @@
   </div>
   <p id="presetRow"></p>
   <div id="bp-crop-wrap" hidden>
-    <p><b data-i18n="bp.ed_crop_title">Crop — drag to move, drag the corner to resize</b></p>
+    <p><b data-i18n="bp.ed_crop_title">Crop — drag any edge or corner to resize, or drag inside to move</b></p>
+    <p class="note"><span data-i18n="bp.ed_crop_help">Drag any edge or corner to expand or reduce the crop — the board output size stays fixed.</span></p>
     <canvas id="bp-crop-canvas"></canvas>
     <p id="bp-crop-warn" class="note warn" hidden><span data-i18n="bp.ba_crop_warn">Subject is wider than the frame — edges may be cut.</span></p>
     <p class="bpb-row">
@@ -262,6 +263,24 @@
       <p id="bp-after-meta" class="note"></p>
     </figure>
   </div>
+</section>
+<!-- Pre-download verification gate (subject+crop round, 18 Nov 2026):
+     checks the exact final blob (background, fringe/wedge, head
+     framing) BEFORE the Download link is offered. PASS reveals the
+     download; FAIL lists the issues with a zoomed view of the worst
+     region and fix buttons — Download stays hidden until the user
+     explicitly chooses "Download anyway". Shown only after Make. -->
+<section id="bp-gate" class="bp-single-only" hidden>
+  <p><b data-i18n="bp.gate_title">Photo check</b> <span id="bp-gate-status" aria-live="polite"></span></p>
+  <ul id="bp-gate-issues"></ul>
+  <canvas id="bp-gate-zoom" hidden></canvas>
+  <p id="bp-gate-zoom-cap" class="note" hidden></p>
+  <p class="bpb-row" id="bp-gate-fixes" hidden>
+    <button type="button" class="btn" id="bp-gate-rerun" data-i18n="bp.gate_fix_rerun">Re-run cutout</button>
+    <button type="button" class="btn ghost" id="bp-gate-crop" data-i18n="bp.gate_fix_crop">Adjust crop</button>
+    <button type="button" class="btn ghost" id="bp-gate-feather" data-i18n="bp.gate_fix_feather">Edge softening</button>
+    <button type="button" class="btn ghost" id="bp-gate-anyway" data-i18n="bp.gate_anyway">Download anyway</button>
+  </p>
 </section>
 <div style="position:relative;display:inline-block" class="bp-single-only">
 <canvas id="bp-canvas" style="max-width:100%;display:none"></canvas>
