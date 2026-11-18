@@ -58,10 +58,43 @@
     }
   }
 
+  /* Google sign-in safety net (live-verified 18 Nov 2026): the GIS
+   * token-client callback normally fires when the chooser is closed
+   * without choosing an account — but when the chooser opens as a
+   * full tab and that tab is closed, the callback never arrived and
+   * the Google button stayed disabled with "Opening Google sign-in…"
+   * forever. This arms a one-shot focus listener per click: when the
+   * window regains focus while the flow is still active, we wait a
+   * beat (the callback may still land first) and then run reset().
+   * Returns a disarm() the page calls on every terminal path
+   * (credential received / error / callback cancel) so a later
+   * focus return cannot reset a finished flow. Alt-tabbing back
+   * while the chooser is still open also resets the button — a
+   * deliberate trade-off: the user can simply click again, and a
+   * stuck disabled button is worse than a re-clickable one. */
+  function resetGoogleOnFocusReturn(getActive, reset) {
+    var done = false;
+    function disarm() {
+      if (done) return;
+      done = true;
+      try { window.removeEventListener("focus", onFocus); } catch (e) {}
+    }
+    function onFocus() {
+      if (done) return;
+      setTimeout(function () {
+        if (done) return;
+        try { if (getActive()) { disarm(); reset(); } } catch (e) {}
+      }, 1200);
+    }
+    try { window.addEventListener("focus", onFocus); } catch (e) {}
+    return disarm;
+  }
+
   window.DKAuth = {
     EMAIL_RE: EMAIL_RE,
     bindPwToggle: bindPwToggle,
     scorePassword: scorePassword,
-    renderStrength: renderStrength
+    renderStrength: renderStrength,
+    resetGoogleOnFocusReturn: resetGoogleOnFocusReturn
   };
 })();

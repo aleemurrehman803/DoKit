@@ -89,6 +89,8 @@ document.addEventListener("DOMContentLoaded", function () {
     s.async = true; s.defer = true;
     s.onload = fn;
     s.onerror = function () {
+      gFlowActive = false;
+      if (gDisarm) gDisarm();
       gBtn.disabled = false;
       if (gErr) gErr.textContent = dkT("su_gfail");
     };
@@ -141,6 +143,17 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
+  /* Google flow state for the focus-return safety net (see
+   * DKAuth.resetGoogleOnFocusReturn in js/pages/auth-common.js):
+   * true from click until the flow ends (credential, cancel, error). */
+  var gFlowActive = false;
+  var gDisarm = null;
+  function gReset() {
+    gFlowActive = false;
+    if (gBtn) gBtn.disabled = false;
+    if (gErr) gErr.textContent = dkT("su_gcancel");
+  }
+
   var gBtn = document.getElementById("googleBtn");
   if (gBtn) {
     gBtn.addEventListener("click", function () {
@@ -155,6 +168,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       gBtn.disabled = true;
       if (gErr) gErr.textContent = dkT("su_gopen");
+      // Arm the safety net: if the chooser closes without the GIS
+      // callback ever firing, a focus return re-enables the button.
+      gFlowActive = true;
+      if (gDisarm) gDisarm();
+      if (window.DKAuth) gDisarm = DKAuth.resetGoogleOnFocusReturn(function () { return gFlowActive; }, gReset);
       withGIS(function () {
         try {
           var tokenClient = google.accounts.oauth2.initTokenClient({
@@ -163,6 +181,8 @@ document.addEventListener("DOMContentLoaded", function () {
             ux_mode: "popup",
             callback: function (tokenResp) {
               if (!tokenResp || !tokenResp.access_token) {
+                gFlowActive = false;
+                if (gDisarm) gDisarm();
                 gBtn.disabled = false;
                 if (gErr) gErr.textContent = dkT("su_gcancel");
                 return;
@@ -172,6 +192,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(function (uc) { return DKF.ensureUserDoc(uc.user); })
                 .then(function () { window.location.href = "dashboard.html"; })
                 .catch(function (err) {
+                  gFlowActive = false;
+                  if (gDisarm) gDisarm();
                   gBtn.disabled = false;
                   if (cap) cap.refresh();
                   if (gErr) gErr.textContent = DKF.friendlyError(err);
@@ -180,6 +202,8 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           tokenClient.requestAccessToken();
         } catch (e) {
+          gFlowActive = false;
+          if (gDisarm) gDisarm();
           gBtn.disabled = false;
           if (gErr) gErr.textContent = dkT("su_gstart");
         }

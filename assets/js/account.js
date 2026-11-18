@@ -1985,6 +1985,65 @@
       });
     }
     bindVfForm();
+
+    /* Remember Me (premium redesign, directory login page): Firebase
+     * default persistence is LOCAL (stay signed in), so a checked box
+     * needs no call at all — and skipping it keeps the Google popup
+     * on the direct click-gesture path (no async hop a popup blocker
+     * could mistake for a background window). Only an UNCHECKED box
+     * calls setPersistence(SESSION) — signed out when the browser or
+     * tab closes. Absent checkbox (signup page) = LOCAL. A failure
+     * here never blocks sign-in; it resolves so the chain continues. */
+    function dkaApplyPersistence(a) {
+      try {
+        var box = $('acct-remember');
+        if (box && !box.checked) {
+          var P = (window.firebase && firebase.auth && firebase.auth.Auth) ? firebase.auth.Auth.Persistence : null;
+          if (a && P) { return a.setPersistence(P.SESSION).catch(function () {}); }
+        }
+      } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
+      return Promise.resolve();
+    }
+
+    /* Premium redesign — auth-page UI helpers (directory login/signup
+     * only; every element is guarded, so all other pages using this
+     * file are untouched). Toggles + strength meter live in the
+     * shared js/pages/auth-common.js (loaded before this file on
+     * these two pages); without it the forms still work, they just
+     * have no toggle/meter. dataset flags stop double-binding if
+     * this function ever runs twice. */
+    if (window.DKAuth) {
+      var dkaShow = (window.dkT ? window.dkT('acct_show_pw', 'Show') : 'Show');
+      var dkaHide = (window.dkT ? window.dkT('acct_hide_pw', 'Hide') : 'Hide');
+      var pwEl = $('acct-pass');
+      var pwTog = $('acct-pw-toggle');
+      if (pwEl && pwTog && !pwTog.dataset.dkToggle) {
+        pwTog.dataset.dkToggle = '1';
+        DKAuth.bindPwToggle(pwEl, pwTog, dkaShow, dkaHide);
+      }
+      var pw2El = $('acct-pass2');
+      var pw2Tog = $('acct-pass2-toggle');
+      if (pw2El && pw2Tog && !pw2Tog.dataset.dkToggle) {
+        pw2Tog.dataset.dkToggle = '1';
+        DKAuth.bindPwToggle(pw2El, pw2Tog, dkaShow, dkaHide);
+      }
+      var meterEl = $('acct-pw-meter');
+      var meterLabel = $('acct-pw-strength');
+      if (pwEl && (meterEl || meterLabel) && !pwEl.dataset.dkMeter) {
+        pwEl.dataset.dkMeter = '1';
+        var strengthWords = [
+          (window.dkT ? window.dkT('acct_pw_weak', 'Weak') : 'Weak'),
+          (window.dkT ? window.dkT('acct_pw_fair', 'Fair') : 'Fair'),
+          (window.dkT ? window.dkT('acct_pw_good', 'Good') : 'Good'),
+          (window.dkT ? window.dkT('acct_pw_strong', 'Strong') : 'Strong')];
+        var refreshMeter = function () {
+          DKAuth.renderStrength(meterEl, meterLabel, pwEl.value, strengthWords);
+        };
+        pwEl.addEventListener('input', refreshMeter);
+        refreshMeter();
+      }
+    }
+
     var login = $('acct-login-form');
     if (login && !login.dataset.dka) {
       login.dataset.dka = '1';
@@ -2010,7 +2069,10 @@
         }
         var a = DKA.auth();
         if (!a) { showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true); return; }
-        a.signInWithEmailAndPassword(email.trim(), pass).then(function(cred){
+        /* Honour Remember Me first, then sign in (unchanged handler). */
+        dkaApplyPersistence(a).then(function(){
+          return a.signInWithEmailAndPassword(email.trim(), pass);
+        }).then(function(cred){
           return DKA.ensureUserDoc(cred.user);
         }).then(function(){
           location.href = '../dashboard/';
@@ -2053,6 +2115,23 @@
           var signupLenMsg = (window.dkT ? window.dkT('acct_err_pw', 'Password must be at least 6 characters.') : 'Password must be at least 6 characters.');
           if (window.dkFailField) { window.dkFailField($('acct-pass'), 'acct-err', signupLenMsg); }
           else { showMsg('acct-err', signupLenMsg, true); }
+          return;
+        }
+        /* Premium redesign: confirm-password + Terms checks. Both
+         * elements exist only on the redesigned signup page — guarded
+         * so every other page using this file is untouched. */
+        var pass2El = $('acct-pass2');
+        if (pass2El && pass2El.value !== pass) {
+          var signupMatchMsg = (window.dkT ? window.dkT('acct_err_pw_match', 'Passwords do not match.') : 'Passwords do not match.');
+          if (window.dkFailField) { window.dkFailField(pass2El, 'acct-err', signupMatchMsg); }
+          else { showMsg('acct-err', signupMatchMsg, true); }
+          return;
+        }
+        var termsEl = $('acct-terms');
+        if (termsEl && !termsEl.checked) {
+          var signupTermsMsg = (window.dkT ? window.dkT('acct_err_terms', 'Please accept the Terms of Service and Privacy Policy to continue.') : 'Please accept the Terms of Service and Privacy Policy to continue.');
+          showMsg('acct-err', signupTermsMsg, true);
+          try { termsEl.focus(); } catch (e) { window.dkSwallow && window.dkSwallow(e, 'account.js'); }
           return;
         }
         var a = DKA.auth();
@@ -2120,7 +2199,10 @@
          * no auto-redirect until this handler's jobs finish. */
         window.__dokitSigningUp = true;
         window.__dokitDocError = null;
-        a.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(cred){
+        /* Remember Me applies to Google sign-in too (same helper). */
+        dkaApplyPersistence(a).then(function(){
+          return a.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        }).then(function(cred){
           /* Referral Phase 1: Google signup previously created NO
            * referrals doc and NO referral fields (email signup did) —
            * that gap is closed here so both flows match. The user-doc

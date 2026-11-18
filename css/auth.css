@@ -208,3 +208,30 @@
   .auth-brand-inner, .auth-card { animation: none; }
   .auth-shell *, .auth-shell *::before, .auth-shell *::after { transition: none !important; }
 }
+
+/* ---------- directory pages (account/login/ + account/signup/) ----------
+ * These pages load assets/css/style.css, NOT tokens.css/hub.css, so
+ * three auth.css variables would be undefined here (--border,
+ * --surface-2, --text-muted). They are defined on the directory shell
+ * only, so the .html pages (which get them from tokens.css) are
+ * untouched. The shell also carries the few form rules hub.css
+ * provides on the .html pages (.field spacing, 48px inputs, full-
+ * width submit, note line), so both surfaces render identically. */
+.auth-shell--dir {
+  --border: var(--line);
+  --surface-2: var(--surface2);
+  --text-muted: var(--muted);
+}
+.auth-shell--dir .auth-card .field { margin-bottom: var(--sp-4); }
+.auth-shell--dir .auth-card .field > label { margin-top: 0; }
+.auth-shell--dir .auth-card input[type="email"],
+.auth-shell--dir .auth-card input[type="password"],
+.auth-shell--dir .auth-card input[type="text"] { min-height: 48px; }
+.auth-shell--dir .auth-pw-wrap input[type="password"],
+.auth-shell--dir .auth-pw-wrap input[type="text"] { padding-right: 4.75rem; }
+.auth-shell--dir .auth-card button[type="submit"] { width: 100%; }
+.auth-shell--dir .auth-card h1 { margin: 0 0 var(--sp-2); font-size: var(--fs-xl); }
+.auth-shell--dir .auth-card .lede { margin-bottom: var(--sp-5); }
+.auth-shell--dir .auth-row .linklike { font-size: var(--fs-sm); font-weight: 600; }
+.auth-shell--dir .auth-note { text-align: center; margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); }
+.auth-shell--dir .auth-note a { font-weight: 600; }
