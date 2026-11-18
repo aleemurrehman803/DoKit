@@ -36,7 +36,19 @@
  *  - buildCanvas() now also honours per-call brightness/contrast/
  *    saturation/temp/crop/mask through opts (single-mode state) while the
  *    bulk engine keeps passing every field explicitly, so bulk output
- *    cannot drift. */
+ *    cannot drift.
+ *
+ * PIPELINE FIX (18 Nov 2026, branch board-photo-pipeline-fix):
+ *  - Make Board Photo is now GATED on segmentation state: while the
+ *    mask is pending Make is disabled; on failure Make refuses with a
+ *    visible error + Retry / Try colour removal / Continue-as-is — a
+ *    failed background is never presented as a finished board photo
+ *    (the old code rendered the cover-crop and said "Ready").
+ *  - The preview render no longer fits quality or publishes a download:
+ *    only Make creates the final blob. A labelled Before / After
+ *    compare shows the original and the exact final blob (one blob feeds
+ *    the After <img> and the download link), and any edit after Make
+ *    invalidates that final first. */
 (function () {
   'use strict';
 
@@ -123,6 +135,15 @@
   var resetBtn = $('bp-reset-btn'), removeBtn = $('bp-remove-photo');
   var rmbgToggle = $('bp-rmbg'), featherEl = $('bp-feather'), featherVal = $('bp-feather-v');
   var bgColorEl = $('bp-bg-color');
+  /* PIPELINE FIX elements (18 Nov 2026): the segmentation failure box
+   * and the labelled Before / After compare section (both hidden until
+   * used). */
+  var segFailBox = $('bp-seg-fail'), segFailMsg = $('bp-seg-fail-msg');
+  var segRetryBtn = $('bp-seg-retry'), segColourBtn = $('bp-seg-colour'),
+      segContinueBtn = $('bp-seg-continue');
+  var compareEl = $('bp-compare'), beforeImg = $('bp-before-img'),
+      afterImg = $('bp-after-img'), beforeMeta = $('bp-before-meta'),
+      afterMeta = $('bp-after-meta');
   var bwToggle = $('bwToggle'), guideToggle = $('guideToggle'), faceGuide = $('faceGuide');
   var camBtn = $('camBtn'), camModal = $('camModal'), camVideo = $('camVideo');
   var camErr = $('camErr'), camClose = $('camClose'), camX = $('camX'), camShot = $('camShot');
@@ -145,7 +166,24 @@
   var removeBgOn = true;    // "Remove background" toggle (default ON)
   var featherPx = 2;        // mask edge feather, px at output size
   var loadedDataUrl = null; // original upload, kept independent of output
-  var renderSeq = 0;        // guards async fitBlob against stale re-renders
+  /* PIPELINE FIX (18 Nov 2026): segmentation state machine. The old code
+   * had no state at all — Make just rendered whatever mask happened to
+   * exist (usually none, in the first seconds after upload) and called
+   * the result "Ready". Now Make is gated on this state:
+   *   idle        — no segmentation run yet for this photo
+   *   pending     — a run is in flight; Make is disabled meanwhile
+   *   ready       — a usable mask exists; Make may run the full pipeline
+   *   failed      — no usable mask (both engines); Make must NOT produce
+   *                 a "Ready" board photo — error + Retry / colour /
+   *                 continue-as-is instead
+   *   unavailable — the segment module itself is missing; same as failed
+   *   off         — the user turned background removal off (or chose
+   *                 continue-as-is): Make runs the cover-crop pipeline
+   *                 and says so honestly, no board-bg claim. */
+  var segState = 'idle';
+  var segRunId = 0;         // guards async runs against a newer upload
+  var finalSeq = 0;         // guards async Make against a newer edit/Make
+  var finalReady = false;   // a Make-produced final output exists for the current state
   /* NOTE (bulk upgrade, master prompt §9): NO name/date stamp is drawn on
    * any photo any more. The old stamp controls were removed with the
    * stamp-drawing code — text, logos and watermarks are prohibited on
@@ -228,7 +266,7 @@
       /* New board = fresh start: custom size and bg override do not leak
        * from the previous board into this board's photo. */
       customSpec = null; bgOverride = null;
-      showSpec(); syncCustomFields(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); rerender(true);
+      showSpec(); syncCustomFields(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); syncMakeBtn(); rerender(true);
     }
   });
   if (filterEl) {
@@ -421,34 +459,40 @@
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
   }
-  /* Re-render the single-photo preview. silent=true (control tweaks)
-   * leaves bp-msg alone; the Make button passes false for feedback. */
+  /* Re-render the single-photo PREVIEW. Preview only: it builds the
+   * canvas and paints it, but it never fits JPEG quality, never creates
+   * a blob and never shows a download link — the preview is not a final
+   * output. Make (makeBoardPhoto) is the ONLY path that fits quality,
+   * creates the blob, and shows the download. (PIPELINE FIX, 18 Nov 2026:
+   * the old rerender fitted + published a download on every preview
+   * render, so a pre-mask preview could be downloaded as a "board
+   * photo" before Make ever ran.)
+   * Any call here after a successful Make invalidates that final first:
+   * an edit after Make must never leave a stale After preview + download
+   * that no longer matches the toolbar state. silent is retained for
+   * call-site compatibility; the preview never writes a status message. */
   function rerender(silent) {
     if (!loadedImg) { return; }
-    var seq = ++renderSeq;
+    finalSeq++; /* a newer render supersedes any Make still fitting */
+    if (finalReady) { invalidateFinal(); }
     var spec = effSpec();
     var built = buildCanvas(loadedImg, spec, { _single: true });
-    /* Show the on-page canvas immediately (preview), then fit quality. */
+    /* Show the on-page canvas immediately (preview). */
     canvasEl.width = built.width; canvasEl.height = built.height;
     canvasEl.getContext('2d').drawImage(built, 0, 0);
     canvasEl.style.display = '';
-    fitBlob(built, spec.kb * 1024).then(function (res) {
-      if (seq !== renderSeq) { return; } /* a newer render supersedes this */
-      if (!res.blob) { if (!silent) { say((window.dkT ? window.dkT('rsv_1228', 'This image could not be processed.') : 'This image could not be processed.')); } return; }
-      if (currentURL) { URL.revokeObjectURL(currentURL); }
-      currentBlob = res.blob;
-      currentURL = URL.createObjectURL(res.blob);
-      if (dlEl) {
-        dlEl.href = currentURL;
-        dlEl.download = 'board-photo-' + spec.w + 'x' + spec.h + '.jpg';
-        dlEl.style.display = 'inline-block';
-      }
-      if (!silent) {
-        say(res.over
-          ? (window.dkT ? window.dkT('rsv_1226', 'Ready, but still over ') : 'Ready, but still over ') + spec.kb + (window.dkT ? window.dkT('rsv_1227', ' KB at lowest quality — try a plainer photo.') : ' KB at lowest quality — try a plainer photo.')
-          : (window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + spec.w + '\u00d7' + spec.h + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.'));
-      }
-    });
+  }
+  /* Clear a Make-produced final output: the After preview, the download
+   * link and the blob all die together (they are one source of truth).
+   * Called when any edit / board change / new upload supersedes it. */
+  function invalidateFinal() {
+    finalReady = false;
+    finalSeq++;
+    if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
+    currentBlob = null;
+    if (compareEl) { compareEl.hidden = true; }
+    if (afterImg) { afterImg.removeAttribute('src'); }
+    if (dlEl) { dlEl.style.display = 'none'; dlEl.removeAttribute('href'); }
   }
 
   /* -- Upload (Phase 2b: FileReader only, never uploaded anywhere) -------- */
@@ -464,7 +508,13 @@
     adj = { brightness: 1, contrast: 1, saturation: 1, temp: 0 };
     singleCrop = null; segMask = null; segEngine = '';
     removeBgOn = true; featherPx = 2; bgOverride = null;
+    /* PIPELINE FIX: a fresh photo starts with no mask and no final —
+     * the old final (a different photo) must die here, not linger. */
+    segState = 'idle'; segRunId++;
+    hideSegFail();
+    invalidateFinal();
     syncToolbarControls(); syncBgBtns(); syncBgWarning();
+    syncMakeBtn();
     if (cropWrap) { cropWrap.hidden = true; }
   }
   function setLoadedImage(img, name, dataUrl) {
@@ -482,36 +532,80 @@
     if (dzLabel) { dzLabel.hidden = true; }
     if (toolbarEl) { toolbarEl.hidden = false; }
     say(window.dkT ? window.dkT('bp.ed_loaded', 'Photo loaded \u2014 edit it below, then press \u201cMake board photo\u201d.') : 'Photo loaded \u2014 edit it below, then press \u201cMake board photo\u201d.');
-    /* Processed preview at once (no mask yet — cover crop on board bg). */
+    /* Processed preview at once (no mask yet — cover crop on board bg).
+     * The preview is NOT a final output: no download is offered until
+     * Make runs the gated pipeline below. */
     rerender(true);
     startSegmentation();
   }
-  /* Background replacement, async and non-blocking. The status line always
-   * says which engine produced the mask (or that none could), never a
-   * silent fallback. If segmentation fails the photo still works — it is
-   * cover-cropped onto the board colour exactly as before. */
-  function startSegmentation() {
-    if (!loadedImg || !window.DKBoardSegment) {
-      setSegStatus(window.dkT ? window.dkT('bp.ed_seg_unavailable', 'Automatic background removal is unavailable in this browser \u2014 your photo is placed on the board colour instead.') : 'Automatic background removal is unavailable in this browser \u2014 your photo is placed on the board colour instead.');
+  /* Background replacement, async and non-blocking — but Make is GATED
+   * on its result (see segState + makeBoardPhoto). PIPELINE FIX:
+   * the old code let Make render while this was still running and
+   * claimed "your photo is placed on the board colour instead" when
+   * it FAILED — a cover-cropped photo fills the frame, so the board
+   * colour was invisible and the user got their ORIGINAL background
+   * labelled as a finished board photo. That silent fallback is gone:
+   * a failure is a visible error with Retry / colour / continue-as-is,
+   * never a success. opts: {forceColour, tolerance} — forceColour skips
+   * MediaPipe and flood-fills only (the failure box's manual path). */
+  function setSegState(s) {
+    segState = s;
+    syncMakeBtn();
+  }
+  function showSegFail() { if (segFailBox) { segFailBox.hidden = false; } }
+  function hideSegFail() { if (segFailBox) { segFailBox.hidden = true; } }
+  function syncMakeBtn() {
+    if (!makeBtn) { return; }
+    /* Disabled ONLY while background removal is still running: a click
+     * then would produce a "Ready" file with the original background
+     * (the race this round closes). Every other state keeps Make
+     * clickable — the handler itself refuses a failed segmentation. */
+    makeBtn.disabled = !!loadedImg && removeBgOn && bgOverride !== 'original'
+      && segState === 'pending';
+  }
+  function startSegmentation(opts) {
+    if (!loadedImg) { return; }
+    if (!removeBgOn) {
+      /* Background removal is off: there is nothing to wait for. Make
+       * runs the cover-crop pipeline and says so honestly. */
+      setSegState('off');
+      setSegStatus(window.dkT ? window.dkT('bp.ba_seg_off', 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.') : 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.');
       return;
     }
+    if (!window.DKBoardSegment) {
+      setSegState('unavailable');
+      setSegStatus(window.dkT ? window.dkT('bp.ed_seg_unavailable', 'Automatic background removal is unavailable in this browser \u2014 the background could not be replaced.') : 'Automatic background removal is unavailable in this browser \u2014 the background could not be replaced.');
+      showSegFail();
+      return;
+    }
+    var run = ++segRunId;
+    setSegState('pending');
+    hideSegFail();
     setSegStatus(window.dkT ? window.dkT('bp.ed_segmenting', 'Removing the background\u2026 (in your browser, nothing is uploaded)') : 'Removing the background\u2026 (in your browser, nothing is uploaded)');
-    window.DKBoardSegment.removeBackground(loadedImg).then(function (res) {
-      if (!loadedImg) { return; } /* a newer photo superseded this run */
+    window.DKBoardSegment.removeBackground(loadedImg, opts || {}).then(function (res) {
+      if (run !== segRunId || !loadedImg) { return; } /* superseded by a newer photo/run */
       if (res && res.mask) {
         segMask = res.mask; segEngine = res.engine;
+        setSegState('ready');
         setSegStatus(window.dkT
           ? window.dkT('bp.ed_seg_ok', 'Background replaced with the board colour')
           : 'Background replaced with the board colour');
+        hideSegFail();
         rerender(true);
       } else {
         segMask = null; segEngine = '';
-        setSegStatus(window.dkT ? window.dkT('bp.ed_seg_failed', 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.') : 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.');
+        setSegState('failed');
+        setSegStatus(window.dkT ? window.dkT('bp.ba_seg_failed', 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.') : 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.');
+        showSegFail();
         rerender(true);
       }
     }).catch(function () {
+      if (run !== segRunId || !loadedImg) { return; }
       segMask = null; segEngine = '';
-      setSegStatus(window.dkT ? window.dkT('bp.ed_seg_failed', 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.') : 'Background could not be separated cleanly \u2014 your photo is placed on the board colour instead. Try a photo against a plain, even background.');
+      setSegState('failed');
+      setSegStatus(window.dkT ? window.dkT('bp.ba_seg_failed', 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.') : 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.');
+      showSegFail();
+      rerender(true);
     });
   }
   function setSegStatus(msg) {
@@ -554,11 +648,95 @@
       if (f) { loadFromFile(f); }
     });
   }
-  if (makeBtn) {
-    makeBtn.addEventListener('click', function () {
-      if (!loadedImg) { say((window.dkT ? window.dkT('rsv_0959', 'Choose a photo first.') : 'Choose a photo first.')); return; }
-      rerender(false);
+  /* -- Make Board Photo: the full gated pipeline (PIPELINE FIX) ---------- */
+  /* Original image -> all edit settings -> segmentation mask (same source
+   * window + flip/rotate transforms as the subject — buildCanvas does
+   * that) -> board background -> dimensions -> format -> size check ->
+   * final image. No render path after this draws the original over the
+   * composited result. Final = After preview = Download: one blob feeds
+   * the After <img> and the download link. */
+  function makeBoardPhoto() {
+    if (!loadedImg) { say((window.dkT ? window.dkT('rsv_0959', 'Choose a photo first.') : 'Choose a photo first.')); return; }
+    /* Gate 1: background replacement must be RESOLVED before any final
+     * output exists. A pending mask means "not yet", a failed mask means
+     * "never as a board photo" — both refuse, neither fakes a success. */
+    if (removeBgOn && bgOverride !== 'original') {
+      if (segState === 'pending') {
+        say(window.dkT ? window.dkT('bp.ba_seg_wait', 'Removing the background\u2026 Make will run when it is ready.') : 'Removing the background\u2026 Make will run when it is ready.');
+        return;
+      }
+      if (segState === 'failed' || segState === 'unavailable') {
+        showSegFail();
+        say(window.dkT ? window.dkT('bp.ba_seg_failed', 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.') : 'Background could not be separated \u2014 this photo does NOT meet your board\u2019s background requirement.');
+        return;
+      }
+      if (segState === 'idle') {
+        /* Segmentation never started (module loaded late, or a toggle
+         * path skipped it): start it now and let the user press Make
+         * again when it resolves. */
+        startSegmentation();
+        say(window.dkT ? window.dkT('bp.ba_seg_wait', 'Removing the background\u2026 Make will run when it is ready.') : 'Removing the background\u2026 Make will run when it is ready.');
+        return;
+      }
+    }
+    /* Gate 2: run the pipeline. */
+    var seq = ++finalSeq;
+    var spec = effSpec();
+    makeBtn.disabled = true; /* processing — re-enabled by the callback */
+    say(window.dkT ? window.dkT('bp.ba_making', 'Making your board photo\u2026') : 'Making your board photo\u2026');
+    var built = buildCanvas(loadedImg, spec, { _single: true });
+    canvasEl.width = built.width; canvasEl.height = built.height;
+    canvasEl.getContext('2d').drawImage(built, 0, 0);
+    canvasEl.style.display = '';
+    fitBlob(built, spec.kb * 1024).then(function (res) {
+      if (seq !== finalSeq) {
+        /* Superseded by a newer Make or an edit meanwhile: this result
+         * must never become the download. */
+        syncMakeBtn();
+        say(window.dkT ? window.dkT('bp.ba_make_stale', 'Your edits changed the photo \u2014 press \u201cMake board photo\u201d again.') : 'Your edits changed the photo \u2014 press \u201cMake board photo\u201d again.');
+        return;
+      }
+      makeBtn.disabled = false; syncMakeBtn();
+      if (!res.blob) { say((window.dkT ? window.dkT('rsv_1228', 'This image could not be processed.') : 'This image could not be processed.')); return; }
+      /* Single source of truth: one blob feeds the After preview AND
+       * the download link — they cannot drift apart. */
+      if (currentURL) { URL.revokeObjectURL(currentURL); }
+      currentBlob = res.blob;
+      currentURL = URL.createObjectURL(res.blob);
+      finalReady = true;
+      var bgReplaced = removeBgOn && segState === 'ready' && !!segMask && bgOverride !== 'original';
+      if (afterImg) { afterImg.src = currentURL; }
+      if (beforeImg && loadedDataUrl) { beforeImg.src = loadedDataUrl; }
+      if (beforeMeta) {
+        beforeMeta.textContent = loadedImg.naturalWidth + '\u00d7' + loadedImg.naturalHeight + ' px \u00b7 '
+          + (window.dkT ? window.dkT('bp.ba_meta_orig', 'original photo') : 'original photo');
+      }
+      if (afterMeta) {
+        afterMeta.textContent = built.width + '\u00d7' + built.height + ' px \u00b7 JPEG \u00b7 '
+          + (Math.round(res.blob.size / 102.4) / 10) + ' KB (max ' + spec.kb + ' KB) \u00b7 '
+          + (bgReplaced
+            ? (window.dkT ? window.dkT('bp.ba_meta_bg', 'background replaced') : 'background replaced')
+            : (window.dkT ? window.dkT('bp.ba_meta_bg_kept', 'original background kept') : 'original background kept'));
+      }
+      if (compareEl) { compareEl.hidden = false; }
+      /* The After <img> IS the final image now — the live preview canvas
+       * would only duplicate it, so it hides until the next edit. */
+      canvasEl.style.display = 'none';
+      if (dlEl) {
+        dlEl.href = currentURL;
+        dlEl.download = 'board-photo-' + built.width + 'x' + built.height + '.jpg';
+        dlEl.style.display = 'inline-block';
+      }
+      var bgNote = bgReplaced
+        ? (window.dkT ? window.dkT('bp.ba_ready_bg_ok', ' Background replaced with the board colour.') : ' Background replaced with the board colour.')
+        : (window.dkT ? window.dkT('bp.ba_ready_bg_off', ' Background removal was off \u2014 the original background was kept.') : ' Background removal was off \u2014 the original background was kept.');
+      say(res.over
+        ? (window.dkT ? window.dkT('rsv_1226', 'Ready, but still over ') : 'Ready, but still over ') + spec.kb + (window.dkT ? window.dkT('rsv_1227', ' KB at lowest quality \u2014 try a plainer photo.') : ' KB at lowest quality \u2014 try a plainer photo.') + bgNote
+        : (window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote);
     });
+  }
+  if (makeBtn) {
+    makeBtn.addEventListener('click', function () { makeBoardPhoto(); });
   }
 
   /* -- Restored: background buttons ---------------------------------------- */
@@ -580,6 +758,7 @@
           var v = btn.getAttribute('data-bg');
           bgOverride = (v === 'board') ? null : v;
           syncBgBtns(); syncBgWarning(); syncBgColorPicker();
+          syncMakeBtn(); /* 'Keep original' makes the pending gate moot */
           rerender(true);
         });
       })(bgBtns[bi]);
@@ -617,6 +796,7 @@
     bgColorEl.addEventListener('input', function () {
       bgOverride = bgColorEl.value;
       syncBgBtns(); syncBgWarning();
+      syncMakeBtn();
       rerender(true);
     });
     syncBgColorPicker();
@@ -626,7 +806,7 @@
   function applyCustomSpec(name, w, h, kb) {
     customSpec = { w: w, h: h, kb: kb };
     bgOverride = null; /* custom spec starts from the board background */
-    showSpec(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); rerender(true);
+    showSpec(); syncBgBtns(); syncBgWarning(); syncBgColorPicker(); syncMakeBtn(); rerender(true);
   }
   if (customBtn) {
     customBtn.addEventListener('click', function () {
@@ -727,6 +907,50 @@
   if (rmbgToggle) {
     rmbgToggle.addEventListener('change', function () {
       removeBgOn = rmbgToggle.checked;
+      if (removeBgOn) {
+        /* Re-enable removal: (re-)run segmentation so Make is gated on
+         * a real mask again. The preview keeps the previous mask
+         * meanwhile, but Make stays disabled until the new run resolves. */
+        if (loadedImg) { startSegmentation(); }
+      } else {
+        /* Off is an explicit user choice: cancel any run in flight so
+         * its late mask cannot re-enable a background the user refused. */
+        segRunId++;
+        setSegState('off');
+        hideSegFail();
+        setSegStatus(window.dkT ? window.dkT('bp.ba_seg_off', 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.') : 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.');
+      }
+      syncMakeBtn();
+      rerender(true);
+    });
+  }
+  /* Segmentation failure box (PIPELINE FIX): Retry re-runs the full
+   * engine chain; "Try colour removal" skips MediaPipe and flood-fills
+   * from the borders at a higher tolerance (uniform backdrops only);
+   * "Continue without background removal" is the explicit user choice
+   * to accept the original background — it is labelled as NOT meeting
+   * the board requirement, never presented as a board photo. */
+  if (segRetryBtn) {
+    segRetryBtn.addEventListener('click', function () {
+      hideSegFail();
+      startSegmentation();
+    });
+  }
+  if (segColourBtn) {
+    segColourBtn.addEventListener('click', function () {
+      hideSegFail();
+      startSegmentation({ forceColour: true, tolerance: 80 });
+    });
+  }
+  if (segContinueBtn) {
+    segContinueBtn.addEventListener('click', function () {
+      removeBgOn = false;
+      if (rmbgToggle) { rmbgToggle.checked = false; }
+      segRunId++; /* cancel any run in flight */
+      setSegState('off');
+      hideSegFail();
+      setSegStatus(window.dkT ? window.dkT('bp.ba_seg_off', 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.') : 'Background removal is off \u2014 the photo keeps its original background. Your board may reject it.');
+      syncMakeBtn();
       rerender(true);
     });
   }
@@ -758,8 +982,9 @@
   if (removeBtn) {
     removeBtn.addEventListener('click', function () {
       loadedImg = null; loadedDataUrl = null; segMask = null; segEngine = '';
-      currentBlob = null;
-      if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
+      segState = 'idle'; segRunId++; /* cancel any run in flight */
+      hideSegFail();
+      invalidateFinal(); /* kills the old final's blob, URL, compare + download */
       if (fileEl) { fileEl.value = ''; }
       showLoadedName('');
       if (previewImg) { previewImg.hidden = true; previewImg.removeAttribute('src'); }
@@ -767,9 +992,9 @@
       if (toolbarEl) { toolbarEl.hidden = true; }
       if (cropWrap) { cropWrap.hidden = true; }
       canvasEl.style.display = 'none';
-      if (dlEl) { dlEl.style.display = 'none'; }
       setSegStatus('');
       resetSingleEdits();
+      syncMakeBtn();
       say(window.dkT ? window.dkT('rsv_1279', 'Choose another photo.') : 'Choose another photo.');
     });
   }

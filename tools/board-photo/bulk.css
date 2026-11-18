@@ -83,3 +83,12 @@
   .bp-sliders input[type="range"] { width: 5.5rem; }
   #bp-preview-img { max-height: 260px; }
 }
+
+/* PIPELINE FIX (18 Nov 2026): labelled Before / After compare (side by
+ * side on desktop, stacked on mobile via flex-wrap) and the
+ * segmentation failure box. Tokens only — DoKit design unchanged. */
+.bp-compare-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin: .75rem 0; }
+.bp-compare-fig { flex: 1 1 200px; margin: 0; }
+.bp-compare-fig img { max-width: 100%; max-height: 260px; height: auto; display: block; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--r-md, 12px); background: var(--surface2); }
+.bp-compare-fig figcaption { font-weight: 700; margin-top: .4rem; }
+.bp-seg-fail { border: 1px solid var(--bad); border-radius: var(--r-md, 12px); padding: .75rem 1rem; margin: .75rem 0; background: var(--surface); }

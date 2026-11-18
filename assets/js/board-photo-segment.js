@@ -18,10 +18,12 @@
  * downscaled, then a flood fill spreads from every border pixel over
  * near-identical colours (uniform studio/backdrop backgrounds — the
  * normal passport-photo case). It is used ONLY when MediaPipe is
- * unavailable or returns an unusable mask. A mask is unusable when the
- * foreground covers <5% or >95% of the frame — in that case removeBackground
- * reports engine 'none' and the caller must say so honestly instead of
- * shipping a bad cutout.
+ * unavailable or returns an unusable mask, or when the user explicitly
+ * picks "Try colour removal" after a failure (forceColour). A mask is
+ * unusable when the foreground covers <5% or >95% of the frame — in
+ * that case removeBackground reports engine 'none' and the caller must
+ * treat that as a FAILED background replacement (error + retry), never
+ * a silent cover-crop success.
  *
  * EDGE QUALITY: masks are feathered (blur) when composited; the caller
  * exposes a feather slider. Hair/fine detail is the known weak point of
@@ -216,13 +218,26 @@
     return info;
   }
 
-  /* Main entry: img = loaded HTMLImageElement. opts: {tolerance}.
-   * Tries MediaPipe first; on failure/unusable mask falls back to colour
-   * removal; if that is unusable too, resolves null (caller keeps the
-   * cover-crop-on-board-colour behaviour and says so honestly). */
+  /* Main entry: img = loaded HTMLImageElement. opts: {tolerance, forceColour}.
+   * forceColour skips MediaPipe and flood-fills only (the failure box's
+   * "Try colour removal" manual path). Tries MediaPipe first; on
+   * failure/unusable mask falls back to colour removal; if that is
+   * unusable too, resolves null (caller must treat that as a FAILED
+   * background replacement — never a silent cover-crop success). */
   function removeBackground(img, opts) {
     var t0 = Date.now();
     var tolerance = (opts && opts.tolerance) || 48;
+    /* TEST HOOK (pipeline fix, 18 Nov 2026): __bpSegTestFail forces a
+     * segmentation failure so the failure path can be tested
+     * deterministically. Production code never sets this flag. */
+    if (window.__bpSegTestFail) {
+      setInfo('none', 0, Date.now() - t0, 'test hook forced failure');
+      return Promise.resolve(null);
+    }
+    /* Manual colour removal: skip MediaPipe, flood-fill only. */
+    if (opts && opts.forceColour) {
+      return Promise.resolve(colorFallback(img, tolerance, t0, 'manual colour removal'));
+    }
     return ensureMP().then(function (mpOk) {
       if (mpOk) {
         return segmentWithMP(img).then(function (maskSrc) {
