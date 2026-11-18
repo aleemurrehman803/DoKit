@@ -145,6 +145,15 @@
   var compareEl = $('bp-compare'), beforeImg = $('bp-before-img'),
       afterImg = $('bp-after-img'), beforeMeta = $('bp-before-meta'),
       afterMeta = $('bp-after-meta');
+  /* Pre-download verification gate (subject+crop round, 18 Nov 2026):
+   * the panel that checks the exact final blob before Download is
+   * offered. All guarded — the gate simply never shows on a page
+   * without the panel. */
+  var gateEl = $('bp-gate'), gateStatusEl = $('bp-gate-status'),
+      gateIssuesEl = $('bp-gate-issues'), gateZoomEl = $('bp-gate-zoom'),
+      gateZoomCap = $('bp-gate-zoom-cap'), gateFixesEl = $('bp-gate-fixes'),
+      gateRerunBtn = $('bp-gate-rerun'), gateCropBtn = $('bp-gate-crop'),
+      gateFeatherBtn = $('bp-gate-feather'), gateAnywayBtn = $('bp-gate-anyway');
   /* Photo analysis (cutout/share round, 18 Nov 2026): the panel that
    * shows the FIRST assessment after upload — subject/head detection,
    * head position + margins, board-spec fit — before crop/background. */
@@ -393,30 +402,162 @@
      * warning use the head zone only. Centring on the head also puts
      * the face in the middle of the frame, not the shoulders. */
     var headBB = maskBBox(maskCanvas, bb.y0 + Math.round((bb.y1 - bb.y0) * 0.45)) || bb;
+    /* SUBJECT+CROP ROUND (18 Nov 2026): safety margin for the mask's
+     * edge error. The mask can barely MISS an ear (a protrusion of
+     * ~12–20 source px can be erased by refineMask's output-size choke,
+     * and the mask edge itself is only accurate to a few px) — and a
+     * window fitted exactly to the mask then cuts that ear silently.
+     * Dilate the head zone by 2% of the output width on each side and
+     * 2% of the output height on top BEFORE centring, so the window
+     * keeps a little air around the head. The dilation is used for
+     * POSITIONING only: the warn flag below still uses the REAL head
+     * width — warning on the buffer would cry wolf on tight-but-fine
+     * headshots whose real head fits with safe margins. */
+    var dilX = Math.round(outW * 0.02 / px), dilY = Math.round(outH * 0.02 / py);
+    var headDil = { x0: headBB.x0 - dilX, x1: headBB.x1 + dilX,
+      y0: headBB.y0 - dilY, y1: headBB.y1 };
     /* Horizontal: shift the window so the head zone has sideWant on both
      * sides. If the head zone is wider than the window allows, centre it
-     * (symmetric). */
-    var leftM = (headBB.x0 - win.x) * px, rightM = (win.x + win.w - 1 - headBB.x1) * px;
+     * (symmetric). The POSITIONING trigger uses the dilated margins (so
+     * the window recentres on the head as soon as the safety buffer
+     * gets tight), but the WARN flag is evaluated on the UNDILATED
+     * margins — exactly as before this round. Otherwise the buffer
+     * itself would flip verdicts: a head with a 17px top margin (fine)
+     * newly enters the vertical branch once the 4px buffer is applied,
+     * and the latent tall-subject warn would call it "wider than the
+     * frame" although the head is fully in frame (caught on
+     * man-glasses, 18 Nov 2026: warn flipped False→True on the buffer
+     * alone). The buffer buys air; it must never buy a warning. */
+    var leftM = (headDil.x0 - win.x) * px, rightM = (win.x + win.w - 1 - headDil.x1) * px;
+    var leftM0 = (headBB.x0 - win.x) * px, rightM0 = (win.x + win.w - 1 - headBB.x1) * px;
     if (leftM < sideWant || rightM < sideWant) {
-      var cx = (headBB.x0 + headBB.x1) / 2;
+      var cx = (headDil.x0 + headDil.x1) / 2;
       var nx = Math.round(cx - win.w / 2);
-      if ((headBB.x1 - headBB.x0) * px > outW - 2 * sideWant) { warn = true; }
+      if ((leftM0 < sideWant || rightM0 < sideWant)
+          && (headBB.x1 - headBB.x0) * px > outW - 2 * sideWant) { warn = true; }
       win.x = Math.max(0, Math.min(iw - win.w, nx));
     }
     /* Vertical: head margin first. If the mask is taller than the window,
      * align the top (head margin) and cut the bottom — shoulders at the
-     * bottom edge are normal for board photos, a cut head is not. */
-    var topM = (bb.y0 - win.y) * py;
+     * bottom edge are normal for board photos, a cut head is not. The
+     * dilated head top is used here too, so the window keeps the same
+     * 2%-of-height air above the head that the sides get. Warn, again,
+     * on the undilated top margin (see the note above). */
+    var topM = (headDil.y0 - win.y) * py;
+    var topM0 = (bb.y0 - win.y) * py;
     if (topM < topWant) {
-      var ny = Math.round(bb.y0 - topWant / py);
-      if ((bb.y1 - bb.y0) * py > outH - topWant) { warn = true; }
+      var ny = Math.round(headDil.y0 - topWant / py);
+      if (topM0 < topWant && (bb.y1 - bb.y0) * py > outH - topWant) { warn = true; }
       win.y = Math.max(0, Math.min(ih - win.h, ny));
     }
     win.warn = warn;
     return win;
   }
+  /* Pale-wedge cleanup (subject+crop round, 18 Nov 2026 — EXPERIMENTAL,
+   * shipped only if the fringe harness proves it: see the measurement
+   * note in buildCanvas). The live failure on curly hair is NOT a cut
+   * face: it is a pale wedge of the ORIGINAL light wall surviving
+   * BETWEEN curl locks, where the mask blob covers the gap as if it
+   * were hair, hard-edged against the strong board blue. Those pixels
+   * are opaque, pale, the colour of the original background, and
+   * within a few px of a real mask boundary — so they can be keyed out
+   * without touching the subject: sample the original background
+   * colour from the subject canvas corners where the refined mask is
+   * background, then zero the mask alpha of pixels that are (a) opaque
+   * (alpha > 200), (b) within 3 px of the mask boundary, and (c) within
+   * Euclidean colour distance 48 of the sampled background. The
+   * sampled colour is kept on window.__bpWedgeBg for the pre-download
+   * gate's wedge test; the zeroed count is on window.__bpWedgePx.
+   * `apply` false only samples (ablation measurement): the gate still
+   * gets the true background colour, but no mask pixel is touched.
+   * Returns the number of mask pixels zeroed (0 when the background
+   * cannot be sampled — e.g. the subject fills every corner — or
+   * when apply is false). */
+  function cleanWedge(subjectCanvas, maskCanvas, apply) {
+    var w = subjectCanvas.width, h = subjectCanvas.height;
+    var s, m;
+    try {
+      s = subjectCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+      m = maskCanvas.getContext('2d').getImageData(0, 0, w, h);
+    } catch (e) { return 0; }
+    var md = m.data;
+    /* Sample: 12x12 corner patches, mask-background pixels only
+     * (alpha < 128). A corner full of shoulder contributes nothing —
+     * only real background pixels vote. Median, not mean: a stray
+     * hair pixel in a corner must not pull the sample. */
+    var rs = [], gs = [], bs = [];
+    var PATCH = 12;
+    function sampleCorner(x0, y0) {
+      for (var y = y0; y < y0 + PATCH && y < h; y++) {
+        for (var x = x0; x < x0 + PATCH && x < w; x++) {
+          var i = (y * w + x) * 4;
+          if (md[i + 3] < 128) {
+            rs.push(s[i]); gs.push(s[i + 1]); bs.push(s[i + 2]);
+          }
+        }
+      }
+    }
+    sampleCorner(0, 0); sampleCorner(w - PATCH, 0);
+    sampleCorner(0, h - PATCH); sampleCorner(w - PATCH, h - PATCH);
+    if (rs.length < 20) { return 0; }
+    function median(a) {
+      a.sort(function (p, q) { return p - q; });
+      return a[Math.floor(a.length / 2)];
+    }
+    var bg = { r: median(rs), g: median(gs), b: median(bs) };
+    window.__bpWedgeBg = bg;
+    /* Boundary proximity: dilate the background (alpha < 128) by 3 px
+     * (3 passes of a 3x3 dilate) — any pixel inside the dilated region
+     * is within Chebyshev distance 3 of the boundary. */
+    var nearBg = new Uint8Array(w * h);
+    for (var p = 0; p < w * h; p++) {
+      nearBg[p] = md[p * 4 + 3] < 128 ? 1 : 0;
+    }
+    for (var pass = 0; pass < 3; pass++) {
+      var next = new Uint8Array(w * h);
+      for (var y2 = 0; y2 < h; y2++) {
+        for (var x2 = 0; x2 < w; x2++) {
+          if (nearBg[y2 * w + x2]) { next[y2 * w + x2] = 1; continue; }
+          var hit = false;
+          for (var dy = -1; dy <= 1 && !hit; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              var nx = x2 + dx, ny = y2 + dy;
+              if (nx < 0 || ny < 0 || nx >= w || ny >= h) { continue; }
+              if (nearBg[ny * w + nx]) { hit = true; break; }
+            }
+          }
+          next[y2 * w + x2] = hit ? 1 : 0;
+        }
+      }
+      nearBg = next;
+    }
+    var flags = new Uint8Array(w * h);
+    var changed = 0;
+    for (var i2 = 0; i2 < w * h; i2++) {
+      if (md[i2 * 4 + 3] <= 200 || !nearBg[i2]) { continue; }
+      var o = i2 * 4;
+      var dr = s[o] - bg.r, dg = s[o + 1] - bg.g, db = s[o + 2] - bg.b;
+      if (Math.sqrt(dr * dr + dg * dg + db * db) <= 48) {
+        flags[i2] = 1;
+        changed++;
+      }
+    }
+    if (apply && changed) {
+      for (var i3 = 0; i3 < w * h; i3++) {
+        if (!flags[i3]) { continue; }
+        var o3 = i3 * 4;
+        md[o3] = 0; md[o3 + 1] = 0; md[o3 + 2] = 0; md[o3 + 3] = 0;
+      }
+      maskCanvas.getContext('2d').putImageData(m, 0, 0);
+      return changed;
+    }
+    return 0;
+  }
   function buildCanvas(img, spec, opts) {
     var o = opts || {};
+    /* Wedge diagnostics reset per render (never stale across photos):
+     * the masked path below re-samples + re-counts when it runs. */
+    window.__bpWedgePx = 0; window.__bpWedgeBg = null;
     var single = !!o._single; /* single-mode state applies ONLY with this flag (bulk never sets it) */
     /* WHY per-field fallback (not Object.assign): the module globals are
      * the single-photo state; bulk passes only the fields it overrides. */
@@ -453,6 +594,15 @@
       cw = Math.min(cropPx.w, iw); ch = Math.min(cropPx.h, ih);
       sx = Math.max(0, Math.min(cropPx.x, iw - cw));
       sy = Math.max(0, Math.min(cropPx.y, ih - ch));
+      /* SUBJECT+CROP ROUND: an explicit crop used to clear the warning
+       * (cropWarn stayed false) and blind the analysis — a cut ear
+       * looked fine. The full-source mask is checked against the crop
+       * window here, so the After meta and the analysis panel warn. */
+      if (single && mask) {
+        var cut = cropCutsSubject();
+        cropWarn = cut.cut;
+        window.__bpCropSides = cut.sides;
+      }
     } else {
       var cc = (single && mask && window.DKBoardSegment)
         ? subjectCropRect(iw, ih, outW, outH, mask)
@@ -463,6 +613,7 @@
     /* The crop warning is visible to the UI/tests: the subject could not
      * be framed with safe margins (wider/taller than the frame). */
     window.__bpCropWarn = cropWarn;
+    if (!cropWarn) { window.__bpCropSides = []; }
     var canvas = document.createElement('canvas');
     canvas.width = outW; canvas.height = outH;
     var ctx = canvas.getContext('2d');
@@ -486,10 +637,16 @@
     }
     var br = (enh ? 1.06 : 1) * adjVal('brightness', 1);
     var ct = (enh ? 1.12 : 1) * adjVal('contrast', 1);
-    var st = (enh ? 1.08 : 1) * adjVal('saturation', 1);
-    if (br !== 1 || ct !== 1 || st !== 1) {
+    /* SUBJECT+CROP ROUND (18 Nov 2026): this was `var st` — the SAME name
+     * as the straighten variable above (buildCanvas :424), so the
+     * saturation value (~1.0–1.08) silently REPLACED straighten in every
+     * rotate((rot + st)...) call and the Straighten slider did nothing
+     * (the subject always rotated ~+1°). Renamed to `sat`: straighten
+     * keeps `st`, saturation keeps `sat`, and the two can never collide. */
+    var sat = (enh ? 1.08 : 1) * adjVal('saturation', 1);
+    if (br !== 1 || ct !== 1 || sat !== 1) {
       filters.push('brightness(' + br.toFixed(3) + ') contrast(' + ct.toFixed(3)
-        + ') saturate(' + st.toFixed(3) + ')');
+        + ') saturate(' + sat.toFixed(3) + ')');
     }
     /* Quality test seam (image-quality round, 18 Nov 2026): tests may
      * override pipeline constants via window.__bpQuality before Make
@@ -629,15 +786,47 @@
       mctx.rotate((rot + st) * Math.PI / 180);
       mctx.drawImage(mask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
       mctx.restore();
-      /* Refine at output size: the 1px choke cuts the pale fringe and the
-       * slider's feather becomes a bounded box blur (see refineMask). */
+      /* Refine at output size: the 2px choke cuts the pale fringe and the
+       * slider's feather becomes a bounded box blur (see refineMask).
+       * (Was "1px choke" in the comment — the production default has
+       * been choke 2 since the cutout/share round; comment fixed
+       * 18 Nov 2026, subject+crop round.) */
       mCanvas = window.DKBoardSegment.refineMask(mCanvas, chokePx, qFeatherPx, qGamma);
+      /* Pale-wedge cleanup (subject+crop round, 18 Nov 2026): key out
+       * opaque slivers of the ORIGINAL background surviving inside the
+       * mask (pale wall between curl locks) before the mask is applied.
+       * Gated on a real background replacement: with bg 'original'
+       * there is no board colour for a wedge to clash with, and the
+       * sampled background would be meaningless. __bpQuality.wedgeCleanup
+       * === false disables it for ablation measurement (tests only);
+       * production always runs it. The count lands on
+       * window.__bpWedgePx so the fringe harness can report the
+       * mask-area change per photo. If the harness ever shows a
+       * regression or a white-shirt canary failure, delete this block
+       * (and the helper above) — the gate + custom crop handle the
+       * wedge instead. */
+      window.__bpWedgePx = 0;
+      if (fill) {
+        /* Sample always (the gate's wedge test needs the true original
+         * background colour even when the cleanup itself is switched
+         * off for ablation); apply only when cleanup is enabled. */
+        window.__bpWedgePx = cleanWedge(tmp, mCanvas,
+          __Q.wedgeCleanup !== false);
+      }
       /* destination-in with the refined mask (feather 0 here — the blur
        * already happened inside refineMask). */
       window.DKBoardSegment.applyMaskToCanvas(tmp, mCanvas, 0);
       /* Recolour the edge band from the subject (no old-bg spill). */
       if (qDecont) { window.DKBoardSegment.decontaminate(tmp, mCanvas); }
       ctx.drawImage(tmp, 0, 0);
+      /* The gate's colour-key tests (verifyFinal) read the UNBLENDED
+       * subject pixels from this canvas, stashed on the built canvas:
+       * the final's band pixels are blends of subject and board
+       * colour, so a hair + pale-bg blend can land on the wall colour
+       * and false-flag as fringe — the subject canvas holds the raw
+       * photo pixel at each location (hair stays dark, wall stays
+       * wall), so the key decides correctly. */
+      canvas.__bpSubjectCanvas = tmp;
       /* Gentle sharpening, subject interior only (mask-gated). */
       window.DKBoardSegment.sharpenSubject(canvas, mCanvas, sharpAmt);
     } else {
@@ -726,6 +915,11 @@
     if (compareEl) { compareEl.hidden = true; }
     if (afterImg) { afterImg.removeAttribute('src'); setAfterZoom(1); }
     if (dlEl) { dlEl.style.display = 'none'; dlEl.removeAttribute('href'); }
+    /* The gate verdict belongs to the dead final: hide the panel and
+     * clear the verdict, so a stale PASS/FAIL can never be read as
+     * applying to the next Make. */
+    if (gateEl) { gateEl.hidden = true; }
+    window.__bpGate = null;
   }
 
   /* -- Upload (Phase 2b: FileReader only, never uploaded anywhere) -------- */
@@ -848,13 +1042,28 @@
       renderAnalysis();
     });
   }
-  /* Output-space mask bbox (cutout/share round): draws the segmentation
-   * mask through the SAME crop window + rotation/flip as buildCanvas,
-   * at output size, refines it the same way (choke 1, feather 1), and
-   * reads the opaque bbox. The analysis panel reports head margins
-   * from THIS box, so it always matches the framing Make will produce.
-   * Returns null without a mask. */
-  function maskOutBBox() {
+  /* Output-space refined mask (subject+crop round, 18 Nov 2026): draws
+   * the segmentation mask through the SAME crop window + rotation/flip
+   * as buildCanvas, at output size, and refines it the same way.
+   * Shared by maskOutBBox() (analysis panel) and verifyFinal() (the
+   * pre-download gate), so the panel, the gate and Make can never
+   * disagree about which mask the final image used. Returns null
+   * without a mask, or {canvas, outW, outH, crop:{sx,sy,cw,ch}}. */
+  function liveRefineParams() {
+    /* The SAME values buildCanvas uses: production = the live feather
+     * slider + choke 2 + gamma 3; the __bpQuality ablation seam may
+     * override any of them per Make (tests only — production never
+     * sets it). maskOutBBox used to hardcode refineMask(c, 2, 1, 3),
+     * so moving the feather slider changed the final image but NOT the
+     * panel's bbox — the panel and the framing silently disagreed. */
+    var __Q = (typeof window !== 'undefined' && window.__bpQuality) || {};
+    return {
+      choke: (__Q.chokePx !== undefined) ? __Q.chokePx : 2,
+      feather: (__Q.featherPx !== undefined) ? __Q.featherPx : featherPx,
+      gamma: (__Q.alphaGamma !== undefined) ? __Q.alphaGamma : 3
+    };
+  }
+  function refinedOutputMask() {
     if (!segMask || !loadedImg || !window.DKBoardSegment) { return null; }
     var spec = effSpec();
     var iw = loadedImg.naturalWidth, ih = loadedImg.naturalHeight;
@@ -881,14 +1090,25 @@
     x.rotate(((rotation + straighten) * Math.PI) / 180);
     x.drawImage(segMask, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
     x.restore();
-    /* Same defaults as buildCanvas (choke 2, feather 1, gamma 3 —
-     * cutout/share round): the panel's bbox must describe the mask
-     * Make actually uses, or its head margins would disagree with
-     * the framing by ~1px. If the defaults ever move, move them here
-     * too. */
-    var refined = window.DKBoardSegment.refineMask(c, 2, 1, 3);
+    var p = liveRefineParams();
+    var refined = window.DKBoardSegment.refineMask(c, p.choke, p.feather, p.gamma);
+    return { canvas: refined, outW: outW, outH: outH,
+      crop: { sx: sx, sy: sy, cw: cw, ch: ch } };
+  }
+  /* Output-space mask bbox (cutout/share round): reads the opaque bbox
+   * from refinedOutputMask(). The analysis panel reports head margins
+   * from THIS box, so it always matches the framing Make will produce.
+   * Returns null without a mask. Besides the whole-subject bbox it
+   * also returns `head` — the bbox of the head zone (top 45% of the
+   * subject, where the face and ears live) — because the whole-subject
+   * side margins are SHOULDER margins: an ear touching a side edge is
+   * invisible to them (subject+crop round). */
+  function maskOutBBox() {
+    var rm = refinedOutputMask();
+    if (!rm) { return null; }
+    var outW = rm.outW, outH = rm.outH;
     var d;
-    try { d = refined.getContext('2d').getImageData(0, 0, outW, outH).data; }
+    try { d = rm.canvas.getContext('2d').getImageData(0, 0, outW, outH).data; }
     catch (e) { return null; }
     var x0 = outW, y0 = outH, x1 = -1, y1 = -1, opaque = 0;
     for (var y = 0; y < outH; y++) {
@@ -901,8 +1121,44 @@
       }
     }
     if (x1 < 0) { return null; }
+    /* Head zone: same 45% rule as subjectCropRect, applied to the
+     * output-size mask. yMax is exclusive of the shoulders below. */
+    var headYMax = y0 + Math.round((y1 - y0) * 0.45);
+    var hx0 = outW, hy0 = outH, hx1 = -1, hy1 = -1;
+    for (var hy = 0; hy < headYMax; hy++) {
+      for (var hx = 0; hx < outW; hx++) {
+        if (d[(hy * outW + hx) * 4 + 3] > 127) {
+          if (hx < hx0) { hx0 = hx; } if (hx > hx1) { hx1 = hx; }
+          if (hy < hy0) { hy0 = hy; } if (hy > hy1) { hy1 = hy; }
+        }
+      }
+    }
+    var head = (hx1 < 0) ? null
+      : { x0: hx0, y0: hy0, x1: hx1, y1: hy1 };
     return { x0: x0, y0: y0, x1: x1, y1: y1, outW: outW, outH: outH,
-      coverage: opaque / (outW * outH) };
+      coverage: opaque / (outW * outH), head: head };
+  }
+  /* Does an explicit user crop cut the subject? (subject+crop round.)
+   * maskOutBBox() re-derives the bbox INSIDE the cropped window, so a
+   * cut ear looks fine to it — the analysis is blind exactly when the
+   * user has cropped. This compares the FULL-SOURCE mask bbox against
+   * the crop rect in source pixels instead, and NAMES the cut sides
+   * (left/right/top/bottom). A 2 source-px tolerance absorbs mask-edge
+   * noise at the crop boundary. Returns {cut, sides:[...]}. */
+  function cropCutsSubject() {
+    var none = { cut: false, sides: [] };
+    if (!singleCrop || !segMask || !loadedImg) { return none; }
+    var bb = maskBBox(segMask);
+    if (!bb) { return none; }
+    var iw = loadedImg.naturalWidth, ih = loadedImg.naturalHeight;
+    var cx0 = singleCrop.x * iw, cy0 = singleCrop.y * ih;
+    var cx1 = cx0 + singleCrop.w * iw, cy1 = cy0 + singleCrop.h * ih;
+    var sides = [];
+    if (bb.x0 < cx0 - 2) { sides.push('left'); }
+    if (bb.x1 > cx1 + 2) { sides.push('right'); }
+    if (bb.y0 < cy0 - 2) { sides.push('top'); }
+    if (bb.y1 > cy1 + 2) { sides.push('bottom'); }
+    return { cut: sides.length > 0, sides: sides };
   }
   /* Photo analysis (cutout/share round): the FIRST assessment after
    * upload — subject/head detection, head position + margins, and
@@ -965,8 +1221,14 @@
     }
     line(sub(sub(tr('bp.an_subject', 'Subject found — {engine}, coverage {cov}% of the frame.'),
       '{engine}', segEngine || 'mediapipe'), '{cov}', String(Math.round(bb.coverage * 100))));
-    var topM = bb.y0, leftM = bb.x0, rightM = bb.outW - 1 - bb.x1;
-    var headW = Math.round((bb.x1 - bb.x0 + 1) / bb.outW * 100);
+    /* SUBJECT+CROP ROUND: side margins come from the HEAD-ZONE bbox
+     * (bb.head), not the whole-subject bbox — the whole-subject sides
+     * are SHOULDER margins, and shoulders are wider than the head, so
+     * an ear touching a side edge was invisible to the old numbers.
+     * The head line below reports the head's own margins. */
+    var head = bb.head || bb;
+    var topM = head.y0, leftM = head.x0, rightM = bb.outW - 1 - head.x1;
+    var headW = Math.round((head.x1 - head.x0 + 1) / bb.outW * 100);
     line(sub(sub(sub(sub(sub(
       tr('bp.an_head', 'Head: top margin {top}px ({topp}% of frame height), head width {w}% of the frame, side margins {l}px / {r}px.'),
       '{top}', String(topM)), '{topp}', String(Math.round(topM / bb.outH * 100))),
@@ -975,10 +1237,32 @@
      * width (edges may be cut), else ready. Thresholds match the
      * framing the pipeline itself enforces (8% top, 4% sides). */
     var topWant = Math.round(bb.outH * 0.08), sideWant = Math.round(bb.outW * 0.04);
-    if (topM < topWant) {
+    function sideName(s) {
+      return tr('bp.side_' + s, s);
+    }
+    /* An explicit user crop blinds maskOutBBox (it re-derives the bbox
+     * INSIDE the cropped window), so the cut is checked against the
+     * FULL-SOURCE mask FIRST — before the top verdict, which reads the
+     * same blind in-window bbox and would otherwise misreport a crop
+     * that cuts the head top as a headroom problem. The cut sides are
+     * NAMED, so the user knows which edge to widen. */
+    var cut = singleCrop ? cropCutsSubject() : null;
+    if (cut && cut.cut) {
+      var sidesTxt = cut.sides.map(sideName).join(', ');
+      line(sub(tr('bp.an_crop_cut', 'Your crop cuts the subject on the {sides} — widen the crop there or that edge will be missing.'),
+        '{sides}', sidesTxt), 'err');
+    } else if (topM < topWant) {
       line(tr('bp.an_verdict_top', 'Head is too close to the top — retake with more space above the head.'), 'err');
     } else if (leftM < sideWant || rightM < sideWant || window.__bpCropWarn) {
-      line(tr('bp.an_verdict_wide', 'Subject is wider than the frame — edges may be cut.'), 'err');
+      /* Head-zone side margin below the threshold: the head touches a
+       * side edge, so an ear may already be cut — name the side. */
+      if (leftM < sideWant || rightM < sideWant) {
+        var edgeSide = leftM <= rightM ? 'left' : 'right';
+        line(sub(tr('bp.an_head_edge', 'Head touches the {side} edge — an ear may be cut.'),
+          '{side}', sideName(edgeSide)), 'err');
+      } else {
+        line(tr('bp.an_verdict_wide', 'Subject is wider than the frame — edges may be cut.'), 'err');
+      }
     } else {
       line(tr('bp.an_verdict_ok', 'Ready for crop — head fully in frame with headroom.'), 'ok');
     }
@@ -1024,6 +1308,594 @@
       if (f) { loadFromFile(f); }
     });
   }
+  /* -- Pre-download verification gate (subject+crop round, 18 Nov 2026) - */
+  /* Checks the EXACT blob the user would download — decoded from the
+   * blob itself, never from a preview canvas — against three gates:
+   *   G1 BACKGROUND: the 4 corners (5x5 patches) + the 4px edge band
+   *      are the board colour within Δ≤16/channel (above JPEG noise
+   *      at q≈0.94). Only clearly-background pixels (mask alpha < 12)
+   *      are tested, so a subject touching the frame edge cannot
+   *      false-flag it.
+   *   G2 FRINGE/WEDGE: pale pixels (luminance > 170, channel spread
+   *      < 70) in the mask transition band, AND opaque pale pixels
+   *      within 3 px of the mask boundary matching the sampled
+   *      original-background colour (the curly-hair wedge test — the
+   *      same colour sample cleanWedge takes in buildCanvas).
+   *   G3 SUBJECT INTEGRITY: the head-zone bbox (top 45% of the
+   *      subject) keeps top ≥8% of outH and sides ≥4% of outW, the
+   *      head is present, and coverage is within ±5% of the analysis
+   *      panel's value.
+   * Returns a Promise of {pass, issues:[{side, region, kind}],
+   * counts:{...}, skipped:[...]}. `region` is output px for the zoomed
+   * view. The gate is async (decoding the blob takes a tick) — Make
+   * reveals the compare + Download only after its verdict. */
+  function hexToRgb(hex) {
+    if (!hex || hex[0] !== '#') { return null; }
+    var h = hex.slice(1);
+    if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+    if (h.length !== 6) { return null; }
+    var n = parseInt(h, 16);
+    if (isNaN(n)) { return null; }
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function verifyFinal(built, blob, spec) {
+    return new Promise(function (resolve) {
+      var outW = built.width, outH = built.height;
+      var bgHex = bgOverride === 'original' ? null : (bgOverride || spec.bg);
+      var bgRgb = bgHex ? hexToRgb(bgHex) : null;
+      var bgReplaced = removeBgOn && segState === 'ready' && !!segMask
+        && bgOverride !== 'original';
+      var analysis = null;
+      try { analysis = maskOutBBox(); } catch (e) { analysis = null; }
+      /* Decode the BLOB (createImageBitmap, Image fallback) — the blob
+       * is what the user downloads, so it is what gets checked. */
+      function decode(cb) {
+        if (typeof createImageBitmap === 'function') {
+          createImageBitmap(blob).then(function (bmp) {
+            var c = document.createElement('canvas');
+            c.width = outW; c.height = outH;
+            c.getContext('2d').drawImage(bmp, 0, 0);
+            if (bmp.close) { bmp.close(); }
+            cb(c);
+          }).catch(function () { decodeViaImg(cb); });
+        } else { decodeViaImg(cb); }
+      }
+      function decodeViaImg(cb) {
+        var url = URL.createObjectURL(blob);
+        var im = new Image();
+        im.onload = function () {
+          var c = document.createElement('canvas');
+          c.width = outW; c.height = outH;
+          c.getContext('2d').drawImage(im, 0, 0);
+          URL.revokeObjectURL(url);
+          cb(c);
+        };
+        im.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+        im.src = url;
+      }
+      decode(function (srcCanvas) {
+        var issues = [], skipped = [];
+        var counts = { bandPx: 0, bandFringe: 0, wedgePx: 0,
+          coverage: null, analysisCoverage: null };
+        if (!srcCanvas) {
+          resolve({ pass: false, done: true,
+            issues: [{ kind: 'verify-error', side: 'photo', region: null }],
+            counts: counts, skipped: skipped });
+          return;
+        }
+        var px;
+        try { px = srcCanvas.getContext('2d').getImageData(0, 0, outW, outH).data; }
+        catch (e) {
+          resolve({ pass: false, done: true,
+            issues: [{ kind: 'verify-error', side: 'photo', region: null }],
+            counts: counts, skipped: skipped });
+          return;
+        }
+        /* Colour-key source (G2): the unblended subject canvas
+         * buildCanvas stashed on the built canvas (see there). The
+         * PALE test still reads the final blob (the visual condition);
+         * the colour KEY reads the subject canvas, where a pixel is
+         * the raw photo pixel — hair stays dark, wall stays wall —
+         * instead of the final's subject/board blend. Falls back to
+         * the final pixels when there is no stashed canvas (plain
+         * path has no mask, so G2 is skipped there anyway). */
+        var keyPx = px;
+        try {
+          var sc = built && built.__bpSubjectCanvas;
+          if (sc && sc.width === outW && sc.height === outH) {
+            keyPx = sc.getContext('2d').getImageData(0, 0, outW, outH).data;
+          }
+        } catch (e) { keyPx = px; }
+        var rm = null, maskA = null;
+        if (bgReplaced) {
+          try { rm = refinedOutputMask(); } catch (e) { rm = null; }
+          if (rm) {
+            try { maskA = rm.canvas.getContext('2d').getImageData(0, 0, rm.outW, rm.outH).data; }
+            catch (e) { maskA = null; }
+          }
+        }
+        function isPale(i) {
+          var r = px[i], g = px[i + 1], b = px[i + 2];
+          var lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          var spread = Math.max(r, g, b) - Math.min(r, g, b);
+          return lum > 170 && spread < 70;
+        }
+        /* --- G1: background corners + edge band ---------------------- */
+        if (!bgRgb) {
+          skipped.push('bg');
+        } else if (!maskA) {
+          skipped.push('bg');
+        } else {
+          /* Only test background pixels that are ALSO clear of the
+           * subject (≥3 px from any opaque pixel): JPEG ringing at a
+           * hard subject/blue boundary shifts near-edge pixels by
+           * >16, and those pixels are transition, not background —
+           * testing them false-flagged every photo whose subject
+           * touches the frame edge (woman-1's bottom strip). */
+          var nearSubj = new Uint8Array(outW * outH);
+          for (var ns = 0; ns < outW * outH; ns++) {
+            nearSubj[ns] = maskA[ns * 4 + 3] > 127 ? 1 : 0;
+          }
+          for (var np = 0; np < 3; np++) {
+            var nxtS = new Uint8Array(outW * outH);
+            for (var yS = 0; yS < outH; yS++) {
+              for (var xS = 0; xS < outW; xS++) {
+                if (nearSubj[yS * outW + xS]) { nxtS[yS * outW + xS] = 1; continue; }
+                var hitS = false;
+                for (var dyS = -1; dyS <= 1 && !hitS; dyS++) {
+                  for (var dxS = -1; dxS <= 1; dxS++) {
+                    var nxS = xS + dxS, nyS = yS + dyS;
+                    if (nxS < 0 || nyS < 0 || nxS >= outW || nyS >= outH) { continue; }
+                    if (nearSubj[nyS * outW + nxS]) { hitS = true; break; }
+                  }
+                }
+                nxtS[yS * outW + xS] = hitS ? 1 : 0;
+              }
+            }
+            nearSubj = nxtS;
+          }
+          function isClearBg(x, y) {
+            var ai = (y * outW + x) * 4 + 3;
+            return maskA[ai] < 12 && !nearSubj[y * outW + x];
+          }
+          var badCorners = [];
+          var cornerXY = [[0, 0], [outW - 5, 0], [0, outH - 5], [outW - 5, outH - 5]];
+          for (var ci = 0; ci < 4; ci++) {
+            var cx0 = cornerXY[ci][0], cy0 = cornerXY[ci][1];
+            var sr = 0, sg = 0, sb = 0, n = 0;
+            for (var cy = cy0; cy < cy0 + 5; cy++) {
+              for (var cx = cx0; cx < cx0 + 5; cx++) {
+                if (!isClearBg(cx, cy)) { continue; } /* subject/transition/near-edge: not bg */
+                var pi = (cy * outW + cx) * 4;
+                sr += px[pi]; sg += px[pi + 1]; sb += px[pi + 2]; n++;
+              }
+            }
+            if (n < 5) { continue; } /* corner is subject: nothing to test */
+            var mr = sr / n, mg = sg / n, mb = sb / n;
+            var dmax = Math.max(Math.abs(mr - bgRgb[0]),
+              Math.abs(mg - bgRgb[1]), Math.abs(mb - bgRgb[2]));
+            if (dmax > 16) {
+              badCorners.push({ x: cx0, y: cy0, w: 5, h: 5 });
+            }
+          }
+          if (badCorners.length) {
+            issues.push({ kind: 'bg', side: 'corners',
+              region: badCorners[0] });
+          }
+          /* Edge band: 4px strips, clearly-background pixels only. */
+          var bandEdges = [
+            { side: 'top', x0: 0, y0: 0, x1: outW, y1: 4 },
+            { side: 'bottom', x0: 0, y0: outH - 4, x1: outW, y1: outH },
+            { side: 'left', x0: 0, y0: 0, x1: 4, y1: outH },
+            { side: 'right', x0: outW - 4, y0: 0, x1: outW, y1: outH }
+          ];
+          var worstEdge = null, worstFrac = 0;
+          for (var ei = 0; ei < 4; ei++) {
+            var ed = bandEdges[ei];
+            var tot = 0, bad = 0;
+            for (var ey = ed.y0; ey < ed.y1; ey++) {
+              for (var ex = ed.x0; ex < ed.x1; ex++) {
+                if (!isClearBg(ex, ey)) { continue; }
+                tot++;
+                var pei = (ey * outW + ex) * 4;
+                if (Math.max(Math.abs(px[pei] - bgRgb[0]),
+                    Math.abs(px[pei + 1] - bgRgb[1]),
+                    Math.abs(px[pei + 2] - bgRgb[2])) > 16) { bad++; }
+              }
+            }
+            if (tot >= 20) {
+              var frac = bad / tot;
+              if (frac > worstFrac) {
+                worstFrac = frac;
+                worstEdge = { side: ed.side,
+                  region: { x: ed.x0, y: ed.y0, w: ed.x1 - ed.x0, h: ed.y1 - ed.y0 } };
+              }
+            }
+          }
+          if (worstEdge && worstFrac > 0.02) {
+            issues.push({ kind: 'bg', side: worstEdge.side,
+              region: worstEdge.region });
+          }
+        }
+        /* --- G2: fringe band + wedge --------------------------------- */
+        if (!maskA) {
+          skipped.push('fringe');
+        } else {
+          /* Boundary proximity: dilate the background (alpha < 128) by
+           * 3 px, same as cleanWedge — a pixel inside is within
+           * Chebyshev distance 3 of the mask boundary. */
+          var nearBg = new Uint8Array(outW * outH);
+          for (var p = 0; p < outW * outH; p++) {
+            nearBg[p] = maskA[p * 4 + 3] < 128 ? 1 : 0;
+          }
+          for (var pass = 0; pass < 3; pass++) {
+            var nxt = new Uint8Array(outW * outH);
+            for (var y2 = 0; y2 < outH; y2++) {
+              for (var x2 = 0; x2 < outW; x2++) {
+                if (nearBg[y2 * outW + x2]) { nxt[y2 * outW + x2] = 1; continue; }
+                var hit = false;
+                for (var dy = -1; dy <= 1 && !hit; dy++) {
+                  for (var dx = -1; dx <= 1; dx++) {
+                    var nx = x2 + dx, ny = y2 + dy;
+                    if (nx < 0 || ny < 0 || nx >= outW || ny >= outH) { continue; }
+                    if (nearBg[ny * outW + nx]) { hit = true; break; }
+                  }
+                }
+                nxt[y2 * outW + x2] = hit ? 1 : 0;
+              }
+            }
+            nearBg = nxt;
+          }
+          var bandPx = 0, bandFringe = 0;
+          var wedgePx = 0, wx0 = outW, wy0 = outH, wx1 = -1, wy1 = -1;
+          var sample = window.__bpWedgeBg || null;
+          /* Band fringe is colour-keyed to the SAMPLED ORIGINAL
+           * background (same 48 tolerance as the wedge test), not
+           * merely "pale": the transition band is a blend of subject
+           * and board colour, so a feathered edge blended against a
+           * pale board (#e6f0ff, the board default) is pale by
+           * construction — man-1 counted 404 such blend px and the
+           * gate failed a good final (probe 18 Nov 2026). The key
+           * reads the UNBLENDED subject canvas (keyPx, above), where
+           * a band pixel is the raw photo pixel — dark hair stays
+           * dark and cannot land on the wall colour — while a real
+           * fringe pixel is the ORIGINAL wall colour leaking at the
+           * edge, which matches the sample. Board-coloured pixels
+           * are excluded too (they ARE the background). Without a
+           * sample (bg kept original) the band cannot be judged —
+           * blend and leak are indistinguishable — so it stays 0. */
+          /* A pixel is the board colour within `tol` per channel.
+           * Default 16 = the G1 correctness tolerance (JPEG noise).
+           * The WEDGE test passes 32: that is a VISIBILITY tolerance,
+           * not a correctness one — a wedge pixel within 32 of the
+           * board colour is too close to it to read as "something
+           * cut away" (a brightened warm wall at (243,234,229)
+           * against the pale default (230,240,255) differs by 26
+           * and is a faint warm tint, not a missing chunk; the same
+           * pixel against strong blue differs by ~140 and counts). */
+          function isBoard(gi, tol) {
+            tol = tol || 16;
+            return Math.max(Math.abs(px[gi] - bgRgb[0]),
+              Math.abs(px[gi + 1] - bgRgb[1]),
+              Math.abs(px[gi + 2] - bgRgb[2])) <= tol;
+          }
+          function isLeak(gi) {
+            return matchesSample(gi, keyPx);
+          }
+          /* A pixel matches the sampled original background when it
+           * is close in RGB (≤48) AND close in chroma (channel
+           * spread within 25): skin is warm (spread ~50–60) while
+           * most walls are near-neutral (spread ~0–25), so chroma
+           * separates brightened skin at the boundary — which RGB
+           * distance alone cannot (man-1 at +40 brightness: skin
+           * (255,238,196) sits 40 from the wall sample, inside the
+           * 48 tolerance, but its spread 59 vs the wall's 8 gives it
+           * away — 47 false wedge px, probe 18 Nov 2026). A
+           * saturated wall (yellow, spread ~135) still matches its
+           * own sample, because the comparison is against the
+           * SAMPLE's spread, not an absolute cap. */
+          function matchesSample(gi, arr) {
+            if (!sample) { return false; }
+            var dr = arr[gi] - sample.r, dg = arr[gi + 1] - sample.g,
+                db = arr[gi + 2] - sample.b;
+            if (Math.sqrt(dr * dr + dg * dg + db * db) > 48) { return false; }
+            var spreadPx = Math.max(arr[gi], arr[gi + 1], arr[gi + 2])
+              - Math.min(arr[gi], arr[gi + 1], arr[gi + 2]);
+            var spreadSm = Math.max(sample.r, sample.g, sample.b)
+              - Math.min(sample.r, sample.g, sample.b);
+            return Math.abs(spreadPx - spreadSm) <= 25;
+          }
+          for (var gy = 0; gy < outH; gy++) {
+            for (var gx = 0; gx < outW; gx++) {
+              var gi = (gy * outW + gx) * 4;
+              var al = maskA[gi + 3];
+              if (al > 0 && al < 255) {
+                bandPx++;
+                if (isPale(gi) && !isBoard(gi) && isLeak(gi)) { bandFringe++; }
+              }
+              /* Wedge: opaque, PALE, near the boundary, the colour of
+               * the ORIGINAL background — pale wall surviving inside
+               * the mask, not fringe on the edge. PALE is load-bearing
+               * here: without it a grey beard against a grey wall
+               * counts as a wedge (man-1 measured 52 false pixels),
+               * because beard and wall match within tolerance 48. A
+               * pale wall wedge reads as "something cut away" against
+               * strong blue; a grey beard does not. The colour key
+               * reads the FINAL pixels here, deliberately — NOT the
+               * subject canvas: the wedge is what the user SEES, and
+               * an edit that brightens a surviving wall sliver makes
+               * it more visible, not less. (The BAND test below keys
+               * on the subject canvas instead, because a band pixel
+               * in the final is a blend and its colour is undecidable
+               * there.) A wedge pixel the colour of the BOARD is
+               * excluded — it is invisible against the background it
+               * sits on (a brightened wedge at +40 brightness reads
+               * warm near-white, within ~30 of the pale default
+               * (230,240,255): a faint tint, not a missing chunk —
+               * but glaring against strong blue, where it still
+               * counts; see isBoard's 32 tolerance). */
+              if (sample && al > 200 && nearBg[gy * outW + gx] && isPale(gi) && !isBoard(gi, 32)) {
+                if (matchesSample(gi, px)) {
+                  wedgePx++;
+                  if (gx < wx0) { wx0 = gx; } if (gx > wx1) { wx1 = gx; }
+                  if (gy < wy0) { wy0 = gy; } if (gy > wy1) { wy1 = gy; }
+                }
+              }
+            }
+          }
+          counts.bandPx = bandPx; counts.bandFringe = bandFringe;
+          counts.wedgePx = wedgePx;
+          if (!sample) { skipped.push('wedge'); }
+          /* Measured thresholds (subject+crop round, 11-photo set,
+           * cleanup ON, band colour-keyed to the sampled original
+           * bg, wedge chroma-checked): the worst GOOD final has 16
+           * wedge px (woman-1, after the cleanup removed 269) and 0
+           * band-leak px, so the band count alone cannot flag
+           * anything — it is a backstop for egregious cases only
+           * (>25% of the band AND >200 px). The wedge test is the
+           * real detector: good finals sit at 0–16, a real pale
+           * wedge (man-2's white wall, 29 px) clears 25. */
+          if (wedgePx >= 25) {
+            issues.push({ kind: 'wedge',
+              side: (wx0 < outW / 2) ? 'left' : 'right',
+              region: { x: Math.max(0, wx0 - 4), y: Math.max(0, wy0 - 4),
+                w: Math.min(outW, wx1 - wx0 + 9), h: Math.min(outH, wy1 - wy0 + 9) },
+              n: wedgePx });
+          }
+          if (bandPx > 0 && bandFringe > 200
+              && bandFringe / bandPx > 0.25) {
+            issues.push({ kind: 'fringe', side: 'edge', region: null,
+              n: bandFringe });
+          }
+        }
+        /* --- G3: subject integrity (head zone + coverage) ------------ */
+        if (!maskA) {
+          skipped.push('subject');
+        } else {
+          var sx0 = outW, sy0 = outH, sx1 = -1, sy1 = -1, opaque = 0;
+          for (var sy = 0; sy < outH; sy++) {
+            for (var sx = 0; sx < outW; sx++) {
+              if (maskA[(sy * outW + sx) * 4 + 3] > 127) {
+                opaque++;
+                if (sx < sx0) { sx0 = sx; } if (sx > sx1) { sx1 = sx; }
+                if (sy < sy0) { sy0 = sy; } if (sy > sy1) { sy1 = sy; }
+              }
+            }
+          }
+          counts.coverage = opaque / (outW * outH);
+          counts.analysisCoverage = analysis ? analysis.coverage : null;
+          if (sx1 < 0) {
+            issues.push({ kind: 'nosubject', side: 'photo', region: null });
+          } else {
+            var headYMax = sy0 + Math.round((sy1 - sy0) * 0.45);
+            var hx0 = outW, hy0 = outH, hx1 = -1, hy1 = -1;
+            for (var hy = 0; hy < headYMax; hy++) {
+              for (var hx = 0; hx < outW; hx++) {
+                if (maskA[(hy * outW + hx) * 4 + 3] > 127) {
+                  if (hx < hx0) { hx0 = hx; } if (hx > hx1) { hx1 = hx; }
+                  if (hy < hy0) { hy0 = hy; } if (hy > hy1) { hy1 = hy; }
+                }
+              }
+            }
+            /* Margin checks run ONLY when the photo is upright
+             * (rotation 0): the head-zone geometry is orientation-
+             * defined — "top 45% of the subject" is the head only
+             * when the head is up. After a 90° rotation the head is
+             * sideways, so the top-45% slice cuts across head AND
+             * body and its bbox spans the full width: every rotated
+             * man-1 final false-flagged a left-edge "cut ear"
+             * (probe 18 Nov 2026). Rotated finals still get the
+             * coverage + head-present checks below; the user rotated
+             * deliberately and the preview shows the result. */
+            var upright = (rotation % 360) === 0;
+            if (!upright) { skipped.push('head-margins'); }
+            var topWant = Math.round(outH * 0.08),
+                sideWant = Math.round(outW * 0.04);
+            if (upright && hy0 < topWant) {
+              issues.push({ kind: 'head', side: 'top',
+                region: { x: 0, y: 0, w: outW, h: Math.max(10, hy0 + 12) } });
+            }
+            if (upright && hx0 < sideWant) {
+              issues.push({ kind: 'head', side: 'left',
+                region: { x: 0, y: Math.max(0, hy0 - 4), w: Math.max(10, hx0 + 12),
+                  h: Math.max(10, hy1 - hy0 + 8) } });
+            }
+            if (upright && outW - 1 - hx1 < sideWant) {
+              issues.push({ kind: 'head', side: 'right',
+                region: { x: Math.max(0, hx1 - 12), y: Math.max(0, hy0 - 4),
+                  w: Math.min(outW, outW - hx1 + 12), h: Math.max(10, hy1 - hy0 + 8) } });
+            }
+            if (analysis && analysis.coverage
+                && Math.abs(counts.coverage - analysis.coverage)
+                  > 0.05 * analysis.coverage) {
+              issues.push({ kind: 'coverage', side: 'photo', region: null });
+            }
+          }
+        }
+        resolve({ pass: issues.length === 0, done: true,
+          issues: issues, counts: counts, skipped: skipped,
+          _srcCanvas: srcCanvas });
+      });
+    });
+  }
+  function gateIssueText(issue) {
+    var T = window.dkT || null;
+    function tr(key, fb) { return T ? T(key, fb) : fb; }
+    function sub(s, k, v) { return s.split(k).join(v); }
+    var side = tr('bp.side_' + issue.side, issue.side);
+    switch (issue.kind) {
+      case 'bg':
+        return sub(tr('bp.gate_issue_bg', 'Background is not the board colour ({side}).'),
+          '{side}', side);
+      case 'wedge':
+        return sub(tr('bp.gate_issue_wedge', 'Pale old background left at the {side} edge — widen the crop or raise edge softening.'),
+          '{side}', side);
+      case 'fringe':
+        return sub(tr('bp.gate_issue_fringe', 'Pale fringe along the edge ({n} px) — raise edge softening or re-run the cutout.'),
+          '{n}', String(issue.n || 0));
+      case 'head':
+        return sub(tr('bp.gate_issue_head', 'Head is too close to the {side} edge — an ear may be cut.'),
+          '{side}', side);
+      case 'nosubject':
+        return tr('bp.gate_issue_nosubject', 'No subject found in the final photo.');
+      case 'coverage':
+        return tr('bp.gate_issue_coverage', 'Subject size changed unexpectedly after Make.');
+      default:
+        return tr('bp.gate_issue_verify', 'The final photo could not be checked — download anyway only if the preview looks right.');
+    }
+  }
+  function showGateChecking() {
+    window.__bpGate = null;
+    if (!gateEl) { return; }
+    gateEl.hidden = false;
+    gateEl.classList.remove('bp-gate-pass', 'bp-gate-fail');
+    if (gateStatusEl) {
+      gateStatusEl.textContent = window.dkT
+        ? window.dkT('bp.gate_checking', 'Checking your photo…')
+        : 'Checking your photo…';
+    }
+    if (gateIssuesEl) { gateIssuesEl.textContent = ''; }
+    if (gateZoomEl) { gateZoomEl.hidden = true; }
+    if (gateZoomCap) { gateZoomCap.hidden = true; }
+    if (gateFixesEl) { gateFixesEl.hidden = true; }
+  }
+  function renderGate(v) {
+    /* The verdict is visible to tests (and to the gate probe) on
+     * window.__bpGate: {pass, issues, counts, skipped}. */
+    window.__bpGate = v;
+    if (!gateEl) { return; }
+    gateEl.hidden = false;
+    gateEl.classList.remove('bp-gate-pass', 'bp-gate-fail');
+    function tr(key, fb) {
+      return window.dkT ? window.dkT(key, fb) : fb;
+    }
+    if (v.pass) {
+      gateEl.classList.add('bp-gate-pass');
+      if (gateStatusEl) {
+        var line = '✓ ' + tr('bp.gate_pass', 'Checked: edges clean, subject complete.');
+        if (v.skipped && v.skipped.length) {
+          line += ' ' + tr('bp.gate_skipped', 'Background kept — background checks skipped.');
+        }
+        gateStatusEl.textContent = line;
+      }
+      if (gateIssuesEl) { gateIssuesEl.textContent = ''; }
+      if (gateZoomEl) { gateZoomEl.hidden = true; }
+      if (gateZoomCap) { gateZoomCap.hidden = true; }
+      if (gateFixesEl) { gateFixesEl.hidden = true; }
+      return;
+    }
+    gateEl.classList.add('bp-gate-fail');
+    if (gateStatusEl) {
+      gateStatusEl.textContent = '⚠ ' + tr('bp.gate_fail', 'Check found {n} issue(s) — fix below, or download anyway.')
+        .split('{n}').join(String(v.issues.length));
+    }
+    if (gateIssuesEl) {
+      gateIssuesEl.textContent = '';
+      for (var i = 0; i < v.issues.length; i++) {
+        var li = document.createElement('li');
+        li.textContent = gateIssueText(v.issues[i]);
+        gateIssuesEl.appendChild(li);
+      }
+    }
+    /* Zoomed view of the worst region (wedge first, then head, then
+     * background): the user sees the exact pixels the gate objected
+     * to, at 3x with no smoothing, so the judgement is honest. */
+    var worst = null, worstRank = 99;
+    var rank = { wedge: 0, head: 1, bg: 2, fringe: 3, coverage: 4, nosubject: 5 };
+    for (var j = 0; j < v.issues.length; j++) {
+      var iss = v.issues[j];
+      if (!iss.region) { continue; }
+      var r = (rank[iss.kind] === undefined) ? 9 : rank[iss.kind];
+      if (r < worstRank) { worstRank = r; worst = iss; }
+    }
+    if (worst && worst.region && v._srcCanvas && gateZoomEl) {
+      var rg = worst.region;
+      var scale = Math.min(3, 300 / Math.max(rg.w, rg.h, 1));
+      gateZoomEl.width = Math.max(1, Math.round(rg.w * scale));
+      gateZoomEl.height = Math.max(1, Math.round(rg.h * scale));
+      var zx = gateZoomEl.getContext('2d');
+      zx.imageSmoothingEnabled = false;
+      zx.drawImage(v._srcCanvas, rg.x, rg.y, rg.w, rg.h,
+        0, 0, gateZoomEl.width, gateZoomEl.height);
+      gateZoomEl.hidden = false;
+      if (gateZoomCap) {
+        gateZoomCap.textContent = gateIssueText(worst);
+        gateZoomCap.hidden = false;
+      }
+    } else {
+      if (gateZoomEl) { gateZoomEl.hidden = true; }
+      if (gateZoomCap) { gateZoomCap.hidden = true; }
+    }
+    if (gateFixesEl) { gateFixesEl.hidden = false; }
+    if (gateAnywayBtn) { gateAnywayBtn.hidden = false; }
+  }
+  if (gateRerunBtn) {
+    gateRerunBtn.addEventListener('click', function () {
+      /* Re-run the cutout, then Make again: the old verdict is stale
+       * the moment the mask changes, so the panel hides until then. */
+      if (gateEl) { gateEl.hidden = true; }
+      window.__bpGate = null;
+      hideSegFail();
+      startSegmentation();
+    });
+  }
+  if (gateCropBtn) {
+    gateCropBtn.addEventListener('click', function () {
+      if (!loadedImg) { return; }
+      if (cropWrap) { cropWrap.hidden = false; }
+      if (cropBtn) { cropBtn.setAttribute('aria-expanded', 'true'); }
+      renderSingleCrop();
+      if (cropWrap && cropWrap.scrollIntoView) {
+        cropWrap.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
+  if (gateFeatherBtn) {
+    gateFeatherBtn.addEventListener('click', function () {
+      /* Edge softening is the feather slider: focus it (and scroll it
+       * into view) so the user adjusts the exact control the gate
+       * named. The verdict stays until the next Make. */
+      if (featherEl) {
+        if (featherEl.scrollIntoView) { featherEl.scrollIntoView({ block: 'nearest' }); }
+        featherEl.focus();
+      }
+    });
+  }
+  if (gateAnywayBtn) {
+    gateAnywayBtn.addEventListener('click', function () {
+      /* Explicit override, never silent: the Download link appears and
+       * the panel records that the user chose to download anyway. */
+      if (dlEl) { dlEl.style.display = 'inline-block'; }
+      if (window.__bpGate) { window.__bpGate.overridden = true; }
+      if (gateStatusEl) {
+        gateStatusEl.textContent += ' ' + (window.dkT
+          ? window.dkT('bp.gate_anyway_note', 'Downloaded anyway — the issues above still apply.')
+          : 'Downloaded anyway — the issues above still apply.');
+      }
+      gateAnywayBtn.hidden = true;
+    });
+  }
+
   /* -- Make Board Photo: the full gated pipeline (PIPELINE FIX) ---------- */
   /* Original image -> all edit settings -> segmentation mask (same source
    * window + flip/rotate transforms as the subject — buildCanvas does
@@ -1097,14 +1969,14 @@
             ? ' \u00b7 ' + (window.dkT ? window.dkT('bp.ba_crop_warn', 'Subject is wider than the frame \u2014 edges may be cut.') : 'Subject is wider than the frame \u2014 edges may be cut.')
             : '');
       }
-      if (compareEl) { compareEl.hidden = false; }
+      if (compareEl) { compareEl.hidden = true; } /* revealed after the gate verdict, below */
       /* The After <img> IS the final image now — the live preview canvas
        * would only duplicate it, so it hides until the next edit. */
       canvasEl.style.display = 'none';
       if (dlEl) {
         dlEl.href = currentURL;
         dlEl.download = 'board-photo-' + built.width + 'x' + built.height + '.jpg';
-        dlEl.style.display = 'inline-block';
+        dlEl.style.display = 'none'; /* hidden until the gate verdict */
       }
       var bgNote = bgReplaced
         ? (window.dkT ? window.dkT('bp.ba_ready_bg_ok', ' Background replaced with the board colour.') : ' Background replaced with the board colour.')
@@ -1117,9 +1989,28 @@
       var qWarn = (!res.over && window.__bpFitQ !== undefined && window.__bpFitQ < 0.75)
         ? (window.dkT ? window.dkT('bp.ba_quality_warn', ' Quality was reduced to fit the size limit.') : ' Quality was reduced to fit the size limit.')
         : '';
-      say(res.over
-        ? (window.dkT ? window.dkT('rsv_1226', 'Ready, but still over ') : 'Ready, but still over ') + spec.kb + (window.dkT ? window.dkT('rsv_1227', ' KB at lowest quality \u2014 try a plainer photo.') : ' KB at lowest quality \u2014 try a plainer photo.') + bgNote
-        : (window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote + qWarn);
+      /* SUBJECT+CROP ROUND: the pre-download gate runs on the exact
+       * blob above. The compare + Download reveal wait for its verdict
+       * — a flagged photo never offers a silent download, and the
+       * Ready message below is written after the verdict, so it can
+       * never claim "Download below" for a photo whose download is
+       * still hidden behind a failed check. */
+      showGateChecking();
+      verifyFinal(built, res.blob, spec).then(function (verdict) {
+        if (seq !== finalSeq) { return; } /* superseded meanwhile */
+        renderGate(verdict);
+        if (compareEl) { compareEl.hidden = false; }
+        if (verdict.pass && dlEl) { dlEl.style.display = 'inline-block'; }
+        if (res.over) {
+          say((window.dkT ? window.dkT('rsv_1226', 'Ready, but still over ') : 'Ready, but still over ') + spec.kb + (window.dkT ? window.dkT('rsv_1227', ' KB at lowest quality \u2014 try a plainer photo.') : ' KB at lowest quality \u2014 try a plainer photo.') + bgNote
+            + (verdict.pass ? '' : (window.dkT ? window.dkT('bp.gate_say_fail', ' The photo check found issues — see below.') : ' The photo check found issues — see below.')));
+        } else if (verdict.pass) {
+          say((window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote + qWarn);
+        } else {
+          say((window.dkT ? window.dkT('rsv_0998', 'Ready: ') : 'Ready: ') + built.width + '\u00d7' + built.height + (window.dkT ? window.dkT('rsv_0951', ' px, under ') : ' px, under ') + spec.kb + (window.dkT ? window.dkT('rsv_0944', ' KB. Download below.') : ' KB. Download below.') + bgNote + qWarn
+            + (window.dkT ? window.dkT('bp.gate_say_fail', ' The photo check found issues — see below.') : ' The photo check found issues — see below.'));
+        }
+      });
     });
   }
   if (makeBtn) {
@@ -1413,12 +2304,140 @@
   }
 
   /* -- Interactive crop (single mode; same pattern as the bulk editor) ----- */
-  /* Draggable + resizable, aspect-locked to the board spec (a free-aspect
-   * rect would stretch the face at export, so it is never allowed).
-   * Apply stores fractions of the source image; Cancel keeps the previous
-   * crop (or none). The original is preserved — crop only changes the
-   * source window buildCanvas() draws from. */
+  /* Draggable + resizable from ANY side. Aspect stays LOCKED to the board
+   * spec: drawSubject stretches the crop window into the output, so a
+   * free-aspect rect would DISTORT the face at export — the lock is a
+   * correctness rule, not a limitation. The user sees the FULL photo
+   * while cropping (the rect is drawn over the whole image, never a
+   * zoomed fragment). Apply stores fractions of the source image;
+   * Cancel keeps the previous crop (or none). The original is
+   * preserved — crop only changes the source window buildCanvas()
+   * draws from (same render path, no second resample). */
   var singleCropDrag = null;
+  /* The 8 drag handles: 4 edge midpoints (N/S/E/W) + 4 corners.
+   * Drawn as gold #FFC531 squares (10x10) with a thin dark outline so
+   * they read on light photos too. */
+  function cropHandlePoints(rect) {
+    var cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+    return [
+      { id: 'nw', x: rect.x, y: rect.y },
+      { id: 'n', x: cx, y: rect.y },
+      { id: 'ne', x: rect.x + rect.w, y: rect.y },
+      { id: 'e', x: rect.x + rect.w, y: cy },
+      { id: 'se', x: rect.x + rect.w, y: rect.y + rect.h },
+      { id: 's', x: cx, y: rect.y + rect.h },
+      { id: 'sw', x: rect.x, y: rect.y + rect.h },
+      { id: 'w', x: rect.x, y: cy }
+    ];
+  }
+  function drawCropOverlay(ctx, rect, W, H) {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, W, rect.y);
+    ctx.fillRect(0, rect.y + rect.h, W, H - (rect.y + rect.h));
+    ctx.fillRect(0, rect.y, rect.x, rect.h);
+    ctx.fillRect(rect.x + rect.w, rect.y, W - (rect.x + rect.w), rect.h);
+    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    var pts = cropHandlePoints(rect);
+    for (var i = 0; i < pts.length; i++) {
+      /* The square is clamped inside the canvas: a handle on the rect's
+       * edge (x=0 or x=W) would otherwise draw half off-canvas and
+       * only a 5px sliver would show. The GRAB point stays the logical
+       * handle position (hitCropHandle uses pts, not the drawn square),
+       * so clamping the drawing changes nothing about dragging. */
+      var hx = Math.max(0, Math.min(pts[i].x - 5, W - 10));
+      var hy = Math.max(0, Math.min(pts[i].y - 5, H - 10));
+      ctx.fillStyle = '#FFC531';
+      ctx.fillRect(hx, hy, 10, 10);
+      ctx.strokeStyle = '#7a5b00'; ctx.lineWidth = 1;
+      ctx.strokeRect(hx, hy, 10, 10);
+    }
+    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
+  }
+  function hitCropHandle(p, rect) {
+    /* Generous 9px grab radius around each 10x10 handle (fingers and
+     * imprecise mice both land it). Handles win over move: a point on
+     * the border is a resize, not a drag. */
+    var pts = cropHandlePoints(rect);
+    for (var i = 0; i < pts.length; i++) {
+      if (Math.abs(p.x - pts[i].x) <= 9 && Math.abs(p.y - pts[i].y) <= 9) {
+        return pts[i].id;
+      }
+    }
+    return null;
+  }
+  function cropCursorFor(mode) {
+    return { nw: 'nwse-resize', se: 'nwse-resize',
+      ne: 'nesw-resize', sw: 'nesw-resize',
+      e: 'ew-resize', w: 'ew-resize', n: 'ns-resize', s: 'ns-resize',
+      move: 'move' }[mode] || 'default';
+  }
+  /* Aspect-locked resize for one drag step. s = drag-start rect (display
+   * px), dx/dy = pointer delta, Wc/Hc = canvas size, aspect = board
+   * w/h. One axis drives, the other follows (h = w / aspect) — the
+   * face can never stretch. Edge drags keep the rect's centre on the
+   * untouched axis (symmetric growth); corner drags anchor the opposite
+   * corner. Min size 20 display px on BOTH axes; the rect always stays
+   * inside the canvas. */
+  function cropDragRect(mode, s, dx, dy, Wc, Hc, aspect) {
+    var minW = Math.max(20, 20 * aspect); /* w >= 20 AND h = w/aspect >= 20 */
+    var rc = { x: s.x, y: s.y, w: s.w, h: s.h };
+    function fitW(w, maxW) {
+      w = Math.max(minW, Math.min(maxW, w));
+      var h = w / aspect;
+      if (h > Hc) { h = Hc; w = h * aspect; }
+      return { w: w, h: h };
+    }
+    function fitH(h, maxH) {
+      h = Math.max(20, Math.min(maxH, h));
+      var w = h * aspect;
+      if (w > Wc) { w = Wc; h = w / aspect; }
+      return { w: w, h: h };
+    }
+    if (mode === 'e') {
+      var fe = fitW(s.w + dx, Wc - s.x);
+      rc.w = fe.w; rc.h = fe.h;
+      rc.y = Math.max(0, Math.min(Hc - rc.h, (s.y + s.h / 2) - rc.h / 2));
+    } else if (mode === 'w') {
+      var right = s.x + s.w;
+      var nx = Math.max(0, Math.min(right - minW, s.x + dx));
+      var fw = fitW(right - nx, right);
+      rc.w = fw.w; rc.h = fw.h; rc.x = right - rc.w;
+      rc.y = Math.max(0, Math.min(Hc - rc.h, (s.y + s.h / 2) - rc.h / 2));
+    } else if (mode === 's') {
+      var fs = fitH(s.h + dy, Hc - s.y);
+      rc.w = fs.w; rc.h = fs.h;
+      rc.x = Math.max(0, Math.min(Wc - rc.w, (s.x + s.w / 2) - rc.w / 2));
+    } else if (mode === 'n') {
+      var bottom = s.y + s.h;
+      var ny = Math.max(0, Math.min(bottom - 20, s.y + dy));
+      var fn = fitH(bottom - ny, bottom);
+      rc.w = fn.w; rc.h = fn.h; rc.y = bottom - rc.h;
+      rc.x = Math.max(0, Math.min(Wc - rc.w, (s.x + s.w / 2) - rc.w / 2));
+    } else if (mode === 'se') {
+      var fse = fitW(s.w + dx, Wc - s.x);
+      rc.w = fse.w; rc.h = fse.h;
+      if (s.y + rc.h > Hc) { var hse = fitH(Hc - s.y, Hc - s.y); rc.w = hse.w; rc.h = hse.h; }
+    } else if (mode === 'nw') {
+      var right2 = s.x + s.w, bottom2 = s.y + s.h;
+      var nx2 = Math.max(0, Math.min(right2 - minW, s.x + dx));
+      var fnw = fitW(right2 - nx2, right2);
+      rc.w = fnw.w; rc.h = fnw.h; rc.x = right2 - rc.w; rc.y = bottom2 - rc.h;
+      if (rc.y < 0) { var hnw = fitH(bottom2, bottom2); rc.w = hnw.w; rc.h = hnw.h; rc.x = right2 - rc.w; rc.y = 0; }
+    } else if (mode === 'ne') {
+      var bottom3 = s.y + s.h;
+      var fne = fitW(s.w + dx, Wc - s.x);
+      rc.w = fne.w; rc.h = fne.h; rc.y = bottom3 - rc.h;
+      if (rc.y < 0) { var hne = fitH(bottom3, bottom3); rc.w = hne.w; rc.h = hne.h; rc.y = 0; }
+    } else if (mode === 'sw') {
+      var right3 = s.x + s.w;
+      var nx3 = Math.max(0, Math.min(right3 - minW, s.x + dx));
+      var fsw = fitW(right3 - nx3, right3);
+      rc.w = fsw.w; rc.h = fsw.h; rc.x = right3 - rc.w;
+      if (s.y + rc.h > Hc) { var hsw = fitH(Hc - s.y, Hc - s.y); rc.w = hsw.w; rc.h = hsw.h; rc.x = right3 - rc.w; }
+    }
+    return rc;
+  }
   function renderSingleCrop() {
     if (!loadedImg || !cropCanvas) { return; }
     var img = loadedImg;
@@ -1439,13 +2458,13 @@
             : coverCropRect(img.naturalWidth, img.naturalHeight, spec.w, spec.h);
           return { x: r.x * scale, y: r.y * scale, w: r.w * scale, h: r.h * scale, warn: !!r.warn };
         })();
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(0, 0, W, rect.y);
-    ctx.fillRect(0, rect.y + rect.h, W, H - (rect.y + rect.h));
-    ctx.fillRect(0, rect.y, rect.x, rect.h);
-    ctx.fillRect(rect.x + rect.w, rect.y, W - (rect.x + rect.w), rect.h);
-    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
-    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (singleCrop) {
+      /* A stored crop has no .warn of its own: re-check it against the
+       * full-source mask, so reopening the cropper still shows the
+       * cut-subject warning the analysis panel shows. */
+      rect.warn = cropCutsSubject().cut;
+    }
+    drawCropOverlay(ctx, rect, W, H);
     cropCanvas._rect = rect; cropCanvas._scale = scale; cropCanvas._aspect = aspect;
     var cropWarnEl = $('bp-crop-warn');
     if (cropWarnEl) { cropWarnEl.hidden = !rect.warn; }
@@ -1454,14 +2473,7 @@
     if (!loadedImg || !cropCanvas || !cropCanvas._rect) { return; }
     var ctx = cropCanvas.getContext('2d');
     ctx.drawImage(loadedImg, 0, 0, cropCanvas.width, cropCanvas.height);
-    var rect = cropCanvas._rect;
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(0, 0, cropCanvas.width, rect.y);
-    ctx.fillRect(0, rect.y + rect.h, cropCanvas.width, cropCanvas.height - (rect.y + rect.h));
-    ctx.fillRect(0, rect.y, rect.x, rect.h);
-    ctx.fillRect(rect.x + rect.w, rect.y, cropCanvas.width - (rect.x + rect.w), rect.h);
-    ctx.strokeStyle = '#FFC531'; ctx.lineWidth = 2;
-    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    drawCropOverlay(ctx, cropCanvas._rect, cropCanvas.width, cropCanvas.height);
   }
   if (cropBtn && cropWrap) {
     cropBtn.addEventListener('click', function () {
@@ -1476,39 +2488,55 @@
     cropCanvas.addEventListener('pointerdown', function (e) {
       if (!cropCanvas._rect) { return; }
       e.preventDefault();
+      /* Capture the pointer: without this a drag that runs past the
+       * canvas edge stops dead (no more pointermove events), so a
+       * long drag could never reach the clamp — the rect simply
+       * froze where the pointer left. With capture the drag keeps
+       * tracking outside and cropDragRect's clamping engages. */
+      try { cropCanvas.setPointerCapture(e.pointerId); } catch (err) { /* old browsers: drag still works inside */ }
       var r = cropCanvas.getBoundingClientRect();
       var p = { x: e.clientX - r.left, y: e.clientY - r.top };
-      var rc = cropCanvas._rect, edge = 10;
-      var nearRight = Math.abs(p.x - (rc.x + rc.w)) < edge;
-      var nearBottom = Math.abs(p.y - (rc.y + rc.h)) < edge;
+      var rc = cropCanvas._rect;
+      var handle = hitCropHandle(p, rc);
       var inside = p.x >= rc.x && p.x <= rc.x + rc.w && p.y >= rc.y && p.y <= rc.y + rc.h;
       singleCropDrag = {
-        mode: (nearRight || nearBottom) ? 'resize' : (inside ? 'move' : null),
+        mode: handle || (inside ? 'move' : null),
         startX: p.x, startY: p.y, rect: { x: rc.x, y: rc.y, w: rc.w, h: rc.h }
       };
+      cropCanvas.style.cursor = cropCursorFor(singleCropDrag.mode);
     });
     cropCanvas.addEventListener('pointermove', function (e) {
-      if (!singleCropDrag || !singleCropDrag.mode) { return; }
-      e.preventDefault();
+      if (!cropCanvas._rect) { return; }
       var r = cropCanvas.getBoundingClientRect();
       var p = { x: e.clientX - r.left, y: e.clientY - r.top };
+      if (!singleCropDrag || !singleCropDrag.mode) {
+        /* Hover: the cursor tells the user what a drag here would do. */
+        var hover = hitCropHandle(p, cropCanvas._rect);
+        var inside = p.x >= cropCanvas._rect.x && p.x <= cropCanvas._rect.x + cropCanvas._rect.w
+          && p.y >= cropCanvas._rect.y && p.y <= cropCanvas._rect.y + cropCanvas._rect.h;
+        cropCanvas.style.cursor = cropCursorFor(hover || (inside ? 'move' : null));
+        return;
+      }
+      e.preventDefault();
       var dx = p.x - singleCropDrag.startX, dy = p.y - singleCropDrag.startY;
-      var rc = { x: singleCropDrag.rect.x, y: singleCropDrag.rect.y,
-        w: singleCropDrag.rect.w, h: singleCropDrag.rect.h };
+      var s = singleCropDrag.rect;
+      var rc;
       if (singleCropDrag.mode === 'move') {
-        rc.x = Math.max(0, Math.min(cropCanvas.width - rc.w, rc.x + dx));
-        rc.y = Math.max(0, Math.min(cropCanvas.height - rc.h, rc.y + dy));
+        rc = { x: Math.max(0, Math.min(cropCanvas.width - s.w, s.x + dx)),
+          y: Math.max(0, Math.min(cropCanvas.height - s.h, s.y + dy)),
+          w: s.w, h: s.h };
       } else {
-        var nw = Math.max(20, Math.min(cropCanvas.width - rc.x, rc.w + dx));
-        var nh = nw / cropCanvas._aspect;
-        if (rc.y + nh > cropCanvas.height) { nh = cropCanvas.height - rc.y; nw = nh * cropCanvas._aspect; }
-        rc.w = nw; rc.h = nh;
+        rc = cropDragRect(singleCropDrag.mode, s, dx, dy,
+          cropCanvas.width, cropCanvas.height, cropCanvas._aspect);
       }
       cropCanvas._rect = rc;
       renderSingleCropOverlayOnly();
     });
     ['pointerup', 'pointerleave'].forEach(function (ev) {
-      cropCanvas.addEventListener(ev, function () { singleCropDrag = null; });
+      cropCanvas.addEventListener(ev, function () {
+        singleCropDrag = null;
+        if (cropCanvas._rect) { cropCanvas.style.cursor = 'default'; }
+      });
     });
   }
   if (cropApply) {
@@ -1738,6 +2766,18 @@
     coverCropRect: coverCropRect,
     subjectCropRect: subjectCropRect,
     maskBBox: maskBBox,
+    /* Subject+crop round test seams: the analysis bbox (with head zone),
+     * the explicit-crop cut check, and the refined output-size mask as a
+     * PNG data URL (alpha channel = refined mask) so tests can prove the
+     * mask really follows the live feather slider. */
+    maskOutBBox: maskOutBBox,
+    cropCutsSubject: cropCutsSubject,
+    refinedMaskDataURL: function () {
+      var rm = refinedOutputMask();
+      if (!rm) { return null; }
+      return { dataUrl: rm.canvas.toDataURL('image/png'),
+        outW: rm.outW, outH: rm.outH };
+    },
     esc: esc
   };
 })();

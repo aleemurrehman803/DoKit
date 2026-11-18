@@ -106,3 +106,16 @@
  * whole page wider on mobile. The zoom box scrolls internally instead. */
 .bp-compare-fig { min-width: 0; }
 .bp-zoom-box { max-width: 100%; }
+
+/* Pre-download verification gate (subject+crop round, 18 Nov 2026):
+ * PASS = green left border, FAIL = red; the zoomed region canvas shows
+ * the exact pixels the gate objected to (pixelated, never smoothed). */
+#bp-gate { border: 1px solid var(--line); border-radius: var(--r-md, 12px);
+  padding: .75rem 1rem; margin: .75rem 0; background: var(--surface); }
+#bp-gate.bp-gate-pass { border-left: 4px solid var(--good); }
+#bp-gate.bp-gate-fail { border-left: 4px solid var(--bad); }
+#bp-gate-issues { margin: .5rem 0; padding-left: 1.25rem; }
+#bp-gate-issues li { margin: .25rem 0; }
+#bp-gate-zoom { display: block; max-width: 100%; margin: .5rem auto;
+  border: 1px solid var(--line); border-radius: var(--r-md, 12px);
+  image-rendering: pixelated; background: var(--surface2); }
