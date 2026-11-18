@@ -52,7 +52,6 @@
   var advToggle = $('advToggle'), advSection = $('advSection'), advBody = $('advBody');
   var enhanceBtn = $('enhanceBtn'), rotL = $('rotL'), rotR = $('rotR'), flipBtn = $('flipH');
   var presetName = $('presetName'), savePresetBtn = $('savePresetBtn'), presetRow = $('presetRow');
-  var stampName = $('stampName'), stampDate = $('stampDate');
   var bwToggle = $('bwToggle'), guideToggle = $('guideToggle'), faceGuide = $('faceGuide');
   var camBtn = $('camBtn'), camModal = $('camModal'), camVideo = $('camVideo');
   var camErr = $('camErr'), camClose = $('camClose'), camX = $('camX'), camShot = $('camShot');
@@ -66,8 +65,11 @@
   var customSpec = null;    // {w,h,kb} when the user overrides the board spec
   var bgOverride = null;    // null = board bg; 'original' = no fill; else colour
   var rotation = 0, flipH = false, bwOn = false, enhanceOn = false;
-  var stampText = '', stampDateOn = false;
   var renderSeq = 0;        // guards async fitBlob against stale re-renders
+  /* NOTE (bulk upgrade, master prompt §9): NO name/date stamp is drawn on
+   * any photo any more. The old stamp controls were removed with the
+   * stamp-drawing code — text, logos and watermarks are prohibited on
+   * output photos; serial numbers live only in filenames. */
 
   function say(msg) { if (msgEl) { msgEl.textContent = msg; } }
   function clampInt(v, fallback, min, max) {
@@ -142,60 +144,78 @@
   /* -- Core pipeline (shared by single photo AND batch: DRY) --------------- */
   /* Build the output canvas for one image at one spec, applying every
    * active transform. Rotation swaps output w/h (a 90-degree photo is
-   * portrait/landscape-flipped), everything else is drawn on top. */
-  function buildCanvas(img, spec) {
-    var rot = ((rotation % 360) + 360) % 360;
+   * portrait/landscape-flipped), everything else is drawn on top.
+   * opts (all optional) lets the bulk engine drive per-image settings
+   * through this SAME code path: {rotation, flipH, bw, enhance, bg,
+   * brightness, contrast, saturation, temp, crop:{x,y,w,h}}. With no
+   * opts the single-photo module globals apply, so the legacy flow
+   * renders exactly as before. Crop rects are SOURCE pixels. No text,
+   * logo or watermark is ever drawn here (master rule §9). */
+  function buildCanvas(img, spec, opts) {
+    var o = opts || {};
+    /* WHY per-field fallback (not Object.assign): the module globals are
+     * the single-photo state; bulk passes only the fields it overrides. */
+    var rot = (((o.rotation !== undefined ? o.rotation : rotation) % 360) + 360) % 360;
+    var flip = (o.flipH !== undefined ? o.flipH : flipH);
+    var bw = (o.bw !== undefined ? o.bw : bwOn);
+    var enh = (o.enhance !== undefined ? o.enhance : enhanceOn);
     var outW = (rot === 90 || rot === 270) ? spec.h : spec.w;
     var outH = (rot === 90 || rot === 270) ? spec.w : spec.h;
-    /* Head-safe cover crop: fill the frame, bias the crop window toward
-     * the top (0.32) so a head is not cut off at the top edge. */
-    var scale = Math.max(outW / img.naturalWidth, outH / img.naturalHeight);
-    var cw = Math.round(outW / scale), ch = Math.round(outH / scale);
-    var sx = Math.max(0, Math.round((img.naturalWidth - cw) / 2));
-    var sy = Math.max(0, Math.round((img.naturalHeight - ch) * 0.32));
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    /* Source window: an explicit crop rect wins; otherwise the head-safe
+     * cover crop — fill the frame, bias the crop window toward the top
+     * (0.32) so a head is not cut off at the top edge. */
+    var cw, ch, sx, sy;
+    if (o.crop && o.crop.w > 0 && o.crop.h > 0) {
+      cw = Math.min(o.crop.w, iw); ch = Math.min(o.crop.h, ih);
+      sx = Math.max(0, Math.min(o.crop.x || 0, iw - cw));
+      sy = Math.max(0, Math.min(o.crop.y || 0, ih - ch));
+    } else {
+      var scale = Math.max(outW / iw, outH / ih);
+      cw = Math.round(outW / scale); ch = Math.round(outH / scale);
+      sx = Math.max(0, Math.round((iw - cw) / 2));
+      sy = Math.max(0, Math.round((ih - ch) * 0.32));
+    }
     var canvas = document.createElement('canvas');
     canvas.width = outW; canvas.height = outH;
     var ctx = canvas.getContext('2d');
     /* 'original' means: do not paint any background (photo pixels only,
      * letterboxed by the cover crop itself). Otherwise the chosen bg. */
-    var fill = bgOverride === 'original' ? null : (bgOverride || spec.bg || '#ffffff');
+    var bgVal = (o.bg !== undefined ? o.bg : bgOverride);
+    var fill = bgVal === 'original' ? null : (bgVal || spec.bg || '#ffffff');
     if (fill) { ctx.fillStyle = fill; ctx.fillRect(0, 0, outW, outH); }
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+    /* Filters: Enhance is a gentle lift only — it never alters the face,
+     * just brightness/contrast/saturation, as in the old tool. Per-image
+     * adjustments multiply on top of it. */
     var filters = [];
-    if (bwOn) { filters.push('grayscale(1)'); }
-    /* Enhance is a gentle lift only — it never alters the face, just
-     * brightness/contrast/saturation, as in the old tool. */
-    if (enhanceOn) { filters.push('brightness(1.06) contrast(1.12) saturate(1.08)'); }
+    if (bw) { filters.push('grayscale(1)'); }
+    var br = (enh ? 1.06 : 1) * (o.brightness || 1);
+    var ct = (enh ? 1.12 : 1) * (o.contrast || 1);
+    var st = (enh ? 1.08 : 1) * (o.saturation || 1);
+    if (br !== 1 || ct !== 1 || st !== 1) {
+      filters.push('brightness(' + br.toFixed(3) + ') contrast(' + ct.toFixed(3)
+        + ') saturate(' + st.toFixed(3) + ')');
+    }
     ctx.filter = filters.length ? filters.join(' ') : 'none';
     ctx.save();
     ctx.translate(outW / 2, outH / 2);
-    if (flipH) { ctx.scale(-1, 1); }
+    if (flip) { ctx.scale(-1, 1); }
     ctx.rotate(rot * Math.PI / 180);
     ctx.drawImage(img, sx, sy, cw, ch, -outW / 2, -outH / 2, outW, outH);
     ctx.restore();
     ctx.filter = 'none';
-    /* Name/date stamp, bottom-right on a translucent strip so it stays
-     * readable on any photo. Date is always "today" at render time. */
-    if (stampText || stampDateOn) {
-      var pad = Math.max(6, Math.round(outH * 0.03));
-      var fs = Math.max(10, Math.round(outH * 0.055));
-      var lines = [];
-      if (stampText) { lines.push(stampText); }
-      if (stampDateOn) {
-        var d = new Date();
-        lines.push(('0' + d.getDate()).slice(-2) + '-'
-          + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + d.getFullYear());
-      }
-      var label = lines.join('  \u2022  ');
-      ctx.font = '600 ' + fs + 'px system-ui, -apple-system, sans-serif';
-      ctx.textBaseline = 'bottom';
-      var tw = ctx.measureText(label).width;
-      var bx = outW - tw - pad * 1.2, by = outH - pad * 0.9;
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.fillRect(bx - pad * 0.6, by - fs - pad * 0.7, tw + pad * 1.2, fs + pad * 0.9);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(label, bx, by);
+    /* Colour temperature: a warm/cool tint overlay at low alpha. It shifts
+     * colour balance only — no pixels are invented, no face is changed. */
+    var temp = o.temp || 0;
+    if (temp !== 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = Math.min(0.12, Math.abs(temp) / 100 * 0.12);
+      ctx.fillStyle = temp > 0 ? '#ff9a3c' : '#3c7dff';
+      ctx.fillRect(0, 0, outW, outH);
+      ctx.restore();
     }
     return canvas;
   }
@@ -383,16 +403,6 @@
       bwOn = bwToggle.checked; rerender(true);
     });
   }
-  if (stampName) {
-    stampName.addEventListener('input', function () {
-      stampText = stampName.value.trim(); rerender(true);
-    });
-  }
-  if (stampDate) {
-    stampDate.addEventListener('change', function () {
-      stampDateOn = stampDate.checked; rerender(true);
-    });
-  }
   if (guideToggle && faceGuide) {
     /* Face guide is a visual overlay only (see fragment): it never
      * changes the output image, it just helps framing the preview. */
@@ -576,6 +586,16 @@
       var c = document.createElement('canvas');
       c.width = camVideo.videoWidth; c.height = camVideo.videoHeight;
       c.getContext('2d').drawImage(camVideo, 0, 0);
+      var dataUrl = c.toDataURL('image/jpeg', 0.92);
+      /* Bulk capture: the bulk engine sets window.__bpBulkCapturing and
+       * listens for 'bp-bulk-capture' — the frame goes to the manager
+       * instead of the single-photo flow. */
+      if (window.__bpBulkCapturing) {
+        closeCam();
+        document.dispatchEvent(new CustomEvent('bp-bulk-capture',
+          { detail: { dataUrl: dataUrl } }));
+        return;
+      }
       var img = new Image();
       img.onload = function () {
         closeCam();
@@ -583,7 +603,7 @@
         say((window.dkT ? window.dkT('rsv_1251', 'Photo captured. Press \u201cMake board photo\u201d.') : 'Photo captured. Press \u201cMake board photo\u201d.'));
         rerender(false);
       };
-      img.src = c.toDataURL('image/jpeg', 0.92);
+      img.src = dataUrl;
     });
   }
 
@@ -668,4 +688,25 @@
       window.open('mailto:?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body), '_blank', 'noopener');
     });
   }
+
+  /* -- Bulk engine API (board-photo-bulk.js consumes this) ---------------- */
+  /* Single source of truth for boards + pipeline, so bulk output can never
+   * drift from single-photo output. Read-only contract: callers must not
+   * mutate BOARDS or the returned spec objects. */
+  window.DKBoardPhoto = {
+    BOARDS: BOARDS,
+    getSpec: function (id) {
+      for (var i = 0; i < BOARDS.length; i++) {
+        if (BOARDS[i].id === id) { return BOARDS[i]; }
+      }
+      return getGeneric();
+    },
+    effSpec: effSpec,
+    buildCanvas: buildCanvas,
+    fitBlob: fitBlob,
+    downloadBlob: downloadBlob,
+    decodeFile: decodeFile,
+    validImageFile: validImageFile,
+    esc: esc
+  };
 })();
