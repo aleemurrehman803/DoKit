@@ -128,7 +128,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       if (!window.DKF || !DKF.auth()) {
-        if (gErr) gErr.textContent = dkT("li_loading");
+        /* Flat Forgot guard (Nov 2026, F1 fix): if the SDKs failed (flag set
+         * by firebase.js), say so honestly instead of "still loading" — the
+         * sign-in cannot finish loading when the SDKs are unreachable.
+         * DKF.friendlyError is only called when DKF exists (the flag can
+         * only be true if firebase.js ran, which defines DKF — the guard
+         * is belt-and-braces). */
+        if (gErr) gErr.textContent = (window.__dkaSdkFailed && window.DKF && DKF.friendlyError) ? DKF.friendlyError({ code: 'auth/network-request-failed' }) : dkT("li_loading");
         return;
       }
       eErr.textContent = "";
