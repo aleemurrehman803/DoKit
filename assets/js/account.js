@@ -728,6 +728,11 @@
       if (!ok) {
         /* Backend unreachable: forms stay visible but submit with an
          * honest error instead of pretending. Nothing is faked. */
+        /* Forgot-password early-click guard (Nov 2026, Objective 2): the
+         * inline pre-bind listener in account/login/index.html reads
+         * this flag so a click after a failed SDK load shows the honest
+         * network error instead of "still loading". */
+        window.__dkaSdkFailed = true;
         /* Wallet guest prompt: auth state is unknowable here, so show
          * the sign-in prompt as the page did before #wf-guest defaulted
          * to hidden — a guest must still find the login link. */

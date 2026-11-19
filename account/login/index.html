@@ -3,6 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Forgot-password early-click guard (Nov 2026, Objective 2): installed
+     here in <head>, before the body is parsed, so it catches clicks on the
+     reset button from the earliest possible moment. The button has no
+     handler until account.js binds one inside ensureSdk().then(), so a
+     click in that window was silently ignored. This listener shows visible
+     feedback instead ("still loading…", or the network error once
+     account.js reports the SDK failed via window.__dkaSdkFailed). It NEVER
+     disables the button, so nothing can ever be left permanently disabled,
+     and once the real handler is bound (dataset.dka) it becomes a no-op.
+     Delegation (one document-level listener) is used because the button
+     does not exist yet when this runs; #acct-err is looked up at click
+     time for the same reason. It mirrors showMsg() (same #acct-err
+     target, class 'note' for loading / 'err' for the network error).
+     English text is deliberate: i18n has not loaded yet at parse time,
+     exactly like the button's own English label. Queue-and-replay was
+     considered and rejected: replaying a send after binding risks
+     double-sends, and the handler has no double-click guard. (An earlier
+     version attached the listener right after the button instead; it
+     installed too late — the parser can yield between the button and the
+     script on a chunk boundary, leaving a ~25–90 ms silent gap.) -->
+<script>
+(function(){
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    var b = (t && t.closest) ? t.closest('#acct-reset-link') : null;
+    if (!b || b.dataset.dka) return; /* not the reset button, or real handler owns it */
+    ev.preventDefault();
+    var e = document.getElementById('acct-err');
+    if (!e) return;
+    e.hidden = false;
+    if (window.__dkaSdkFailed) {
+      e.className = 'err';
+      e.textContent = 'Network error. Check your connection and try again.';
+    } else {
+      e.className = 'note';
+      e.textContent = 'Sign-in is still loading. Please wait a moment and try again.';
+    }
+  });
+})();
+</script>
 <title>Log In | DoKit</title>
 <meta name="description" content="Log in to your DoKit account to pick up where you left off — typing progress, coins, certificates and settings, saved in your account and on this device.">
 <meta property="og:title" content="Log In | DoKit">
