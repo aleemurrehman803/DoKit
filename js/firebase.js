@@ -32,7 +32,16 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
   };
 
   function ready() {
-    if (!window.firebase) return false;
+    if (!window.firebase) {
+      /* Flat-login Forgot guard (Nov 2026): firebase.js is a defer script
+         ordered after the four Firebase SDK defer tags, so by the time it
+         runs each SDK has loaded or failed; an absent window.firebase
+         means the SDKs failed to load. Record that so the head guard in
+         js/pages/forgot-guard.js can show the honest network error
+         instead of "still loading" forever. Never set on success. */
+      window.__dkaSdkFailed = true;
+      return false;
+    }
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -49,7 +58,12 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
         } catch (e) { /* App Check optional: app still works unenforced */ }
       }
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      /* Same as the missing-SDK path above: initialisation failed, so the
+         SDKs cannot produce an auth instance — flag it for the head guard. */
+      window.__dkaSdkFailed = true;
+      return false;
+    }
   }
 
   var DKF = {
@@ -215,4 +229,14 @@ function dkT(k) { try { if (window.DKI18N) return DKI18N.t(k); } catch (e) {} re
   };
 
   window.DKF = DKF;
+
+  /* Flat-login Forgot guard (Nov 2026, F1 fix): firebase.js is a defer
+   * script ordered after the four Firebase SDK defer tags, so by the time
+   * it runs each SDK has loaded or failed. If the Auth SDK is absent the
+   * sign-in cannot work — record that NOW (before DOMContentLoaded and
+   * before login.js binds its handler) so the head guard's network-error
+   * branch can fire for pre-bind clicks. Successful load never sets the
+   * flag. (The ready() failure paths also set it, covering initializeApp
+   * failures that only surface when ready() runs.) */
+  try { if (!window.firebase || !firebase.auth) window.__dkaSdkFailed = true; } catch (e) { window.__dkaSdkFailed = true; }
 })();
