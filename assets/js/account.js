@@ -744,6 +744,32 @@
             showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
           });
         });
+        /* Offline-fallback gap (390px verify, 19 Nov 2026): the reset
+         * link and Google button are bound only inside bindGuestPages(),
+         * which never runs on this path — so offline they were dead
+         * clicks with no feedback at all (verified: #acct-err stayed
+         * empty, no dialog, no message). Bind the same honest network
+         * error here; the online path below is untouched. */
+        var resetLink0 = $('acct-reset-link');
+        if (resetLink0 && !resetLink0.dataset.dka) {
+          resetLink0.dataset.dka = '1';
+          resetLink0.addEventListener('click', function(e){
+            e.preventDefault();
+            var em0 = ($('acct-email') || {}).value || '';
+            if (!em0.trim()) {
+              showMsg('acct-err', (window.dkT ? window.dkT('acct_err_email', 'Please enter a valid email address.') : 'Please enter a valid email address.'), true);
+              return;
+            }
+            showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
+          });
+        }
+        var gBtn0 = $('acct-google-btn');
+        if (gBtn0 && !gBtn0.dataset.dka) {
+          gBtn0.dataset.dka = '1';
+          gBtn0.addEventListener('click', function(){
+            showMsg('acct-err', (window.dkT ? window.dkT('acct_err_net', 'Network error. Check your connection and try again.') : 'Network error. Check your connection and try again.'), true);
+          });
+        }
         /* Verify form must work without the cloud SDK too (device
          * certificates verify via the same-browser fallback). */
         bindVfForm();
