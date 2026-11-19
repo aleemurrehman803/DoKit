@@ -109,6 +109,8 @@ document.addEventListener("DOMContentLoaded", function () {
    * Uses the email already typed in the form; errors come from
    * DKF.friendlyError like every other auth error on this page. */
   if (forgotLink) {
+    /* Yield marker for the head guard (forgot-guard.js): without it the guard would swallow every forgot click forever. */
+    forgotLink.dataset.dka = '1';
     forgotLink.addEventListener("click", function (ev) {
       ev.preventDefault();
       if (forgotLink.getAttribute("aria-disabled") === "true") return;
