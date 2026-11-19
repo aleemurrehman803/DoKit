@@ -114,6 +114,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (forgotLink.getAttribute("aria-disabled") === "true") return;
       if (okEl) { okEl.hidden = true; okEl.textContent = ""; }
       if (gErr) gErr.textContent = "";
+      if (eErr) eErr.textContent = ""; /* 390px verify, 19 Nov 2026: without
+        this, a stale "enter a valid email" error from an earlier empty
+        click stayed visible next to the loading/sent message after the
+        user typed an email and clicked again. */
       var em = email.value.trim();
       var emailOk = window.DKAuth ? DKAuth.EMAIL_RE.test(em) : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
       if (!emailOk) {
